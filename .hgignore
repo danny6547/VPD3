@@ -1,0 +1,4 @@
+syntax: glob
+scriptTest2.sql
+BuildFromTab.sql
+scriptTest1.sql
