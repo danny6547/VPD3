@@ -1,4 +1,4 @@
-function avgStruct = movingAverages( perStruct, durations )
+function avgStruct = movingAverages( perStruct, durations, varargin)
 %movingAverages Calculate moving averages of time-series data
 %   avgStruct = movingAverages(perStruct, duration) will return in 
 %   AVGSTRUCT a struct with field names 'Average', 'StartDate' and 
@@ -7,17 +7,93 @@ function avgStruct = movingAverages( perStruct, durations )
 %   same size as PERSTRUCT, and PERSTRUCT must have fields 'Date' and 
 %   'Performance_Index'. The numerical arrays contained in it's fields will
 %   have as many rows as durations in the 'Performance_Index' data and as
-%   many columns as elements in DURATION.
+%   many columns as elements in DURATION. Note that the number of durations
+%   found in the data is based on the contents of the 'Date' field in
+%   PERSTRUCT.
+%   avgStruct = movingAverages(perStruct, duration, reverse) will, in
+%   addition to the above, return the averages over the durations
+%   calculated from the end of the data in PERSTRUCT backwards when logical
+%   REVERSE is TRUE and vice versa. REVERSE can be either scalar, in which
+%   case the same value is applied to all data, or an array, in which case
+%   it must be the same size as PERSTRUCT. The default value is FALSE.
+%   avgStruct = movingAverages(perStruct, duration, reverse, trim) will, in
+%   addition to the above, trim the outputs for durations which do not
+%   fully overlap with those of non-nan data in PERSTRUCT so that their
+%   'StartDate' and/or 'EndDate' values match those of the lowest and/or
+%   highest date values which they overlap. TRIM can be either scalar, in 
+%   which case the same value is applied to all data, or an array, in which
+%   case it must be the same size as PERSTRUCT. The default value is FALSE.
+%   avgStruct = movingAverages(perStruct, duration, reverse, trim, remove)
+%   will, in addition to the above, remove outputs for durations which are
+%   not fully within the range of the date values input in PERSTRUCT. TRIM 
+%   can be either scalar, in which case the same value is applied to all 
+%   data, or an array, in which case it must be the same size as PERSTRUCT.
+%   The default value is FALSE.
 
-% Iterate over elements of array
+% Initialise Outpus
+avgStruct = struct('Duration', []);
 sizeStruct = size(perStruct);
-avgStruct = struct('Duration', []); 
 
+% Inputs
+reverse_l = false;
+errorSizeMatch_f = @(varname) error('moveAvg:InputSizeMismatch', ...
+    ['If input ' varname ' is not a scalar, it must be the same size as '...
+    'input PERSTRUCT']);
+resizeMatch_f = @(match, this) repmat(match, size(this));
+
+if nargin > 2
+    validateattributes(varargin{1}, {'logical'}, {}, ...
+        'movingAverages', 'reverse', 3);
+    
+    if ~isscalar(varargin{1}) && ~isequal(size(varargin{1}), sizeStruct)
+       errid = 'moveAvg:InputSizeMismatch';
+       errmsg = ['If input REVERSE is not a scalar, it must be the same '...
+           'size as input PERSTRUCT'];
+       error(errid, errmsg);
+    end
+    
+    reverse_l = varargin{1};
+end
+if isscalar(reverse_l)
+    reverse_l = resizeMatch_f(reverse_l, perStruct);
+end
+
+trim_l = false;
+if nargin > 3
+    
+    validateattributes(varargin{2}, {'logical'}, {}, ...
+        'movingAverages', 'trim', 4);
+    
+    if ~isscalar(varargin{2}) && ~isequal(size(varargin{2}), sizeStruct)
+        errorSizeMatch_f('trim')
+    end
+    trim_l = varargin{2};
+end
+if isscalar(trim_l)
+    trim_l = resizeMatch_f(trim_l, perStruct);
+end
+    
+remove_l = false;
+if nargin > 4
+    ci = 3;
+    validateattributes(varargin{ci}, {'logical'}, {}, ...
+        'movingAverages', 'remove', 5);
+    
+    if ~isscalar(varargin{ci}) && ~isequal(size(varargin{ci}), sizeStruct)
+        errorSizeMatch_f('remove')
+    end
+    remove_l = varargin{ci};
+end
+if isscalar(remove_l)
+    remove_l = resizeMatch_f(remove_l, perStruct);
+end
+
+% Iterate over elements of data array
 for si = 1:numel(perStruct)
     
     % Skip if empty
     currStruct = perStruct(si);
-    if any(isnan(currStruct.IMO))
+    if all(isnan(currStruct.Performance_Index))
         continue
     end
     
@@ -36,30 +112,33 @@ for si = 1:numel(perStruct)
     
     for di = 1:length(durations)
         
-        % Build matrix of dates
+        % Get dates for start and end of durations
+        if trim_l(si) && ~remove_l(si)
+            filtCurrDate_l = ~isnan(currPerf);
+            currDate = currDate(filtCurrDate_l);
+            currPerf = currPerf(filtCurrDate_l);
+        end
+        
         currDur = durations(di);
         rangeDates = max(currDate) - min(currDate);
-        numColumns = ceil(rangeDates / currDur);
-        numRows = ceil(currDur);
-        numRowsDown = floor(currDur);
-        durationPI = nan(numRows, numColumns);
+        numDurations = ceil(rangeDates / currDur);
         
-        dayOfDuration = nan(numRows, numColumns);
-        dayOfDuration(1:numRowsDown, :) = repmat((1:numRowsDown)', 1,...
-            size(dayOfDuration, 2));
-        
-        delimDates = min(currDate):currDur:...
-            min(currDate)+(numColumns*currDur);
-        delimDates(delimDates > max(currDate)) = max(currDate);
+        if reverse_l(si)
+            delimDates = max(currDate):-currDur:...
+                max(currDate)-(numDurations*currDur);
+%             delimDates(delimDates < min(currDate)) = min(currDate);
+        else
+            delimDates = min(currDate):currDur:...
+                min(currDate)+(numDurations*currDur);
+%             delimDates(delimDates > max(currDate)) = max(currDate);
+        end
         delimDates = unique(delimDates);
         startDates = delimDates(1:end-1); 
         endDates = delimDates(2:end);
         startDates_c = num2cell(startDates);
         endDates_c = num2cell(endDates);
-%         currDate_c = repmat({currDate}, size(startDates_c));
-%         currPerf_c = repmat({currPerf}, size(endDates_c));
-%         
         
+        % Get result over durations and filter
         output = cellfun(@(start, endd) ...
             nanmean(currPerf(currDate >= start & currDate < endd)),...
             startDates_c, endDates_c);
@@ -69,151 +148,40 @@ for si = 1:numel(perStruct)
         startDates(nanFilt_l) = [];
         endDates(nanFilt_l) = [];
         
-        % Assign into outputs
-        Duration_st(di).Average = output;
-        Duration_st(di).StartDate = startDates;
-        Duration_st(di).EndDate = endDates;
+        % Remove outputs not within range
+        if remove_l(si)
+            startDates(startDates < min(currDate)) = [];
+            startDates(startDates > max(currDate)) = [];
+            endDates(endDates < min(currDate)) = [];
+            endDates(endDates > max(currDate)) = [];
+        else
+            if reverse_l
+                startDates(startDates < min(currDate)) = min(currDate);
+            else
+                endDates(endDates > max(currDate)) = max(currDate);
+            end
+        end
         
-%         % Get indices to "leap" columns 
-%         remainder = currDur - floor(currDur);
-%         leap_l = remainder ~= 0;
-%         if leap_l
-%             
-%             
-%             [numer, denom] = rat(remainder);
-%             
-%             leapStarts = 1:denom:numColumns;
-%             leapEnds = denom:denom:denom + numColumns;
-%             leapEnds(leapEnds == numColumns) = [];
-%             
-%             leapColi_c = arrayfun(@(x, y) round(linspace(x, y, numer)), ...
-%                 leapStarts, leapEnds, 'Uni', 0);
-%             leapColi = [leapColi_c{:}];
-%             leapColi(leapColi > numColumns) = [];
-%             
-%             % Get indices to final day of each duration
-%             endDatesRows = repmat(numRowsDown, [1, numColumns]);
-%             endDatesRows(leapColi) = numRows;
-%             endDatesCols = 1:numColumns;
-%             endDatesi = sub2ind([numRowsDown, numColumns], endDatesRows,...
-%                 endDatesCols);
-%             leapColi_l = ~ismember(1:numColumns, leapColi);
-%             endDatesi(~leapColi_l) = endDatesi(~leapColi_l) + 1;
-%             endDatesi(endDatesi > numel(currDate)) = numel(currDate);
-%             endDatesi = unique(endDatesi);
-%             
-%             startDatesRows = ones(1, numColumns);
-%             startDatesCols = 1:numColumns;
-%             startDatesi = sub2ind([numRowsDown, numColumns], startDatesRows, ...
-%                 startDatesCols);
-%             startDatesi(~leapColi_l) = startDatesi(~leapColi_l) + 1;
-%             startDatesi(startDatesi > numel(currDate)) = [];
-%             
-%             startDate = min(inputDates):numRowsDown:
-%             
-%             endDates = min(inputDates)+numRowsDown:numRowsDown:numRowsDown*numColumns;
-%             endDates(~leapColi_l) = endDates(~leapColi_l) + 1;
-%             
-%             
-%             durData_c = arrayfun(...
-%                 @(start, endd, dates) dates(dates >= start & dates < endd),...
-%                 startDates, endDates, inputDates, 'Uni', 0);
-%             
-% %             anyLeaps_l = any(~leapColi_l);
-% %             if numel(leapColi_l) ~= ( numel(startDatesi) - 1 )
-% %                 
-% %                 diffNum = numel(leapColi_l) - numel(startDatesi);
-% %                 leapColi_l(end-diffNum:end) = [];
-% %             end
-% %             
-% %             endDatesi(2:end) = endDatesi(2:end) - leapColi_l;
-% %             startDatesi(2:end) = startDatesi(2:end) - leapColi_l;
-%             dayOfDuration(end, leapColi) = numRows;
-%         end
-%         
-%         dayOfDuration = dayOfDuration(~isnan(dayOfDuration));
-%         dayOfDuration = dayOfDuration(1:length(currStruct.Performance_Index));
-%         
-%         durationIndex = nan(numRows, numColumns);
-%         durationIndex(1:numRowsDown, :) = repmat(1:numColumns, numRowsDown, 1);
-%         durationVect = 1:numColumns;
-%         
-%         if leap_l
-%             
-%             durationIndex(end, leapColi) = durationVect(leapColi);
-%         end
-%         
-%         durationIndex = durationIndex(~isnan(durationIndex));
-%         durationIndex = durationIndex(1:length(currStruct.Performance_Index));
-%         
-%         durationInd = sub2ind(size(durationPI), dayOfDuration, durationIndex);
-%         
-% %         %% Build matrix of dates
-% %         [yeari, ~] = datevec(currDate);
-% %         
-% %         % uniYears = unique(yeari);
-% %         numYearsData = numel(unique(yeari));
-% % 
-% %         dayOfYear = nan(366, numYearsData);
-% %         dayOfYear(1:365, :) = repmat((1:365)', 1, size(dayOfYear, 2));
-% %         dayOfYear(end, 4:4:end) = 366;
-% %         dayOfYear = dayOfYear(~isnan(dayOfYear));
-% %         dayOfYear = dayOfYear(1:length(currStruct.Performance_Index));
-% %         
-% %         yearsPI = nan(366, numYearsData);
-% %         
-% %         yearIndex = nan(366, numYearsData);
-% %         yearIndex(1:365, :) = repmat(1:numYearsData, 365, 1);
-% %         yearVect = 1:numYearsData;
-% %         yearIndex(end, 4:4:end) = yearVect(4:4:end);
-% %         yearIndex = yearIndex(~isnan(yearIndex));
-% %         yearIndex = yearIndex(1:length(currStruct.Performance_Index));
-% %         
-% %         yearInd = sub2ind(size(yearsPI), dayOfYear, yearIndex);
-%         
-%         
-% %         if ri == 1
-% % 
-% %             % If first DD, calculate from end backwards
-% %             durationPI(durationInd) = currStruct.Performance_Index(end:-1:1);
-% % 
-% %         else
-% %             
-%             % Otherwise last DDi, calculate from start forwards
-%             durationPI(durationInd) = currStruct.Performance_Index;
-% %         end
-%         
-%         % Calculate averages
-%         durAverage = nanmean(durationPI);
-%         
-%         % Filter any years that had no data
-% %         if ri == 1
-% %             currDate = currDate(end:-1:1);
-% %         end
-%         
-%         endDates = currDate(endDatesi);
-%         startDates = currDate(startDatesi);
-% 
-% %         enddates = currDate(dayOfDuration == 1);
-%         nanFilt_l = isnan(durAverage);
-%         durAverage(nanFilt_l) = [];
-%         nanFilt_l = nanFilt_l(1:length(endDates));
-%         startDates(nanFilt_l) = [];
-%         endDates(nanFilt_l) = [];
-% %         
-% %         startdates = currDate(startDatesi);
-%         
-%         % Assign into outputs
-%         Duration_st(di).Average = durAverage;
-%         Duration_st(di).StartDate = startDates(:)';
-%         Duration_st(di).EndDate = endDates(:)';
-%         
+        % Trim start, end dates
+        if trim_l(si)
+            startDates(startDates < min(currDate)) = min(currDate);
+            startDates(startDates > max(currDate)) = max(currDate);
+            endDates(endDates < min(currDate)) = min(currDate);
+            endDates(endDates > max(currDate)) = max(currDate);
+        end
+        
+        % Remove from all outputs if any corresponding have been removed
+        outLength = min([length(output), length(startDates), ...
+            length(endDates)]);
+        
+        % Assign into outputs
+        Duration_st(di).Average = output(1:outLength);
+        Duration_st(di).StartDate = startDates(1:outLength);
+        Duration_st(di).EndDate = endDates(1:outLength);
         
     end
     
-        
-    % Re-assign into OUTPUTs
+    % Re-assign into Outputs
     avgStruct(ri, ci).Duration = Duration_st;
-%     perStruct(si) = currStruct;
     
 end
