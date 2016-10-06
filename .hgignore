@@ -4,3 +4,7 @@ parseEcoInsightXLS.asv
 parseShipXLS.asv
 pctdemo_task_radar.ps
 070916.mat
+
+syntax: regexp
+(?i)\.asv
+

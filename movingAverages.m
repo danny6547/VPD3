@@ -113,28 +113,50 @@ for si = 1:numel(perStruct)
     for di = 1:length(durations)
         
         % Get dates for start and end of durations
-        if trim_l(si) && ~remove_l(si)
-            filtCurrDate_l = ~isnan(currPerf);
-            currDate = currDate(filtCurrDate_l);
-            currPerf = currPerf(filtCurrDate_l);
-        end
+%         if trim_l(si) && ~remove_l(si)
+%             filtCurrDate_l = ~isnan(currPerf);
+%             currDate = currDate(filtCurrDate_l);
+%             currPerf = currPerf(filtCurrDate_l);
+%         end
         
         currDur = durations(di);
-        rangeDates = max(currDate) - min(currDate);
-        numDurations = ceil(rangeDates / currDur);
+%         rangeDates = max(currDate) - min(currDate);
+%         numDurations = ceil(rangeDates / currDur);
+        
+        % Create timestep vector for current dates
+        tstep = unique(diff(currDate));
+        tstep_v = repmat(tstep, size(currDate));
+        
+        preDates = currDate - 0.5*tstep_v;
+        postDates = currDate + 0.5*tstep_v;
         
         if reverse_l(si)
-            delimDates = max(currDate):-currDur:...
-                max(currDate)-(numDurations*currDur);
+            
+%             delimDates = postDates(1):currDur:preDates(1);
+            
+            delimDates = unique([postDates(end):-currDur:preDates(1),...
+                preDates(1)]);
+%             delimDates = max(currDate):-currDur:...
+%                 max(currDate)-(numDurations*currDur);
 %             delimDates(delimDates < min(currDate)) = min(currDate);
         else
-            delimDates = min(currDate):currDur:...
-                min(currDate)+(numDurations*currDur);
+            
+            delimDates = unique([preDates(1):currDur:postDates(end),...
+                postDates(end)]);
+%             delimDates = unique([preDates(1:currDur:end); postDates(end)]);
+            
+%             delimDates = unique([preDates(1:currDur:end); postDates(end)]);
+%             startDates = delimDates(1:end-1); 
+%             endDates = delimDates(2:end);
+%             delimDates = currDate - 0.5*tstep_v;
+%             delimDates = min(currDate):currDur:...
+%                 min(currDate)+(numDurations*currDur);
 %             delimDates(delimDates > max(currDate)) = max(currDate);
         end
-        delimDates = unique(delimDates);
+        
+%         delimDates = unique(delimDates);
         startDates = delimDates(1:end-1); 
-        endDates = delimDates(2:end);
+        endDates  = delimDates(2:end);
         startDates_c = num2cell(startDates);
         endDates_c = num2cell(endDates);
         
@@ -150,29 +172,34 @@ for si = 1:numel(perStruct)
         
         % Remove outputs not within range
         if remove_l(si)
-            startDates(startDates < min(currDate)) = [];
-            startDates(startDates > max(currDate)) = [];
-            endDates(endDates < min(currDate)) = [];
-            endDates(endDates > max(currDate)) = [];
+            startDates(startDates < min(preDates)) = [];
+%             startDates(startDates > max(currDate)) = [];
+%             endDates(endDates < min(currDate)) = [];
+            endDates(endDates > max(postDates)) = [];
         else
-            if reverse_l
-                startDates(startDates < min(currDate)) = min(currDate);
-            else
-                endDates(endDates > max(currDate)) = max(currDate);
-            end
+%             if reverse_l
+%                 startDates(startDates < min(currDate)) = min(currDate);
+%             else
+%                 endDates(endDates > max(currDate)) = max(currDate);
+%             end
         end
         
         % Trim start, end dates
         if trim_l(si)
-            startDates(startDates < min(currDate)) = min(currDate);
-            startDates(startDates > max(currDate)) = max(currDate);
-            endDates(endDates < min(currDate)) = min(currDate);
-            endDates(endDates > max(currDate)) = max(currDate);
+            startDates(startDates < min(preDates)) = min(currDate);
+%             startDates(startDates > max(currDate)) = max(currDate);
+%             endDates(endDates < min(currDate)) = min(currDate);
+            endDates(endDates > max(postDates)) = max(currDate);
         end
         
         % Remove from all outputs if any corresponding have been removed
         outLength = min([length(output), length(startDates), ...
             length(endDates)]);
+        
+        % Make all Row vectors
+        output = output(:)';
+        startDates = startDates(:)';
+        endDates = endDates(:)';
         
         % Assign into outputs
         Duration_st(di).Average = output(1:outLength);

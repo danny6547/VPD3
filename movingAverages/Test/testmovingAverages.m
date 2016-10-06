@@ -14,8 +14,8 @@ classdef testmovingAverages < matlab.unittest.TestCase
 properties(Constant = true)
     
     NumData = 30;
-    PerfData = [nan(1, 5), abs(randn(1, testmovingAverages.NumData)), nan(1, 5)];
-    DateData = 1:(testmovingAverages.NumData + 10);
+    PerfData = [nan(1, 5), abs(randn(1, testmovingAverages.NumData)), nan(1, 5)]';
+    DateData = (1:(testmovingAverages.NumData + 10))';
     AvgStruct = struct('Average', [],...
         'StartDate', [], ...
         'EndDate', []);
@@ -33,7 +33,7 @@ methods(Static)
         perStruct = struct('Date', {},...
             'Performance_Index', []);
         perStruct(1).Date = datestring_c;
-        perStruct(1).Performance_Index = testmovingAverages.PerfData';
+        perStruct(1).Performance_Index = testmovingAverages.PerfData;
         
     end
     
@@ -50,6 +50,7 @@ methods(Static)
        inputMat = logical(dec2bin(0:(2^3-1)) - '0');
        
     end
+    
 end
 
 methods(Test)
@@ -74,25 +75,24 @@ methods(Test)
             
             currSD = ceil( durStruct(1).StartDate(ai) );
             currED = floor( durStruct(1).EndDate(ai) );
-%             if ai == length(durStruct(1).StartDate)
-%                 currED = currED + 1;
-%             end
             tempAv(ai) = nanmean(in_perStruct.Performance_Index(currSD:currED));
         end
         
         durStruct(1).Average = tempAv;
+        delimDates = [min(datedata_v) - 0.5:in_dur(2):max(datedata_v) + 0.5,...
+            max(datedata_v) + 0.5];
+        durStruct(2).StartDate = delimDates(1:end-1);
+        durStruct(2).EndDate = delimDates(2:end);
         
-        durStruct(2).StartDate = 1:in_dur(2):max(datedata_v)-in_dur(2);
-        durStruct(2).EndDate = durStruct(2).StartDate + in_dur(2);
+        si = ceil( delimDates(1:end-1) );
+        ei = floor( delimDates(2:end) );
+        ei(2:4:end) = ei(2:4:end)-1;
+        ei(end) = length(datedata_v);
         
-        ei = [5, floor(durStruct(2).EndDate(2:end))];
-        ei(4:4:end) = ei(4:4:end) - 1;
-        si = [1, ei(1:end-1)+1];
-        
-        for ai = 1:length(durStruct(2).StartDate)
+        for ai = 1:length(si)
             
-%             currSD = durStruct(2).StartDate(ai);
-%             currED = durStruct(2).EndDate(ai);
+%             currSD = ceil( durStruct(2).StartDate(ai) );
+%             currED = floor( durStruct(2).EndDate(ai) );
             tempAv(ai) = nanmean(in_perStruct.Performance_Index(si(ai):ei(ai)));
         end
         
@@ -133,64 +133,72 @@ methods(Test)
             in_perstruct.Date(end-4:end) = [];
             in_perstruct.Performance_Index(end-4:end) = [];
             in_dur = 10;
-%             in_reverse = true;
             
-%             firstDate = min(in_perstruct.Date);
-%             lastDate = max(in_perstruct.Date);
+            filtDate = datedata(isnan(in_perstruct.Performance_Index));
             
             tstep = 1;
-            preDates = datedata - 0.5*tstep;
-            postDates = datedata + 0.5*tstep;
+            preDates = datedata(:)' - 0.5*tstep;
+            postDates = datedata(:)' + 0.5*tstep;
+            numDur = ceil( (max(postDates) - min(preDates))  / in_dur);
             
             % Divide vector up into durations counting from end
             if currReverse
-%                 dates = in_perstruct.Date; %lastDate:-in_dur:firstDate;
-                delimDates = [postDates(1), preDates(in_dur:in_dur:end)];
+                delimDates = linspace(postDates(end), ...
+                    postDates(end)-(numDur*in_dur), numDur+1);
+%                 delimDates = postDates(end):-in_dur:postDates(1);
+%                 delimDates = [postDates(1), preDates(in_dur:in_dur:end)];
                 endDates = delimDates(1:end-1);
                 startDates = delimDates(2:end);
             else
-                delimDates = [preDates(1:in_dur:end), postDates(end)];
+                delimDates = linspace(preDates(1), ...
+                    preDates(1)+(numDur*in_dur), numDur+1);
+%                 delimDates = preDates(1):in_dur:numDur*in_dur;
+%                 delimDates = [delimDates, delimDates(end)+in_dur];
+%                 delimDates = [preDates(1:in_dur:end), postDates(end)];
                 startDates = delimDates(1:end-1);
                 endDates = delimDates(2:end);
             end
             
             % Remove durations whose start or end exceed those of the dates
             if currRemove
-                if any(startDates) < min(datedata)
-                    startDates(startDates < min(datedata)) = [];
+                if any(startDates < min(preDates))
+                    filt_l = startDates < min(datedata);
+                    startDates(filt_l) = [];
+                    endDates(filt_l) = [];
                 end
-                if any(endDates) > max(datedata)
-                    endDates(endDates > min(datedata)) = [];
+                if any(endDates > max(postDates))
+                    filt_l = endDates > max(datedata);
+                    startDates(filt_l) = [];
+                    endDates(filt_l) = [];
                 end
             end
             
             % Trim start and end dates to match extents of date data
             if currTrim
-                if any(startDates) < min(datedata)
-                    startDates(startDates < min(datedata)) = min(datedata);
+                if any(startDates) < min(filtDate)
+                    startDates(startDates < min(filtDate)) = min(filtDate);
                 end
-                if any(endDates) > max(datedata)
-                    endDates(endDates > min(datedata)) = max(datedata);
+                if any(endDates) > max(filtDate)
+                    endDates(endDates > min(filtDate)) = max(filtDate);
                 end
             end
             
             dur_st = testcase.emptyDuration;
-            dur_st.StartDate = startDates; % [1, in_dur:in_dur:max(testcase.DateData)-in_dur];
-            dur_st.EndDate = endDates; % in_dur:in_dur:max(testcase.DateData); % max(testcase.DateData):-in_dur:in_dur;
-            
-    %         delimDates = [40, (40-in_dur:-in_dur:0)+1];
-    %         dur_st.StartDate = sort(delimDates(2:end));
-    %         dur_st.EndDate = sort(delimDates(1:end-1));
+            dur_st.StartDate = sort( startDates );
+            dur_st.EndDate = sort( endDates );
             
             tempAv = nan(1, length(dur_st(1).StartDate));
             for ai = 1:length(dur_st.StartDate)
                 
                 currSD = ceil( dur_st(1).StartDate(ai) );
                 currED = floor( dur_st(1).EndDate(ai) );
-                if ai == length(dur_st(1).StartDate)
-                    currED = currED + 1;
+                if currED > length(in_perstruct.Performance_Index)
+                    currED = length(in_perstruct.Performance_Index);
                 end
-                tempAv(ai) = nanmean(in_perstruct.Performance_Index(currSD:currED-1));
+                if currSD < 1
+                    currSD = 1;
+                end
+                tempAv(ai) = nanmean(in_perstruct.Performance_Index(currSD:currED));
             end
             
             dur_st.Average = tempAv;
