@@ -102,6 +102,9 @@ for si = 1:numel(perStruct)
     currPerf = currStruct.Performance_Index;
     [ri, ci] = ind2sub(sizeStruct, si);
     
+    % Get dates filtered by nan in performance data
+    filtDate = currDate(~isnan(currPerf));
+    
     % NB. TAKE THE DRY-DOCK DATE FROM SERIES
     
     % If first DDi, calculate from end backwards
@@ -129,20 +132,25 @@ for si = 1:numel(perStruct)
         
         preDates = currDate - 0.5*tstep_v;
         postDates = currDate + 0.5*tstep_v;
+        numDur = ceil( (max(postDates) - min(preDates)) / currDur);
         
         if reverse_l(si)
             
 %             delimDates = postDates(1):currDur:preDates(1);
-            
-            delimDates = unique([postDates(end):-currDur:preDates(1),...
-                preDates(1)]);
+            delimDates = linspace(postDates(end) - (currDur*numDur), ...
+                postDates(end), numDur + 1);
+%             delimDates = unique([postDates(end):-currDur:preDates(1),...
+%                 preDates(1)]);
 %             delimDates = max(currDate):-currDur:...
 %                 max(currDate)-(numDurations*currDur);
 %             delimDates(delimDates < min(currDate)) = min(currDate);
         else
             
-            delimDates = unique([preDates(1):currDur:postDates(end),...
-                postDates(end)]);
+            delimDates = linspace(preDates(1), preDates(1)+(currDur*numDur),...
+                numDur + 1);
+            
+%             delimDates = unique([preDates(1):currDur:postDates(end),...
+%                 postDates(end)]);
 %             delimDates = unique([preDates(1:currDur:end); postDates(end)]);
             
 %             delimDates = unique([preDates(1:currDur:end); postDates(end)]);
@@ -172,10 +180,14 @@ for si = 1:numel(perStruct)
         
         % Remove outputs not within range
         if remove_l(si)
-            startDates(startDates < min(preDates)) = [];
+            startFilt = startDates + 0.5*tstep < min(currDate);
+            startDates(startFilt) = [];
+            endDates(startFilt) = [];
 %             startDates(startDates > max(currDate)) = [];
 %             endDates(endDates < min(currDate)) = [];
-            endDates(endDates > max(postDates)) = [];
+            endFilt = endDates - 0.5*tstep > max(currDate);
+            startDates(endFilt) = [];
+            endDates(endFilt) = [];
         else
 %             if reverse_l
 %                 startDates(startDates < min(currDate)) = min(currDate);
@@ -186,10 +198,10 @@ for si = 1:numel(perStruct)
         
         % Trim start, end dates
         if trim_l(si)
-            startDates(startDates < min(preDates)) = min(currDate);
+            startDates(startDates < min(filtDate)) = min(filtDate);
 %             startDates(startDates > max(currDate)) = max(currDate);
 %             endDates(endDates < min(currDate)) = min(currDate);
-            endDates(endDates > max(postDates)) = max(currDate);
+            endDates(endDates > max(filtDate)) = max(filtDate);
         end
         
         % Remove from all outputs if any corresponding have been removed

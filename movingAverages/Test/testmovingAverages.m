@@ -134,7 +134,7 @@ methods(Test)
             in_perstruct.Performance_Index(end-4:end) = [];
             in_dur = 10;
             
-            filtDate = datedata(isnan(in_perstruct.Performance_Index));
+            filtDate = datedata(~isnan(in_perstruct.Performance_Index));
             
             tstep = 1;
             preDates = datedata(:)' - 0.5*tstep;
@@ -161,13 +161,13 @@ methods(Test)
             
             % Remove durations whose start or end exceed those of the dates
             if currRemove
-                if any(startDates < min(preDates))
-                    filt_l = startDates < min(datedata);
+                if any(startDates + 0.5*tstep < min(datedata))
+                    filt_l = startDates + 0.5*tstep < min(datedata);
                     startDates(filt_l) = [];
                     endDates(filt_l) = [];
                 end
-                if any(endDates > max(postDates))
-                    filt_l = endDates > max(datedata);
+                if any(endDates - 0.5*tstep > max(datedata))
+                    filt_l = endDates - 0.5*tstep > max(datedata);
                     startDates(filt_l) = [];
                     endDates(filt_l) = [];
                 end
@@ -175,11 +175,11 @@ methods(Test)
             
             % Trim start and end dates to match extents of date data
             if currTrim
-                if any(startDates) < min(filtDate)
+                if any(startDates < min(filtDate))
                     startDates(startDates < min(filtDate)) = min(filtDate);
                 end
-                if any(endDates) > max(filtDate)
-                    endDates(endDates > min(filtDate)) = max(filtDate);
+                if any(endDates > max(filtDate))
+                    endDates(endDates > max(filtDate)) = max(filtDate);
                 end
             end
             
