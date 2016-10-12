@@ -1,10 +1,16 @@
-function loadInfileDNVGLRaw(csvfile, database, table)
+function loadInfileDNVGLRaw(csvfile)
 % loadInfileDNVGLRaw Load raw file from DNVGL into table in database
 % loadInfileDNVGLRaw(csvfile, database, table) will call SQL function LOAD
-% INFILE on the CSV file csvfile into the table TABLE in the database
-% DATABASE, where csvfile is a full file path and TABLE and DATABASE are
-% strings. CSVFILE must be a "raw data" file downloaded from DNVGL
-% EcoInsight.
+% INFILE on the CSV file given by string CSVFILE into the table TABLE in 
+% the database DATABASE, where csvfile is a full file path and TABLE and 
+% DATABASE are strings. CSVFILE must be a "raw data" file downloaded from 
+% DNVGL EcoInsight.
+% loadInfileDNVGLRaw(csvfile, database, table) where CSVFILE is a cell
+% array of strings giving the paths to files of the type described above
+% will add the data in all these files to the database.
+
+
+database = 'test2';
 
 % Connect to Database
 conn_ch = ['driver=MySQL ODBC 5.3 ANSI Driver;', ...
@@ -12,35 +18,34 @@ conn_ch = ['driver=MySQL ODBC 5.3 ANSI Driver;', ...
     'Database=', database, ';',  ...
     'Uid=root;',  ...
     'Pwd=HullPerf2016;'];
-a = adodb_connect(conn_ch);
+sqlConn = adodb_connect(conn_ch);
 
-% Parse Colunm Headers
-q = textscan(fopen(csvfile), '%s', 220, 'Delimiter', ',');
-ColumnHeaders_c = [q{:}];
+% Drop temp loading table if exists
+tempTable = 'tempraw';
+drop_s = ['DROP TABLE IF EXISTS `' tempTable '`;'];
+adodb_query(sqlConn, drop_s);
 
-% Build strings to set NULL if blank and convert date, time formats
-date_l = cellfun(@(x) isequal(x, 'Date_UTC'), ColumnHeaders_c);
-time_l = cellfun(@(x) isequal(x, 'Time_UTC'), ColumnHeaders_c);
-dateOrtime_l = date_l | time_l;
+% Create temp table
+filename = ['C:\Users\damcl\Documents\SQL\tests\EcoInsight Test Scripts\',...
+    'Create Tables\createDNVGLRawTempTable.sql'];
+create_s = fscanf(fopen(filename), '%c');
+create_s(1:130) = [];
+adodb_query(sqlConn, create_s);
 
-atVars_c = strcat('@', ColumnHeaders_c);
-e = sprintf('%s, ', atVars_c{:});
-e(end-1:end) = [];
+% Load data into temp table
+loadInfileCSV(csvfile, 'test2', tempTable);
 
-ColumnHeaders_c(dateOrtime_l) = [];
-setnullif_c = cellfun(@(x) [x, ' = nullif(@' x ', '''')'], ColumnHeaders_c, 'Uni', 0);
-setnullif_ch = sprintf('%s, ', setnullif_c{:});
-setnullif_ch(end-1:end) = [];
+% Call procedure to add time into DateTime
+addTime_s = ['CALL addTimeDNVGLRaw(' '''' tempTable ''');'];
+adodb_query(sqlConn, addTime_s);
 
-% Build MySQL code string
-sqlstr = ['LOAD DATA LOCAL INFILE ''', ...
-    strrep(csvfile, '\', '\\'), ...
-    ''' INTO TABLE ' table, ...
-    ' FIELDS TERMINATED BY '',''', ...
-    ' IGNORE 1 LINES (' e ')' ...
-    ' SET Date_UTC = STR_TO_DATE(@Date_UTC, ''%d/%m/%Y''), ', ...
-    'Time_UTC = STR_TO_DATE(@Time_UTC, '' %H:%i''), ', ...
-    setnullif_ch];
+% Call procedute to remove any all-null rows from temp table
+noNulls_s = 'CALL removeNullRows';
+adodb_query(sqlConn, noNulls_s);
 
-% Call MySQL
-adodb_query(a, sqlstr);
+% Move data to final table, ignoring non-unique values
+final_s = 'CALL insertWithoutDuplicates';
+adodb_query(sqlConn, final_s);
+
+% Close connection
+sqlConn.Close;

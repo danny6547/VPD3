@@ -1,1 +1,4 @@
-Test movingAverages
+movingAverages: write test 
+performanceData: Test for case of 0 dry dock dates
+plotPerformnceData: Fix bug in name of graph in case of no vessel name information
+loadInfileDNVGLRaw: rename to loadInfileCSV, extract csv-relavant part, rewrite loadInfileDNVGLRaw with one input
