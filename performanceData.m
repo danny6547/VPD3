@@ -108,16 +108,18 @@ end
 
 % 
 s = cellfun(@isempty, w);
-[row,col] = find(~s);
-first = accumarray(col, row, [], @min);
-col_l = first ~= 1;
-starts = first(col_l);
-x = arrayfun(@(x) circshift((1:size(s, 1))', [-x + 1, 0]), starts, 'Uni', 0);
-c = [x{:}]';
-repr = sub2ind(size(s), c, repmat(find(col_l), size(c, 1), size(c, 2)));
-orig = sub2ind(size(s), repmat(1:size(s, 1), size(c, 1), 1), ...
-    repmat(find(col_l), size(c, 1), size(c, 2)));
-w(orig) = w(repr);
+if any(s)
+    [row,col] = find(~s);
+    first = accumarray(col, row, [], @min);
+    col_l = first ~= 1;
+    starts = first(col_l);
+    x = arrayfun(@(x) circshift((1:size(s, 1))', [-x + 1, 0]), starts, 'Uni', 0);
+    c = [x{:}]';
+    repr = sub2ind(size(s), c, repmat(find(col_l), size(c, 1), size(c, 2)));
+    orig = sub2ind(size(s), repmat(1:size(s, 1), size(c, 1), 1), ...
+        repmat(find(col_l), size(c, 1), size(c, 2)));
+    w(orig) = w(repr);
+end
 
 % Assemble outputs into struct
 fieldnames_c = strrep(PerformanceDataColumnsNames_c, ' ', '_');
