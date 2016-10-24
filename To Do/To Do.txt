@@ -1,0 +1,11 @@
+insertDNVGLIntoRaw: test          
+sortOnDateTime: test              
+updateAirDensity: test            
+updateBrakePower: test            
+updateDisplacement: test          
+updateExpectedSpeed: test         
+updateMassFuelOilConsumed: test   
+updateShaftPower: test            
+updateSpeedLoss: test             
+updateWindResistance: test     
+insertDNVGLIntoPerformance: test

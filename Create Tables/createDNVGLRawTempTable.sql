@@ -1,6 +1,6 @@
 /* Creates RawData table, a table containing the "raw" ship data obtained from DNVGL EcoInsight "Manage Data" page. */ 
 use test2;
-CREATE TABLE RawData (
+CREATE TABLE tempraw (
 id INTEGER AUTO_INCREMENT PRIMARY KEY,
 AE_1_Running_Hours	DOUBLE(20, 5),
 AE_2_Running_Hours	DOUBLE(20, 5), 
