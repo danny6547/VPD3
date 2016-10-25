@@ -2,6 +2,7 @@
 
 CREATE TABLE rawdata (id INT PRIMARY KEY AUTO_INCREMENT,
 						 DateTime_UTC DATETIME,
+                         IMO_Vessel_Number INT(7),
 						 Relative_Wind_Speed DOUBLE(10, 5),
 						 Relative_Wind_Direction DOUBLE(10, 5),
 						 Speed_Over_Ground DOUBLE(10, 5),
@@ -19,9 +20,7 @@ CREATE TABLE rawdata (id INT PRIMARY KEY AUTO_INCREMENT,
 						 Delivered_Power DOUBLE(10, 5),
 						 Shaft_Power DOUBLE(10, 5),
 						 Brake_Power DOUBLE(10, 5),
-						 Rudder_Angle DOUBLE(10, 5),
 						 Shaft_Torque DOUBLE(10, 5),
-						 Shaft_Revolutions DOUBLE(10, 5),
 						 Mass_Consumed_Fuel_Oil DOUBLE(10, 5),
 						 Volume_Consumed_Fuel_Oil DOUBLE(10, 5),
 						 Lower_Caloirifc_Value_Fuel_Oil DOUBLE(10, 5),
@@ -33,4 +32,4 @@ CREATE TABLE rawdata (id INT PRIMARY KEY AUTO_INCREMENT,
                          Expected_Speed_Through_Water DOUBLE(10, 5),
                          Displacement DOUBLE(10, 5),
                          Speed_Loss DOUBLE(10, 5)
-						 );
+						 ) ENGINE = MYISAM;

@@ -1,3 +1,10 @@
 /* Sort data in temp raw ISO by time */
 
-INSERT INTO tempRawISO SELECT * FROM tempRawISO ORDER BY DateTime_UTC;
+delimiter //
+
+CREATE PROCEDURE sortOnDateTime()
+BEGIN
+
+	ALTER TABLE tempRawISO ORDER BY DateTime_UTC ASC;
+    
+END
