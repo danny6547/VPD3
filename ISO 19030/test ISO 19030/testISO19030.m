@@ -104,17 +104,17 @@ methods(Test)
     
     % Inputs
     date = now+1:-1:now-1;
-    x = 3:-1:1;
+    x = (3:-1:1)';
     
     date_c = cellstr(datestr(date, testcase.DateTimeFormSQL));
-    input = [date_c, num2cell(x')];
+    input = [date_c, num2cell(x)];
     names = {'DateTime_UTC', 'Speed_Loss'};
     [startrow, numrows] = testcase.insert(input, names);
     
     [exp_date, datei] = sort(date, 'ascend');
     exp_date = cellstr(datestr(exp_date, testcase.DateTimeFormAdodb));
     exp_x = num2cell(x(datei));
-    exp_sorted = [exp_date, exp_x'];
+    exp_sorted = [exp_date, exp_x];
     
     % Execute
     testcase.call('sortOnDateTime');
@@ -151,7 +151,7 @@ methods(Test)
     act_dens = testcase.read('Air_Density', startrow, numrows);
     msg_dens = ['Data for column ''Air_Density'' should have values ',...
         'matching those given for Equation G5 in standard ISO 19030'];
-    testcase.verifyEqual(act_dens, exp_dens, msg_dens);
+    testcase.verifyEqual(act_dens, exp_dens, 'AbsTol', 1e-9, msg_dens);
     
     end
 end
@@ -159,7 +159,12 @@ end
 methods
     
     function call(testcase, funcname, varargin)
-    % CALL Execute procedure call on input procedure name and inputs
+    % CALL Execute procedure call given procedure name and inputs
+    % call(testcase, funcname) will call the stored procedure FUNCNAME in
+    % the database given by input object TESTCASE. 
+    % call(testcase, funcname, inputs) will, in addition to the above, call
+    % procedure FUNCNAME with inputs given by string or cell of strings
+    % INPUTS. 
     
     conn = testcase.Connection;
     inputs_s = '()';
@@ -170,11 +175,20 @@ methods
     
     sql_s = ['CALL ' funcname, inputs_s, ';'];
     adodb_query(conn, sql_s);
-        
+    
     end
     
     function [data, colnames] = read(obj, varargin)
     % READ Reads the database with optional specified parameters
+    % data = read(obj) will return in DATA a cell array containing all rows
+    % for all columns in the database table specified by input object OBJ.
+    % data = read(obj, names) will return in DATA all data from the table
+    % specified in OBJ for the column name(s) given by string or cell array
+    % of strings NAMES.
+    % data = read(obj, names, startrow, count) will, in addition to the 
+    % above, return only the data from row number STARTROW and having the 
+    % number of rows given by COUNT. Inputting COUNT without a STARTROW 
+    % will result in COUNT having no effect.
     
         % Input
         names_s = '*';
@@ -216,7 +230,8 @@ methods
     % INSERT Inserts data into table, returning indices to read
     % startrow = insert(testcase, data, names) will call INSERT on the data
     % in DATA with the column names given by cell array of strings NAMES
-    % for the database and tables given by object TESTCASE. 
+    % for the database and tables given by object TESTCASE. NAMES must have
+    % as many elements as columns in DATA.
     
     % Establish Connection
     sqlConn = testcase.Connection;

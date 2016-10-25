@@ -9,7 +9,7 @@ updateShaftPower: test
 updateSpeedLoss: test             
 updateWindResistance: test     
 insertDNVGLIntoPerformance: test
-updateAirDensity: write            
+# updateAirDensity: write            
 updateBrakePower: write            
 updateDisplacement: write          
 updateExpectedSpeed: write         
