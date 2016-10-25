@@ -1,6 +1,6 @@
 insertDNVGLIntoRaw: test          
 # sortOnDateTime: test              
-updateAirDensity: test            
+# updateAirDensity: test            
 updateBrakePower: test            
 updateDisplacement: test          
 updateExpectedSpeed: test         
@@ -9,3 +9,12 @@ updateShaftPower: test
 updateSpeedLoss: test             
 updateWindResistance: test     
 insertDNVGLIntoPerformance: test
+updateAirDensity: write            
+updateBrakePower: write            
+updateDisplacement: write          
+updateExpectedSpeed: write         
+updateMassFuelOilConsumed: write   
+updateShaftPower: write            
+updateSpeedLoss: write             
+updateWindResistance: write     
+insertDNVGLIntoPerformance: write

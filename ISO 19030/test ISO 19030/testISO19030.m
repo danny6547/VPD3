@@ -128,6 +128,32 @@ methods(Test)
     
     end
     
+    function testupdateAirDensity(testcase)
+    % Test that procedure updateAirDensity will update appropriate values.
+    % 1: Test that the values for column 'airDensity' will be updated with
+    % those from the appropriate columns as descirbed by equation G5 in IMO
+    % standard ISO/DIS 19030-2, namely:
+    % airDensity = airPressure / SpecificGasConstant * (AirTemp + 273.15)
+    
+    % Inputs
+    in_press = [1.225, 1.2, 1.1];
+    in_R = 287.058;
+    in_Temp = [25, 30, 27];
+    exp_dens = num2cell( in_press ./ (in_R.*(in_Temp + 273.15)) )';
+    
+    names_c = {'Air_Pressure', 'Air_Temperature'};
+    [startrow, numrows] = testcase.insert([in_press', in_Temp'], names_c);
+    
+    % Execute
+    testcase.call('updateAirDensity');
+    
+    % Verify
+    act_dens = testcase.read('Air_Density', startrow, numrows);
+    msg_dens = ['Data for column ''Air_Density'' should have values ',...
+        'matching those given for Equation G5 in standard ISO 19030'];
+    testcase.verifyEqual(act_dens, exp_dens, msg_dens);
+    
+    end
 end
 
 methods
@@ -154,6 +180,7 @@ methods
         names_s = '*';
         if nargin > 1
             names_c = varargin{1};
+            names_c = cellstr(names_c);
             names_s = strjoin(names_c, ', ');
         end
         

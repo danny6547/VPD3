@@ -2,9 +2,9 @@
 
 delimiter //
 
-CREATE PROCEDURE sortOnDateTime()
+CREATE PROCEDURE updateAirDensity()
 BEGIN
 
-	UPDATE tempRawISO SET Air_Density = Air_Pressure / ((Air_Temperatue + 273.15) * (SELECT Specific_Gas_Constant_Air FROM GlobalConstants));
+	UPDATE tempRawISO SET Air_Density = Air_Pressure / ((Air_Temperature + 273.15) * (SELECT Specific_Gas_Constant_Air FROM GlobalConstants));
 
 END
