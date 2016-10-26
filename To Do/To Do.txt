@@ -1,7 +1,7 @@
 insertDNVGLIntoRaw: test          
 # sortOnDateTime: test              
 # updateAirDensity: test            
-updateBrakePower: test            
+# updateBrakePower: test            
 updateDisplacement: test          
 updateExpectedSpeed: test         
 updateMassFuelOilConsumed: test   

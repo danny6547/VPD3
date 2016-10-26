@@ -27,6 +27,8 @@ properties(Constant, Hidden)
    
     DateTimeFormSQL = 'yyyy-mm-dd HH:MM:SS';
     DateTimeFormAdodb = 'dd-mm-yyyy HH:MM:SS';
+    SFOCCoefficients = [-6949.127353, -0.000132468, 7.918354135];
+    InvalidIMO = sprintf('%u', [1:6, 8]);
     
 end
 
@@ -51,15 +53,7 @@ methods(TestClassSetup)
     % createTable Creates test table in database if none exists
     
     testcase.establishConnection;
-    invalidIMO = [1:6, 8];
-    invalidIMO = sprintf('%u', invalidIMO);
-    call(testcase, 'createTempRawISO', invalidIMO);
-    
-%     sql_s = ['CREATE TABLE ' testcase.TableName ...
-%             ' (id INT PRIMARY KEY AUTO_INCREMENT,'...
-%             ' a DATETIME, '...
-%             ' b DOUBLE(10, 5));'];
-% 	adodb_query(testcase.Connection, sql_s);
+    call(testcase, 'createTempRawISO', testcase.InvalidIMO);
     
     end
     
@@ -152,6 +146,37 @@ methods(Test)
     msg_dens = ['Data for column ''Air_Density'' should have values ',...
         'matching those given for Equation G5 in standard ISO 19030'];
     testcase.verifyEqual(act_dens, exp_dens, 'AbsTol', 1e-9, msg_dens);
+    
+    end
+    
+    function testupdateBrakePower(testcase)
+    % Test that BrakePower will be calculated based on the standard.
+    % This test assumes that the data given in property 'SFOCCoefficients'
+    % matches that for 'Engine_Model' value 'k98me-c712' in the table
+    % 'SFOCCoefficients' in the database given by TESTCASE.
+    % 1: Test that the column Brake_Power will be updated following call to
+    % procedure "updateBrakePower" based on the calculations described in
+    % ISO standard 19030-2, Annexes C and D. 
+    
+    % Inputs
+    in_massfoc = [50, 75, 60];
+    in_lcv = [42, 41.9, 43];
+    in_data = [in_massfoc', in_lcv'];
+    in_names = {'Mass_Consumed_Fuel_Oil', 'Lower_Caloirifc_Value_Fuel_Oil'};
+    [startrow, numrows] = testcase.insert(in_data, in_names);
+    
+    x = in_massfoc.* (in_lcv ./ 42.7);
+    coeff = testcase.SFOCCoefficients;
+    exp_brake = coeff(3)*x.^2 + coeff(2)*x + coeff(1);
+    
+    % Execute
+    testcase.call('updateBrakePower', testcase.InvalidIMO);
+    
+    % Verify
+    act_brake = testcase.read('Brake_Power', startrow, numrows);
+    msg_brake = ['Updated Brake Power is expected to match that calculated',...
+        ' from mass of fuel oil consumed and the SFOC curve'];
+    testcase.verifyEqual(act_brake, exp_brake, msg_brake);
     
     end
 end
