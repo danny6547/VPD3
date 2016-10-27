@@ -274,7 +274,31 @@ methods(Test)
         
     end
     
+    function testupdateSpeedLoss(testcase)
+    % Test that speed loss is calculated as described in the standard.
+    % 1: Test that speed loss will be calculated as the relative difference
+    % between vessel speed through water and the expected speed expressed
+    % as a percentage, as described in equation 4 of the ISO 19030-2
+    % standard.
     
+    % Input
+    in_sog = [13, 10, 20];
+    in_speedexp = [14, 12, 17];
+    [startrow, count] = testcase.insert([in_sog', in_speedexp'], ...
+        {'Speed_Through_Water', 'Expected_Speed_Through_Water'});
+    
+    exp_loss = num2cell(((in_sog - in_speedexp) ./ in_speedexp) .* 100)';
+    
+    % Execute
+    testcase.call('updateSpeedLoss')
+    
+    % Verify
+    act_loss = testcase.read('Speed_Loss', startrow, count);
+    msg_loss = ['Speed loss expected to be relative difference between ',...
+        'speed over ground and expected speed, as a percentage.'];
+    testcase.verifyEqual(act_loss, exp_loss, 'RelTol', 1e-6, msg_loss);
+    
+    end
     
 end
 

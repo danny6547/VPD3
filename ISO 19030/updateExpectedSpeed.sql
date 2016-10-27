@@ -34,10 +34,10 @@ BEGIN
 														* EXP( (SELECT Exponent_B FROM speedPowerCoefficients WHERE IMO_Vessel_Number = imo)
                                                         * Delivered_Power);
     
-	/* Case where all delivered power values match those in SpeedPower */
-	SELECT Speed FROM SpeedPower WHERE IMO = imo AND Power = (SELECT Delivered_Power FROM tempRawISO);
+	/* /* Case where all delivered power values match those in SpeedPower */
+	/* SELECT Speed FROM SpeedPower WHERE IMO = imo AND Power = (SELECT Delivered_Power FROM tempRawISO); */
 	
 	/* Case where delivered power values are within range but don't exactly match those in SpeedPower */
-    SELECT Speed FROM SpeedPower WHERE IMO = imo AND Power > (SELECT Delivered_Power FROM tempRawISO);
-    
+    /* SELECT Speed FROM SpeedPower WHERE IMO = imo AND Power > (SELECT Delivered_Power FROM tempRawISO); */
+	
 END
