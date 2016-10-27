@@ -244,9 +244,37 @@ methods(Test)
     act_mass = testcase.read('Mass_Consumed_Fuel_Oil', startrow, count);
     msg_mass = ['Mass of fuel oil consumed is expected to match that ',...
         'calculated from formula C2 of ISO 19030-2.'];
-    testcase.verifyEqual(act_mass, exp_mass, msg_mass);
+    testcase.verifyEqual(act_mass, exp_mass, 'RelTol', 1e-9, msg_mass);
     
     end
+    
+    function testupdateShaftPower(testcase)
+    % Test that shaft power will be calculated as described in the standard
+    % 1: Test that, as given in Equation B1 in Annex B of the ISO 19030-2
+    % standard, shaft power will be calculated as the product of torque,
+    % rpm and a conversion factor to radians per second.
+    
+    % Input
+    in_torque = 50:25:100;
+    in_rpm = 10:12;
+    [startrow, count] = testcase.insert([in_torque', in_rpm'], ...
+        {'Shaft_Torque', 'Shaft_Revolutions'});
+    
+    exp_shaft = num2cell( in_torque.*in_rpm.*(2*pi/60) )';
+    
+    % Execute
+    testcase.call('updateShaftPower', testcase.InvalidIMO);
+    
+    % Verify
+    act_shaft = testcase.read('Shaft_Power', startrow, count);
+    msg_shaft = ['Shaft power expected to be torque multiplied by angular ',...
+        'velocity'];
+    testcase.verifyEqual(act_shaft, exp_shaft, 'RelTol', 1e-7, msg_shaft);
+    
+        
+    end
+    
+    
     
 end
 

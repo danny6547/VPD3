@@ -5,7 +5,7 @@ insertDNVGLIntoRaw: test
 # updateDisplacement: test          
 updateExpectedSpeed: test         
 # updateMassFuelOilConsumed: test   
-updateShaftPower: test            
+# updateShaftPower: test            
 updateSpeedLoss: test             
 updateWindResistance: test     
 insertDNVGLIntoPerformance: test
@@ -14,7 +14,7 @@ insertDNVGLIntoPerformance: test
 # updateDisplacement: write          
 updateExpectedSpeed: write         
 # updateMassFuelOilConsumed: write   
-updateShaftPower: write            
+# updateShaftPower: write            
 updateSpeedLoss: write             
 updateWindResistance: write     
 insertDNVGLIntoPerformance: write
