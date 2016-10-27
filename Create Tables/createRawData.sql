@@ -31,6 +31,6 @@ CREATE TABLE rawdata (id INT PRIMARY KEY AUTO_INCREMENT,
                          Wind_Resistance_Relative DOUBLE(10, 5),
                          Air_Resistance_No_Wind DOUBLE(10, 5),
                          Expected_Speed_Through_Water DOUBLE(10, 5),
-                         Displacement DOUBLE(10, 5),
+                         Displacement DOUBLE(20, 10),
                          Speed_Loss DOUBLE(10, 5)
 						 ) ENGINE = MYISAM;

@@ -24,11 +24,15 @@ properties(Hidden)
 end
 
 properties(Constant, Hidden)
-   
+    
     DateTimeFormSQL = 'yyyy-mm-dd HH:MM:SS';
     DateTimeFormAdodb = 'dd-mm-yyyy HH:MM:SS';
     SFOCCoefficients = [-6949.127353, -0.000132468, 7.918354135];
     InvalidIMO = sprintf('%u', [1:6, 8]);
+    AlmavivaIMO = sprintf('%u', 9450648);
+    AlmavivaBreadth = 42.8;
+    AlmavivaLength = 334;
+    AlmavivaBlockCoefficient = 0.62;
     
 end
 
@@ -166,7 +170,7 @@ methods(Test)
     in_lcv = [42, 41.9, 43];
     in_data = [in_massfoc', in_lcv'];
     in_names = {'Mass_Consumed_Fuel_Oil', 'Lower_Caloirifc_Value_Fuel_Oil'};
-    in_IMO = sprintf('%u', 9450648);
+    in_IMO = testcase.AlmavivaIMO;
     [startrow, numrows] = testcase.insert(in_data, in_names);
     
     x = in_massfoc.* (in_lcv ./ 42.7);
@@ -184,6 +188,36 @@ methods(Test)
     
     end
     
+    function testupdateDisplacement(testcase)
+    % Test that displacement will be calculated either from the block
+    % coefficient or by looking up a hydrostatic table.
+    % 1: Test that when no data is given for vessel in hydrostatic table
+    % but a block coefficient is given in the 'Vessels' table, the latter
+    % will be used to approximate the displacement.
+    
+    % 1
+    % Input
+    in_draftFore = [10, 12, 11]';
+    in_draftAft = [10, 11, 13]';
+    in_Length = testcase.AlmavivaLength;
+    in_Breadth = testcase.AlmavivaBreadth;
+    in_Cb = testcase.AlmavivaBlockCoefficient;
+    [startrow, count] = testcase.insert([in_draftFore, in_draftAft],...
+        {'Static_Draught_Fore', 'Static_Draught_Aft'});
+    
+    exp_disp = num2cell(...
+        mean([in_draftFore'; in_draftAft'])*(in_Length*in_Breadth*in_Cb))';
+    
+    % Execute
+    testcase.call('updateDisplacement', testcase.AlmavivaIMO);
+    
+    % Verify
+    act_disp = testcase.read('Displacement', startrow, count);
+    msg_disp = ['Displacement should equal the block coefficient ',...
+        'multiplied by the extreme lengths in three dimensions.'];
+    testcase.verifyEqual(act_disp, exp_disp, 'RelTol', 1e-9, msg_disp);
+    
+    end
 end
 
 methods
