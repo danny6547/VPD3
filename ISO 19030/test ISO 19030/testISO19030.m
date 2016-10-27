@@ -97,7 +97,8 @@ methods(Test)
     % the non-DateTime data.
     
     % Inputs
-    date = now+1:-1:now-1;
+    today = floor(now) + 0.1;
+    date = today+1:-1:today-1;
     x = (3:-1:1)';
     
     date_c = cellstr(datestr(date, testcase.DateTimeFormSQL));
@@ -153,7 +154,9 @@ methods(Test)
     % Test that BrakePower will be calculated based on the standard.
     % This test assumes that the data given in property 'SFOCCoefficients'
     % matches that for 'Engine_Model' value 'k98me-c712' in the table
-    % 'SFOCCoefficients' in the database given by TESTCASE.
+    % 'SFOCCoefficients' in the database given by TESTCASE. It also assumes
+    % that the table 'Vessels' has been updated with for the vessel named
+    % 'CMA CGM ALMAVIVA', which contains this engine model.
     % 1: Test that the column Brake_Power will be updated following call to
     % procedure "updateBrakePower" based on the calculations described in
     % ISO standard 19030-2, Annexes C and D. 
@@ -163,22 +166,24 @@ methods(Test)
     in_lcv = [42, 41.9, 43];
     in_data = [in_massfoc', in_lcv'];
     in_names = {'Mass_Consumed_Fuel_Oil', 'Lower_Caloirifc_Value_Fuel_Oil'};
+    in_IMO = sprintf('%u', 9450648);
     [startrow, numrows] = testcase.insert(in_data, in_names);
     
     x = in_massfoc.* (in_lcv ./ 42.7);
     coeff = testcase.SFOCCoefficients;
-    exp_brake = coeff(3)*x.^2 + coeff(2)*x + coeff(1);
+    exp_brake = num2cell(coeff(3)*x.^2 + coeff(2)*x + coeff(1))';
     
     % Execute
-    testcase.call('updateBrakePower', testcase.InvalidIMO);
+    testcase.call('updateBrakePower', in_IMO);
     
     % Verify
     act_brake = testcase.read('Brake_Power', startrow, numrows);
     msg_brake = ['Updated Brake Power is expected to match that calculated',...
         ' from mass of fuel oil consumed and the SFOC curve'];
-    testcase.verifyEqual(act_brake, exp_brake, msg_brake);
+    testcase.verifyEqual(act_brake, exp_brake, 'RelTol', 1e-9, msg_brake);
     
     end
+    
 end
 
 methods
