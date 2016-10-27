@@ -218,6 +218,36 @@ methods(Test)
     testcase.verifyEqual(act_disp, exp_disp, 'RelTol', 1e-9, msg_disp);
     
     end
+    
+    function testupdateMassFOC(testcase)
+    % Test that calculation of mass of fuel oil consumed from volume flow 
+    % meter measurements matches that described in the standard. 
+    % 1. Test that the mass of fuel oil consumed will match that returned
+    % by formula C2 in Annex C of the ISO 19030-2 standard.
+        
+    % Input
+    in_vol = 100:20:140;
+    in_den15 = repmat(500, 1, 3);
+    in_denChange = repmat(10, 1, 3);
+    in_tempFuel = 50:5:60;
+    [startrow, count] = testcase.insert([in_vol', in_den15', in_denChange',...
+        in_tempFuel'], {'Volume_Consumed_Fuel_Oil', 'Density_Fuel_Oil_15C',...
+        'Density_Change_Rate_Per_C', 'Temp_Fuel_Oil_At_Flow_Meter'});
+    
+    exp_mass = num2cell(...
+        in_vol.*(in_den15 - in_denChange.*(in_tempFuel - 15)))';
+    
+    % Execute
+    testcase.call('updateMassFuelOilConsumed', testcase.InvalidIMO);
+    
+    % Verify
+    act_mass = testcase.read('Mass_Consumed_Fuel_Oil', startrow, count);
+    msg_mass = ['Mass of fuel oil consumed is expected to match that ',...
+        'calculated from formula C2 of ISO 19030-2.'];
+    testcase.verifyEqual(act_mass, exp_mass, msg_mass);
+    
+    end
+    
 end
 
 methods
