@@ -33,6 +33,7 @@ properties(Constant, Hidden)
     AlmavivaBreadth = 42.8;
     AlmavivaLength = 334;
     AlmavivaBlockCoefficient = 0.62;
+    AlmavivaSpeedPowerCoefficients = [6.037644473511698, -40.659732310548080];
     
 end
 
@@ -300,6 +301,45 @@ methods(Test)
     
     end
     
+    function testupdateExpectedSpeed(testcase)
+    % Test that expected speed is calculated according to the standard
+    % 1: Test that the values for column 'Expected_Speed_Through_Water' in
+    % the test table are calculated by interpolating the appropriate
+    % speed-power curve fitted to an exponential model as described in 
+    % equation 3 of the ISO 19030-3 standard.
+    % 2: Test that the values for column 'Expected_Speed_Through_Water' in
+    % the test table will be read from the appropriate speed power curve
+    % based on the conditions described in section 4.4 of the ISO 19030-2
+    % standard, where speed values corresponding to displacements and trims
+    % which fail the condition will be corrected for using the Admiralty
+    % formula.
+    
+    % 1
+    % Input
+    in_A = testcase.AlmavivaSpeedPowerCoefficients(1);
+    in_B = testcase.AlmavivaSpeedPowerCoefficients(2);
+    in_DeliveredPower = 30e4:10e4:50e4;
+    [startrow, count] = testcase.insert(in_DeliveredPower', ...
+        {'Delivered_Power'});
+    
+    exp_espeed = num2cell( in_A(1).*log(in_DeliveredPower) + in_B )';
+    
+    % Execute
+    testcase.call('updateExpectedSpeed', testcase.AlmavivaIMO);
+    
+    % Verify
+    act_espeed = testcase.read('Expected_Speed_Through_Water', startrow,...
+        count);
+    msg_espeed = ['Expected speed is expected to be calculated based on ',...
+        'the speed-power curve for this vessel.'];
+    testcase.verifyEqual(act_espeed, exp_espeed, 'RelTol', 1e-5, msg_espeed);
+    
+    end
+    
+    function test(testcase)
+    
+        
+    end
 end
 
 methods
@@ -390,6 +430,11 @@ methods
         r = strrep(e, ';', '),(');
         t = strrep(r, '[', '(');
         data_str = strrep(t, ']', ')');
+        
+        if isscalar(data)
+            data_str = ['(', data_str, ')'];
+        end
+        
     elseif iscell(data)
         
         % Assume first column is date data

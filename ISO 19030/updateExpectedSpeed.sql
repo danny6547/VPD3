@@ -30,9 +30,8 @@ BEGIN
 		END; */
 	
     /* Calculate expected speed from fitted speed-power curve */
-	UPDATE tempRawISO SET Expected_Speed_Through_Water = (SELECT Exponent_A FROM speedPowerCoefficients WHERE IMO_Vessel_Number = imo)
-														* EXP( (SELECT Exponent_B FROM speedPowerCoefficients WHERE IMO_Vessel_Number = imo)
-                                                        * Delivered_Power);
+	UPDATE tempRawISO SET Expected_Speed_Through_Water = ((SELECT Exponent_A FROM speedPowerCoefficients WHERE IMO_Vessel_Number = imo) * LOG(Delivered_Power))
+														+ (SELECT Exponent_B FROM speedPowerCoefficients WHERE IMO_Vessel_Number = imo);
     
 	/* /* Case where all delivered power values match those in SpeedPower */
 	/* SELECT Speed FROM SpeedPower WHERE IMO = imo AND Power = (SELECT Delivered_Power FROM tempRawISO); */

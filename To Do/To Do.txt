@@ -3,7 +3,7 @@ insertDNVGLIntoRaw: test
 # updateAirDensity: test            
 # updateBrakePower: test            
 # updateDisplacement: test          
-updateExpectedSpeed: test         
+# updateExpectedSpeed: test         
 # updateMassFuelOilConsumed: test   
 # updateShaftPower: test            
 # updateSpeedLoss: test             
@@ -12,9 +12,11 @@ insertDNVGLIntoPerformance: test
 # updateAirDensity: write            
 # updateBrakePower: write            
 # updateDisplacement: write          
-updateExpectedSpeed: write         
+# updateExpectedSpeed: write         
 # updateMassFuelOilConsumed: write   
 # updateShaftPower: write            
 # updateSpeedLoss: write             
 updateWindResistance: write     
 insertDNVGLIntoPerformance: write
+updateExpectedSpeed: include conditions for admiralty formula
+insertIntoSpeedPowerCoefficients: calculate R2 value and validate against ISO standard (0.8)
