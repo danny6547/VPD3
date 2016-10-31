@@ -10,6 +10,7 @@ insertDNVGLIntoRaw: test
 updateWindResistanceCorrection: test     
 # updateWindResistanceRelative: test     
 # updateAirResistance: test     
+updateTransProjAreaCurrent: test
 correctDataset: test     
 updateWindResistanceCorrection: write   
 updateAirResistance: write     

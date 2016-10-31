@@ -36,6 +36,7 @@ properties(Constant, Hidden)
     AlmavivaSpeedPowerCoefficients = [6.037644473511698, -40.659732310548080];
     AlmavivaTransProjArea = 1330;
     AlmavivaWindResistCoeffHead = 0.0001512;
+    AlmavivaDesignDraft = 15;
     
 end
 
@@ -432,6 +433,38 @@ methods(Test)
     msg_air = ['Air resistance expected to match definition given',...
         'by equation G2 in the standard.'];
     testcase.verifyEqual(act_air, exp_air, 'RelTol', 1e-6, msg_air);
+    
+    end
+    
+    function testupdateTransProjAreaCurrent(testcase)
+    % Test that transverse projected area in current loading condition is
+    % calculated as described in the standard.
+    % 1: Test that the transverse projected area in current loading
+    % condition is calculated based on equations G3 and G4 in the IS0 
+    % 19030-2 standard.
+    
+    % Input
+    designArea = testcase.AlmavivaTransProjArea;
+    designDraft = testcase.AlmavivaDesignDraft;
+    draftFore = [11, 13, 9];
+    draftAft = [9, 11, 7];
+    currentDraft = mean([draftFore; draftAft]);
+    shipWidth = testcase.AlmavivaBreadth;
+    [startrow, count] = testcase.insert([draftFore', draftAft'], ...
+        {'Static_Draught_Fore', 'Static_Draught_Aft'});
+    
+    exp_area = num2cell(designArea + ...
+        (designDraft - currentDraft).*shipWidth)';
+    
+    % Execute
+    testcase.call('updateTransProjArea', testcase.AlmavivaIMO);
+    
+    % Verify
+    act_area = testcase.read('Transverse_Projected_Area_Current', ...
+        startrow, count);
+    msg_area = ['Transverse projected area in current loading condition ',...
+        'should be calculated from equations G3 and G4 in the standard'];
+    testcase.verifyEqual(act_area, exp_area, msg_area);
     
     end
     

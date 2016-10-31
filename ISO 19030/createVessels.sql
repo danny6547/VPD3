@@ -11,4 +11,5 @@ CREATE TABLE Vessels (id INT PRIMARY KEY AUTO_INCREMENT,
 						 Block_Coefficient DOUBLE(10, 5),
                          Breadth_Moulded DOUBLE(10, 5),
                          Length_Overall DOUBLE(10, 5),
+                         Draft_Design DOUBLE(10, 5),
 						 LBP DOUBLE(10, 5));
