@@ -34,6 +34,8 @@ properties(Constant, Hidden)
     AlmavivaLength = 334;
     AlmavivaBlockCoefficient = 0.62;
     AlmavivaSpeedPowerCoefficients = [6.037644473511698, -40.659732310548080];
+    AlmavivaTransProjArea = 1330;
+    AlmavivaWindResistCoeffHead = 0.0001512;
     
 end
 
@@ -336,9 +338,75 @@ methods(Test)
     
     end
     
-    function test(testcase)
+%     function testupdateWindResistance(testcase)
+%     % Test that wind resistance correction is calculated as in the standard
+%     % 1: Test that the wind resistance correction is calculated according
+%     % to the procedure given in Equation G2, Annex G of the ISO 19030-2
+%     % standard. 
+%     
+%     % Input
+%     
+%     windDirCtrs = 0:30:330;
+%     windResCoef = randi([0, 10], [1, 12]);
+%     windDirectionRel = [0, 45, 212];
+%     [~, windi] = ismember(windDirectionRel, windDirCtrs);
+%     in_WindResCoeffDir = windResCoef(windi);
+%     
+%     in_AirPressure = linspace(1e5, 1e5+20, 3);
+%     in_AirTemp = [20, 21, 22];
+%     in_SOG = 15:2:19;
+%     in_TransProjA = 100;
+%     in_WindResCoeffHead = 0.5;
+%     in_RelWindSpeed = 10:5:20;
+%     in_PropulsCalm = 0.7;
+%     
+%     in_AirDens = in_AirPressure / (287.058 * (in_AirTemp + 273.15));
+%     airResist = 0.5*in_AirDens*in_SOG^2*in_TransProjA*in_WindResCoeffHead;
+%     windResist = 0.5*in_AirDens*in_RelWindSpeed^2*in_TransProjA*...
+%         in_WindResCoeffDir;
+%     exp_wind = ((windResist - airResist)*in_SOG)/ in_PropulsCalm + ...
+%         in_DeliveredPower*(1 - in_PropulsActual/in_PropulsCalm) ;
+%     
+%     % Execute
+%     
+%     % Verify
+%     msg_wind = ['Wind resistance correction values should match those ',...
+%         'calculated with Equation G2 in the standard.'];
+%     testcase.verifyEqual(act_wind, exp_wind, 'RelTol', 1e-9, msg_wind);
+%         
+%     end
     
-        
+    function testupdateWindResistanceRelative(testcase)
+    % Test that relative wind resistance is described by the standard
+    % 1: Test that wind resistance due to relative wind is being calculated
+    % according to equation G2 of the ISO 19030-2 standard.
+    
+    % Input
+    Coeffs = [testcase.AlmavivaWindResistCoeffHead, [0.2:0.1:0.6, ...
+        0.55:-0.1:0.05].*1e-5];
+    RelWindDir = [30, 45, 0];
+    CoeffDirEdges = 0:30:360;
+    [~, relwind_i] = histc(RelWindDir, CoeffDirEdges);
+    CoeffRelWind = Coeffs(relwind_i);
+    
+    Air_Dens = [1.22, 1.21, 1.23];
+    RelWindSpeed = [10, 15, 25];
+    TransArea = testcase.AlmavivaTransProjArea;
+    exp_rel = num2cell(0.5 * Air_Dens .* RelWindSpeed.^2 .* TransArea ...
+        .* CoeffRelWind)';
+    [startrow, count] = testcase.insert(...
+        [Air_Dens', RelWindSpeed', RelWindDir'], ...
+        {'Air_Density', 'Relative_Wind_Speed', 'Relative_Wind_Direction'});
+    
+    % Execute
+    testcase.call('updateWindResistanceRelative', testcase.AlmavivaIMO);
+    
+    % Verify
+    act_rel = testcase.read({'Wind_Resistance_Relative'}, startrow, count);
+    msg_rel = ['Relative wind resistance expected to match definition given',...
+        'by equation G2 in the standard.'];
+    testcase.verifyEqual(act_rel, exp_rel, 'RelTol', 1e-5, msg_rel);
+    
     end
 end
 
