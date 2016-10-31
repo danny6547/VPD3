@@ -464,6 +464,28 @@ methods(Test)
     
     end
     
+    function testupdatecorrectPower(testcase)
+    % Test that the corrected power is power minues wind-correction
+    
+    % Input
+    in_delivered = 10e3:1e3:12e3;
+    in_correction = 1e3:0.5e3:2e3;
+    [startrow, count] = testcase.insert([in_delivered', in_correction'],...
+        {'Delivered_Power', 'Wind_Resistance_Correction'});
+    
+    exp_corr = num2cell( in_delivered - in_correction )';
+    
+    % Execute
+    testcase.call('updateCorrectedPower');
+        
+    % Verify
+    act_corr = testcase.read('Corrected_Power', startrow, count);
+    msg_corr = ['The corrected power is expected to be the difference ',...
+        'between delivered power and wind resistance correction.'];
+    testcase.verifyEqual(act_corr, exp_corr, msg_corr);
+    
+    end
+    
 end
 
 methods
@@ -593,3 +615,11 @@ methods
 end
 
 end
+
+
+    % Input
+    
+    % Execute
+        
+    % Verify
+    

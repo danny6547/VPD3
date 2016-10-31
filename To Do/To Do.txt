@@ -11,10 +11,10 @@ insertDNVGLIntoRaw: test
 # updateWindResistanceRelative: test     
 # updateAirResistance: test     
 # updateTransProjAreaCurrent: test
-correctDataset: test     
+# updateCorrectPower: test     
 # updateWindResistanceCorrection: write   
 # updateAirResistance: write     
-correctDataset: write       
+# updateCorrectPower: write       
 insertDNVGLIntoPerformance: test
 # updateAirDensity: write            
 # updateBrakePower: write            
