@@ -7,13 +7,13 @@ insertDNVGLIntoRaw: test
 # updateMassFuelOilConsumed: test   
 # updateShaftPower: test            
 # updateSpeedLoss: test             
-updateWindResistanceCorrection: test     
+# updateWindResistanceCorrection: test     
 # updateWindResistanceRelative: test     
 # updateAirResistance: test     
-updateTransProjAreaCurrent: test
+# updateTransProjAreaCurrent: test
 correctDataset: test     
-updateWindResistanceCorrection: write   
-updateAirResistance: write     
+# updateWindResistanceCorrection: write   
+# updateAirResistance: write     
 correctDataset: write       
 insertDNVGLIntoPerformance: test
 # updateAirDensity: write            
@@ -22,8 +22,7 @@ insertDNVGLIntoPerformance: test
 # updateExpectedSpeed: write         
 # updateMassFuelOilConsumed: write   
 # updateShaftPower: write            
-# updateSpeedLoss: write             
-updateWindResistance: write     
+# updateSpeedLoss: write        
 insertDNVGLIntoPerformance: write
 updateExpectedSpeed: include conditions for admiralty formula
 insertIntoSpeedPowerCoefficients: calculate R2 value and validate against ISO standard (0.8)

@@ -37,6 +37,7 @@ properties(Constant, Hidden)
     AlmavivaTransProjArea = 1330;
     AlmavivaWindResistCoeffHead = 0.0001512;
     AlmavivaDesignDraft = 15;
+    AlmavivaPropulsiveEfficiency = 0.71;
     
 end
 
@@ -339,43 +340,38 @@ methods(Test)
     
     end
     
-%     function testupdateWindResistance(testcase)
-%     % Test that wind resistance correction is calculated as in the standard
-%     % 1: Test that the wind resistance correction is calculated according
-%     % to the procedure given in Equation G2, Annex G of the ISO 19030-2
-%     % standard. 
-%     
-%     % Input
-%     
-%     windDirCtrs = 0:30:330;
-%     windResCoef = randi([0, 10], [1, 12]);
-%     windDirectionRel = [0, 45, 212];
-%     [~, windi] = ismember(windDirectionRel, windDirCtrs);
-%     in_WindResCoeffDir = windResCoef(windi);
-%     
-%     in_AirPressure = linspace(1e5, 1e5+20, 3);
-%     in_AirTemp = [20, 21, 22];
-%     in_SOG = 15:2:19;
-%     in_TransProjA = 100;
-%     in_WindResCoeffHead = 0.5;
-%     in_RelWindSpeed = 10:5:20;
-%     in_PropulsCalm = 0.7;
-%     
-%     in_AirDens = in_AirPressure / (287.058 * (in_AirTemp + 273.15));
-%     airResist = 0.5*in_AirDens*in_SOG^2*in_TransProjA*in_WindResCoeffHead;
-%     windResist = 0.5*in_AirDens*in_RelWindSpeed^2*in_TransProjA*...
-%         in_WindResCoeffDir;
-%     exp_wind = ((windResist - airResist)*in_SOG)/ in_PropulsCalm + ...
-%         in_DeliveredPower*(1 - in_PropulsActual/in_PropulsCalm) ;
-%     
-%     % Execute
-%     
-%     % Verify
-%     msg_wind = ['Wind resistance correction values should match those ',...
-%         'calculated with Equation G2 in the standard.'];
-%     testcase.verifyEqual(act_wind, exp_wind, 'RelTol', 1e-9, msg_wind);
-%         
-%     end
+    function testupdateWindResistanceCorrection(testcase)
+    % Test that wind resistance correction is calculated as in the standard
+    % 1: Test that the wind resistance correction is calculated according
+    % to the procedure given in Equation G2, Annex G of the ISO 19030-2
+    % standard.
+    
+    % Input
+    in_DeliveredPower = 10e3:1e3:12e3;
+    in_SOG = 15:2:19;
+    in_PropulsCalm = testcase.AlmavivaPropulsiveEfficiency;
+    in_PropulsActual = 0.7;
+    
+    airResist = 0.1:0.1:0.3;
+    windResist = 0.3:0.2:0.7;
+    [startrow, count] = testcase.insert(...
+        [windResist', airResist', in_SOG', in_DeliveredPower'],...
+        {'Wind_Resistance_Relative', 'Air_Resistance_No_Wind', ...
+        'Speed_Over_Ground', 'Delivered_Power'});
+    
+    exp_wind = num2cell(((windResist - airResist).*in_SOG)./ in_PropulsCalm + ...
+        in_DeliveredPower.*(1 - in_PropulsActual./in_PropulsCalm))';
+    
+    % Execute
+    testcase.call('updateWindResistanceCorrection', testcase.AlmavivaIMO);
+    
+    % Verify
+    act_wind = testcase.read('Wind_Resistance_Correction', startrow, count);
+    msg_wind = ['Wind resistance correction values should match those ',...
+        'calculated with Equation G2 in the standard.'];
+    testcase.verifyEqual(act_wind, exp_wind, 'RelTol', 1e-7, msg_wind);
+    
+    end
     
     function testupdateWindResistanceRelative(testcase)
     % Test that relative wind resistance is described by the standard
