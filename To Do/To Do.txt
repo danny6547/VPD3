@@ -9,7 +9,7 @@ insertDNVGLIntoRaw: test
 # updateSpeedLoss: test             
 updateWindResistanceCorrection: test     
 # updateWindResistanceRelative: test     
-updateAirResistance: test     
+# updateAirResistance: test     
 correctDataset: test     
 updateWindResistanceCorrection: write   
 updateAirResistance: write     

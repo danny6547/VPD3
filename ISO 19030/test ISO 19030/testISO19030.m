@@ -408,6 +408,33 @@ methods(Test)
     testcase.verifyEqual(act_rel, exp_rel, 'RelTol', 1e-5, msg_rel);
     
     end
+    
+    function testupdateAirResistance(testcase)
+    % Test that air resistance in no-wind condition conforms to standard
+    % 1: Test that the air resistance in no-wind condition is calculated
+    % according to equation G2 in the ISO 19030-2 standard.
+    
+    % Input
+    Air_Dens = [1.22, 1.21, 1.23];
+    SOG = [10, 15, 25];
+    CoeffHeadWind = testcase.AlmavivaWindResistCoeffHead;
+    TransArea = testcase.AlmavivaTransProjArea;
+    
+    exp_air = num2cell(0.5 * Air_Dens .* SOG.^2 .* TransArea .* CoeffHeadWind)';
+    [startrow, count] = testcase.insert([Air_Dens', SOG'], ...
+        {'Air_Density', 'Speed_Over_Ground'});
+    
+    % Execute
+    testcase.call('updateAirResistanceNoWind', testcase.AlmavivaIMO);
+    
+    % Verify
+    act_air = testcase.read({'Air_Resistance_No_Wind'}, startrow, count);
+    msg_air = ['Air resistance expected to match definition given',...
+        'by equation G2 in the standard.'];
+    testcase.verifyEqual(act_air, exp_air, 'RelTol', 1e-6, msg_air);
+    
+    end
+    
 end
 
 methods
