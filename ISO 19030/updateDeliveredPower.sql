@@ -8,23 +8,36 @@ BEGIN
     /* DECLARATIONS */
     /* DECLARE isAvail BOOLEAN; */
     
-    /* Check if torsio-metre data available */
-    CALL isShaftPowerAvailable(1234568, @isAvail);
+    /* Check if torsio-metre data available 
+    CALL log_msg(concat('isShaftAvail = ', @isShaftAvail));
+		CALL log_msg(concat('UPDATE shaft power called')); */
+	DECLARE powerIncalculable CONDITION FOR SQLSTATE '45000';
+	
+    CALL isShaftPowerAvailable(imo, @isShaftAvail);
+    CALL isBrakePowerAvailable(imo, @isBrakeAvail, @isMassNeeded);
     
-    CALL log_msg(concat('isAVAIL = ', @isAvail));
-    
-    IF (SELECT @isAvail) THEN
+    IF @isShaftAvail THEN
 		
         CALL updateShaftPower(imo);
-		CALL log_msg(concat('UPDATE shaft power called'));
         UPDATE tempRawISO SET Delivered_Power = Shaft_Power;
-    
+		
     /* Check if engine data available */
-    
-    
+    ELSEIF @isBrakeAvail THEN
+		
+		IF @isMassNeeded THEN
+			CALL updateMassFuelOilConsumed(imo);
+        END IF;
+		
+		CALL updateBrakePower(imo);
+        UPDATE tempRawISO SET Delivered_Power = Brake_Power;
+		
     /* Error if value cannot be calculated */
-    
-    
+    ELSE
+		
+		SIGNAL powerIncalculable
+		  SET MESSAGE_TEXT = 'Delivered Power cannot be calculated
+			 without either sufficient inputs for shaft power or 
+            brake power';
+		
     END IF;
-    
 END;

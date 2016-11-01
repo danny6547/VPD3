@@ -2,7 +2,7 @@
 
 delimiter //
 
-CREATE PROCEDURE isBrakePowerAvailable(imo INT, OUT isAvailable BOOLEAN)
+CREATE PROCEDURE isBrakePowerAvailable(imo INT, OUT isAvailable BOOLEAN, OUT isMassNeeded BOOLEAN)
 BEGIN
 	
     DECLARE MfocAvail BOOLEAN;
@@ -12,6 +12,7 @@ BEGIN
     SET LCVAvail := FALSE;
     
     SET isAvailable = FALSE;
+    SET isMassNeeded = FALSE;
     
     /* Check if Mass of fuel oil consumed is not all NULL */
     IF (SELECT COUNT(*) FROM tempRawISO WHERE Mass_Consumed_Fuel_Oil IS NOT NULL) = 0 THEN
@@ -21,13 +22,12 @@ BEGIN
 												  Density_Fuel_Oil_15C  IS NOT NULL AND
                                                   Density_Change_Rate_Per_C  IS NOT NULL AND
                                                   Temp_Fuel_Oil_At_Flow_Meter IS NOT NULL
-			) > 0 THEN
-        
+																				) > 0 THEN
 			SET MfocAvail := TRUE;
+            SET isMassNeeded := TRUE;
         END IF;
         
 	ELSE
-        
         SET MfocAvail := TRUE;
     END IF;
     

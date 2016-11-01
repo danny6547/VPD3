@@ -518,7 +518,17 @@ methods(Test)
     testcase.dropTable;
     testcase.createTable;
     
-    
+    in_LCV = 0.2:0.1:0.4;
+    in_VFOC = 20:5:30;
+    in_FuelDens = 300:5:310;
+    in_DensChange = 1:3;
+    in_FuelTemp = 50:52;
+    [startrow, count] = testcase.insert([in_LCV', in_VFOC', in_FuelDens',...
+        in_DensChange', in_FuelTemp'], {'Lower_Caloirifc_Value_Fuel_Oil', ...
+                        'Volume_Consumed_Fuel_Oil',...
+                        'Density_Fuel_Oil_15C',...
+                        'Density_Change_Rate_Per_C',...
+                        'Temp_Fuel_Oil_At_Flow_Meter'});
     
     % Execute
     testcase.call('updateDeliveredPower', testcase.AlmavivaIMO);
@@ -527,9 +537,33 @@ methods(Test)
     act_del = testcase.read('Delivered_Power', startrow, count);
     act_allNull = any(cellfun(@isnan, act_del));
     msg_brake = ['Delivered Power is expected to be equal to brake power when',...
-        'shaft power is unavailable but brake power is.'];
+        ' shaft power is unavailable but brake power is.'];
     testcase.verifyFalse(act_allNull, msg_brake);
     
+    % 3
+    % Input
+    testcase.dropTable;
+    testcase.createTable;
+    
+    in_LCV = 0.2:0.1:0.4;
+    in_VFOC = 20:5:30;
+    in_FuelDens = 300:5:310;
+    in_DensChange = 1:3;
+    in_FuelTemp = nan(1, 3);
+    testcase.insert([in_LCV', in_VFOC', in_FuelDens', in_DensChange', ...
+        in_FuelTemp'], {'Lower_Caloirifc_Value_Fuel_Oil', ...
+                        'Volume_Consumed_Fuel_Oil',...
+                        'Density_Fuel_Oil_15C',...
+                        'Density_Change_Rate_Per_C',...
+                        'Temp_Fuel_Oil_At_Flow_Meter'});
+    
+    % Execute
+    exec_f = @() testcase.call('updateDeliveredPower', testcase.AlmavivaIMO);
+    
+    % Verify
+    exp_errid = 'MATLAB:COM:E2147500037';
+    msg_error = 'An error is expected when power cannot be calculated.';
+    testcase.verifyError(exec_f, exp_errid, msg_error);
     
     end
     
@@ -608,7 +642,8 @@ methods(Test)
                         'Temp_Fuel_Oil_At_Flow_Meter'});
     
     % Execute
-    testcase.call('isBrakePowerAvailable', testcase.InvalidIMO, '@out');
+    testcase.call('isBrakePowerAvailable', testcase.InvalidIMO, '@out',...
+        '@needVolume');
     
     % Verify
     [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
@@ -635,7 +670,8 @@ methods(Test)
                         'Temp_Fuel_Oil_At_Flow_Meter'});
     
     % Execute
-    testcase.call('isBrakePowerAvailable', testcase.InvalidIMO, '@out');
+    testcase.call('isBrakePowerAvailable', testcase.InvalidIMO, '@out',...
+        '@needVolume');
     
     % Verify
     [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
