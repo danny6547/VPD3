@@ -541,14 +541,35 @@ methods(Test)
         {'Shaft_Torque', 'Shaft_Revolutions'});
     
     % Execute
-    testcase.call('isShaftPowerAvailable', testcase.InvalidIMO,...
-        '@out');
+    testcase.call('isShaftPowerAvailable',...
+        testcase.InvalidIMO, '@out');
     
     % Verify
     [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
+    act_isAvail = logical(str2double([act_isAvail{:}]));
     msg_isAvail = ['Shaft power is expected to be available when shaft ',...
         'torque and rpm are available.'];
     testcase.verifyTrue(act_isAvail, msg_isAvail);
+    
+    % 2
+    % Input
+    testcase.dropTable;
+    testcase.createTable;
+    in_ShaftTorque = nan(1, 3);
+    in_ShaftRPM = 12:2:16;
+    testcase.insert([in_ShaftTorque', in_ShaftRPM'], ...
+        {'Shaft_Torque', 'Shaft_Revolutions'});
+    
+    % Execute
+    testcase.call('isShaftPowerAvailable', testcase.InvalidIMO,...
+        '@out');
+        
+    % Verify
+    [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
+    act_isAvail = logical(str2double([act_isAvail{:}]));
+    msg_isAvail = ['Shaft power is expected not to be available when shaft ',...
+        'torque and rpm are available.'];
+    testcase.verifyFalse(act_isAvail, msg_isAvail);
     
     end
     

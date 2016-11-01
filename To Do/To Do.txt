@@ -27,7 +27,7 @@ ISO19030: write
 # updateDeliveredPower: test
 updateDeliveredPower: write
 # isShaftPowerAvailable: test
-isShaftPowerAvailable: write
+# isShaftPowerAvailable: write
 insertDNVGLIntoPerformance: test
 insertDNVGLIntoPerformance: write
 updateExpectedSpeed: include conditions for admiralty formula
