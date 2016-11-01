@@ -511,7 +511,47 @@ methods(Test)
         'shaft power is available'];
     testcase.verifyEqual(act_del, exp_del, msg_del);
     
+    % 2
+    % Input
+    
+    
+    % Execute
+    
+    
+    % Verify
+    
+    
     end
+    
+    function testisShaftPowerAvailable(testcase)
+    % Test that if torque and rpm data for shaft available, return true
+    % Test that if all the rows of both Shaft_Torque and Shaft_Revolutions
+    % are not NULL, then the procedure will return TRUE to indicate that
+    % Shaft_Power can be calculated.
+    % 1: Test that if both Shaft_Torque and Shaft_Revolutions are not all
+    % NULL, procedure will return TRUE.
+    % 2: Test that if either Shaft_Torque or Shaft_Revolutions are all
+    % NULL, procedure will return FALSE.
+    
+    % 1
+    % Input
+    in_ShaftTorque = [10, nan, 12];
+    in_ShaftRPM = 12:2:16;
+    testcase.insert([in_ShaftTorque', in_ShaftRPM'], ...
+        {'Shaft_Torque', 'Shaft_Revolutions'});
+    
+    % Execute
+    testcase.call('isShaftPowerAvailable', testcase.InvalidIMO,...
+        '@out');
+    
+    % Verify
+    [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
+    msg_isAvail = ['Shaft power is expected to be available when shaft ',...
+        'torque and rpm are available.'];
+    testcase.verifyTrue(act_isAvail, msg_isAvail);
+    
+    end
+    
 end
 
 methods
@@ -527,8 +567,9 @@ methods
     conn = testcase.Connection;
     inputs_s = '()';
     if nargin > 2
-        inputs_c = cellstr(varargin{1});
-        inputs_s = ['(' strjoin(inputs_c, ', ') ')'];
+        v = varargin;
+        v = cellfun(@cellstr, v);
+        inputs_s = ['(' strjoin(v, ', ') ')'];
     end
     
     sql_s = ['CALL ' funcname, inputs_s, ';'];
@@ -634,6 +675,7 @@ methods
     
     sql_insert = ['INSERT INTO ' testcase.TableName ' ' names_str ' VALUES ' , ...
         ' ', data_str, ';'];
+    sql_insert = strrep(sql_insert, 'NaN', 'NULL');
     adodb_query(sqlConn, sql_insert);
     
     end
@@ -641,7 +683,6 @@ methods
 end
 
 end
-
 
     % Input
     
