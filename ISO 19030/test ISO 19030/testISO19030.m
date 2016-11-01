@@ -486,6 +486,32 @@ methods(Test)
     
     end
     
+    function testupdateDeliveredPower(testcase)
+    % Test that delivered power will be updated based on shaft power data 
+    % if available or on fuel consumption data otherwise. 
+    % 1: Test that delivered power will be given the values of shaft power
+    % if shaft power is available.
+    % 2: Test that, if shaft power is not available and brake power is,
+    % delivered power will be given the values of brake power.
+    % 3: Test that, if neither shaft power nor brake power are available,
+    % an error will be returned.
+    
+    % 1
+    % Input
+    in_shaftPower = 10:10:30;
+    [startrow, count] = testcase.insert(in_shaftPower', {'Shaft_Power'});
+    exp_del = num2cell(in_shaftPower)';
+    
+    % Execute
+    testcase.call('updateDeliveredPower', testcase.AlmavivaIMO);
+    
+    % Verify
+    act_del = testcase.read('Delivered_Power', startrow, count);
+    msg_del = ['Delivered Power is expected to be equal to shaft power when',...
+        'shaft power is available'];
+    testcase.verifyEqual(act_del, exp_del, msg_del);
+    
+    end
 end
 
 methods
