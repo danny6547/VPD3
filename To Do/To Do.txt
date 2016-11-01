@@ -28,8 +28,11 @@ ISO19030: write
 updateDeliveredPower: write
 # isShaftPowerAvailable: test
 # isShaftPowerAvailable: write
+# isBrakePowerAvailable: test
+# isBrakePowerAvailable: write
 insertDNVGLIntoPerformance: test
 insertDNVGLIntoPerformance: write
 updateExpectedSpeed: include conditions for admiralty formula
 insertIntoSpeedPowerCoefficients: calculate R2 value and validate against ISO standard (0.8)
 updateAirResistanceNoWind: find coefficient in bin CLOSEST to centred on zero (create BinCentres Column in WindCoefficientDirection?)
+createRawData: modify double precision to reflect real-world values

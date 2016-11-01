@@ -498,27 +498,37 @@ methods(Test)
     
     % 1
     % Input
-    in_shaftPower = 10:10:30;
-    [startrow, count] = testcase.insert(in_shaftPower', {'Shaft_Power'});
-    exp_del = num2cell(in_shaftPower)';
+    in_torque = 1e4:1e4:3e4;
+    in_revs = 10:10:30;
+    [startrow, count] = testcase.insert([in_torque', in_revs'], ...
+        {'Shaft_Torque', 'Shaft_Revolutions'});
     
     % Execute
     testcase.call('updateDeliveredPower', testcase.AlmavivaIMO);
     
     % Verify
     act_del = testcase.read('Delivered_Power', startrow, count);
+    act_allNull = any(cellfun(@isnan, act_del));
     msg_del = ['Delivered Power is expected to be equal to shaft power when',...
         'shaft power is available'];
-    testcase.verifyEqual(act_del, exp_del, msg_del);
+    testcase.verifyFalse(act_allNull, msg_del);
     
     % 2
     % Input
+    testcase.dropTable;
+    testcase.createTable;
+    
     
     
     % Execute
-    
+    testcase.call('updateDeliveredPower', testcase.AlmavivaIMO);
     
     % Verify
+    act_del = testcase.read('Delivered_Power', startrow, count);
+    act_allNull = any(cellfun(@isnan, act_del));
+    msg_brake = ['Delivered Power is expected to be equal to brake power when',...
+        'shaft power is unavailable but brake power is.'];
+    testcase.verifyFalse(act_allNull, msg_brake);
     
     
     end
@@ -573,6 +583,68 @@ methods(Test)
     
     end
     
+    function testisBrakePowerAvailable(testcase)
+    % Test that if data sufficient for brake power calculation, return true
+    % Test that if data for the equation of brake power, C1 in the ISO
+    % 19030-2 standard, is available then the procedure will return TRUE.
+    % 1: Test that, if data is available for Lower_Caloirifc_Value_Fuel_Oil
+    % and Mass_Consumed_Fuel_Oil, procedure will return TRUE.
+    % 2: Test that, if data is unavailable or cannot be calculated for 
+    % either Lower_Caloirifc_Value_Fuel_Oil or Mass_Consumed_Fuel_Oil,
+    % procedure will return FALSE.
+    
+    % 1:
+    % Input
+    in_LCV = 42:44;
+    in_VFOC = 20:5:30;
+    in_FuelDens = 300:5:310;
+    in_DensChange = 1:3;
+    in_FuelTemp = 50:52;
+    testcase.insert([in_LCV', in_VFOC', in_FuelDens', in_DensChange', ...
+        in_FuelTemp'], {'Lower_Caloirifc_Value_Fuel_Oil', ...
+                        'Volume_Consumed_Fuel_Oil',...
+                        'Density_Fuel_Oil_15C',...
+                        'Density_Change_Rate_Per_C',...
+                        'Temp_Fuel_Oil_At_Flow_Meter'});
+    
+    % Execute
+    testcase.call('isBrakePowerAvailable', testcase.InvalidIMO, '@out');
+    
+    % Verify
+    [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
+    act_isAvail = logical(str2double([act_isAvail{:}]));
+    msg_avail = ['Output expected to be true when MFOC and LCV are both ',...
+        'given or can be calculated.'];
+    testcase.verifyTrue(act_isAvail, msg_avail);
+    
+    % 2:
+    % Input
+    testcase.dropTable;
+    testcase.createTable;
+    
+    in_LCV = 42:44;
+    in_VFOC = 20:5:30;
+    in_FuelDens = 300:5:310;
+    in_DensChange = 1:3;
+    in_FuelTemp = nan(1, 3);
+    testcase.insert([in_LCV', in_VFOC', in_FuelDens', in_DensChange', ...
+        in_FuelTemp'], {'Lower_Caloirifc_Value_Fuel_Oil', ...
+                        'Volume_Consumed_Fuel_Oil',...
+                        'Density_Fuel_Oil_15C',...
+                        'Density_Change_Rate_Per_C',...
+                        'Temp_Fuel_Oil_At_Flow_Meter'});
+    
+    % Execute
+    testcase.call('isBrakePowerAvailable', testcase.InvalidIMO, '@out');
+    
+    % Verify
+    [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
+    act_isAvail = logical(str2double([act_isAvail{:}]));
+    msg_avail = ['Output expected to be false when either MFOC or LCV cannot ',...
+        'be calculated.'];
+    testcase.verifyFalse(act_isAvail, msg_avail);
+    
+    end
 end
 
 methods
