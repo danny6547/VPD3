@@ -35,13 +35,17 @@ adodb_query(sqlConn, create_s);
 % Load data into temp table
 loadInfileCSV(csvfile, 'test2', tempTable);
 
-% Call procedure to add time into DateTime
-addTime_s = ['CALL addTimeDNVGLRaw(' '''' tempTable ''');'];
-adodb_query(sqlConn, addTime_s);
-
 % Call procedute to remove any all-null rows from temp table
 noNulls_s = 'CALL removeNullRows';
 adodb_query(sqlConn, noNulls_s);
+
+% Call procedure to add time into DateTime
+addTime_s = 'CALL addTimeDNVGLRaw;';
+adodb_query(sqlConn, addTime_s);
+
+% Call procedure to add time into DateTime
+convertRaw_s = 'CALL convertDNVGLRawToRawData;';
+adodb_query(sqlConn, convertRaw_s);
 
 % Move data to final table, ignoring non-unique values
 final_s = 'CALL insertWithoutDuplicates';
