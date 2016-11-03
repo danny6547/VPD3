@@ -32,8 +32,16 @@ create_s = fscanf(fopen(filename), '%c');
 create_s(1:130) = [];
 adodb_query(sqlConn, create_s);
 
+% Load infile defaults for DNVGL raw table
+delimiter_s = ',';
+ignore_s = 1;
+set_s = ['SET Date_UTC = STR_TO_DATE(@Date_UTC, ''%d/%m/%Y''), ', ...
+         'Time_UTC = STR_TO_DATE(@Time_UTC, '' %H:%i''), '];
+setnull_c = {'Date_UTC', 'Time_UTC'};
+
 % Load data into temp table
-loadInfileCSV(csvfile, 'test2', tempTable);
+loadInfile(csvfile, 'test2', tempTable, delimiter_s, ignore_s, set_s,...
+    setnull_c);
 
 % Call procedute to remove any all-null rows from temp table
 noNulls_s = 'CALL removeNullRows';
