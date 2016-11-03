@@ -2,26 +2,20 @@
 
 delimiter //
 
-CREATE PROCEDURE addTimeDNVGLRaw(IMO int)
+CREATE PROCEDURE addTimeDNVGLRaw()
 BEGIN
-
+	
 	IF NOT EXISTS( SELECT NULL
-    
+		
 		FROM INFORMATION_SCHEMA.COLUMNS
-	    WHERE table_name = 'rawdata'
+	    WHERE table_name = 'tempraw'
 		AND table_schema = 'test2'
 		AND column_name = 'DateTime_UTC')
         
-        THEN CALL addTimeColDNVGLRaw;
+        THEN CALL addTimeColDNVGLRaw('tempraw');
 	END IF;
     
-    /* Create datetime from inputs */
-    CREATE TABLE tempRaw (id INTEGER PRIMARY KEY AUTO_INCREMENT, idRaw INT, Date_UTC DATE, Time_UTC TIME, DateTime_UTC DATETIME);
-    INSERT INTO tempRaw (idRaw, Date_UTC, Time_UTC, DateTime_UTC) SELECT idRaw, Date_UTC, Time_UTC, ADDTIME(Date_UTC, Time_UTC) FROM rawdata WHERE IMO_Vessel_Number = IMO;
-    
     /* Update */
-	UPDATE rawdata SET DateTime_UTC = ADDTIME(Date_UTC, Time_UTC) WHERE rawdata.id IN (SELECT idRaw FROM tempRaw);
+	UPDATE tempraw SET DateTime_UTC = ADDTIME(Date_UTC, Time_UTC);
     
-    /* Remove Temp table*/ 
-	DROP TABLE tempRaw;
 END;

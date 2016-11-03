@@ -35,9 +35,7 @@ BEGIN
     ELSE
 		
 		SIGNAL powerIncalculable
-		  SET MESSAGE_TEXT = 'Delivered Power cannot be calculated
-			 without either sufficient inputs for shaft power or 
-            brake power';
+		  SET MESSAGE_TEXT = 'Delivered Power cannot be calculated without either sufficient inputs for shaft power or brake power';
 		
     END IF;
 END;
