@@ -682,6 +682,42 @@ methods(Test)
     
     end
     
+    function testupdateLCVFuelOil(testcase)
+    % Test that LCV of fuel oil is read from table appropriately 
+    % 1: Test that values of column Lower_Caloirifc_Value_Fuel_Oil will be
+    % updated based on the corresponding value under column
+    % Lower_Heating_Value in table BunkerDeliveryNote of the column
+    % BDN_Number.
+    
+    % Input
+    LCV_v = [40.5, 42.8, 49.32, 46.5, 40.5, 42.7, 42.7];
+    bdnAll_c = {'Default_HFO'
+                'Default_LFO'
+                'Default_LNG'
+                'Default_LPG'
+                'Default_LSHFO'
+                'Default_MDO'
+                'Default_MGO'};
+    bdn_c = {'Default_HFO', 'Default_LNG'};
+    bdn_l = ismember(bdnAll_c, bdn_c);
+    
+    sqlAddCol_s = 'ALTER TABLE tempRawISO ADD ME_Fuel_BDN VARCHAR(40);';
+    adodb_query(testcase.Connection, sqlAddCol_s);
+    
+    [startrow, count] = testcase.insert(bdn_c', {'ME_Fuel_BDN'});
+    exp_lcv = num2cell( LCV_v(bdn_l) )';
+    
+    % Execute
+    testcase.call('updateLCVFuelOil');
+    
+    % Verify
+    act_lcv = testcase.read('Lower_Caloirifc_Value_Fuel_Oil', startrow, ...
+        count);
+    msg_lcv = ['LCV values expected to match those in table '...
+        'BunkerDeliveryNote for the corresponding rows of BDN_Number.'];
+    testcase.verifyEqual(act_lcv, exp_lcv, msg_lcv);
+    
+    end
 end
 
 methods

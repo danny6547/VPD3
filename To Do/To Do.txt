@@ -37,3 +37,6 @@ insertIntoSpeedPowerCoefficients: calculate R2 value and validate against ISO st
 updateAirResistanceNoWind: find coefficient in bin CLOSEST to centred on zero (create BinCentres Column in WindCoefficientDirection?)
 createRawData: modify double precision to reflect real-world values
 updateBrakePower: allow for multiple engines per IMO
+bunkerDeliveryNote: make BDN_number unique. This will both ensure that no duplicates rows are added when adding notes from different ships, and that only one value can be indexed for raw data.
+# updateLCVFuelOil: test
+# updateLCVFuelOil: write
