@@ -30,6 +30,7 @@ ISO19030: write
 # isShaftPowerAvailable: write
 # isBrakePowerAvailable: test
 # isBrakePowerAvailable: write
+# convertDNVGLRawToRawData: write
 insertDNVGLIntoPerformance: test
 insertDNVGLIntoPerformance: write
 updateExpectedSpeed: include conditions for admiralty formula
@@ -40,3 +41,5 @@ updateBrakePower: allow for multiple engines per IMO
 bunkerDeliveryNote: make BDN_number unique. This will both ensure that no duplicates rows are added when adding notes from different ships, and that only one value can be indexed for raw data.
 # updateLCVFuelOil: test
 # updateLCVFuelOil: write
+insertWithoutDuplicates: test
+# insertWithoutDuplicates: write
