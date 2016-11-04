@@ -1,5 +1,7 @@
 movingAverages: write test 
 performanceData: Test for case of 0 dry dock dates
 plotPerformnceData: Fix bug in name of graph in case of no vessel name information
-loadInfileDNVGLRaw: rename to loadInfileCSV, extract csv-relavant part, rewrite loadInfileDNVGLRaw with one input
-updateBrakePower: allow for multiple engines per IMO
+# loadInfileDNVGLRaw: rename to loadInfileCSV, extract csv-relavant part, rewrite loadInfileDNVGLRaw with one input
+connectDatabase: write function to connect to given database, return connection object.
+connectDatabase: test
+validateCellStr: write function to return validateAttributes-style error message if all elements of input cell are not strings.

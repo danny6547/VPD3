@@ -9,7 +9,6 @@ function loadInfileDNVGLRaw(csvfile)
 % array of strings giving the paths to files of the type described above
 % will add the data in all these files to the database.
 
-
 database = 'test2';
 
 % Connect to Database
@@ -56,8 +55,40 @@ convertRaw_s = 'CALL convertDNVGLRawToRawData;';
 adodb_query(sqlConn, convertRaw_s);
 
 % Move data to final table, ignoring non-unique values
-final_s = 'CALL insertWithoutDuplicates';
-adodb_query(sqlConn, final_s);
+toTable = 'rawdata';
+columns =   {
+            'DateTime_UTC'
+            'IMO_Vessel_Number'
+            'Relative_Wind_Speed'
+            'Relative_Wind_Direction'
+            'Speed_Over_Ground'
+            'Shaft_Revolutions'
+            'Static_Draught_Fore'
+            'Static_Draught_Aft'
+            'Water_Depth'
+            'Seawater_Temperature'
+            'Air_Temperature'
+            'Air_Pressure'
+            'Speed_Through_Water'
+            'Mass_Consumed_Fuel_Oil'
+            'Lower_Caloirifc_Value_Fuel_Oil'
+            'Density_Fuel_Oil_15C'
+            % 'Density_Change_Rate_Per_C'
+            % 'Temp_Fuel_Oil_At_Flow_Meter'
+            % 'Wind_Resistance_Relative'
+            % %'Air_Resistance_No_Wind'
+            % 'Expected_Speed_Through_Water'
+            % 'Displacement'
+            % 'Speed_Loss'
+            % 'Transverse_Projected_Area_Current'
+            % 'Wind_Resistance_Correction'
+            % 'Corrected_Power'
+            };
+duplicateCols = {'DateTime_UTC', 'IMO_Vessel_Number'};
+insertWithoutDuplicates(tempTable, toTable, columns, duplicateCols)
+
+% final_s = 'CALL insertWithoutDuplicates';
+% adodb_query(sqlConn, final_s);
 
 % Close connection
 sqlConn.Close;
