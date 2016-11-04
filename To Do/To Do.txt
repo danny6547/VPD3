@@ -43,3 +43,4 @@ bunkerDeliveryNote: make BDN_number unique. This will both ensure that no duplic
 # updateLCVFuelOil: write
 insertWithoutDuplicates: test
 # insertWithoutDuplicates: write
+# updateLCVFuelOil: rename to updateFromBunkerNote, include update of density value

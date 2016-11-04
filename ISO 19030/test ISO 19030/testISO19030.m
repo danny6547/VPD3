@@ -682,13 +682,18 @@ methods(Test)
     
     end
     
-    function testupdateLCVFuelOil(testcase)
-    % Test that LCV of fuel oil is read from table appropriately 
+    function testupdateFromBunkerNote(testcase)
+    % Test that LCV and density of fuel are read from table appropriately 
     % 1: Test that values of column Lower_Caloirifc_Value_Fuel_Oil will be
     % updated based on the corresponding value under column
     % Lower_Heating_Value in table BunkerDeliveryNote of the column
     % BDN_Number.
+    % 2: Test that values of column Density_Fuel_Oil_15C will be updated
+    % based on the corresponding value under column Density_At_15dg in
+    % table BunkerDeliveryNote of the column
+    % BDN_Number.
     
+    % 1:
     % Input
     LCV_v = [40.5, 42.8, 49.32, 46.5, 40.5, 42.7, 42.7];
     bdnAll_c = {'Default_HFO'
@@ -708,11 +713,27 @@ methods(Test)
     exp_lcv = num2cell( LCV_v(bdn_l) )';
     
     % Execute
-    testcase.call('updateLCVFuelOil');
+    testcase.call('updateFromBunkerNote');
     
     % Verify
     act_lcv = testcase.read('Lower_Caloirifc_Value_Fuel_Oil', startrow, ...
         count);
+    msg_lcv = ['LCV values expected to match those in table '...
+        'BunkerDeliveryNote for the corresponding rows of BDN_Number.'];
+    testcase.verifyEqual(act_lcv, exp_lcv, msg_lcv);
+    
+    % 2:
+    % Input
+    dens_v = [0.991, 0.98, 0.44, 0.58, 0.986, 0.9, 0.89];
+    bdn_l = ismember(bdnAll_c, bdn_c);
+    [startrow, count] = testcase.insert(bdn_c', {'ME_Fuel_BDN'});
+    exp_lcv = num2cell( dens_v(bdn_l) )';
+    
+    % Execute
+    testcase.call('updateFromBunkerNote');
+    
+    % Verify
+    act_lcv = testcase.read('Density_Fuel_Oil_15C', startrow, count);
     msg_lcv = ['LCV values expected to match those in table '...
         'BunkerDeliveryNote for the corresponding rows of BDN_Number.'];
     testcase.verifyEqual(act_lcv, exp_lcv, msg_lcv);

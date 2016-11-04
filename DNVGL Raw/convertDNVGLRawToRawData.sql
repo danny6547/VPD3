@@ -71,7 +71,8 @@ BEGIN
     
     /* Volume of consumed fuel oil not found in DNVGL raw files. Procedure `updateMassFuelOilConsumed` not compatible with this input file type. */
     
-    /* LCV is a bunker report variable */
+    /* LCV is a bunker report variable. It can be read from bunker delivery note table. */
+    CALL updateLCVFuelOil;
     
     /* Normalied Energy Consumed is a derived variable */
     
