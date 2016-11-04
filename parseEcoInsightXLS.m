@@ -24,25 +24,49 @@ for fi = 1:numFiles
     
     % Read
     [dat, txt] = xlsread(filename{fi});
-    dataStartRow(fi) = find(cellfun(@(x) isequal(x, 'Date'), txt(:, 1)), 1) + 1;
+        version = 0;
+    try dataStartRow(fi) = find(cellfun(@(x) isequal(x, 'Date'), txt(:, 1)), 1) + 1;
+        
+        version = 2;
+        
+    catch e
+        
+        try dataStartRow(fi) = find(cellfun(@(x) isequal(x, '     Date'), txt(:, 1)), 1) + 1;
+        
+            version = 1;
+        catch ee
+            
+            rethrow(e);
+            
+        end
+    end
+    
+    
     date_c = txt(dataStartRow(fi):end, 1);
     pidx = dat(:, 1);
     regr = dat(:, 3);
     
-    shipDataLength = 18;
-    shipdataEnd = dataStartRow(fi) - 3;
-    shipdataStart = shipdataEnd - shipDataLength;
-    shipdata = txt(shipdataStart : shipdataEnd, [1, 4]);
-    shipdata( cellfun(@isempty, shipdata(:, 1)), :) = [];
-    fnames_c = shipdata(:, 1);
-    fnames_c = regexprep(fnames_c, {' ', '[', '%', ']'}, repmat({'_'}, 1, 4));
-    
-    if fi == 1
-        ship(fi) = cell2struct(cell(length(fnames_c), 1), fnames_c, 1);
-        % ship = repmat(struct(), [numFiles, 1]);
+    if version == 2
+        shipDataLength = 18;
+        shipdataEnd = dataStartRow(fi) - 3;
+        shipdataStart = shipdataEnd - shipDataLength;
+        shipdata = txt(shipdataStart : shipdataEnd, [1, 4]);
+        shipdata( cellfun(@isempty, shipdata(:, 1)), :) = [];
+        fnames_c = shipdata(:, 1);
+        fnames_c = regexprep(fnames_c, {' ', '[', '%', ']'}, repmat({'_'}, 1, 4));
+
+        if fi == 1
+            ship(fi) = cell2struct(cell(length(fnames_c), 1), fnames_c, 1);
+            % ship = repmat(struct(), [numFiles, 1]);
+        end
+
+        ship(fi) = cell2struct(shipdata(:, 2), fnames_c, 1);
+        
+    else
+        
+        ship = struct();
+
     end
-    
-    ship(fi) = cell2struct(shipdata(:, 2), fnames_c, 1);
     
     % Convert Date
     date_c = cellfun(@(x) datenum(x, 'dd-mm-yyyy'), date_c, 'Uni', 0);
