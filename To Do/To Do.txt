@@ -45,4 +45,4 @@ insertWithoutDuplicates: test
 # insertWithoutDuplicates: write
 # updateLCVFuelOil: rename to updateFromBunkerNote, include update of density value
 # removeInvalidRecords: test for remove rows where: mfoc is zero,
-removeInvalidRecords: write
+# removeInvalidRecords: write

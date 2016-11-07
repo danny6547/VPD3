@@ -764,7 +764,7 @@ methods(Test)
     nZero = 1;
     mfoc_v = abs(randn(1, nData));
     zeroI = randperm(nData, nZero);
-    mfoc_v(zeroI) = 0;
+    mfoc_v(zeroI) = -randi([0, 1]);
     
     [startrow, count] = testcase.insert(mfoc_v', {'Mass_Consumed_Fuel_Oil'});
     
