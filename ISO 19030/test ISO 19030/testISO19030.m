@@ -320,9 +320,19 @@ methods(Test)
     
     % 1
     % Input
+    in_DeliveredPower = 30e4:10e4:50e4;
+    q = 1:10;
+    e = repmat(in_DeliveredPower, size(q', 1), 1);
+    r = repmat(q', 1, size(in_DeliveredPower, 2));
+    w = e.*(10.^r);
+    numTests = size(in_DeliveredPower, 1);
+    
+    for ti = 1:numTests
+    
     in_A = testcase.AlmavivaSpeedPowerCoefficients(1);
     in_B = testcase.AlmavivaSpeedPowerCoefficients(2);
-    in_DeliveredPower = 30e4:10e4:50e4;
+%     in_DeliveredPower = 30e4:10e4:50e4;
+    in_DeliveredPower = w(ti, :);
     [startrow, count] = testcase.insert(in_DeliveredPower', ...
         {'Delivered_Power'});
     
@@ -338,6 +348,7 @@ methods(Test)
         'the speed-power curve for this vessel.'];
     testcase.verifyEqual(act_espeed, exp_espeed, 'RelTol', 1e-5, msg_espeed);
     
+    end
     end
     
     function testupdateWindResistanceCorrection(testcase)
@@ -737,6 +748,37 @@ methods(Test)
     msg_lcv = ['LCV values expected to match those in table '...
         'BunkerDeliveryNote for the corresponding rows of BDN_Number.'];
     testcase.verifyEqual(act_lcv, exp_lcv, msg_lcv);
+    
+    end
+    
+    function testremoveInvalidRecords(testcase)
+    % Test that records marked invalid based on conditions are removed
+    % 1: Test that records with zero Mass_Consumed_Fuel_Oil are removed.
+    
+    import matlab.unittest.constraints.EveryElementOf;
+    import matlab.unittest.constraints.IsGreaterThan;
+    
+    % 1
+    % Input
+    nData = 2;
+    nZero = 1;
+    mfoc_v = abs(randn(1, nData));
+    zeroI = randperm(nData, nZero);
+    mfoc_v(zeroI) = 0;
+    
+    [startrow, count] = testcase.insert(mfoc_v', {'Mass_Consumed_Fuel_Oil'});
+    
+    % Execute
+    testcase.call('removeInvalidRecords');
+    
+    % Verify
+    mfoc_act = testcase.read('Mass_Consumed_Fuel_Oil', startrow, count);
+    mfoc_act = [mfoc_act{:}];
+    ZeroMfoc_act = EveryElementOf(mfoc_act);
+    ZeroMfoc_cons = IsGreaterThan(0);
+    ZeroMfoc_Msg = ['All elements of Mass_Consumed_Fuel_Oil are expected '...
+            'to be greater than 0.'];
+    testcase.verifyThat(ZeroMfoc_act, ZeroMfoc_cons, ZeroMfoc_Msg);
     
     end
 end
