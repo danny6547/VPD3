@@ -5,6 +5,6 @@ delimiter //
 CREATE PROCEDURE removeInvalidRecords()
 BEGIN
 
-	SELECT * FROM tempRawISO;
+	DELETE FROM tempRawISO WHERE Mass_Consumed_Fuel_Oil = 0;
     
 END;
