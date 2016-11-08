@@ -6,6 +6,6 @@ CREATE PROCEDURE deleteWithReferenceConditions()
 
 BEGIN
 	
-	
+	DELETE FROM tempRawISO WHERE Seawater_Temperature <= 2;
     
 END;
