@@ -27,7 +27,7 @@ properties(Constant, Hidden)
     
     DateTimeFormSQL = 'yyyy-mm-dd HH:MM:SS';
     DateTimeFormAdodb = 'dd-mm-yyyy HH:MM:SS';
-    SFOCCoefficients = [-6949.127353, -0.000132468, 7.918354135];
+    SFOCCoefficients = [-6949.127353, 7.918354135, -0.000132468];
     InvalidIMO = sprintf('%u', [1:6, 8]);
     AlmavivaIMO = sprintf('%u', 9450648);
     AlmavivaBreadth = 42.8;
@@ -38,6 +38,8 @@ properties(Constant, Hidden)
     AlmavivaWindResistCoeffHead = 0.0001512;
     AlmavivaDesignDraft = 15;
     AlmavivaPropulsiveEfficiency = 0.71;
+    MinimumFOCph = 3989.96;
+    minTemp = 2;
     
 end
 
@@ -95,6 +97,110 @@ methods(TestClassTeardown)
     
     end
     
+end
+
+methods(Static)
+    
+    function [R, in, out] = randOutThreshold(sz, varargin)
+    % Random data with some, but not all, values within thresholds
+    
+    % Input
+    R = [];
+    in = [];
+    out = [];
+    if nargin == 1
+       R = rand(sz);
+    else
+       R = nan(sz);
+    end
+    
+    if prod(sz) == 1
+        
+       errid = 'db:randThresh:InsufficientSize';
+       errmsg = ['Input data size, SZ, must correspond to two or more ',...
+           'elements in order to return values within and without ',...
+           'thresholds.'];
+       error(errid, errmsg);
+    end
+    
+    % Check that conditions have accompanying values
+    conditionValue_c = varargin;
+    validateattributes(numel(conditionValue_c)/2, {'numeric'}, {'integer'},...
+        'randOutThreshold', 'condition,value', 2);
+    cellfun(@(x) validateattributes(x, {'function_handle'}, {'scalar'},...
+        'randOutThreshold', 'condition', 2), conditionValue_c(1:2:end));
+    cellfun(@(x) validateattributes(x, {'numeric'}, {'scalar'},...
+        'randOutThreshold', 'value', 3), conditionValue_c(2:2:end));
+    
+    funcNames_c = cellfun(@func2str, conditionValue_c(1:2:end), 'Uni', 0);
+    if any(~ismember(funcNames_c, {'gt', 'ne', 'lt', 'le'}))
+       errid = 'db:randThresh:UnknownOperator';
+       errmsg = 'Input operator must be from the set gt, ne, lt, le.';
+       error(errid, errmsg);
+    end
+    
+    % Prepare conditions
+    squareInputs = [conditionValue_c(1:2:end)', conditionValue_c(2:2:end)'];
+    
+    % Get indices of data to fail and pass condition
+    nData = prod(sz);
+    nOut = floor(nData / 2);
+    outI = randperm(nData, nOut);
+    out_l = ismember(1:nData, outI);
+    in_l = ~out_l;
+    nIn = numel(find(in_l));
+    
+    % Get ranges of passing and failing values
+    minVal_l = cellfun(@(x) isequal(x, @gt), squareInputs(:, 1));
+    minVal = min(cell2mat(squareInputs(minVal_l, 2)));
+    
+    maxVal_l = cellfun(@(x) isequal(x, @lt), squareInputs(:, 1));
+    maxVal = max(cell2mat(squareInputs(maxVal_l, 2)));
+    
+    eqVal_l = cellfun(@(x) isequal(x, @eq), squareInputs(:, 1));
+    eqVal = cell2mat(squareInputs(eqVal_l, 2));
+    
+    neqVal_l = cellfun(@(x) isequal(x, @ne), squareInputs(:, 1));
+    neqVal = cell2mat(squareInputs(neqVal_l, 2));
+    
+    if ~isempty(minVal) && isempty(maxVal)
+        
+        passes_v = minVal + rand(1, nIn);
+        fails_v = minVal - rand(1, nOut);
+        
+    end
+    if ~isempty(maxVal) && isempty(minVal)
+        
+        passes_v = maxVal - rand(1, nIn);
+        fails_v = maxVal + rand(1, nOut);
+        
+    end
+    if ~isempty(maxVal) && ~isempty(minVal)
+        
+        passes_v = -minVal + (maxVal - minVal).* rand(1, nIn);
+        fails_v = minVal - rand(1, nOut);
+        
+    end
+    if ~isempty(neqVal)
+        
+        passes_v = randn(1, nIn);
+        while ~isempty(passes_v(passes_v == neqVal))
+            passes_v(passes_v == neqVal) = randn(numel(...
+                find(passes_v == neqVal)));
+        end
+        fails_v = repmat(neqVal, 1, nOut);
+    end
+    if ~isempty(eqVal)
+        passes_v = repmat(eqVal, 1, nIn);
+    end
+    
+    R(in_l) = passes_v;
+    R(out_l) = fails_v;
+    
+    in = in_l;
+    out = out_l;
+    
+    end
 end
 
 methods(Test)
@@ -171,14 +277,14 @@ methods(Test)
     % ISO standard 19030-2, Annexes C and D. 
     
     % Inputs
-    in_massfoc = [50, 75, 60];
+    in_massfoc = [1e5, 1.5e5, 2e5];
     in_lcv = [42, 41.9, 43];
     in_data = [in_massfoc', in_lcv'];
     in_names = {'Mass_Consumed_Fuel_Oil', 'Lower_Caloirifc_Value_Fuel_Oil'};
     in_IMO = testcase.AlmavivaIMO;
     [startrow, numrows] = testcase.insert(in_data, in_names);
     
-    x = in_massfoc.* (in_lcv ./ 42.7);
+    x = in_massfoc.* (in_lcv ./ 42.7) ./ 24;
     coeff = testcase.SFOCCoefficients;
     exp_brake = num2cell(coeff(3)*x.^2 + coeff(2)*x + coeff(1))';
     
@@ -189,7 +295,7 @@ methods(Test)
     act_brake = testcase.read('Brake_Power', startrow, numrows);
     msg_brake = ['Updated Brake Power is expected to match that calculated',...
         ' from mass of fuel oil consumed and the SFOC curve'];
-    testcase.verifyEqual(act_brake, exp_brake, 'RelTol', 1e-9, msg_brake);
+    testcase.verifyEqual(act_brake, exp_brake, 'RelTol', 1e-8, msg_brake);
     
     end
     
@@ -779,6 +885,71 @@ methods(Test)
     ZeroMfoc_Msg = ['All elements of Mass_Consumed_Fuel_Oil are expected '...
             'to be greater than 0.'];
     testcase.verifyThat(ZeroMfoc_act, ZeroMfoc_cons, ZeroMfoc_Msg);
+    
+    end
+    
+    function testremoveFOCBelowMinimum(testcase)
+    % Test that rows are removed for MFOC values below engine minimum.
+    % 1: Test that values of Mass_Consumed_Fuel_Oil below the corresponding
+    % value of Minimum_FOC_ph for the corresponding engine will be removed
+    % for corresponding reporting frequencies.
+    
+    import matlab.unittest.constraints.EveryElementOf;
+    import matlab.unittest.constraints.IsGreaterThan;
+    
+    % 1
+    % Input
+    minFOCph = testcase.MinimumFOCph;
+    minFOC = minFOCph*24;
+    maxFOC = minFOC + 1e3;
+    nData = 2;
+    nBelow = 1;
+    mfoc_v = (maxFOC - minFOC).*rand(1, nData) + minFOC;
+    belowI = randperm(nData, nBelow);
+    mfoc_v(belowI) = randi([0, floor(minFOC) - 1]);
+    [startrow, count] = testcase.insert(mfoc_v', {'Mass_Consumed_Fuel_Oil'});
+    
+    % Execute
+    testcase.call('removeFOCBelowMinimum', testcase.AlmavivaIMO);
+    
+    % Verify
+    mfoc_act = testcase.read('Mass_Consumed_Fuel_Oil', startrow, count);
+    mfoc_act = [mfoc_act{:}];
+    minfoc_act = EveryElementOf(mfoc_act);
+    minfoc_cons = IsGreaterThan(minFOC);
+    minfoc_msg = ['All elements of Mass_Consumed_Fuel_Oil are expected to ',...
+        'be above the minimum foc for the engine.'];
+    testcase.verifyThat(minfoc_act, minfoc_cons, minfoc_msg);
+    
+    end
+    
+    function testdeleteWithReferenceConditions(testcase)
+    % Test that values are filtered based on reference conditions
+    % 1: Test that values for the reference conditions outlined in section
+    % 6.2.1 of the ISO 19030-2 standard are fullfilled.
+    
+    % Input
+    import matlab.unittest.constraints.EveryElementOf;
+    import matlab.unittest.constraints.IsGreaterThan;
+    
+    mintemp = testcase.minTemp;
+    testSz = [1, 2];
+    inTemp_v = testcase.randOutThreshold(testSz, @lt, mintemp);
+    inputData_m = [inTemp_v'];
+    inputNames_c = {'Seawater_Temperature'};
+    [startrow, count] = testcase.insert(inputData_m, inputNames_c);
+    
+    % Execute
+    testcase.call('deleteWithReferenceConditions');
+    
+    % Verify
+    temp_act = testcase.read('Seawater_Temperature', startrow, count);
+    temp_act = [temp_act{:}];
+    reftemp_act = EveryElementOf(temp_act);
+    reftemp_cons = IsGreaterThan(mintemp);
+    temp_msg = ['Water temperatures at or below 2 degrees Celsius should ',...
+        'be removed.'];
+    testcase.verifyThat(reftemp_act, reftemp_cons, temp_msg);
     
     end
 end

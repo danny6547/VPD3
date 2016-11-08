@@ -46,3 +46,7 @@ insertWithoutDuplicates: test
 # updateLCVFuelOil: rename to updateFromBunkerNote, include update of density value
 # removeInvalidRecords: test for remove rows where: mfoc is zero,
 # removeInvalidRecords: write
+updateBrakePower: make compatible with arbitrary-frequency data
+removeFOCBelowMinimum: remove values of Mfoc below the minimum FOC of the SFOC reference curve.
+deleteWithReferenceConditions: test remove values corresponding to those failing the reference conditions in the standard.
+deleteWithReferenceConditions: write
