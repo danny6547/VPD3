@@ -7,6 +7,7 @@ BEGIN
 
 	/* Get retreived data set 5.3.3 */
     CALL createTempRawISO(imo);
+    CALL removeInvalidRecords();
     CALL sortOnDateTime();
     
     /* Normalise frequency rates 5.3.3.1 */
@@ -15,17 +16,18 @@ BEGIN
     
     /* Correct for environmental factors 5.3.5 */
     CALL updateDeliveredPower(imo);
+    CALL removeFOCBelowMinimum(imo);
     
     CALL updateWindResistanceRelative(imo);
 	CALL updateAirResistanceNoWind(imo);
 	CALL updateWindResistanceCorrection(imo);
     
-    CALL updateCorrectPower(imo);
+    CALL updateCorrectedPower();
     
     /* Calculate Performance Values 5.3.6.2 */
     CALL updateExpectedSpeed(imo);
     
     /* Calculate Performance Values 5.3.6.1 */
-    CALL updateSpeedLoss(imo);
+    CALL updateSpeedLoss();
     
 END;
