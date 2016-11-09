@@ -66,17 +66,19 @@ BEGIN
     
     /* Shaft Torque not found in DNVGL raw files. Procedure `updateShaftPower` not compatible with this input file type. */
     
-	ALTER TABLE tempRaw ADD Mass_Consumed_Fuel_Oil DOUBLE(10, 5);
-    UPDATE tempRaw SET Mass_Consumed_Fuel_Oil = ME_1_Current_Consumption / 1e3;           /* Assume only one engine. */
+	ALTER TABLE tempRaw ADD Mass_Consumed_Fuel_Oil DOUBLE(10, 3);
+    UPDATE tempRaw SET Mass_Consumed_Fuel_Oil = ME_Consumption * 1e3;           /* Assume only one engine. */
     
     /* Volume of consumed fuel oil not found in DNVGL raw files. Procedure `updateMassFuelOilConsumed` not compatible with this input file type. */
     
     /* LCV is a bunker report variable. It can be read from bunker delivery note table. */
-    CALL updateLCVFuelOil;
+    ALTER TABLE tempRaw ADD Lower_Caloirifc_Value_Fuel_Oil DOUBLE(10, 5);
+    ALTER TABLE tempRaw ADD Density_Fuel_Oil_15C DOUBLE(10, 5);
+    CALL updateFromBunkerNote;
     
     /* Normalied Energy Consumed is a derived variable */
     
-    /* Density_Fuel_Oil_15C is a bunker report variable */
+    /* Density_Fuel_Oil_15C is a bunker report variable and will have been updated with previous call to updateFromBunkerNote */
     
     /* Density_Change_Rate_Per_C not found in DNVGL raw files. This may be obtained from another source. */
     
