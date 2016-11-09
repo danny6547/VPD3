@@ -40,6 +40,10 @@ properties(Constant, Hidden)
     AlmavivaPropulsiveEfficiency = 0.71;
     MinimumFOCph = 3989.96;
     minTemp = 2;
+    MinWind = 0;
+    MaxWind = 7.9;
+    GravitationalAcceleration = 9.80665;
+    MaxRudder = 5;
     
 end
 
@@ -913,8 +917,10 @@ methods(Test)
     testcase.call('removeFOCBelowMinimum', testcase.AlmavivaIMO);
     
     % Verify
-    mfoc_act = testcase.read('Mass_Consumed_Fuel_Oil', startrow, count);
+    mfoc_act = testcase.read('Mass_Consumed_Fuel_Oil', startrow - 2, count);
+    testcase.assertNotEmpty(mfoc_act, 'MFOC cannot be empty for test.')
     mfoc_act = [mfoc_act{:}];
+    mfoc_act(isnan(mfoc_act)) = [];
     minfoc_act = EveryElementOf(mfoc_act);
     minfoc_cons = IsGreaterThan(minFOC);
     minfoc_msg = ['All elements of Mass_Consumed_Fuel_Oil are expected to ',...
@@ -925,31 +931,175 @@ methods(Test)
     
     function testdeleteWithReferenceConditions(testcase)
     % Test that values are filtered based on reference conditions
-    % 1: Test that values for the reference conditions outlined in section
+    % Test that values for the reference conditions outlined in section
     % 6.2.1 of the ISO 19030-2 standard are fullfilled.
+    % 1: Test that values of Seawater_Temperature below 2 are removed.
+    % 2: Test that only values of Relative_Wind_Speed between 0 and 7.9
+    % remain after call.
+    % 3: Test that values of Water_Depth less than the greater of the two
+    % formulae 5 and 6 in the standard are removed.
+    % 4: Test that values of Rudder_Angle above 5 are removed.
     
+    % 1
     % Input
     import matlab.unittest.constraints.EveryElementOf;
     import matlab.unittest.constraints.IsGreaterThan;
+    import matlab.unittest.constraints.IsLessThan;
+    testSz = [1, 2];
     
     mintemp = testcase.minTemp;
-    testSz = [1, 2];
+    
     inTemp_v = testcase.randOutThreshold(testSz, @lt, mintemp);
-    inputData_m = [inTemp_v'];
+    inputData_m = inTemp_v';
     inputNames_c = {'Seawater_Temperature'};
     [startrow, count] = testcase.insert(inputData_m, inputNames_c);
     
     % Execute
-    testcase.call('deleteWithReferenceConditions');
+    testcase.call('deleteWithReferenceConditions', testcase.AlmavivaIMO);
     
     % Verify
-    temp_act = testcase.read('Seawater_Temperature', startrow, count);
+    temp_act = testcase.read('Seawater_Temperature', startrow, count, 'id');
     temp_act = [temp_act{:}];
     reftemp_act = EveryElementOf(temp_act);
     reftemp_cons = IsGreaterThan(mintemp);
     temp_msg = ['Water temperatures at or below 2 degrees Celsius should ',...
         'be removed.'];
     testcase.verifyThat(reftemp_act, reftemp_cons, temp_msg);
+    
+    % 2
+    
+    % Input
+    minWind = testcase.MinWind;
+    maxWind = testcase.MaxWind;
+    
+    inputNames_c = {'Relative_Wind_Speed'};
+    inWindSpeed_v = testcase.randOutThreshold(testSz, @lt, 7.9, @gt, 0);
+    inputData_m = inWindSpeed_v';
+    [startrow, count] = testcase.insert(inputData_m, inputNames_c);
+    
+    % Execute
+    testcase.call('deleteWithReferenceConditions', testcase.AlmavivaIMO);
+    
+    % Verify
+    rudder_act = testcase.read('Relative_Wind_Speed', startrow - 1, count,...
+        'id');
+    rudder_act = [rudder_act{:}];
+    rudder_act(isnan(rudder_act)) = [];
+    refwind_act = EveryElementOf(rudder_act);
+    refwind1_cons = IsGreaterThan(minWind);
+    refwind2_cons = IsLessThan(maxWind);
+    temp_msg = ['Wind speeds outside of the range of 0 to 7.9 m/s should ',...
+        'be removed.'];
+    testcase.assertNotEmpty(rudder_act, ['Wind speed must not be non-empty ',...
+        'to be tested.']);
+    testcase.verifyThat(refwind_act, refwind1_cons, temp_msg);
+    testcase.verifyThat(refwind_act, refwind2_cons, temp_msg);
+    
+    % 3
+    
+    % Input
+    inputNames_c = {'Water_Depth', 'Static_Draught_Fore', ...
+        'Static_Draught_Aft', 'Speed_Through_Water'};
+    
+    breadth = testcase.AlmavivaBreadth;
+    g = testcase.GravitationalAcceleration;
+    
+    aftDraft = [12, 0];
+    forDraft = [9, 1];
+    speed = [15, 25];
+    meanDraft = mean([aftDraft; forDraft]);
+    formula5 = 3 .* sqrt(breadth * meanDraft);
+    formula6 = 2.75 .* speed.^2 ./ g;
+    
+    depth5 = testcase.randOutThreshold(testSz, @gt, formula5(1));
+    depth6 = testcase.randOutThreshold(testSz, @gt, formula6(2));
+    depth_v = [depth5, depth6];
+    
+    forDraft = repmat(forDraft, [2, 1]);
+    aftDraft = repmat(aftDraft, [2, 1]);
+    speed = repmat(speed, [2, 1]);
+    
+    datetime_s = datestr(now-3:now, 'yyyy-mm-dd HH:MM:SS');
+    inputData_m = [depth_v(:), forDraft(:), aftDraft(:), speed(:)];
+    [startrow, count] = testcase.insert(inputData_m, inputNames_c);
+    
+    [~, id_c] = adodb_query(testcase.Connection, ...
+        'SELECT id FROM tempRawISO');
+    id_v = [id_c{:}];
+    
+%     update1_s = ['UPDATE ' testcase.TableName ' SET DateTime_UTC = ''' ...
+%         datetime_s(1, :) ''' WHERE id = ' num2str(id_v(3)) ';'];
+%     update2_s = ['UPDATE ' testcase.TableName ' SET DateTime_UTC = ''' ...
+%         datetime_s(2, :) ''' WHERE id = ' num2str(id_v(3 + 1)) ';'];
+%     update3_s = ['UPDATE ' testcase.TableName ' SET DateTime_UTC = ''' ...
+%         datetime_s(3, :) ''' WHERE id = ' num2str(id_v(3 + 2)) ';'];
+%     update4_s = ['UPDATE ' testcase.TableName ' SET DateTime_UTC = ''' ...
+%         datetime_s(4, :) ''' WHERE id = ' num2str(id_v(3 + 3)) ';'];
+    
+    update1_s = ['UPDATE ' testcase.TableName ' SET DateTime_UTC = ''' ...
+        datetime_s(1, :) ''' WHERE id = ' num2str(max(id_v) - 3) ';'];
+    update2_s = ['UPDATE ' testcase.TableName ' SET DateTime_UTC = ''' ...
+        datetime_s(2, :) ''' WHERE id = ' num2str(max(id_v) - 2) ';'];
+    update3_s = ['UPDATE ' testcase.TableName ' SET DateTime_UTC = ''' ...
+        datetime_s(3, :) ''' WHERE id = ' num2str(max(id_v) - 1) ';'];
+    update4_s = ['UPDATE ' testcase.TableName ' SET DateTime_UTC = ''' ...
+        datetime_s(4, :) ''' WHERE id = ' num2str(max(id_v)) ';'];
+    adodb_query(testcase.Connection, update1_s);
+    adodb_query(testcase.Connection, update2_s);
+    adodb_query(testcase.Connection, update3_s);
+    adodb_query(testcase.Connection, update4_s);
+    
+    % Execute
+    testcase.call('deleteWithReferenceConditions', testcase.AlmavivaIMO);
+    
+    % Verify
+    depth5_act = testcase.read('Water_Depth', startrow, 1, 'id');
+    depth6_act = testcase.read('Water_Depth', startrow + 1, 1, 'id');
+    testcase.assertNotEmpty(depth5_act, ['Water_Depth must not be non-empty ',...
+        'to be tested.']);
+    testcase.assertNotEmpty(depth6_act, ['Water_Depth must not be non-empty ',...
+        'to be tested.']);
+    depth5_act = [depth5_act{:}];
+    depth5_act(isnan(depth5_act)) = [];
+    depth6_act = [depth6_act{:}];
+    depth6_act(isnan(depth6_act)) = [];
+    refdepth5_act = EveryElementOf(depth5_act);
+    refdepth5_cons = IsGreaterThan(formula5(1));
+    refdepth6_act = EveryElementOf(depth6_act);
+    refdepth6_cons = IsGreaterThan(formula6(2));
+    dep_msg = ['Depths less than the greater of those returned by formula ',...
+        '5 or 6 in the standard should be removed by procedure.'];
+    testcase.assertNotEmpty(depth5_act, ['Water_Depth must not be non-empty ',...
+        'to be tested.']);
+    testcase.assertNotEmpty(depth6_act, ['Water_Depth must not be non-empty ',...
+        'to be tested.']);
+    testcase.verifyThat(refdepth5_act, refdepth5_cons, dep_msg);
+    testcase.verifyThat(refdepth6_act, refdepth6_cons, dep_msg);
+    
+    % 4
+    % Input
+    maxRudder = testcase.MaxRudder;
+    inputNames_c = {'Rudder_Angle'};
+    inRudderAngle_v = testcase.randOutThreshold(testSz, @lt, maxRudder);
+    inputData_m = inRudderAngle_v';
+    [startrow, count] = testcase.insert(inputData_m, inputNames_c);
+    
+    % Execute
+    testcase.call('deleteWithReferenceConditions', testcase.AlmavivaIMO);
+    
+    % Verify
+    rudder_act = testcase.read('Rudder_Angle', startrow, count, 'id');
+    testcase.assertNotEmpty(rudder_act, ['Rudder angle must not be non-empty ',...
+        'to be tested.']);
+    rudder_act = [rudder_act{:}];
+    rudder_act(isnan(rudder_act)) = [];
+    rudder_act = EveryElementOf(rudder_act);
+    rudder_cons = IsLessThan(maxRudder);
+    rudder_msg = ['Rudder angles above 5 degrees should be removed by ',...
+        'procedure.'];
+    testcase.assertNotEmpty(rudder_act, ['Rudder angle must not be non-empty ',...
+        'to be tested.']);
+    testcase.verifyThat(rudder_act, rudder_cons, rudder_msg);
     
     end
 end
@@ -1009,11 +1159,19 @@ methods
             count_s = num2str(count_d);
         end
         
+        order_s = '';
+        if nargin > 4
+            order_s = varargin{4};
+            if ~isempty(order_s)
+                order_s = [' ORDER BY ', order_s];
+            end
+        end
+        
         % Establish Connection
         sqlConn = obj.Connection;
         
         % Read command
-        sql_read = ['SELECT ', names_s, ' FROM ' obj.TableName];
+        sql_read = ['SELECT ', names_s, ' FROM ' obj.TableName, order_s];
         if ~isempty(start_s)
             sql_read = [sql_read, ' LIMIT ', start_s, ', ', count_s];
         end
@@ -1025,7 +1183,7 @@ methods
         
     end
     
-    function [startrow, numrows] = insert(testcase, data, names)
+    function [startrow, numrows] = insert(testcase, data, names, varargin)
     % INSERT Inserts data into table, returning indices to read
     % startrow = insert(testcase, data, names) will call INSERT on the data
     % in DATA with the column names given by cell array of strings NAMES
@@ -1035,6 +1193,11 @@ methods
     % Establish Connection
     sqlConn = testcase.Connection;
     
+    update_l = false;
+    if nargin > 3
+        update_l = varargin{1};
+    end
+        
     % Insert command
     if isnumeric(data)
         
@@ -1073,8 +1236,15 @@ methods
     startrow = str2double( [startrow_c{:}] );
     numrows = size(data, 1);
     
-    sql_insert = ['INSERT INTO ' testcase.TableName ' ' names_str ' VALUES ' , ...
-        ' ', data_str, ';'];
+    if update_l
+        nameNoBracker_str = strrep(names_str, '(', '');
+        nameNoBracker_str = strrep(nameNoBracker_str, ')', '');
+        sql_insert = ['UPDATE ' testcase.TableName ' SET ' nameNoBracker_str, ...
+            ' ', data_str, ';'];
+    else
+        sql_insert = ['INSERT INTO ' testcase.TableName ' ' names_str ' VALUES ' , ...
+            ' ', data_str, ';'];
+    end
     sql_insert = strrep(sql_insert, 'NaN', 'NULL');
     adodb_query(sqlConn, sql_insert);
     
