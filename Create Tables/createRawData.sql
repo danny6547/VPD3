@@ -35,5 +35,7 @@ CREATE TABLE rawdata (id INT PRIMARY KEY AUTO_INCREMENT,
                          Speed_Loss DOUBLE(10, 5),
                          Transverse_Projected_Area_Current DOUBLE(10, 5),
                          Wind_Resistance_Correction DOUBLE(10, 5),
-                         Corrected_Power DOUBLE(20, 3)
+                         Corrected_Power DOUBLE(20, 3),
+                         FilterSPDist BOOLEAN,
+                         NearestDisplacement DOUBLE(10, 5)
 						 ) ENGINE = MYISAM;

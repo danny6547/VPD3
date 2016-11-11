@@ -1102,6 +1102,62 @@ methods(Test)
     testcase.verifyThat(rudder_act, rudder_cons, rudder_msg);
     
     end
+    
+    function testfilterSpeedPowerLookup(testcase)
+    % Test that power values outside displacement and trim ranges removed
+    % 1: Test that values of delivered power corresponding to those of
+    % displacement beyond +/- 5% of the displacement of the speed, power
+    % data will correspond to a FilterSPDist value of TRUE.
+    % 2: Test that values of delivered power corresponding to those of
+    % trim beyond +/- 0.2% of the LBP of the trim of the speed, power
+    % data will correspond to a FilterSPTrim value of TRUE.
+    
+    % 1
+    % Input
+    import matlab.unittest.constraints.EveryElementOf;
+    import matlab.unittest.constraints.IsGreaterThanOrEqualTo;
+    import matlab.unittest.constraints.IsLessThanOrEqualTo;
+    testSz = [1, 2];
+    
+    lowerDisp = 0.95*114050;
+    upperDisp = 1.05*114050;
+    
+    inDelPower_v = testcase.randOutThreshold(testSz, @gt, 0);
+    inDisp_v = testcase.randOutThreshold(testSz, @gt, lowerDisp, ...
+        @lt, upperDisp);
+    inputData_m = [inDelPower_v', inDisp_v'];
+    inputNames_c = {'Delivered_Power', 'Displacement'};
+    [startrow, count] = testcase.insert(inputData_m, inputNames_c);
+    
+%     exp_filt = inDisp_v > upperDisp | inDisp_v < lowerDisp;
+    
+    % Execute
+    testcase.call('filterSpeedPowerLookup', testcase.AlmavivaIMO);
+    
+    % Verify
+    filt_act = testcase.read('FilterSPDist', startrow, count);
+    disp_act = testcase.read('Displacement', startrow, count);
+    testcase.assertNotEmpty(disp_act, ['Displacement cannot be empty',...
+        ' for test.']);
+    testcase.assertNotEmpty(filt_act, ['FilterSPDist cannot be empty',...
+        ' for test.']);
+    disp_act = [disp_act{:}];
+    disp_act(isnan(disp_act)) = [];
+    filt_act = [filt_act{:}];
+    filt_act(isnan(filt_act)) = [];
+    disp_act = EveryElementOf(disp_act(~filt_act));
+    minDisp_cons = IsGreaterThanOrEqualTo(lowerDisp);
+    minDisp_msg = ['Elements of FilterSPDist corresponding to those ',...
+        'below the minimum power values in the speed power curve are ',...
+        'expected to be TRUE.'];
+    testcase.verifyThat(disp_act, minDisp_cons, minDisp_msg);
+    minDisp_cons = IsLessThanOrEqualTo(upperDisp);
+    minDisp_msg = ['Elements of FilterSPDist corresponding to those ',...
+        'above the maximum power values in the speed power curve are ',...
+        'expected to be TRUE.'];
+    testcase.verifyThat(disp_act, minDisp_cons, minDisp_msg);
+    
+    end
 end
 
 methods
