@@ -1,0 +1,18 @@
+/* Bunker fuel variables */
+Lower_Caloirifc_Value_Fuel_Oil
+Density_Fuel_Oil_15C
+
+/* Possibly obtainable from other sources (for customer CMA CGM) */
+Wind_Resistance_Relative
+Air_Resistance_No_Wind
+Transverse_Projected_Area_Current
+
+/* Variables without known source required for procedures */
+Temp_Fuel_Oil_At_Flow_Meter
+Density_Change_Rate_Per_C
+Volume of consumed fuel oil
+Shaft Torque
+
+/* Variables without known source, non-essential */
+Rudder Angle
+Ship heading
