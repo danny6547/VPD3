@@ -3,5 +3,6 @@
 CREATE TABLE speedPowerCoefficients (id INT PRIMARY KEY AUTO_INCREMENT,
 										 IMO_Vessel_Number INT,
 										 Displacement DOUBLE(20, 3),
+										 Trim DOUBLE(10, 8),
 										 Exponent_A DOUBLE(10, 5),
 										 Exponent_B DOUBLE(10, 5));

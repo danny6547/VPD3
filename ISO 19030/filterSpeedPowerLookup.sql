@@ -15,15 +15,20 @@ BEGIN
 	DROP TABLE IF EXISTS tempSpeedPowerConditions;
 	CREATE TABLE tempSpeedPowerConditions (id INT PRIMARY KEY AUTO_INCREMENT,
 									Displacement DOUBLE(20, 10),
-									Difference_With_Nearest DOUBLE(20, 3),
-									Nearest_In_Speed_Power DOUBLE(20, 3),
-									Difference_PC DOUBLE(10, 5),
+									Displacement_Difference_With_Nearest DOUBLE(20, 3),
+									Displacement_Nearest DOUBLE(20, 3),
+									Displacement_Diff_PC DOUBLE(10, 5),
 									Displacement_Condition BOOLEAN,
+                                    Trim DOUBLE(10, 8),
+                                    Trim_Nearest DOUBLE(10, 8),
 									Trim_Condition BOOLEAN,
 									Nearest_Neighbour_Condition BOOLEAN);
     
+    /* Update trim */
+    UPDATE tempRawISO SET Trim = Static_Draught_Fore - Static_Draught_Aft;
+    
 	/* Find nearest displacement value */
-    INSERT INTO tempSpeedPowerConditions (Displacement) SELECT Displacement FROM tempRawISO WHERE Displacement IS NOT NULL;
+    INSERT INTO tempSpeedPowerConditions (Displacement, Trim) SELECT Displacement, Trim FROM tempRawISO WHERE Displacement IS NOT NULL;
     CALL log_msg('Max Displacement = ', (SELECT MAX(Displacement) FROM tempSpeedPowerConditions));
     
 	DROP TABLE IF EXISTS tempTable1;
@@ -42,45 +47,55 @@ BEGIN
 		INNER JOIN tempTable1 b
 			ON a.Displacement = b.disps
 				SET
-                a.Nearest_In_Speed_Power = b.disps ORDER BY `Abs Difference` LIMIT numRows;
-    /* UPDATE tempSpeedPowerConditions a,  tempTable1 b SET a.Nearest_In_Speed_Power = (SELECT b.disps FROM tempTable1 ORDER BY `Abs Difference` LIMIT numRows); */
-	/*INSERT INTO tempSpeedPowerConditions (Nearest_In_Speed_Power) (SELECT disps FROM tempTable1 ORDER BY `Abs Difference` LIMIT numRows); */
+                a.Displacement_Nearest = b.disps ORDER BY `Abs Difference` LIMIT numRows;
+    /* UPDATE tempSpeedPowerConditions a,  tempTable1 b SET a.Displacement_Nearest = (SELECT b.disps FROM tempTable1 ORDER BY `Abs Difference` LIMIT numRows); */
+	/*INSERT INTO tempSpeedPowerConditions (Displacement_Nearest) (SELECT disps FROM tempTable1 ORDER BY `Abs Difference` LIMIT numRows); */
     
     DROP TABLE IF EXISTS NearestDisplacement;
-	CREATE TABLE NearestDisplacement (id INT PRIMARY KEY AUTO_INCREMENT, Displacement DOUBLE(20, 10), Difference_With_Nearest DOUBLE(20, 3), Nearest_In_Speed_Power DOUBLE(20, 3));
-    INSERT INTO NearestDisplacement (Displacement, Nearest_In_Speed_Power, Difference_With_Nearest) (SELECT disps, lookupDisps, `Abs Difference` FROM tempTable1 ORDER BY `Abs Difference` LIMIT numRows);
+	CREATE TABLE NearestDisplacement (id INT PRIMARY KEY AUTO_INCREMENT, Displacement DOUBLE(20, 10), Displacement_Difference_With_Nearest DOUBLE(20, 3), Displacement_Nearest DOUBLE(20, 3));
+    INSERT INTO NearestDisplacement (Displacement, Displacement_Nearest, Displacement_Difference_With_Nearest) (SELECT disps, lookupDisps, `Abs Difference` FROM tempTable1 ORDER BY `Abs Difference` LIMIT numRows);
     UPDATE tempSpeedPowerConditions a
 		INNER JOIN NearestDisplacement b
 			ON a.Displacement = b.Displacement
 				SET
-                a.Nearest_In_Speed_Power = b.Nearest_In_Speed_Power,
-                a.Difference_With_Nearest = b.Difference_With_Nearest;
+                a.Displacement_Nearest = b.Displacement_Nearest,
+                a.Displacement_Difference_With_Nearest = b.Displacement_Difference_With_Nearest;
 	
-    CALL log_msg('Nearest_In_Speed_Power 1 = ', (SELECT Nearest_In_Speed_Power FROM tempSpeedPowerConditions LIMIT 1));
+    CALL log_msg('Displacement_Nearest 1 = ', (SELECT Displacement_Nearest FROM tempSpeedPowerConditions LIMIT 1));
     
-    /* UPDATE tempSpeedPowerConditions SET Difference_With_Nearest = (SELECT MIN(ABS(Difference)) AS 'Difference_With_Speed_Power' FROM 
+    /* UPDATE tempSpeedPowerConditions SET Displacement_Difference_With_Nearest = (SELECT MIN(ABS(Difference)) AS 'Difference_With_Speed_Power' FROM 
 		(SELECT (tempRawISO.Displacement - speedPower.Displacement) AS 'Difference' FROM tempRawISO
 			JOIN speedPower WHERE tempRawISO.IMO_Vessel_Number = imo) AS tempTable1 GROUP BY Displacement);
-    CALL log_msg('Max DWN = ', (SELECT MAX(Difference_With_Nearest) FROM tempSpeedPowerConditions));
+    CALL log_msg('Max DWN = ', (SELECT MAX(Displacement_Difference_With_Nearest) FROM tempSpeedPowerConditions));
     
-    UPDATE tempSpeedPowerConditions SET Nearest_In_Speed_Power = Displacement + Difference_With_Nearest;
-    CALL log_msg('Max NISP = ', (SELECT MAX(Nearest_In_Speed_Power) FROM tempSpeedPowerConditions)); */
+    UPDATE tempSpeedPowerConditions SET Displacement_Nearest = Displacement + Displacement_Difference_With_Nearest;
+    CALL log_msg('Max NISP = ', (SELECT MAX(Displacement_Nearest) FROM tempSpeedPowerConditions)); */
     
     /* Update Displacement Condition */
-    UPDATE tempSpeedPowerConditions SET Difference_PC = ( Difference_With_Nearest / Nearest_In_Speed_Power )*100;
-    UPDATE tempSpeedPowerConditions SET Displacement_Condition = Difference_PC > 5;
+    UPDATE tempSpeedPowerConditions SET Displacement_Diff_PC = ( Displacement_Difference_With_Nearest / Displacement_Nearest )*100;
+    UPDATE tempSpeedPowerConditions SET Displacement_Condition = Displacement_Diff_PC > 5;
     CALL log_msg('Max DispCond = ', (SELECT MAX(Displacement_Condition) FROM tempSpeedPowerConditions));
     
-    /* Update trim */
-    UPDATE tempRawISO SET Trim = Static_Draught_Fore - Static_Draught_Aft;
-    
     /* Update Trim Condition SELECT Trim FROM tempRawISO */
-    UPDATE tempSpeedPowerConditions a
+	DROP TABLE IF EXISTS tempTable3;
+	CREATE TABLE tempTable3 (id INT PRIMARY KEY AUTO_INCREMENT, rawTrim DOUBLE(20, 10), lookupTrim DOUBLE(20, 10), `Abs Difference` DOUBLE(20, 10));
+	INSERT INTO tempTable3 (rawTrim, lookupTrim, `Abs Difference`)
+		(SELECT a.Trim, b.Trim, ABS(a.Trim - b.Trim) AS 'Abs Difference'
+			FROM tempSpeedPowerConditions a
+				JOIN speedPowerCoefficients b
+					ORDER BY b.Trim);
+                    
+    UPDATE tempSpeedPowerConditions a 
+	INNER JOIN (SELECT rawTrim, lookupTrim, `Abs Difference` FROM tempTable3 ORDER BY `Abs Difference` LIMIT 2) b
+		ON a.Trim = b.rawTrim
+			SET a.Trim_Nearest = b.lookupTrim,
+				a.Trim_Condition = (ABS(a.Trim) - ABS(a.Trim_Nearest)) > (0.002 * (SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = 9450648));
+    
+    /* UPDATE tempSpeedPowerConditions a
 		INNER JOIN tempRawISO b
 			ON a.Displacement = b.Displacement
 				SET
-                a.Trim_Condition = ABS(b.Trim) > (0.002 * (SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo));
-    
+                a.Trim_Condition = ABS(b.Trim) > (0.002 * (SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)); */
     
     /* UPDATE tempSpeedPowerConditions, tempRawISO SET Trim_Condition = CASE
 		WHEN ABS(tempRawISO.Trim) > (0.002 * (SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo))
