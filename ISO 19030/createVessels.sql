@@ -12,4 +12,5 @@ CREATE TABLE Vessels (id INT PRIMARY KEY AUTO_INCREMENT,
                          Breadth_Moulded DOUBLE(10, 5),
                          Length_Overall DOUBLE(10, 5),
                          Draft_Design DOUBLE(10, 5),
+                         Speed_Power_Source TEXT,
 						 LBP DOUBLE(10, 5));
