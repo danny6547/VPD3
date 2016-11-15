@@ -432,20 +432,12 @@ methods(Test)
     % 1
     % Input
     in_DeliveredPower = 30e4:10e4:50e4;
-    q = 1:10;
-    e = repmat(in_DeliveredPower, size(q', 1), 1);
-    r = repmat(q', 1, size(in_DeliveredPower, 2));
-    w = e.*(10.^r);
-    numTests = size(in_DeliveredPower, 1);
-    
-    for ti = 1:numTests
-    
+    in_Displacement = 114049:114051;
     in_A = testcase.AlmavivaSpeedPowerCoefficients(1);
     in_B = testcase.AlmavivaSpeedPowerCoefficients(2);
-%     in_DeliveredPower = 30e4:10e4:50e4;
-    in_DeliveredPower = w(ti, :);
-    [startrow, count] = testcase.insert(in_DeliveredPower', ...
-        {'Delivered_Power'});
+    [startrow, count] = testcase.insert(...
+        [in_DeliveredPower', in_Displacement'], ...
+        {'Delivered_Power', 'Displacement'});
     
     exp_espeed = num2cell( in_A(1).*log(in_DeliveredPower) + in_B )';
     
@@ -459,7 +451,6 @@ methods(Test)
         'the speed-power curve for this vessel.'];
     testcase.verifyEqual(act_espeed, exp_espeed, 'RelTol', 1e-5, msg_espeed);
     
-    end
     end
     
     function testupdateWindResistanceCorrection(testcase)
