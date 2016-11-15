@@ -1136,8 +1136,8 @@ methods(Test)
     testcase.call('filterSpeedPowerLookup', testcase.AlmavivaIMO);
     
     % Verify
-    filt_act = testcase.read('FilterSPDisp', startrow, count);
-    disp_v = testcase.read('Displacement', startrow, count);
+    filt_act = testcase.read('FilterSPDisp', startrow, count, 'id');
+    disp_v = testcase.read('Displacement', startrow, count, 'id');
     testcase.assertNotEmpty(disp_v, ['Displacement cannot be empty',...
         ' for test.']);
     testcase.assertNotEmpty(filt_act, ['FilterSPDist cannot be empty',...
@@ -1158,10 +1158,13 @@ methods(Test)
         'expected to be TRUE.'];
     testcase.verifyThat(disp_act, minDisp_cons, minDisp_msg);
     
-    filt_act = testcase.read('FilterSPTrim', startrow, count);
+    trim_c = testcase.read('Trim', startrow, count, 'id');
+    trim_v = [trim_c{:}];
+    trim_v(isnan(filt_act)) = [];
+    filt_act = testcase.read('FilterSPTrim', startrow, count, 'id');
     filt_act = [filt_act{:}];
     filt_act(isnan(filt_act)) = [];
-    trim_act = EveryElementOf(inTrim_v(~filt_act));
+    trim_act = EveryElementOf(trim_v(~filt_act));
     minTrim_cons = IsGreaterThanOrEqualTo(lowerTrim);
     minTrim_msg = ['Elements of FilterSPTrim corresponding to those ',...
         'outside of +/- 0.2% of the LBP of the vessel are expected to be ',...

@@ -23,7 +23,7 @@ BEGIN
 									Nearest_Neighbour_Condition BOOLEAN);
     
 	/* Find nearest displacement value */
-    INSERT INTO tempSpeedPowerConditions (Displacement) SELECT Displacement FROM tempRawISO;
+    INSERT INTO tempSpeedPowerConditions (Displacement) SELECT Displacement FROM tempRawISO WHERE Displacement IS NOT NULL;
     CALL log_msg('Max Displacement = ', (SELECT MAX(Displacement) FROM tempSpeedPowerConditions));
     
 	DROP TABLE IF EXISTS tempTable1;
@@ -46,11 +46,11 @@ BEGIN
     /* UPDATE tempSpeedPowerConditions a,  tempTable1 b SET a.Nearest_In_Speed_Power = (SELECT b.disps FROM tempTable1 ORDER BY `Abs Difference` LIMIT numRows); */
 	/*INSERT INTO tempSpeedPowerConditions (Nearest_In_Speed_Power) (SELECT disps FROM tempTable1 ORDER BY `Abs Difference` LIMIT numRows); */
     
-    DROP TABLE IF EXISTS tempTable2;
-	CREATE TABLE tempTable2 (id INT PRIMARY KEY AUTO_INCREMENT, Displacement DOUBLE(20, 10), Difference_With_Nearest DOUBLE(20, 3), Nearest_In_Speed_Power DOUBLE(20, 3));
-    INSERT INTO tempTable2 (Displacement, Nearest_In_Speed_Power, Difference_With_Nearest) (SELECT disps, lookupDisps, `Abs Difference` FROM tempTable1 ORDER BY `Abs Difference` LIMIT numRows);
+    DROP TABLE IF EXISTS NearestDisplacement;
+	CREATE TABLE NearestDisplacement (id INT PRIMARY KEY AUTO_INCREMENT, Displacement DOUBLE(20, 10), Difference_With_Nearest DOUBLE(20, 3), Nearest_In_Speed_Power DOUBLE(20, 3));
+    INSERT INTO NearestDisplacement (Displacement, Nearest_In_Speed_Power, Difference_With_Nearest) (SELECT disps, lookupDisps, `Abs Difference` FROM tempTable1 ORDER BY `Abs Difference` LIMIT numRows);
     UPDATE tempSpeedPowerConditions a
-		INNER JOIN tempTable2 b
+		INNER JOIN NearestDisplacement b
 			ON a.Displacement = b.Displacement
 				SET
                 a.Nearest_In_Speed_Power = b.Nearest_In_Speed_Power,
@@ -104,6 +104,8 @@ BEGIN
 			WHEN Displacement_Condition = TRUE AND Trim_Condition = TRUE THEN TRUE
 			ELSE FALSE
 		END;
+    
+    /* Delete unwanted tables */
     
     /* Get upper and lower limits */
     
