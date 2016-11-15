@@ -46,6 +46,7 @@ properties(Constant, Hidden)
     MaxRudder = 5;
     LBP = 319;
     LowestPower = 28534;
+    SPTrim = 3.3-9.56;
     
 end
 
@@ -1113,16 +1114,18 @@ methods(Test)
     import matlab.unittest.constraints.IsLessThanOrEqualTo;
     testSz = [1, 2];
     
-    lowerDisp = 0.95*114050;
-    upperDisp = 1.05*114050;
+    lowerDisp = 0.95*48800;
+    upperDisp = 1.05*48800;
     inDelPower_v = testcase.randOutThreshold(testSz, @gt, 0);
     inDisp_v = testcase.randOutThreshold(testSz, @lt, upperDisp, ...
         @gt, lowerDisp);
     lbp = testcase.LBP;
     
-    inTrim_v = testcase.randOutThreshold(testSz, @lt, lbp*2e-3, @gt, -lbp*2e-3);
-    lowerTrim = - 0.002*lbp;
-    upperTrim =   0.002*lbp;
+    spTrim = testcase.SPTrim;
+    lowerTrim = spTrim - 0.002*lbp;
+    upperTrim = spTrim + 0.002*lbp;
+    inTrim_v = testcase.randOutThreshold(testSz, @lt, upperTrim, ...
+        @gt, lowerTrim);
     
     inStatic_Draught_Aft = randi([0, 2], testSz);
     inStatic_Draught_Fore = inTrim_v + inStatic_Draught_Aft;
