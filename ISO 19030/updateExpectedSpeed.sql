@@ -7,8 +7,20 @@ delimiter //
 CREATE PROCEDURE updateExpectedSpeed(imo INT)
 BEGIN
 	
-    /* Calculate expected speed from fitted speed-power curve */
+    /* Calculate expected speed from fitted speed-power curve
 	UPDATE tempRawISO SET Expected_Speed_Through_Water = ((SELECT Exponent_A FROM speedPowerCoefficients WHERE IMO_Vessel_Number = imo AND Displacement = 137090) * LOG(Delivered_Power))
-														+ (SELECT Exponent_B FROM speedPowerCoefficients WHERE IMO_Vessel_Number = imo AND Displacement = 137090);
+														+ (SELECT Exponent_B FROM speedPowerCoefficients WHERE IMO_Vessel_Number = imo AND Displacement = 137090); */
+       
+	/* Calculate expected speed from fitted speed-power curve */ 
+    UPDATE tempRawISO c
+	INNER JOIN (
+				SELECT b.Displacement, a.Exponent_A, a.Exponent_B, b.Nearest_In_Speed_Power
+					FROM speedpowercoefficients a
+						JOIN NearestDisplacement b
+							ON a.Displacement = b.Nearest_In_Speed_Power
+								WHERE a.IMO_Vessel_Number = imo
+				) d
+	ON c.Displacement = d.Displacement
+	SET c.Expected_Speed_Through_Water = d.Exponent_A*LOG(ABS(c.Delivered_Power)) + d.Exponent_B;
     
 END

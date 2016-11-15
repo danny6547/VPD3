@@ -442,6 +442,7 @@ methods(Test)
     exp_espeed = num2cell( in_A(1).*log(in_DeliveredPower) + in_B )';
     
     % Execute
+    testcase.call('filterSpeedPowerLookup', testcase.AlmavivaIMO);
     testcase.call('updateExpectedSpeed', testcase.AlmavivaIMO);
     
     % Verify

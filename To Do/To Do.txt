@@ -53,10 +53,13 @@ updateBrakePower: make compatible with arbitrary-frequency data
 # insertBunkerDeliveryNoteDNVGL: write
 insertBunkerDeliveryNoteDNVGL: test
 
-filterSpeedPowerLookup: update displacement and trim filters for speed-power values
+# filterSpeedPowerLookup: update displacement and trim filters for speed-power values
 # filterSpeedPowerLookup: test
 # filterSpeedPowerLookup: write
-vessels: column "Speed Power Source", where data was sourced from.
+# vessels: column "Speed Power Source", where data was sourced from.
+# updateExpectedSpeed: test for multiple-displacement power curves
+# updateExpectedSpeed: write for multiple-displacement power curves
+Vessels.Speed_Power_Source: what if file is moved? Generate ordered, protected, easily expandable dir structure.
 sensorRecalibration: create table for dates and nature of sensor recalibration (imo, sensor, description)
 removePowerBelowMinimum: remove values of Delivered Power below the minimum power of the speed-power curve.
 normaliseFrequencies: update all columns by normalising frequencies based on formula 2.
