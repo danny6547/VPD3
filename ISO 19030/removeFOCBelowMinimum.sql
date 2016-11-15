@@ -9,7 +9,6 @@ BEGIN
     DECLARE HoursPerTimeStep DOUBLE(10, 3) DEFAULT 24;
     
     SET FOCmin = (SELECT Minimum_FOC_ph FROM SFOCCoefficients WHERE Engine_Model = (SELECT Engine_Model FROM Vessels WHERE IMO_Vessel_Number = IMO)) * HoursPerTimeStep;
-    CALL log_msg(concat('focmin = ', FOCmin));
     DELETE FROM tempRawISO WHERE Mass_Consumed_Fuel_Oil < FOCmin;
 	
 END

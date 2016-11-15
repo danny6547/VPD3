@@ -1,5 +1,7 @@
 /* Set values of displacement in ISO analysis from current draft, trim values and diplacement table values */
 
+DROP PROCEDURE IF EXISTS updateDisplacement;
+
 delimiter //
 
 CREATE PROCEDURE updateDisplacement(IMO INT)
@@ -18,10 +20,6 @@ BEGIN
     
 		/* Calculate Displacement based on Block Coefficient Approximation */
         SET AdjustedTopArea := (SELECT Block_Coefficient*Length_Overall*Breadth_Moulded FROM Vessels WHERE IMO_Vessel_Number = IMO);
-        CALL log_msg(concat('AdjustedTopArea = ', AdjustedTopArea));
-        CALL log_msg(concat('Mean = ', (SELECT AVG((Static_Draught_Fore + Static_Draught_Aft) / 2) FROM tempRawIso)));
-        CALL log_msg(concat('Result = ', AdjustedTopArea*(SELECT AVG((Static_Draught_Fore + Static_Draught_Aft) / 2) FROM tempRawIso)));
-        
         UPDATE tempRawISO SET Displacement = AdjustedTopArea*( (Static_Draught_Fore + Static_Draught_Aft) / 2);
 	
     END IF;
