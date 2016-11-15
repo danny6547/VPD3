@@ -25,7 +25,7 @@ AS n ORDER BY distance LIMIT 1; */
 UNION
 (SELECT * FROM numbers FORCE INDEX (PRIMARY) WHERE number >= 2500 ORDER BY number LIMIT 1) */
 
-SELECT number, MIN(Difference) AS 'Shortest', number + 'Shortest' AS 'A' FROM 
+/* ASELECT number, MIN(Difference) AS 'Shortest', number + 'Shortest' AS 'A' FROM 
 		(SELECT number, a, ABS(number - a) AS 'Difference' FROM numbers
 			JOIN lookups) AS tempTable1 GROUP BY number;
             
@@ -33,3 +33,7 @@ UPDATE tempTable1 SET A = number + Shortest;
 
 /* SELECT number, a, ABS(number - a) AS 'Difference' FROM numbers
 JOIN lookups*/
+
+CREATE TABLE tempTable1 (id INT PRIMARY KEY AUTO_INCREMENT, number INT, a INT, `Abs Difference` INT);  */
+INSERT INTO tempTable1 (number, a, `Abs Difference`) (SELECT number, a, ABS(number - a) AS 'Abs Difference' FROM numbers JOIN lookups AS tempTable1 ORDER BY a);  */
+SELECT a, number, `Abs Difference` FROM tempTable1 ORDER BY `Abs Difference` LIMIT 2;
