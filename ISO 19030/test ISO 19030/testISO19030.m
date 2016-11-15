@@ -45,6 +45,7 @@ properties(Constant, Hidden)
     GravitationalAcceleration = 9.80665;
     MaxRudder = 5;
     LBP = 319;
+    LowestPower = 28534;
     
 end
 
@@ -1177,6 +1178,47 @@ methods(Test)
     testcase.verifyThat(trim_act, minTrim_cons, minTrim_msg);
     
     end
+    
+    function testfilterPowerBelowMinimum(testcase)
+    % Test that column FilterSPBelow is true when Delivered_Power is lower
+    % than the minimum of the speed power curve.
+    % 1: Test that procedure returns TRUE for values of Delivered_Power
+    % lower than the minimum of the speed, power curve for this vessel at
+    % the nearest displacement and trim values.
+    
+    % 1
+    % Input
+    import matlab.unittest.constraints.EveryElementOf;
+    import matlab.unittest.constraints.IsGreaterThanOrEqualTo;
+    import matlab.unittest.constraints.HasSize;
+    
+    testSz = [1, 2];
+    lowerPower = testcase.LowestPower;
+    inPower_v = testcase.randOutThreshold(testSz, @lt, lowerPower);
+    [startrow, count] = testcase.insert(inPower_v', {'Delivered_Power'});
+    
+    % Execute
+    testcase.call('filterPowerBelowMinimum', testcase.AlmavivaIMO);
+    
+    % Verify
+    outPower_v = testcase.read('Delivered_Power', startrow, count, 'id');
+    outPower_v = [outPower_v{:}];
+    outPower_v(isnan(outPower_v)) = [];
+    filt_act = testcase.read('FilterSPBelow', startrow, count, 'id');
+    filt_act = [filt_act{:}];
+    filt_act(isnan(filt_act)) = [];
+    size_msg = ['FilterSPBelow is expected to have some values TRUE before ',...
+        'procedure can be verified.'];
+    testcase.assertThat(outPower_v(~filt_act), ~HasSize(size(inPower_v)),...
+        size_msg)
+    power_act = EveryElementOf(outPower_v(~filt_act));
+    minPower_cons = IsGreaterThanOrEqualTo(lowerPower);
+    minPower_msg = ['Elements of Delivered_Power corresponding to those ',...
+        'below the minimum value of Power at the corresponding displacement ',...
+        'and trim in the table SpeedPower are expected to be FALSE.'];
+    testcase.verifyThat(power_act, minPower_cons, minPower_msg);
+    
+    end
 end
 
 methods
@@ -1328,10 +1370,3 @@ methods
 end
 
 end
-
-    % Input
-    
-    % Execute
-    
-    % Verify
-    
