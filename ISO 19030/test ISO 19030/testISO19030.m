@@ -44,6 +44,7 @@ properties(Constant, Hidden)
     MaxWind = 7.9;
     GravitationalAcceleration = 9.80665;
     MaxRudder = 5;
+    LBP = 319;
     
 end
 
@@ -181,7 +182,7 @@ methods(Static)
     end
     if ~isempty(maxVal) && ~isempty(minVal)
         
-        passes_v = -minVal + (maxVal - minVal).* rand(1, nIn);
+        passes_v = minVal + (maxVal - minVal).* rand(1, nIn);
         fails_v = minVal - rand(1, nOut);
         
     end
@@ -1121,31 +1122,39 @@ methods(Test)
     
     lowerDisp = 0.95*114050;
     upperDisp = 1.05*114050;
-    
     inDelPower_v = testcase.randOutThreshold(testSz, @gt, 0);
-    inDisp_v = testcase.randOutThreshold(testSz, @gt, lowerDisp, ...
-        @lt, upperDisp);
-    inputData_m = [inDelPower_v', inDisp_v'];
-    inputNames_c = {'Delivered_Power', 'Displacement'};
-    [startrow, count] = testcase.insert(inputData_m, inputNames_c);
+    inDisp_v = testcase.randOutThreshold(testSz, @lt, upperDisp, ...
+        @gt, lowerDisp);
+    lbp = testcase.LBP;
     
-%     exp_filt = inDisp_v > upperDisp | inDisp_v < lowerDisp;
+    inTrim_v = testcase.randOutThreshold(testSz, @lt, lbp*2e-3, @gt, -lbp*2e-3);
+    lowerTrim = - 0.002*lbp;
+    upperTrim =   0.002*lbp;
+    
+    inStatic_Draught_Aft = randi([0, 2], testSz);
+    inStatic_Draught_Fore = inTrim_v + inStatic_Draught_Aft;
+    
+    inputData_m = [inDelPower_v', inDisp_v', inTrim_v', ...
+        inStatic_Draught_Fore', inStatic_Draught_Aft'];
+    inputNames_c = {'Delivered_Power', 'Displacement', 'Trim', ...
+        'Static_Draught_Fore', 'Static_Draught_Aft'};
+    [startrow, count] = testcase.insert(inputData_m, inputNames_c);
     
     % Execute
     testcase.call('filterSpeedPowerLookup', testcase.AlmavivaIMO);
     
     % Verify
-    filt_act = testcase.read('FilterSPDist', startrow, count);
-    disp_act = testcase.read('Displacement', startrow, count);
-    testcase.assertNotEmpty(disp_act, ['Displacement cannot be empty',...
+    filt_act = testcase.read('FilterSPDisp', startrow, count);
+    disp_v = testcase.read('Displacement', startrow, count);
+    testcase.assertNotEmpty(disp_v, ['Displacement cannot be empty',...
         ' for test.']);
     testcase.assertNotEmpty(filt_act, ['FilterSPDist cannot be empty',...
         ' for test.']);
-    disp_act = [disp_act{:}];
-    disp_act(isnan(disp_act)) = [];
+    disp_v = [disp_v{:}];
+    disp_v(isnan(disp_v)) = [];
     filt_act = [filt_act{:}];
     filt_act(isnan(filt_act)) = [];
-    disp_act = EveryElementOf(disp_act(~filt_act));
+    disp_act = EveryElementOf(disp_v(~filt_act));
     minDisp_cons = IsGreaterThanOrEqualTo(lowerDisp);
     minDisp_msg = ['Elements of FilterSPDist corresponding to those ',...
         'below the minimum power values in the speed power curve are ',...
@@ -1156,6 +1165,21 @@ methods(Test)
         'above the maximum power values in the speed power curve are ',...
         'expected to be TRUE.'];
     testcase.verifyThat(disp_act, minDisp_cons, minDisp_msg);
+    
+    filt_act = testcase.read('FilterSPTrim', startrow, count);
+    filt_act = [filt_act{:}];
+    filt_act(isnan(filt_act)) = [];
+    trim_act = EveryElementOf(inTrim_v(~filt_act));
+    minTrim_cons = IsGreaterThanOrEqualTo(lowerTrim);
+    minTrim_msg = ['Elements of FilterSPTrim corresponding to those ',...
+        'outside of +/- 0.2% of the LBP of the vessel are expected to be ',...
+        'FALSE.'];
+    testcase.verifyThat(trim_act, minTrim_cons, minTrim_msg);
+    minTrim_cons = IsLessThanOrEqualTo(upperTrim);
+    minTrim_msg = ['Elements of FilterSPTrim corresponding to those ',...
+        'outside of +/- 0.2% of the LBP of the vessel are expected to be ',...
+        'FALSE.'];
+    testcase.verifyThat(trim_act, minTrim_cons, minTrim_msg);
     
     end
 end
@@ -1313,6 +1337,6 @@ end
     % Input
     
     % Execute
-        
+    
     % Verify
     

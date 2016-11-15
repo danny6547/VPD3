@@ -1,4 +1,5 @@
 /* Create temporary table for speed-power data look-up */
+DROP TABLE IF EXISTS tempSpeedPowerConditions;
 
 CREATE TABLE tempSpeedPowerConditions (id INT PRIMARY KEY AUTO_INCREMENT,
 								Displacement DOUBLE(10, 5),
