@@ -128,8 +128,8 @@ BEGIN
     /* Is value between limits? */
     
    /* Get boolean column indicating which values of trim and displacement are outside the ranges for nearest-neighbour interpolation */
-   UPDATE tempRawISO SET FilterSPDispTrim = FALSE;
-	/* UPDATE tempRawISO SET FilterSPDispTrim = id IN (SELECT Cid FROM
+   /* UPDATE tempRawISO SET FilterSPDispTrim = FALSE; */
+   UPDATE tempRawISO SET FilterSPDispTrim = id NOT IN (SELECT Cid FROM
 	(SELECT c.id AS Cid, d.id AS Did, `Actual Displacement`, `Actual Trim`, SPTrim, SPDisplacement FROM 
 			(SELECT 
 				 b.id, 
@@ -167,5 +167,5 @@ BEGIN
 			) e
 		WHERE Cid = DiD
 		GROUP BY Cid)
-        ; */
+        ;
 END

@@ -1117,23 +1117,23 @@ methods(Test)
     testSz = [1, 2];
     
     bothValid_l = false;
-    while ~any(bothValid_l)
+    while ~any(bothValid_l) || all(bothValid_l)
         
-        lowerDisp = 0.95*48800;
-        upperDisp = 1.05*48800;
+        lowerDisp = (1/1.05)*48800;
+        upperDisp = (1/0.95)*48800;
         inDelPower_v = testcase.randOutThreshold(testSz, @gt, 0);
         inDisp_v = testcase.randOutThreshold(testSz, @lt, upperDisp, ...
             @gt, lowerDisp);
         lbp = testcase.LBP;
-
+        
         spTrim = testcase.SPTrim;
         lowerTrim = spTrim - 0.002*lbp;
         upperTrim = spTrim + 0.002*lbp;
         inTrim_v = testcase.randOutThreshold(testSz, @lt, upperTrim, ...
             @gt, lowerTrim);
         
-        bothValid_l = inDisp_v > lowerDisp & inDisp_v < upperDisp & ...
-                      inTrim_v > lowerTrim & inTrim_v < upperTrim;
+        bothValid_l = 48800 >= inDisp_v.*0.95 & 48800 <= inDisp_v.*1.05 & ...
+                      spTrim <= inTrim_v + 0.002*lbp & spTrim >= inTrim_v - 0.002*lbp;
         
     end
     inStatic_Draught_Aft = randi([0, 2], testSz);
@@ -1160,12 +1160,12 @@ methods(Test)
     filt_act = [filt_act{:}];
     filt_act(isnan(filt_act)) = [];
     disp_act = EveryElementOf(disp_v(~filt_act));
-    minDisp_cons = IsGreaterThanOrEqualTo(lowerDisp);
+    minDisp_cons = IsGreaterThanOrEqualTo(disp_v(~filt_act)*0.95);
     minDisp_msg = ['Elements of FilterSPDist corresponding to those ',...
         'below the minimum power values in the speed power curve are ',...
         'expected to be TRUE.'];
     testcase.verifyThat(disp_act, minDisp_cons, minDisp_msg);
-    minDisp_cons = IsLessThanOrEqualTo(upperDisp);
+    minDisp_cons = IsLessThanOrEqualTo(disp_v(~filt_act)*1.05);
     minDisp_msg = ['Elements of FilterSPDist corresponding to those ',...
         'above the maximum power values in the speed power curve are ',...
         'expected to be TRUE.'];
@@ -1178,12 +1178,12 @@ methods(Test)
 %     filt_act = [filt_act{:}];
 %     filt_act(isnan(filt_act)) = [];
     trim_act = EveryElementOf(trim_v(~filt_act));
-    minTrim_cons = IsGreaterThanOrEqualTo(lowerTrim);
+    minTrim_cons = IsGreaterThanOrEqualTo(trim_v(~filt_act) - 0.002*lbp);
     minTrim_msg = ['Elements of FilterSPTrim corresponding to those ',...
         'outside of +/- 0.2% of the LBP of the vessel are expected to be ',...
         'FALSE.'];
     testcase.verifyThat(trim_act, minTrim_cons, minTrim_msg);
-    minTrim_cons = IsLessThanOrEqualTo(upperTrim);
+    minTrim_cons = IsLessThanOrEqualTo(trim_v(~filt_act) + 0.002*lbp);
     minTrim_msg = ['Elements of FilterSPTrim corresponding to those ',...
         'outside of +/- 0.2% of the LBP of the vessel are expected to be ',...
         'FALSE.'];
