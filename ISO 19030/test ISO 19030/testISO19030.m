@@ -1100,12 +1100,14 @@ methods(Test)
     
     function testfilterSpeedPowerLookup(testcase)
     % Test that power values outside displacement and trim ranges removed
-    % 1: Test that values of delivered power corresponding to those of
-    % displacement beyond +/- 5% of the displacement of the speed, power
-    % data will correspond to a FilterSPDist value of TRUE.
-    % 2: Test that values of delivered power corresponding to those of
-    % trim beyond +/- 0.2% of the LBP of the trim of the speed, power
-    % data will correspond to a FilterSPTrim value of TRUE.
+    % 1: Test that values of delivered power which simultaneously 
+    % correspond to those of displacement beyond +/- 5% of the displacement
+    % of the speed, power data and to trim values beyond +/- 0.2% of the 
+    % LBP of the trim of the speed, power data will correspond to a 
+    % FilterSPDispTrim value of TRUE.
+    % 2: Test that values of NearestDisplacement and NearestTrim will
+    % correspond to values of the Displacement and Trim respectively
+    % which are within the ranges given in test 1.
     
     % 1
     % Input
@@ -1114,19 +1116,26 @@ methods(Test)
     import matlab.unittest.constraints.IsLessThanOrEqualTo;
     testSz = [1, 2];
     
-    lowerDisp = 0.95*48800;
-    upperDisp = 1.05*48800;
-    inDelPower_v = testcase.randOutThreshold(testSz, @gt, 0);
-    inDisp_v = testcase.randOutThreshold(testSz, @lt, upperDisp, ...
-        @gt, lowerDisp);
-    lbp = testcase.LBP;
-    
-    spTrim = testcase.SPTrim;
-    lowerTrim = spTrim - 0.002*lbp;
-    upperTrim = spTrim + 0.002*lbp;
-    inTrim_v = testcase.randOutThreshold(testSz, @lt, upperTrim, ...
-        @gt, lowerTrim);
-    
+    bothValid_l = false;
+    while ~any(bothValid_l)
+        
+        lowerDisp = 0.95*48800;
+        upperDisp = 1.05*48800;
+        inDelPower_v = testcase.randOutThreshold(testSz, @gt, 0);
+        inDisp_v = testcase.randOutThreshold(testSz, @lt, upperDisp, ...
+            @gt, lowerDisp);
+        lbp = testcase.LBP;
+
+        spTrim = testcase.SPTrim;
+        lowerTrim = spTrim - 0.002*lbp;
+        upperTrim = spTrim + 0.002*lbp;
+        inTrim_v = testcase.randOutThreshold(testSz, @lt, upperTrim, ...
+            @gt, lowerTrim);
+        
+        bothValid_l = inDisp_v > lowerDisp & inDisp_v < upperDisp & ...
+                      inTrim_v > lowerTrim & inTrim_v < upperTrim;
+        
+    end
     inStatic_Draught_Aft = randi([0, 2], testSz);
     inStatic_Draught_Fore = inTrim_v + inStatic_Draught_Aft;
     
@@ -1140,7 +1149,7 @@ methods(Test)
     testcase.call('filterSpeedPowerLookup', testcase.AlmavivaIMO);
     
     % Verify
-    filt_act = testcase.read('FilterSPDisp', startrow, count, 'id');
+    filt_act = testcase.read('FilterSPDispTrim', startrow, count, 'id');
     disp_v = testcase.read('Displacement', startrow, count, 'id');
     testcase.assertNotEmpty(disp_v, ['Displacement cannot be empty',...
         ' for test.']);
@@ -1165,9 +1174,9 @@ methods(Test)
     trim_c = testcase.read('Trim', startrow, count, 'id');
     trim_v = [trim_c{:}];
     trim_v(isnan(filt_act)) = [];
-    filt_act = testcase.read('FilterSPTrim', startrow, count, 'id');
-    filt_act = [filt_act{:}];
-    filt_act(isnan(filt_act)) = [];
+%     filt_act = testcase.read('FilterSPDispTrim', startrow, count, 'id');
+%     filt_act = [filt_act{:}];
+%     filt_act(isnan(filt_act)) = [];
     trim_act = EveryElementOf(trim_v(~filt_act));
     minTrim_cons = IsGreaterThanOrEqualTo(lowerTrim);
     minTrim_msg = ['Elements of FilterSPTrim corresponding to those ',...
