@@ -63,7 +63,7 @@ Vessels.Speed_Power_Source: what if file is moved? Generate ordered, protected, 
 # sensorRecalibration: create table for dates and nature of sensor recalibration (imo, sensor, description)
 filterPowerBelowMinimum: filter values of Delivered Power below the minimum power of the speed-power curve.
 # filterPowerBelowMinimum: test
-filterPowerBelowMinimum: write
+# filterPowerBelowMinimum: write
 normaliseFrequencies: update all columns by normalising frequencies based on formula 2.
 filterData: Chauvenet's criteria
 validteData: applies formulae in annex J

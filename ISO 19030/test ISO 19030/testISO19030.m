@@ -468,13 +468,19 @@ methods(Test)
     in_SOG = 15:2:19;
     in_PropulsCalm = testcase.AlmavivaPropulsiveEfficiency;
     in_PropulsActual = 0.7;
+    testSz = [1, 3];
+    in_NearDisp = repmat(114050, testSz);
+    in_NearTrim = zeros(testSz);
+    in_IMO = repmat(str2double(testcase.AlmavivaIMO), testSz);
     
     airResist = 0.1:0.1:0.3;
     windResist = 0.3:0.2:0.7;
     [startrow, count] = testcase.insert(...
-        [windResist', airResist', in_SOG', in_DeliveredPower'],...
+        [windResist', airResist', in_SOG', in_DeliveredPower', in_NearDisp',...
+        in_NearTrim', in_IMO'],...
         {'Wind_Resistance_Relative', 'Air_Resistance_No_Wind', ...
-        'Speed_Over_Ground', 'Delivered_Power'});
+        'Speed_Over_Ground', 'Delivered_Power', 'NearestDisplacement', ...
+        'NearestTrim', 'IMO_Vessel_Number'});
     
     exp_wind = num2cell(((windResist - airResist).*in_SOG)./ in_PropulsCalm + ...
         in_DeliveredPower.*(1 - in_PropulsActual./in_PropulsCalm))';
@@ -1212,7 +1218,12 @@ methods(Test)
     testSz = [1, 2];
     lowerPower = testcase.LowestPower;
     inPower_v = testcase.randOutThreshold(testSz, @lt, lowerPower);
-    [startrow, count] = testcase.insert(inPower_v', {'Delivered_Power'});
+    inNearTrim_v = zeros(testSz);
+    inNearDisp_v = repmat(114050, testSz);
+    inIMO_v = repmat(str2double(testcase.AlmavivaIMO), testSz);
+    [startrow, count] = testcase.insert(...
+        [inPower_v', inNearTrim_v', inNearDisp_v', inIMO_v'], ...
+        {'Delivered_Power', 'NearestTrim', 'NearestDisplacement', 'IMO_Vessel_Number'});
     
     % Execute
     testcase.call('filterPowerBelowMinimum', testcase.AlmavivaIMO);
