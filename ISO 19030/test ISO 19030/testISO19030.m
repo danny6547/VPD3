@@ -1115,7 +1115,7 @@ methods(Test)
     import matlab.unittest.constraints.EveryElementOf;
     import matlab.unittest.constraints.IsGreaterThanOrEqualTo;
     import matlab.unittest.constraints.IsLessThanOrEqualTo;
-    testSz = [1, 2];
+    testSz = [1, 4];
     
     bothValid_l = false;
     while ~any(bothValid_l) || all(bothValid_l)
@@ -1160,6 +1160,10 @@ methods(Test)
     disp_v(isnan(disp_v)) = [];
     filt_act = [filt_act{:}];
     filt_act(isnan(filt_act)) = [];
+    testcase.assertNotEmpty(disp_v, ['Displacement cannot be empty',...
+        ' for test.']);
+    testcase.assertNotEmpty(filt_act, ['FilterSPDist cannot be empty',...
+        ' for test.']);
     disp_act = EveryElementOf(disp_v(~filt_act));
     minDisp_cons = IsGreaterThanOrEqualTo(disp_v(~filt_act)*0.95);
     minDisp_msg = ['Elements of FilterSPDist corresponding to those ',...
@@ -1194,7 +1198,7 @@ methods(Test)
     
     function testfilterPowerBelowMinimum(testcase)
     % Test that column FilterSPBelow is true when Delivered_Power is lower
-    % than the minimum of the speed power curve.
+    % than the minimum of the appropriate speed power curve.
     % 1: Test that procedure returns TRUE for values of Delivered_Power
     % lower than the minimum of the speed, power curve for this vessel at
     % the nearest displacement and trim values.

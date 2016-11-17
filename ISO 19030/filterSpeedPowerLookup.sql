@@ -169,7 +169,7 @@ BEGIN
         ;
 	
     /* Update column giving the nearest value of Displacement and Trim for which the Displacement and Trim conditions are both satisfied */
-	UPDATE tempRawISO f
+	/* UPDATE tempRawISO f
 	JOIN (SELECT * FROM (SELECT c.id AS Cid, d.id AS Did, `Actual Displacement`, `Actual Trim`, SPTrim, SPDisplacement FROM
 				(SELECT
 					 b.id,
@@ -210,5 +210,102 @@ BEGIN
 	ON f.id = g.Cid
     SET f.NearestDisplacement = g.SPDisplacement,
 		f.NearestTrim = g.SPTrim
-        ;
+        ;*/
+	
+    /* Get valid trim and nearest trim */
+    UPDATE tempRawISO t
+		JOIN (
+			SELECT c.SPTrim, c.InvalidTrim
+				FROM (SELECT 
+					 b.id, 
+					 a.Trim AS 'SPTrim',
+					 b.Trim AS 'Actual Trim',
+					 `Lower Trim`,
+					 `Upper Trim`,
+					 (a.Trim > `Lower Trim` AND a.Trim < `Upper Trim`) AS InvalidTrim,
+					 ABS((ABS(a.Trim) - ABS(b.Trim))) AS DiffTrim
+					 FROM speedpowercoefficients a
+					 JOIN
+						(SELECT
+								id,
+							   Trim,
+							  (Trim - 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = 9450648)) AS 'Lower Trim',
+							  (Trim + 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = 9450648)) AS 'Upper Trim'
+						FROM tempRawISO) AS b) AS c
+					 INNER JOIN
+						(
+						SELECT f.id, 'SPTrim', 'Actual Trim', `Lower Trim`, `Upper Trim`, InvalidTrim, MIN(DiffTrim) AS MinDiff
+						FROM (SELECT 
+								 d.id, 
+								 a.Trim AS 'SPTrim',
+								 d.Trim AS 'Actual Trim',
+								 `Lower Trim`,
+								 `Upper Trim`,
+								 (a.Trim > `Lower Trim` AND a.Trim < `Upper Trim`) AS InvalidTrim,
+								 ABS((ABS(a.Trim) - ABS(d.Trim))) AS DiffTrim
+								 FROM speedpowercoefficients a
+								 JOIN
+									(SELECT
+											id,
+										   Trim,
+										  (Trim - 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = 9450648)) AS 'Lower Trim',
+										  (Trim + 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = 9450648)) AS 'Upper Trim'
+									FROM tempRawISO) AS d) AS f
+							GROUP BY id) AS e /* 'SPTrim', 'Actual Trim', `Lower Trim`, `Upper Trim`,  */ 
+					  ON
+						c.id= e.id AND
+						c.DiffTrim = e.MinDiff
+					  GROUP BY c.id) w
+		SET t.FilterSPTrim = w.InvalidTrim,
+			t.NearestTrim = w.SPTrim
+				;
+	
+    /* Get valid displacement and nearest displacement */
+    UPDATE tempRawISO t
+		JOIN (
+			SELECT z.ValidDisplacement, z.SPDisplacement AS 'NearestDisplacement'
+				FROM
+					(SELECT
+						 b.id,
+						 a.Displacement AS 'SPDisplacement',
+						 b.Displacement AS 'Actual Displacement',
+						 `Lower Displacement`,
+						 `Upper Displacement`,
+						 (a.Displacement > `Lower Displacement` AND a.Displacement < `Upper Displacement`) AS ValidDisplacement,
+						 ABS((ABS(a.Displacement) - ABS(b.Displacement))) AS DiffDisp
+						 FROM speedpowercoefficients a
+						 JOIN
+							(SELECT
+									id,
+								   Displacement,
+								  (Displacement*0.95) AS 'Lower Displacement',
+								  (Displacement*1.05) AS 'Upper Displacement'
+							FROM tempRawISO) AS b) AS z
+				INNER JOIN
+					(
+					SELECT d.id, SPDisplacement, `Actual Displacement`, `Lower Displacement`, `Upper Displacement`, ValidDisplacement, MIN(DiffDisp) AS MinDiff
+					FROM (SELECT
+						 b.id,
+						 a.Displacement AS 'SPDisplacement',
+						 b.Displacement AS 'Actual Displacement',
+						 `Lower Displacement`,
+						 `Upper Displacement`,
+						 (a.Displacement > `Lower Displacement` AND a.Displacement < `Upper Displacement`) AS ValidDisplacement,
+						 ABS((ABS(a.Displacement) - ABS(b.Displacement))) AS DiffDisp
+						 FROM speedpowercoefficients a
+						 JOIN
+							(SELECT
+									id,
+								   Displacement,
+								  (Displacement*0.95) AS 'Lower Displacement',
+								  (Displacement*1.05) AS 'Upper Displacement'
+							FROM tempRawISO) AS b) AS d
+					 GROUP BY id) AS x /* 'SPTrim', 'Actual Trim', `Lower Trim`, `Upper Trim`,  */ 
+				  ON
+					z.id= x.id AND
+					z.DiffDisp = x.MinDiff
+					GROUP BY z.id) w
+			 SET t.NearestDisplacement = w.NearestDisplacement,
+				 t.FilterSPDisp = w.ValidDisplacement;
+                
 END
