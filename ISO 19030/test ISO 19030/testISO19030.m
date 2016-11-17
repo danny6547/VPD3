@@ -1247,6 +1247,40 @@ methods(Test)
     testcase.verifyThat(power_act, minPower_cons, minPower_msg);
     
     end
+    
+    function testnormaliseHigherFreq(testcase)
+    % Test that high frequency data is averaged to a lower frequency.
+    % 1: Test that all data in table will be averaged over the frequency 
+    % input resulting in average values at that lower frequency.
+    
+    % 1
+    % Input
+    import matlab.unittest.constraints.HasSize;
+    testSz = [1, 10];
+    in_SpeedGPS = randi([1, 15], testSz);
+    in_SpeedGPS(1:2:end) = nan;
+    in_DateTimeUTC = linspace(floor(now), floor(now), prod(testSz));
+    in_Depth = randi([50, 200], testSz);
+    
+    input_m = [cellstr(datestr(in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS')),...
+        num2cell([in_SpeedGPS', in_Depth'])];
+    [startrow, count] = testcase.insert(input_m, ...
+        {'DateTime_UTC', 'Speed_Over_Ground', 'Water_Depth'});
+    
+    % Execute
+    testcase.call('normaliseHigherFreq');
+    
+    % Verify
+    outSpeed_c = testcase.read('Speed_Over_Ground', startrow, count, 'id');
+    outSpeed_v = [outSpeed_c{:}];
+    outSpeed_v(isnan(outSpeed_v)) = [];
+    speed_msg = ['High-frequency data is expected to be averaged over the '...
+        'lower frequency given.'];
+    
+    testcase.verifyThat(outSpeed_v, ~HasSize(testSz), speed_msg);
+    testcase.verifyEqual(mean(in_SpeedGPS), mean(outSpeed_v), speed_msg);
+    
+    end
 end
 
 methods
