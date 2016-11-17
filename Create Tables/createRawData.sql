@@ -38,5 +38,6 @@ CREATE TABLE rawdata (id INT PRIMARY KEY AUTO_INCREMENT,
                          Corrected_Power DOUBLE(20, 3),
                          FilterSPDispTrim BOOLEAN,
                          NearestDisplacement DOUBLE(10, 5),
+                         NearestTrim DOUBLE(10, 5),
                          Trim DOUBLE(10, 5)
 						 ) ENGINE = MYISAM;

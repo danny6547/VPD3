@@ -128,7 +128,6 @@ BEGIN
     /* Is value between limits? */
     
    /* Get boolean column indicating which values of trim and displacement are outside the ranges for nearest-neighbour interpolation */
-   /* UPDATE tempRawISO SET FilterSPDispTrim = FALSE; */
    UPDATE tempRawISO SET FilterSPDispTrim = id NOT IN (SELECT Cid FROM
 	(SELECT c.id AS Cid, d.id AS Did, `Actual Displacement`, `Actual Trim`, SPTrim, SPDisplacement FROM 
 			(SELECT 
@@ -143,8 +142,8 @@ BEGIN
 					(SELECT
 							id,
 						   Trim,
-						  (Trim - 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = 9450648)) AS 'Lower Trim',
-						  (Trim + 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = 9450648)) AS 'Upper Trim'
+						  (Trim - 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AS 'Lower Trim',
+						  (Trim + 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AS 'Upper Trim'
 					FROM tempRawISO) AS b) AS c
 		JOIN
 			(SELECT
@@ -167,5 +166,49 @@ BEGIN
 			) e
 		WHERE Cid = DiD
 		GROUP BY Cid)
+        ;
+	
+    /* Update column giving the nearest value of Displacement and Trim for which the Displacement and Trim conditions are both satisfied */
+	UPDATE tempRawISO f
+	JOIN (SELECT * FROM (SELECT c.id AS Cid, d.id AS Did, `Actual Displacement`, `Actual Trim`, SPTrim, SPDisplacement FROM
+				(SELECT
+					 b.id,
+					 a.Trim AS 'SPTrim',
+					 b.Trim AS 'Actual Trim',
+					 `Lower Trim`,
+					 `Upper Trim`,
+					 (a.Trim > `Lower Trim` AND a.Trim < `Upper Trim`) AS ValidTrim
+					 FROM speedpowercoefficients a
+					 JOIN
+						(SELECT
+								id,
+							   Trim,
+							  (Trim - 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AS 'Lower Trim',
+							  (Trim + 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AS 'Upper Trim'
+						FROM tempRawISO) AS b) AS c
+			JOIN
+				(SELECT
+					 b.id,
+					 a.Displacement AS 'SPDisplacement',
+					 b.Displacement AS 'Actual Displacement',
+					 `Lower Displacement`,
+					 `Upper Displacement`,
+					 (a.Displacement > `Lower Displacement` AND a.Displacement < `Upper Displacement`) AS ValidDisplacement
+					 FROM speedpowercoefficients a
+					 JOIN
+						(SELECT
+								id,
+							   Displacement,
+							  (Displacement*0.95) AS 'Lower Displacement',
+							  (Displacement*1.05) AS 'Upper Displacement'
+						FROM tempRawISO) AS b) AS d
+			WHERE c.ValidTrim = 1 AND
+				  d.ValidDisplacement = 1
+				) e
+			WHERE Cid = DiD
+			GROUP BY Cid) g
+	ON f.id = g.Cid
+    SET f.NearestDisplacement = g.SPDisplacement,
+		f.NearestTrim = g.SPTrim
         ;
 END

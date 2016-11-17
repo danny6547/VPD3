@@ -435,11 +435,12 @@ methods(Test)
     % Input
     in_DeliveredPower = 30e4:10e4:50e4;
     in_Displacement = 114049:114051;
+    in_Trim = zeros(1, 3);
     in_A = testcase.AlmavivaSpeedPowerCoefficients(1);
     in_B = testcase.AlmavivaSpeedPowerCoefficients(2);
     [startrow, count] = testcase.insert(...
-        [in_DeliveredPower', in_Displacement'], ...
-        {'Delivered_Power', 'Displacement'});
+        [in_DeliveredPower', in_Displacement', in_Trim'], ...
+        {'Delivered_Power', 'Displacement', 'Trim'});
     
     exp_espeed = num2cell( in_A(1).*log(in_DeliveredPower) + in_B )';
     

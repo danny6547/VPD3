@@ -8,6 +8,7 @@ CREATE PROCEDURE filterPowerBelowMinimum(imo INT)
 
 BEGIN
 	
+    /* Get nearest displacements and trim */
 	UPDATE tempRawISO SET FilterSPBelow = FALSE;
 	
 END
