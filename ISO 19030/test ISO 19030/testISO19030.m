@@ -1259,10 +1259,12 @@ methods(Test)
     testSz = [1, 10];
     in_SpeedGPS = randi([1, 15], testSz);
     in_SpeedGPS(1:2:end) = nan;
-    in_DateTimeUTC = linspace(floor(now), floor(now), prod(testSz));
+    in_DateTimeUTC = linspace(floor(now), floor(now)+1, prod(testSz));
+%     halfSec = 1 /(24*3600*2);
+%     in_DateTimeUTC = linspace(floor(now), floor(now)+halfSec, prod(testSz));
     in_Depth = randi([50, 200], testSz);
     
-    input_m = [cellstr(datestr(in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS')),...
+    input_m = [cellstr(datestr(in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')),...
         num2cell([in_SpeedGPS', in_Depth'])];
     [startrow, count] = testcase.insert(input_m, ...
         {'DateTime_UTC', 'Speed_Over_Ground', 'Water_Depth'});
@@ -1271,14 +1273,14 @@ methods(Test)
     testcase.call('normaliseHigherFreq');
     
     % Verify
-    outSpeed_c = testcase.read('Speed_Over_Ground', startrow, count, 'id');
-    outSpeed_v = [outSpeed_c{:}];
-    outSpeed_v(isnan(outSpeed_v)) = [];
+    outDepth_c = testcase.read('Water_Depth', startrow, count, 'id');
+    outDepth_v = [outDepth_c{:}];
+    outDepth_v(isnan(outDepth_v)) = [];
     speed_msg = ['High-frequency data is expected to be averaged over the '...
         'lower frequency given.'];
     
-    testcase.verifyThat(outSpeed_v, ~HasSize(testSz), speed_msg);
-    testcase.verifyEqual(mean(in_SpeedGPS), mean(outSpeed_v), speed_msg);
+    testcase.verifyThat(outDepth_v, ~HasSize(testSz), speed_msg);
+    testcase.verifyEqual(mean(in_Depth), mean(outDepth_v), speed_msg);
     
     end
 end

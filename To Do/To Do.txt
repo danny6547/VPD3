@@ -65,8 +65,8 @@ Vessels.Speed_Power_Source: what if file is moved? Generate ordered, protected, 
 # filterPowerBelowMinimum: test
 # filterPowerBelowMinimum: write
 normaliseFrequencies: update all columns by normalising frequencies based on formula 2.
-normaliseHigherFreq: average higher-freq data to a lower frequency
-normaliseHigherFreq: write
+# normaliseHigherFreq: average higher-freq data to a lower frequency
+# normaliseHigherFreq: write
 # normaliseHigherFreq: test
 normaliseLowerFreq: duplicate lwoer-freq data to a higher frequency
 normaliseLowerFreq: write
@@ -78,7 +78,7 @@ Sensors: create table to store sensors and their accuracies
 ISO19030Compliant: create table to store boolean indicating whether analysis was compliant with standard
 checkSensorRequirements: insert value for column "Compliant" into table ISO19030Compliant based on comparison of values in Sensors and the requirements in the standard
 
-PerformanceData: rename to PerformanceDataDNVGL
+# PerformanceData: rename to PerformanceDataDNVGL
 PerformanceDataISO19030: create table for data processed from ISO19030
 insertPerformanceDataISO19030: insert performance data derived from RawData into PerformanceDataISO19030
 
