@@ -1260,8 +1260,6 @@ methods(Test)
     in_SpeedGPS = randi([1, 15], testSz);
     in_SpeedGPS(1:2:end) = nan;
     in_DateTimeUTC = linspace(floor(now), floor(now)+1, prod(testSz));
-%     halfSec = 1 /(24*3600*2);
-%     in_DateTimeUTC = linspace(floor(now), floor(now)+halfSec, prod(testSz));
     in_Depth = randi([50, 200], testSz);
     
     input_m = [cellstr(datestr(in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')),...
@@ -1281,6 +1279,41 @@ methods(Test)
     
     testcase.verifyThat(outDepth_v, ~HasSize(testSz), speed_msg);
     testcase.verifyEqual(mean(in_Depth), mean(outDepth_v), speed_msg);
+    
+    end
+    
+    function testnormaliseLowerFreq(testcase)
+    % Test that low frequency data is repeated at a higher frequency.
+    % 1: Test that values of secondary parameters will be repeated at the
+    % frequency of the primary parameters when the primary parameters are
+    % at a higher frequency.
+    
+    % 1
+    % Input
+    import matlab.unittest.constraints.HasSize;
+    testSz = [1, 10];
+    in_SpeedGPS = randi([1, 15], testSz);
+    in_DateTimeUTC = linspace(floor(now), floor(now)+1, prod(testSz));
+    in_Depth = randi([50, 200], testSz);
+    in_Depth(2:2:end) = nan;
+    
+    input_m = [cellstr(datestr(in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')),...
+        num2cell([in_SpeedGPS', in_Depth'])];
+    [startrow, count] = testcase.insert(input_m, ...
+        {'DateTime_UTC', 'Speed_Over_Ground', 'Water_Depth'});
+    
+    % Execute
+    testcase.call('normaliseLowerFreq');
+    
+    % Verify
+    outDepth_c = testcase.read('Water_Depth', startrow, count, 'id');
+    outDepth_v = [outDepth_c{:}];
+    outDepth_v(isnan(outDepth_v)) = [];
+    speed_msg = ['Low-frequency data is expected to be repeated over the '...
+        'higher-frequency primary parameter timestep.'];
+    
+    testcase.verifyThat(outDepth_v, HasSize(size(in_SpeedGPS)), speed_msg);
+    testcase.verifyEqual(nanmean(in_Depth), mean(outDepth_v), speed_msg);
     
     end
 end
@@ -1433,4 +1466,10 @@ methods
     
 end
 
+    % 1
+    % Input
+    
+    % Execute
+    
+    % Verify
 end

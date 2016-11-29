@@ -68,9 +68,9 @@ normaliseFrequencies: update all columns by normalising frequencies based on for
 # normaliseHigherFreq: average higher-freq data to a lower frequency
 # normaliseHigherFreq: write
 # normaliseHigherFreq: test
-normaliseLowerFreq: duplicate lwoer-freq data to a higher frequency
+normaliseLowerFreq: duplicate lower-freq data to a higher frequency
 normaliseLowerFreq: write
-normaliseLowerFreq: test
+# normaliseLowerFreq: test
 filterData: Chauvenet's criteria
 validteData: applies formulae in annex J
 
