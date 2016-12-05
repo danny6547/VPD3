@@ -1377,6 +1377,86 @@ methods(Test)
     testcase.verifyEqual(actChauv, exp_Chauv, 'RelTol', 1.5E-7, chauv_msg);
     
     end
+    
+    function testupdateValidated(testcase)
+    % Test that variable "Validated" is updated according to Annex J.
+    % 1. Test that, for the four variables described in Annex J of the
+    % standard, where the values of their standard error of the mean exceed
+    % the stated threshold, the corresponding values of the variable
+    % "Validated" for the entire 10-minute block of data will be FALSE, 
+    % and otherwise they will be TRUE. 
+    
+    % 1
+    % Input
+    N = 5E2;
+    nBlock = 2;
+    
+    in_RPM = abs(randn([1, N])*3);
+    in_SpeedThroughWater = abs(randn([1, N])*0.5);
+    in_SpeedOverGround = abs(randn([1, N])*0.5);
+    in_RudderAngle = abs(randn([1, N])*10);
+    tstep = 1 / (24*(60/2));
+    in_DateTimeUTC = linspace(now, now+(tstep*(N-1)), N);
+    
+    [startrow, count] = testcase.insert([cellstr(datestr(...
+        in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')), ...
+        num2cell(in_RPM)',...
+        num2cell(in_SpeedThroughWater)', ...
+        num2cell(in_SpeedOverGround)',...
+        num2cell(in_RudderAngle)'], ...
+        {'DateTime_UTC', 'Shaft_Revolutions', 'Speed_Through_Water', ...
+        'Speed_Over_Ground', 'Rudder_Angle'});
+    
+    mRPM = mean(reshape(in_RPM, [nBlock, N/nBlock]));
+    mRPM = repmat(mRPM, [nBlock, 1]);
+    mRPM = mRPM(:)';
+    stdRPM = std(reshape(in_RPM, [nBlock, N/nBlock]), 1);
+    stdRPM = repmat(stdRPM, [nBlock, 1]);
+    stdRPM = stdRPM(:)';
+    
+    mSpeedThroughWater = mean(reshape(in_SpeedThroughWater, [nBlock, N/nBlock]));
+    mSpeedThroughWater = repmat(mSpeedThroughWater, [nBlock, 1]);
+    mSpeedThroughWater = mSpeedThroughWater(:)';
+    stdSpeedThroughWater = std(reshape(in_SpeedThroughWater, [nBlock, N/nBlock]), 1);
+    stdSpeedThroughWater = repmat(stdSpeedThroughWater, [nBlock, 1]);
+    stdSpeedThroughWater = stdSpeedThroughWater(:)';
+    
+    mSpeedOverGround = mean(reshape(in_SpeedOverGround, [nBlock, N/nBlock]));
+    mSpeedOverGround = repmat(mSpeedOverGround, [nBlock, 1]);
+    mSpeedOverGround = mSpeedOverGround(:)';
+    stdSpeedOverGround = std(reshape(in_RPM, [nBlock, N/nBlock]), 1);
+    stdSpeedOverGround = repmat(stdSpeedOverGround, [nBlock, 1]);
+    stdSpeedOverGround = stdSpeedOverGround(:)';
+    
+    mRudderAngle = mean(reshape(in_RudderAngle, [nBlock, N/nBlock]));
+    mRudderAngle = repmat(mRudderAngle, [nBlock, 1]);
+    mRudderAngle = mRudderAngle(:)';
+    stdRudderAngle = std(reshape(in_RudderAngle, [nBlock, N/nBlock]), 1);
+    stdRudderAngle = repmat(stdRudderAngle, [nBlock, 1]);
+    stdRudderAngle = stdRudderAngle(:)';
+    
+    invalid_RPM = stdRPM > 3;
+    invalid_SpeedThroughWater = stdSpeedThroughWater > 0.5;
+    invalid_SpeedOverGround = stdSpeedOverGround > 0.5;
+    invalid_RudderAngle = stdRudderAngle > 1;
+    
+    exp_validated = invalid_RPM | invalid_SpeedThroughWater | ...
+        invalid_SpeedOverGround | invalid_RudderAngle;
+    
+    % Execute
+    testcase.call('updateValidated');
+    
+    % Verify
+    outValidated_c = testcase.read('Validated', startrow, count, 'id');
+    outValidated_v = [outValidated_c{:}];
+    outValidated_v(isnan(outValidated_v)) = [];
+    actValidated = logical(outValidated_v);
+    validated_msg = ['Field name ''Validated'' expected to be true when '...
+        'standard devaitions of all four fields given in Annex J are not '...
+        'exceeded.'];
+    testcase.verifyEqual(actValidated, exp_validated, validated_msg);
+    
+    end
 end
 
 methods

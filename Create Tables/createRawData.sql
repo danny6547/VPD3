@@ -43,5 +43,6 @@ CREATE TABLE rawdata (id INT PRIMARY KEY AUTO_INCREMENT,
                          NearestDisplacement DOUBLE(20, 10),
                          NearestTrim DOUBLE(10, 5),
                          Trim DOUBLE(10, 5),
-                         Chauvenet_Criteria BOOLEAN
+                         Chauvenet_Criteria BOOLEAN,
+                         Validated BOOLEAN
 						 ) ENGINE = MYISAM;
