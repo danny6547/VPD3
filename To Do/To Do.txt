@@ -64,14 +64,15 @@ Vessels.Speed_Power_Source: what if file is moved? Generate ordered, protected, 
 # filterPowerBelowMinimum: filter values of Delivered Power below the minimum power of the speed-power curve.
 # filterPowerBelowMinimum: test
 # filterPowerBelowMinimum: write
-normaliseFrequencies: update all columns by normalising frequencies based on formula 2.
+# normaliseFrequencies: update all columns by normalising frequencies based on formula 2.
 # normaliseHigherFreq: average higher-freq data to a lower frequency
 # normaliseHigherFreq: write
 # normaliseHigherFreq: test
-normaliseLowerFreq: duplicate lower-freq data to a higher frequency
-normaliseLowerFreq: write
+# normaliseLowerFreq: duplicate lower-freq data to a higher frequency
+# normaliseLowerFreq: write
 # normaliseLowerFreq: test
-filterData: Chauvenet's criteria
+# updateChauvenetsCriteria: mark rows for filtering for non-angle variables.
+updateChauvenetCriteria: calculate mean and error of angles from formula I2.
 validteData: applies formulae in annex J
 
 Sensors: create table to store sensors and their accuracies

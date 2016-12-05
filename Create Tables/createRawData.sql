@@ -1,7 +1,7 @@
 /* Create temporary table for ISO 19030 analysis with */
 
 CREATE TABLE rawdata (id INT PRIMARY KEY AUTO_INCREMENT,
-						 DateTime_UTC DATETIME,
+						 DateTime_UTC DATETIME(3),
                          IMO_Vessel_Number INT(7),
 						 Relative_Wind_Speed DOUBLE(10, 5),
 						 Relative_Wind_Direction DOUBLE(10, 5),
@@ -42,5 +42,6 @@ CREATE TABLE rawdata (id INT PRIMARY KEY AUTO_INCREMENT,
                          FilterSPBelow BOOLEAN,
                          NearestDisplacement DOUBLE(20, 10),
                          NearestTrim DOUBLE(10, 5),
-                         Trim DOUBLE(10, 5)
+                         Trim DOUBLE(10, 5),
+                         Chauvenet_Criteria BOOLEAN
 						 ) ENGINE = MYISAM;

@@ -1316,6 +1316,67 @@ methods(Test)
     testcase.verifyEqual(nanmean(in_Depth), mean(outDepth_v), speed_msg);
     
     end
+    
+    function testupdateChauvenetCriteria(testcase)
+    % Test that Chauvenet's criteria is caluclated based on formula I7
+    % 1: Test that after calling the procedure, the column
+    % "Chauvenet_Criteria" will have value TRUE for every row at which
+    % Chauvenet's criteria, defined in Formula I7 in the standard, is met.
+    
+    % 1
+    % Input
+    N = 5E2;
+    nBlock = 5;
+    
+    in_SpeedOverGround = abs(randn([1, N])*10);
+    in_RelWindSpeed = abs(randn([1, N])*10);
+    tstep = 1 / (24*(60/2));
+    in_DateTimeUTC = linspace(now, now+(tstep*(N-1)), N);
+    
+    [startrow, count] = testcase.insert([cellstr(datestr(...
+        in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')), ...
+        num2cell(in_SpeedOverGround)',...
+        num2cell(in_RelWindSpeed)'], ...
+        {'DateTime_UTC', 'Speed_Over_Ground', 'Relative_Wind_Speed'});
+    
+    mSpeed = mean(reshape(in_SpeedOverGround, [nBlock, N/nBlock]));
+    mSpeed = repmat(mSpeed, [nBlock, 1]);
+    mSpeed = mSpeed(:)';
+    stdSpeed = std(reshape(in_SpeedOverGround, [nBlock, N/nBlock]), 1);
+    stdSpeed = repmat(stdSpeed, [nBlock, 1]);
+    stdSpeed = stdSpeed(:)';
+    mWind = mean(reshape(in_RelWindSpeed, [nBlock, N/nBlock]));
+    mWind = repmat(mWind, [nBlock, 1]);
+    mWind = mWind(:)';
+    stdWind = std(reshape(in_RelWindSpeed, [nBlock, N/nBlock]), 1);
+    stdWind = repmat(stdWind, [nBlock, 1]);
+    stdWind = stdWind(:)';
+    
+    y_f = @(x, N) erfc( x ).* nBlock;
+    t_f = @(x) 1 ./ (1 + x.*0.3275911);
+    x_f = @(z) abs(z - mSpeed) ./ ( stdSpeed - sqrt(2) );
+    x_f = @(z) abs(z - mWind) ./ ( stdWind - sqrt(2) );
+    
+    chav_f = @(delta, sigma, N) erfc(delta ./ (sigma - sqrt(2)))*N < 0.5;
+    chauvSpeed = chav_f(abs(in_SpeedOverGround - mSpeed),...
+        stdSpeed, nBlock);
+    chauvWind = chav_f(abs(in_RelWindSpeed - mWind),...
+        stdWind, nBlock);
+    exp_Chauv = chauvSpeed | chauvWind;
+    
+    % Execute
+    testcase.call('updateChauvenetCriteria');
+    
+    % Verify
+    outChauv_c = testcase.read('Chauvenet_Criteria', startrow, count, 'id');
+    outChauv_v = [outChauv_c{:}];
+    outChauv_v(isnan(outChauv_v)) = [];
+    actChauv = logical(outChauv_v);
+    chauv_msg = ['Chauvenet criterion expected to be calculated based on '...
+        'formula I7.'];
+    testcase.verifyEqual(actChauv, exp_Chauv, 'RelTol', 1.5E-7, chauv_msg);
+    
+    end
 end
 
 methods
