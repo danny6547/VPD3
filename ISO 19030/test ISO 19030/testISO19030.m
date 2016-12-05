@@ -1389,12 +1389,13 @@ methods(Test)
     % 1
     % Input
     N = 5E2;
-    nBlock = 2;
+    nBlock = 5;
+    k = 1.65;
     
-    in_RPM = abs(randn([1, N])*3);
-    in_SpeedThroughWater = abs(randn([1, N])*0.5);
-    in_SpeedOverGround = abs(randn([1, N])*0.5);
-    in_RudderAngle = abs(randn([1, N])*10);
+    in_RPM = abs(randn([1, N])*3*k);
+    in_SpeedThroughWater = abs(randn([1, N])*0.5*k);
+    in_SpeedOverGround = abs(randn([1, N])*0.5*k);
+    in_RudderAngle = abs(randn([1, N])*k);
     tstep = 1 / (24*(60/2));
     in_DateTimeUTC = linspace(now, now+(tstep*(N-1)), N);
     
@@ -1424,7 +1425,7 @@ methods(Test)
     mSpeedOverGround = mean(reshape(in_SpeedOverGround, [nBlock, N/nBlock]));
     mSpeedOverGround = repmat(mSpeedOverGround, [nBlock, 1]);
     mSpeedOverGround = mSpeedOverGround(:)';
-    stdSpeedOverGround = std(reshape(in_RPM, [nBlock, N/nBlock]), 1);
+    stdSpeedOverGround = std(reshape(in_SpeedOverGround, [nBlock, N/nBlock]), 1);
     stdSpeedOverGround = repmat(stdSpeedOverGround, [nBlock, 1]);
     stdSpeedOverGround = stdSpeedOverGround(:)';
     
@@ -1440,8 +1441,8 @@ methods(Test)
     invalid_SpeedOverGround = stdSpeedOverGround > 0.5;
     invalid_RudderAngle = stdRudderAngle > 1;
     
-    exp_validated = invalid_RPM | invalid_SpeedThroughWater | ...
-        invalid_SpeedOverGround | invalid_RudderAngle;
+    exp_validated = ~invalid_RPM & ~invalid_SpeedThroughWater & ...
+        ~invalid_SpeedOverGround & ~invalid_RudderAngle;
     
     % Execute
     testcase.call('updateValidated');
