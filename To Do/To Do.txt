@@ -73,9 +73,10 @@ Vessels.Speed_Power_Source: what if file is moved? Generate ordered, protected, 
 # normaliseLowerFreq: test
 # updateChauvenetsCriteria: mark rows for filtering for non-angle variables.
 updateChauvenetCriteria: calculate mean and error of angles from formula I2.
-validteData: applies formulae in annex J
+# validteData: applies formulae in annex J
 # validteData: test
-validteData: write
+# validteData: write
+# validteData: update for standard error of angles calculations
 
 Sensors: create table to store sensors and their accuracies
 ISO19030Compliant: create table to store boolean indicating whether analysis was compliant with standard

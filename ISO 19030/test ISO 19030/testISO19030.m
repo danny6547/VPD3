@@ -1408,31 +1408,26 @@ methods(Test)
         {'DateTime_UTC', 'Shaft_Revolutions', 'Speed_Through_Water', ...
         'Speed_Over_Ground', 'Rudder_Angle'});
     
-    mRPM = mean(reshape(in_RPM, [nBlock, N/nBlock]));
-    mRPM = repmat(mRPM, [nBlock, 1]);
-    mRPM = mRPM(:)';
     stdRPM = std(reshape(in_RPM, [nBlock, N/nBlock]), 1);
     stdRPM = repmat(stdRPM, [nBlock, 1]);
     stdRPM = stdRPM(:)';
-    
-    mSpeedThroughWater = mean(reshape(in_SpeedThroughWater, [nBlock, N/nBlock]));
-    mSpeedThroughWater = repmat(mSpeedThroughWater, [nBlock, 1]);
-    mSpeedThroughWater = mSpeedThroughWater(:)';
     stdSpeedThroughWater = std(reshape(in_SpeedThroughWater, [nBlock, N/nBlock]), 1);
     stdSpeedThroughWater = repmat(stdSpeedThroughWater, [nBlock, 1]);
     stdSpeedThroughWater = stdSpeedThroughWater(:)';
-    
-    mSpeedOverGround = mean(reshape(in_SpeedOverGround, [nBlock, N/nBlock]));
-    mSpeedOverGround = repmat(mSpeedOverGround, [nBlock, 1]);
-    mSpeedOverGround = mSpeedOverGround(:)';
     stdSpeedOverGround = std(reshape(in_SpeedOverGround, [nBlock, N/nBlock]), 1);
     stdSpeedOverGround = repmat(stdSpeedOverGround, [nBlock, 1]);
     stdSpeedOverGround = stdSpeedOverGround(:)';
     
-    mRudderAngle = mean(reshape(in_RudderAngle, [nBlock, N/nBlock]));
-    mRudderAngle = repmat(mRudderAngle, [nBlock, 1]);
-    mRudderAngle = mRudderAngle(:)';
-    stdRudderAngle = std(reshape(in_RudderAngle, [nBlock, N/nBlock]), 1);
+    deltaRudderAngle = nan(size(in_RudderAngle));
+    in_RudderAngle = reshape(in_RudderAngle, [nBlock, N/nBlock]);
+    mRudder = atan2(mean(sin(in_RudderAngle)), mean(cos(in_RudderAngle)));
+    mRudder = repmat(mRudder, [nBlock, 1]);
+    ri = mod(abs(in_RudderAngle - mRudder), 360);
+    rudderAbove180 = ri > 180;
+    deltaRudderAngle(rudderAbove180) = 360 - ri(rudderAbove180);
+    deltaRudderAngle(~rudderAbove180) = ri(~rudderAbove180);
+    deltaRudderAngle = reshape(deltaRudderAngle, [nBlock, N/nBlock]);
+    stdRudderAngle = sqrt(mean(deltaRudderAngle.^2));
     stdRudderAngle = repmat(stdRudderAngle, [nBlock, 1]);
     stdRudderAngle = stdRudderAngle(:)';
     
