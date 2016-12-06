@@ -1327,17 +1327,21 @@ methods(Test)
     % Input
     N = 5E2;
     nBlock = 5;
+    k = 20;
     
     in_SpeedOverGround = abs(randn([1, N])*10);
     in_RelWindSpeed = abs(randn([1, N])*10);
+    in_RudderAngle = abs(randn([1, N])*k);
     tstep = 1 / (24*(60/2));
     in_DateTimeUTC = linspace(now, now+(tstep*(N-1)), N);
     
     [startrow, count] = testcase.insert([cellstr(datestr(...
         in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')), ...
         num2cell(in_SpeedOverGround)',...
-        num2cell(in_RelWindSpeed)'], ...
-        {'DateTime_UTC', 'Speed_Over_Ground', 'Relative_Wind_Speed'});
+        num2cell(in_RelWindSpeed)', ...
+        num2cell(in_RudderAngle)'], ...
+        {'DateTime_UTC', 'Speed_Over_Ground', 'Relative_Wind_Speed',...
+        'Rudder_Angle'});
     
     mSpeed = mean(reshape(in_SpeedOverGround, [nBlock, N/nBlock]));
     mSpeed = repmat(mSpeed, [nBlock, 1]);
@@ -1352,6 +1356,21 @@ methods(Test)
     stdWind = repmat(stdWind, [nBlock, 1]);
     stdWind = stdWind(:)';
     
+    in_RudderAngle = reshape(in_RudderAngle, [nBlock, N/nBlock]);
+    mur = atan2(mean(sin(in_RudderAngle)), mean(cos(in_RudderAngle)));
+    mur = repmat(mur, [nBlock, 1]);
+    ri = mod(abs(in_RudderAngle - mur), 360);
+    riAbove180 = ri > 180;
+    deltar = nan(size(in_RudderAngle));
+    deltar(riAbove180) = 360 - ri(riAbove180);
+    deltar(~riAbove180) = ri(~riAbove180);
+    % deltar = reshape(deltar, [nBlock, N/nBlock]);
+    sigmar = sqrt(mean( deltar.^2));
+    sigmar = repmat(sigmar, [nBlock, 1]);
+    sigmar = sigmar(:)';
+    in_RudderAngle = in_RudderAngle(:)';
+    mur = mur(:)';
+    
     y_f = @(x, N) erfc( x ).* nBlock;
     t_f = @(x) 1 ./ (1 + x.*0.3275911);
     x_f = @(z) abs(z - mSpeed) ./ ( stdSpeed - sqrt(2) );
@@ -1362,7 +1381,9 @@ methods(Test)
         stdSpeed, nBlock);
     chauvWind = chav_f(abs(in_RelWindSpeed - mWind),...
         stdWind, nBlock);
-    exp_Chauv = chauvSpeed | chauvWind;
+    chauvRudder = chav_f(abs(in_RudderAngle - mur),...
+        sigmar, nBlock);
+    exp_Chauv = chauvSpeed | chauvWind | chauvRudder;
     
     % Execute
     testcase.call('updateChauvenetCriteria');

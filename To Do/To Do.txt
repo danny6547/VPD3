@@ -72,7 +72,7 @@ Vessels.Speed_Power_Source: what if file is moved? Generate ordered, protected, 
 # normaliseLowerFreq: write
 # normaliseLowerFreq: test
 # updateChauvenetsCriteria: mark rows for filtering for non-angle variables.
-updateChauvenetCriteria: calculate mean and error of angles from formula I2.
+# updateChauvenetCriteria: calculate mean and error of angles from formula I2.
 # validteData: applies formulae in annex J
 # validteData: test
 # validteData: write

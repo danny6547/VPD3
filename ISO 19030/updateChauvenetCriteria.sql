@@ -282,7 +282,7 @@ BEGIN
 									@lastd := IFNULL(Avg_Relative_Wind_Speed, @lastd) AS Avg_Relative_Wind_Speed,        
 									@laste := IFNULL(Avg_Relative_Wind_Direction, @laste) AS Avg_Relative_Wind_Direction,
 									@lastf := IFNULL(Avg_Speed_Over_Ground, @lastf) AS Avg_Speed_Over_Ground,            
-									@lastg := IFNULL(Avg_Ship_Heading, @lastg) AS Avg_Ship_Heading,                      
+									@lastg := IFNULL(Avg_Ship_Heading, @lastg) AS Avg_Ship_Heading,                       
 									@lasth := IFNULL(Avg_Rudder_Angle, @lasth) AS Avg_Rudder_Angle,                      
 									@lasti := IFNULL(Avg_Water_Depth, @lasti) AS Avg_Water_Depth,                        
 									@lastj := IFNULL(Avg_Seawater_Temperature, @lastj) AS Avg_Seawater_Temperature,      
@@ -295,7 +295,7 @@ BEGIN
 									@lastq := IFNULL(Std_Ship_Heading, @lastq) AS Std_Ship_Heading,                      
 									@lastr := IFNULL(Std_Rudder_Angle, @lastr) AS Std_Rudder_Angle,                      
 									@lasts := IFNULL(Std_Water_Depth, @lasts) AS Std_Water_Depth,                        
-									@lastt := IFNULL(Std_Seawater_Temperature, @lastt) AS Std_Seawater_Temperature,
+									@lastt := IFNULL(Std_Seawater_Temperature, @lastt) AS Std_Seawater_Temperature,     
                                     @lastv := IFNULL(N, @lastv) AS N
 							FROM
 								(SELECT
@@ -318,9 +318,9 @@ BEGIN
 									Avg_Relative_Wind_Direction,
 									Avg_Speed_Over_Ground,
 									Avg_Ship_Heading,
-									Avg_Rudder_Angle,
 									Avg_Water_Depth,
 									Avg_Seawater_Temperature,
+                                    Avg_Rudder_Angle,
 									Std_Speed_Through_Water,
 									Std_Delivered_Power,
 									Std_Shaft_Revolutions,
@@ -328,11 +328,11 @@ BEGIN
 									Std_Relative_Wind_Direction,
 									Std_Speed_Over_Ground,
 									Std_Ship_Heading,
-									Std_Rudder_Angle,
 									Std_Water_Depth,
-									Std_Seawater_Temperature
+									Std_Seawater_Temperature,
+                                    Std_Rudder_Angle
 										FROM tempRawISO t1
-											LEFT JOIN (SELECT id, DateTime_UTC, IMO_Vessel_Number, COUNT(*) AS N,
+											LEFT JOIN (SELECT id, DateTime_UTC, t33.IMO_Vessel_Number, COUNT(*) AS N,
 												AVG(Speed_Through_Water) AS  Avg_Speed_Through_Water,        
 												AVG(Delivered_Power) AS  Avg_Delivered_Power,                
 												AVG(Shaft_Revolutions) AS  Avg_Shaft_Revolutions,            
@@ -340,20 +340,70 @@ BEGIN
 												AVG(Relative_Wind_Direction) AS  Avg_Relative_Wind_Direction,
 												AVG(Speed_Over_Ground) AS  Avg_Speed_Over_Ground,            
 												AVG(Ship_Heading) AS  Avg_Ship_Heading,                      
-												AVG(Rudder_Angle) AS  Avg_Rudder_Angle,                      
 												AVG(Water_Depth) AS  Avg_Water_Depth,                        
 												AVG(Seawater_Temperature) AS  Avg_Seawater_Temperature,
+                                                mu_Rudder_Angle AS Avg_Rudder_Angle,
+                                                mu_Relative_Wind_Direction AS mu_Relative_Wind_Direction,
 												STD(Speed_Through_Water) AS  Std_Speed_Through_Water,        
 												STD(Delivered_Power) AS  Std_Delivered_Power,                
 												STD(Shaft_Revolutions) AS  Std_Shaft_Revolutions,            
 												STD(Relative_Wind_Speed) AS  Std_Relative_Wind_Speed,        
-												STD(Relative_Wind_Direction) AS  Std_Relative_Wind_Direction,
 												STD(Speed_Over_Ground) AS  Std_Speed_Over_Ground,            
-												STD(Ship_Heading) AS  Std_Ship_Heading,                      
-												STD(Rudder_Angle) AS  Std_Rudder_Angle,                      
+												STD(Ship_Heading) AS  Std_Ship_Heading,                        
 												STD(Water_Depth) AS  Std_Water_Depth,                        
-												STD(Seawater_Temperature) AS  Std_Seawater_Temperature 
-													FROM tempRawISO
+												STD(Seawater_Temperature) AS  Std_Seawater_Temperature,
+												SQRT(AVG(POWER(Delta_Rudder_Angle, 2))) AS Std_Rudder_Angle,
+												SQRT(AVG(POWER(Delta_Relative_Wind_Direction, 2))) AS Std_Relative_Wind_Direction
+													FROM (SELECT
+																t32.id,
+                                                                t32.IMO_Vessel_Number,
+																t32.DateTime_UTC,
+																Speed_Through_Water,
+																Delivered_Power,
+																Shaft_Revolutions,
+																Relative_Wind_Speed,
+																Relative_Wind_Direction,
+																Speed_Over_Ground,
+																Ship_Heading,
+																Water_Depth,
+																Seawater_Temperature,
+                                                                mu_Rudder_Angle,
+                                                                mu_Relative_Wind_Direction,
+																CASE mod(ABS(t32.Rudder_Angle - mu_Rudder_Angle), 360) > 180
+																	WHEN TRUE THEN 360 - mod(ABS(t32.Rudder_Angle - mu_Rudder_Angle), 360)
+																	WHEN FALSE THEN mod(ABS(t32.Rudder_Angle - mu_Rudder_Angle), 360)
+																END AS Delta_Rudder_Angle,
+																CASE mod(ABS(t32.Relative_Wind_Direction - mu_Relative_Wind_Direction), 360) > 180
+																	WHEN TRUE THEN 360 - mod(ABS(t32.Relative_Wind_Direction - mu_Relative_Wind_Direction), 360)
+																	WHEN FALSE THEN mod(ABS(t32.Relative_Wind_Direction - mu_Relative_Wind_Direction), 360)
+																END AS Delta_Relative_Wind_Direction
+															FROM
+																(SELECT t31.id,
+																	t31.IMO_Vessel_Number,
+                                                                    t31.DateTime_UTC,
+																	t31.Rudder_Angle,
+																	Speed_Through_Water,
+																	Delivered_Power,
+																	Shaft_Revolutions,
+																	Relative_Wind_Speed,
+																	Relative_Wind_Direction,
+																	Speed_Over_Ground,
+																	Ship_Heading,
+																	Water_Depth,
+																	Seawater_Temperature,
+																	@lastw := IFNULL(mu_Rudder_Angle, @lastw) AS mu_Rudder_Angle,
+																	@lastx := IFNULL(mu_Relative_Wind_Direction, @lastx) AS mu_Relative_Wind_Direction
+																	FROM
+																		(SELECT id,
+																			IMO_Vessel_Number,
+																			DateTime_UTC,
+																			 ATAN2(AVG(SIN(Rudder_Angle)), AVG(COS(Rudder_Angle))) AS mu_Rudder_Angle,
+																			 ATAN2(AVG(SIN(Relative_Wind_Direction)), AVG(COS(Relative_Wind_Direction))) AS mu_Relative_Wind_Direction
+																		FROM tempRawISO
+																			GROUP BY FLOOR((TO_SECONDS(DateTime_UTC) - @startTime)/(600))) t30
+																		RIGHT JOIN tempRawISO t31
+																			ON t30.id = t31.id
+																				CROSS JOIN (SELECT @lastw := 0) AS var_w) t32) t33
 														GROUP BY FLOOR((TO_SECONDS(DateTime_UTC) - @startTime)/(600))) t2
 											ON t1.id = t2.id) t3
 											CROSS JOIN (SELECT @lasta := 0) AS var_a
