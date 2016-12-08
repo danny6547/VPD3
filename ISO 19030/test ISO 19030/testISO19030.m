@@ -34,6 +34,7 @@ properties(Constant, Hidden)
     AlmavivaLength = 334;
     AlmavivaBlockCoefficient = 0.62;
     AlmavivaSpeedPowerCoefficients = [6.037644473511698, -40.659732310548080];
+    AlmavivaSpeedPowerDispTrim = [114050, 0];
     AlmavivaTransProjArea = 1330;
     AlmavivaWindResistCoeffHead = 0.0001512;
     AlmavivaDesignDraft = 15;
@@ -453,6 +454,51 @@ methods(Test)
         count);
     msg_espeed = ['Expected speed is expected to be calculated based on ',...
         'the speed-power curve for this vessel.'];
+    testcase.verifyEqual(act_espeed, exp_espeed, 'RelTol', 1e-5, msg_espeed);
+    
+    % 2
+    % Input
+    testSz = [1, 4];
+    
+    dispReference = testcase.AlmavivaSpeedPowerDispTrim(1);
+    upperDisp = 1.05*dispReference;
+    lowerDisp = 0.95*dispReference;
+    in_Displacement = testcase.randOutThreshold(testSz, @lt, lowerDisp);
+    
+    upperTrim = testcase.LBP * 0.002;
+    lowerTrim = - testcase.LBP * 0.002;
+    in_Trim = testcase.randOutThreshold(testSz, @lt, lowerTrim);
+    
+    in_DeliveredPower = linspace(1e4, 5e4, prod(testSz));
+    in_A = testcase.AlmavivaSpeedPowerCoefficients(1);
+    in_B = testcase.AlmavivaSpeedPowerCoefficients(2);
+    exp_espeed = in_A.*log(in_DeliveredPower) + in_B;
+    
+    dispCriteria_l = in_Displacement >= lowerDisp & ...
+        in_Displacement <= upperDisp;
+    trimCriteria_l = in_Trim >= lowerTrim & ...
+        in_Trim <= upperTrim;
+    bothCriteria_l = ~(dispCriteria_l & trimCriteria_l);
+    exp_espeed(bothCriteria_l) = exp_espeed(bothCriteria_l) .*...
+        (in_Displacement(bothCriteria_l).^(2/3) ./ ...
+        dispReference.^(2/3)).^(1/3);
+    exp_espeed = num2cell(exp_espeed(:));
+%     exp_espeed = exp_espeed(:);
+    
+    [startrow, count] = testcase.insert(...
+        [in_DeliveredPower', in_Displacement', in_Trim'], ...
+        {'Delivered_Power', 'Displacement', 'Trim'});
+    
+    % Execute
+    testcase.call('filterSpeedPowerLookup', testcase.AlmavivaIMO);
+    testcase.call('updateExpectedSpeed', testcase.AlmavivaIMO);
+    
+    % Verify
+    act_espeed = testcase.read('Expected_Speed_Through_Water', startrow,...
+        count);
+    msg_espeed = ['Expected_Speed_Through_Water is expected to be corrected'...
+        'for displacement using the Admiralty formula when displacement is '...
+        'out of range.'];
     testcase.verifyEqual(act_espeed, exp_espeed, 'RelTol', 1e-5, msg_espeed);
     
     end
