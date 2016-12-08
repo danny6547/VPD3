@@ -437,11 +437,12 @@ methods(Test)
     in_DeliveredPower = 30e4:10e4:50e4;
     in_Displacement = 114049:114051;
     in_Trim = zeros(1, 3);
+    in_IMO = repmat(str2double(testcase.AlmavivaIMO), 1, 3);
     in_A = testcase.AlmavivaSpeedPowerCoefficients(1);
     in_B = testcase.AlmavivaSpeedPowerCoefficients(2);
     [startrow, count] = testcase.insert(...
-        [in_DeliveredPower', in_Displacement', in_Trim'], ...
-        {'Delivered_Power', 'Displacement', 'Trim'});
+        [in_DeliveredPower', in_Displacement', in_Trim', in_IMO'], ...
+        {'Delivered_Power', 'Displacement', 'Trim', 'IMO_Vessel_Number'});
     
     exp_espeed = num2cell( in_A(1).*log(in_DeliveredPower) + in_B )';
     
@@ -459,13 +460,12 @@ methods(Test)
     % 2
     % Input
     testSz = [1, 4];
+    in_IMO = repmat(str2double(testcase.AlmavivaIMO), testSz);
     
     dispReference = testcase.AlmavivaSpeedPowerDispTrim(1);
-    upperDisp = 1.05*dispReference;
-    lowerDisp = 0.95*dispReference;
+    lowerDisp = dispReference*1/(1.05);
     in_Displacement = testcase.randOutThreshold(testSz, @lt, lowerDisp);
     
-    upperTrim = testcase.LBP * 0.002;
     lowerTrim = - testcase.LBP * 0.002;
     in_Trim = testcase.randOutThreshold(testSz, @lt, lowerTrim);
     
@@ -474,20 +474,17 @@ methods(Test)
     in_B = testcase.AlmavivaSpeedPowerCoefficients(2);
     exp_espeed = in_A.*log(in_DeliveredPower) + in_B;
     
-    dispCriteria_l = in_Displacement >= lowerDisp & ...
-        in_Displacement <= upperDisp;
-    trimCriteria_l = in_Trim >= lowerTrim & ...
-        in_Trim <= upperTrim;
-    bothCriteria_l = ~(dispCriteria_l & trimCriteria_l);
-    exp_espeed(bothCriteria_l) = exp_espeed(bothCriteria_l) .*...
-        (in_Displacement(bothCriteria_l).^(2/3) ./ ...
+    dispReference_v = repmat(dispReference, testSz);
+    dispCriteria_l = ~(dispReference_v >= in_Displacement*0.95 & ...
+        dispReference_v <= in_Displacement*1.05);
+    exp_espeed(dispCriteria_l) = exp_espeed(dispCriteria_l) .*...
+        (in_Displacement(dispCriteria_l).^(2/3) ./ ...
         dispReference.^(2/3)).^(1/3);
     exp_espeed = num2cell(exp_espeed(:));
-%     exp_espeed = exp_espeed(:);
     
     [startrow, count] = testcase.insert(...
-        [in_DeliveredPower', in_Displacement', in_Trim'], ...
-        {'Delivered_Power', 'Displacement', 'Trim'});
+        [in_DeliveredPower', in_Displacement', in_Trim', in_IMO'], ...
+        {'Delivered_Power', 'Displacement', 'Trim', 'IMO_Vessel_Number'});
     
     % Execute
     testcase.call('filterSpeedPowerLookup', testcase.AlmavivaIMO);
