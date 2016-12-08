@@ -37,7 +37,7 @@ insertDNVGLIntoPerformance: write
 # updateExpectedSpeed: include conditions for admiralty formula, test
 # updateExpectedSpeed: include conditions for admiralty formula, write
 insertIntoSpeedPowerCoefficients: calculate R2 value and validate against ISO standard (0.8)
-updateAirResistanceNoWind: find coefficient in bin CLOSEST to centred on zero (create BinCentres Column in WindCoefficientDirection?)
+# updateAirResistanceNoWind: find coefficient in bin containing direction zero (create BinCentres Column in WindCoefficientDirection?)
 createRawData: modify double precision to reflect real-world values
 updateBrakePower: allow for multiple engines per IMO
 bunkerDeliveryNote: make BDN_number unique. This will both ensure that no duplicates rows are added when adding notes from different ships, and that only one value can be indexed for raw data.

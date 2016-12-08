@@ -13,6 +13,6 @@ BEGIN
 		Air_Density * 
 		POWER(Speed_Over_Ground, 2) * 
 		( SELECT Transverse_Projected_Area_Design FROM Vessels WHERE IMO = imo) * 
-		( SELECT Coefficient FROM WindCoefficientDirection WHERE IMO = imo AND Start_Direction = 0);
+		( SELECT Coefficient FROM WindCoefficientDirection WHERE IMO_Vessel_Number = 9450648 AND 0 BETWEEN Start_Direction AND End_Direction);
 	
 END;
