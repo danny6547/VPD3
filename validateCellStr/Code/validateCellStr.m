@@ -6,7 +6,7 @@ function cout = validateCellStr(c, varargin)
 % array of strings if no error is thrown.
 
 % Input
-validateattributes(c, {'char', 'cell'}, {'vector'},...
+validateattributes(c, {'char', 'cell'}, {},...
         varargin{:});
 
 funcname = '';
