@@ -5,3 +5,4 @@ plotPerformnceData: Fix bug in name of graph in case of no vessel name informati
 connectDatabase: write function to connect to given database, return connection object.
 connectDatabase: test
 validateCellStr: write function to return validateAttributes-style error message if all elements of input cell are not strings.
+parseEcoInsightXLS: parse when aggregation is selected
