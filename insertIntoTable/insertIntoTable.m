@@ -16,13 +16,22 @@ if nargin > 3
 end
 
 % Build string containing values
-formatStr = strcat('(', formStrInner, '),\n');
-insertValues_s = sprintf(formatStr, data');
-insertValues_s(end-1:end) = [];
-
-allColsComma_s = [' (', strjoin(columns, ', '), ') '];
+formatStr = strcat('(', formStrInner, '),');
+formatStr = strrep(formatStr, '%s', '''%s''');
+rowIdx = 1:size(data, 1);
+data(cellfun(@isempty, data)) = { nan };
+data_cc = arrayfun(@(x) { data(x, :) }, rowIdx, 'Uni', 1);
+insertValsFormatted_c = cellfun(@(x) sprintf(formatStr, x{:}), ...
+    data_cc, 'Uni', 0);
+insertVals_c = cellfun(@(x) strrep(x, 'NaN', 'NULL'), ...
+    insertValsFormatted_c, 'Uni', 0);
+insertVals_c = cellfun(@(x) strrep(x, '''NULL''', 'NULL'), ...
+    insertVals_c, 'Uni', 0);
+insertValues_s = strcat(insertVals_c{:});
+insertValues_s(end) = [];
 
 % Build string to insert into table
+allColsComma_s = [' (', strjoin(columns, ', '), ') '];
 insertTemp_s = ['INSERT INTO ', table, allColsComma_s 'VALUES '];
 
 % Connect

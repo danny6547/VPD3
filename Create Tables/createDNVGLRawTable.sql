@@ -221,5 +221,19 @@ ER_Ventilation_Fans_In_Service	DOUBLE(20, 5),
 ER_Ventilation_Waste_Air_Temp	DOUBLE(20, 5), 
 Remarks	DOUBLE(20, 5), 
 Entry_Made_By_1	DOUBLE(20, 5), 
-Entry_Made_By_2	DOUBLE(20, 5)
+Entry_Made_By_2	DOUBLE(20, 5),
+Air_Pressure DOUBLE (10, 5),                  
+Air_Temperature DOUBLE (10, 5),               
+Density_Fuel_Oil_15C DOUBLE (10, 5),          
+Lower_Caloirifc_Value_Fuel_Oil DOUBLE (10, 5),
+Mass_Consumed_Fuel_Oil DOUBLE (10, 5),        
+Relative_Wind_Direction DOUBLE (10, 5),       
+Relative_Wind_Speed DOUBLE (10, 5),           
+Seawater_Temperature DOUBLE (10, 5),          
+Shaft_Revolutions DOUBLE (10, 5),             
+Speed_Over_Ground DOUBLE (10, 5),             
+Static_Draught_Aft DOUBLE (10, 5),            
+Static_Draught_Fore DOUBLE (10, 5)
 );
+
+ALTER TABLE DNVGLRaw ADD DateTime_UTC DATETIME AFTER Date_UTC;

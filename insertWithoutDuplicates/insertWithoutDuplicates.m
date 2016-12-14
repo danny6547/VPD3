@@ -3,7 +3,7 @@ function [ varargout ] = insertWithoutDuplicates(data, toTable, key, uniqueColum
 %   Detailed explanation goes here
 
 % Input
-validateattributes(data, {'char', 'numeric'}, {}, ...
+validateattributes(data, {'char', 'numeric', 'cell'}, {}, ...
     'insertWithoutDuplicates', 'fromTable', 1);
 validateattributes(key, {'char'}, {'vector'}, 'insertWithoutDuplicates', ...
     'key', 3);
@@ -89,6 +89,9 @@ if callSQL
         adodb_query(conn, dropIfTemp_s);
         createTemp_s = ['CREATE TABLE tempTable LIKE ' toTable];
         adodb_query(conn, createTemp_s);
+        if isnumeric(data)
+            data = num2cell(data);
+        end
         insertIntoTable('tempTable', [uniqueColumns, otherColumns], data, format_c{:});
     end
     

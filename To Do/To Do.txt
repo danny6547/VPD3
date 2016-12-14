@@ -88,4 +88,10 @@ checkSensorRequirements: insert value for column "Compliant" into table ISO19030
 PerformanceDataISO19030: create table for data processed from ISO19030
 insertPerformanceDataISO19030: insert performance data derived from RawData into PerformanceDataISO19030
 
+propulsiveEfficiency: figure out how to calculate EtaD for "calm" and "actual voyage" conditions
+
+staticShip: insert static ship data ie speed-power, LBP, 
 updatePI: calculate dd performance, in-service performance (out of scope of this project?)
+
+Find script behind procedure addTimeDNVGLRaw;
+Delete table DNVGLRaw, rewrite loadInfileDNVGLRaw to load data into tempRaw, make ready for RawData, insert without duplicates to RawData;

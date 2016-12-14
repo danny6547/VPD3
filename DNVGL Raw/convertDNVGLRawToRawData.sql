@@ -1,4 +1,5 @@
 /* Create columns and update values in temp DNVGL raw table to match those of RawData, based on the RawData definitions given in the ISO 19030 standard */
+DROP PROCEDURE IF EXISTS convertDNVGLRawToRawData;
 
 delimiter //
 
@@ -74,7 +75,7 @@ BEGIN
     /* LCV is a bunker report variable. It can be read from bunker delivery note table. */
     ALTER TABLE tempRaw ADD Lower_Caloirifc_Value_Fuel_Oil DOUBLE(10, 5);
     ALTER TABLE tempRaw ADD Density_Fuel_Oil_15C DOUBLE(10, 5);
-    CALL updateFromBunkerNote;
+    /* CALL updateFromBunkerNote; */
     
     /* Normalied Energy Consumed is a derived variable */
     
