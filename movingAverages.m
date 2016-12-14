@@ -98,9 +98,13 @@ for si = 1:numel(perStruct)
     end
     
     % Index into input and get dates
-    currDate = datenum(char(currStruct.Date), 'dd-mm-yyyy');
+    currDate = datenum(char(currStruct.DateTime_UTC), 'dd-mm-yyyy');
     currPerf = currStruct.Performance_Index;
     [ri, ci] = ind2sub(sizeStruct, si);
+    
+    % Remove duplicate date data (redundant when no duplicates in db)
+    [currDate, udi] = unique(currDate);
+    currPerf = currPerf(udi);
     
     % Get dates filtered by nan in performance data
     filtDate = currDate(~isnan(currPerf));
@@ -128,6 +132,7 @@ for si = 1:numel(perStruct)
         
         % Create timestep vector for current dates
         tstep = unique(diff(currDate));
+        tstep(tstep==0) = [];
         tstep_v = repmat(tstep, size(currDate));
         
         preDates = currDate - 0.5*tstep_v;

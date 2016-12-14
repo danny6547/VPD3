@@ -1,4 +1,4 @@
-function [ figHandles, dataLines, avgLines ] = plotPerformanceData(perfData, varargin)
+function [ figHandles, dataLines, avgLines, regrLines ] = plotPerformanceData(perfData, varargin)
 %plotPerformanceData Plot performance against time, with statistics.
 %   figHandles = plotPerformanceData(perfData) will return in FIGHANDLES an
 %   array of figure handles to graphs containing the data in the
@@ -9,10 +9,12 @@ function [ figHandles, dataLines, avgLines ] = plotPerformanceData(perfData, var
 % Inputs
 dataLines = [];
 avgLines = [];
+regrLines = [];
 
 avg_l = false;
 numDur = 1;
 if nargin > 1
+    
     avg_l = true;
     avgStruct = varargin{1};
     validateattributes(avgStruct, {'struct'}, {}, 'plotPerformanceData',...
@@ -20,6 +22,23 @@ if nargin > 1
     numDur = numel(avgStruct(1).Duration);
 end
 
+regr_l = false;
+if nargin > 2
+    
+    regr_l = true;
+    regri = 1;
+    regrStruct = varargin{2};
+    validateattributes(regrStruct, {'struct'}, {}, 'plotPerformanceData',...
+        'regrStruct', 3);
+end
+
+varname = 'Performance_Index';
+if nargin > 3
+    
+    varname = varargin{3};
+    validateattributes(varname, {'char'}, {'vector'}, 'plotPerformanceData',...
+        'varname', 4);
+end
 
 % Plot all dry dock intervals for each vessel
 sz = size(perfData);
@@ -50,7 +69,7 @@ for ii = 1:nDDi:numel(perfData)
        
        % Skip DDi if empty
        currData = perfData(ddi, idx_c{2:end});
-       if all(isnan(currData.Performance_Index))
+       if all(isnan(currData.(varname)))
            continue
        end
        
@@ -59,12 +78,13 @@ for ii = 1:nDDi:numel(perfData)
        
        % Plot data
        hold on
-       pi_line = plot(currAx, datenum(currData.Date, 'dd-mm-yyyy'), ...
-           currData.Performance_Index * 100, 'o', 'Color', currColour);
+       xdata = datenum(currData.DateTime_UTC, 'dd-mm-yyyy');
+       pi_line = plot(currAx, xdata, ...
+           currData.(varname) * 100, 'o', 'Color', currColour);
        hold off
        pi_line.MarkerFaceColor = pi_line.Color;
        
-       vesselNum = unique(currData.IMO);
+       vesselNum = unique(currData.IMO_Vessel_Number);
        
        % Plot averages
        if avg_l
@@ -98,6 +118,35 @@ for ii = 1:nDDi:numel(perfData)
                hold off
            end
        end
+       
+       % Plot regressions
+       if regr_l
+           
+           currRegr_st = regrStruct(ddi, idx_c{2:end});
+           coeffs = currRegr_st.Coefficients;
+           
+           % Figure out plotting any order later...
+           if numel(coeffs) == 2
+                
+                m = coeffs(1);
+                c = coeffs(2);
+                
+                x1 = linspace(min(xdata), max(xdata), 1e3);
+                y1 = ( m*x1 + c ) * 100;
+                
+                % Regression lines are slightly darker than data points
+                currColour = currColour - 0.2;
+                currColour(currColour < 0) = 0;
+                
+                hold on
+                regrLines(regri) = ...
+                   line(x1, y1,...
+                       'Color', currColour,...
+                       'LineWidth', 2);
+                hold off
+                regri = regri + 1;
+           end
+       end
    end
    
    % Vertical starts at zero
@@ -116,11 +165,11 @@ for ii = 1:nDDi:numel(perfData)
    
    % Labels
    labFontsz = 12;
-   ylabel('Performance Index ( % )', 'fontsize', labFontsz);
+   ylabel([strrep(varname, '_', ' '), ' ( % )'], 'fontsize', labFontsz);
    
    titleFontsz = 13;
    vesselName_ch = vesselName(vesselNum);
-   titleStr = ['Performance Index against Time for Vessel ' vesselName_ch];
+   titleStr = [strrep(varname, '_', ' '), ' against Time for Vessel ' vesselName_ch];
    title(titleStr, 'fontsize', titleFontsz);
    
 end

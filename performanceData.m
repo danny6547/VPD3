@@ -27,11 +27,11 @@ if nargin > 1
 end
 
 % Build SQL commands from basic statements
-sqlPerformanceDataBase = {'SELECT ', ' FROM test2.`performance data`'};
+sqlPerformanceDataBase = {'SELECT ', ' FROM test2.PerformanceDataDNVGL'};
 
 % SQL command for Column Names
-PerformanceDataColumnsNames_c = {'IMO', 'Date', 'Performance Index',...
-    'Speed Index'};
+PerformanceDataColumnsNames_c = {'IMO_Vessel_Number', 'DateTime_UTC',...
+    'Performance_Index', 'Speed_Index'};
 sqlPerformanceDataColumnsNames = sprintf('`%s`, ', ...
     PerformanceDataColumnsNames_c{:});
 sqlPerformanceDataColumnsNames(end-1:end) = [];
@@ -40,7 +40,7 @@ PerformanceData_c = [sqlPerformanceDataBase(1), {sqlPerformanceDataColumnsNames}
 sqlPerformanceData = [PerformanceData_c{:}];
 
 % SQL command to select only relevant IMO
-IMOFilter_c = ' WHERE IMO = ';
+IMOFilter_c = ' WHERE IMO_Vessel_Number = ';
 sqlSingle = sprintf([sqlPerformanceData, IMOFilter_c, '%u\n'], imo);
 
 % Remove trailing "\n"
@@ -90,21 +90,26 @@ if ddi_l
     
     numShips = numel(imo);
     numDocks = cellfun(@(x) size(x, 1), intervalDates_c, 'Uni', 0);
+    maxNumDocks = max([numDocks{:}]);
     e = cellfun(@(x, y) repmat({x}, y, 1), sqlMulti_c, numDocks, 'Uni', 0);
-    r = cat(2, e{:});
-    t = cat(2, intervalDates_c{:});
+    eprime = cellfun(@(x) [x; cell(maxNumDocks - length(x), 1)], e, 'Uni', 0);
+%     r = cat(2, e{:});
+    r = cat(2, eprime{:});
+%     t = cat(2, intervalDates_c{:});
     
     y = cellfun(@(x) num2cell(x, 2),  intervalDates_c, 'Uni', 0);
-    u = cat(2, y{:});
+    yprime = cellfun(@(x) [x; cell(maxNumDocks - length(x), 1)], y, 'Uni', 0);
+%     u = cat(2, y{:});
+    u = cat(2, yprime{:});
     
-    o = cellfun(@(x, y) [x ' AND Date > ' y{1} ' AND Date < ' y{2}], r, u,...
-        'Uni', 0);
-    
+    o = cellfun(@(x, y) [x ' AND DateTime_UTC > ' y{1} ' AND DateTime_UTC < ' y{2}], r, u,...
+        'Uni', 0, 'ErrorHandler', @(strct, a, b) (''));
     sqlMulti_c = o;
 end
 
 % Execute SQL
-[~, w] = cellfun(@(x) adodb_query(conn, x), sqlMulti_c, 'Uni', 0);
+[~, w] = cellfun(@(x) adodb_query(conn, x), sqlMulti_c, 'Uni', 0, ...
+    'ErrorHandler', @(strct, a) deal('', ''));
 
 % 
 s = cellfun(@isempty, w);
@@ -135,6 +140,6 @@ d = cellfun(@(x, y, z) [x, y, z], t, u, e, 'Uni', 0);
 % SQL syntax ensures each column corresponds to different IMO, so vector of
 % IMO can be reduced to scalar
 out = cellfun(@(x) cell2struct(x, fieldnames_c, 2), d);
-out = arrayfun(@(x, y) setfield(y, 'IMO', unique(x.IMO)), out, out);
+out = arrayfun(@(x, y) setfield(y, 'IMO_Vessel_Number', unique(x.IMO_Vessel_Number)), out, out);
 
 end
