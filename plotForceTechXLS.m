@@ -171,12 +171,12 @@ else
     
     fid = fopen(filename);
     temp_c = textscan(fid, strForm_s, 'Headerlines', 1, ...
-        'Delimiter', {';'}, 'Whitespace', '', 'TreatAsEmpty', '-');
+        'Delimiter', {','}, 'Whitespace', '', 'TreatAsEmpty', '-');
     
     while ~feof(fid)
         
         temp2_c = textscan(fid, strForm_s, 'Headerlines', 1, ...
-        'Delimiter', {';'}, 'Whitespace', '', 'TreatAsEmpty', '-');
+        'Delimiter', {','}, 'Whitespace', '', 'TreatAsEmpty', '-');
         temp_c(end+1, :) = temp2_c;
     end
     
@@ -188,17 +188,47 @@ else
 end
 
 % Filter
-rawDate = datenum(ShipName.ReportEndUtcTime, 'yyyy-mm-dd HH:MM'); %'dd-mm-yyyy HH:MM' ); %  );
+if iscell(ShipName.ReportEndUtcTime)
+    rawDate = cellfun(@(x) datenum(x{1}, 'yyyy-mm-dd HH:MM'), ...
+        ShipName.ReportEndUtcTime, 'Uni', 1, 'Err', @(x, y) nan(1));
+else
+    rawDate = datenum(ShipName.ReportEndUtcTime, 'yyyy-mm-dd HH:MM'); %'dd-mm-yyyy HH:MM' ); %  );
+end
 
 rawSI = ShipName.SpeedIndexCombined;
 if iscell(rawSI)
     rawSI(cellfun(@(x) isequal(x, '-'), rawSI)) = {nan};
-    rawSI = cellfun(@str2double, rawSI);
+    rawSI(cellfun(@isempty, rawSI)) = {nan};
+    rawSI(~cellfun(@isscalar, rawSI)) = {nan};
+    if any(cellfun(@(x) isequal(class(x), 'char'), rawSI))
+        rawSI = cellfun(@str2double, rawSI);
+    else
+        rawSI = [rawSI{:}];
+    end
 end
 
 datefilt_l = rawDate >= datenum(DDdate, 'dd-mm-yy');
-waves_v = ShipName.WavesState(datefilt_l);
-depth_v = ShipName.MinimumWaterDepth(datefilt_l);
+
+if iscell(ShipName.WavesState)
+    waves_c = ShipName.WavesState;
+    waves_c(cellfun(@isempty, waves_c)) = {nan};
+    waves_c(~cellfun(@isscalar, waves_c)) = {nan};
+    waves_v = [waves_c{:}];
+else
+    waves_v = ShipName.WavesState;
+end
+
+if iscell(ShipName.MinimumWaterDepth)
+    depth_c = ShipName.MinimumWaterDepth;
+    depth_c(cellfun(@isempty, depth_c)) = {nan};
+    depth_c(~cellfun(@isscalar, depth_c)) = {nan};
+    depth_v = [depth_c{:}];
+else
+    depth_v = ShipName.MinimumWaterDepth;
+end
+
+waves_v = waves_v(datefilt_l);
+depth_v = depth_v(datefilt_l);
 dateDate = rawDate(datefilt_l);
 dateSI = rawSI(datefilt_l);
 
@@ -239,4 +269,3 @@ dataTable = ShipName;
 
 
 end
-
