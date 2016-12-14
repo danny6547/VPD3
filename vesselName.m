@@ -35,5 +35,16 @@ else
     name = out.name;
     if iscell(out.imo)
         IMOout = [out.imo{:}];
+    else
+        IMOout = [out.imo];
     end
+end
+
+% Sort by input order
+if ~isscalar(IMOin)
+    [imoFilt, imoOrder] = ismember(IMOin, IMOout);
+    IMOout = IMOout(imoFilt);
+    imoOrder = imoOrder(imoFilt);
+    name = name(imoOrder);
+    IMOout = IMOout(imoOrder);
 end
