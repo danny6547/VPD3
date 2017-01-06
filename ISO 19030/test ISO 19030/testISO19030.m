@@ -48,6 +48,8 @@ properties(Constant, Hidden)
     LBP = 319;
     LowestPower = 28534;
     SPTrim = 3.3-9.56;
+    EngineMinPower = 22840.84;
+    EngineMaxPower = 67544.40;
     
 end
 
@@ -1515,6 +1517,42 @@ methods(Test)
         'standard devaitions of all four fields given in Annex J are not '...
         'exceeded.'];
     testcase.verifyEqual(actValidated, exp_validated, validated_msg);
+    
+    end
+    
+    function testfilterSFOCOutOfRange(testcase)
+    % Test the filter for when engine's tested range exceeded in ship data.
+    % 1. Test that, when the brake power is below the minimum or above the
+    % maximum of the engine brake power for which there is data for it's
+    % fuel consumption, the filter value will be positive and otherwise,
+    % negative.
+    
+    % 1
+    % Input
+    import matlab.unittest.constraints.IsTrue;
+    import matlab.unittest.constraints.IsFalse;
+    
+    minEngine = testcase.EngineMinPower;
+    maxEngine = testcase.EngineMaxPower;
+    testSz = [1, 4];
+    inBrake_v = testcase.randOutThreshold(testSz, @lt, minEngine, ...
+        @gt, maxEngine);
+    expTrue_l = inBrake_v < minEngine | inBrake_v > maxEngine;
+    in_DateTimeUTC = linspace(floor(now), floor(now)+1, prod(testSz));
+    data_m = [cellstr(datestr(in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')),...
+        num2cell(inBrake_v')];
+    [startrow, count] = testcase.insert(data_m, ...
+        {'DateTime_UTC', 'Brake_Power'});
+    
+    % Execute
+    testcase.call('filterSFOCOutOfRange');
+    
+    % Verify
+    outFilt_v = testcase.read('FilterSFOCOutRange', startrow, count, 'id');
+    msgFilt = ['Values at indices where brake power is out of range '...
+        'are expected to be TRUE'];
+    testcase.verifyThat(outFilt_v(expTrue_l), IsTrue, msgFilt);
+    testcase.verifyThat(outFilt_v(~expTrue_l), IsFalse, msgFilt);
     
     end
 end
