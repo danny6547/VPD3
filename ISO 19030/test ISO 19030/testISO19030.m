@@ -211,6 +211,15 @@ methods(Static)
     out = out_l;
     
     end
+    
+    function datecell = datetime_utc(testSize)
+    % Cell array of strings compatible with column 'DateTime_UTC'.
+    
+    in_DateTimeUTC = linspace(floor(now), floor(now)+1, prod(testSize));
+    datecell = cellstr(datestr(in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF'));
+    
+    end
+    
 end
 
 methods(Test)
@@ -1531,28 +1540,60 @@ methods(Test)
     % Input
     import matlab.unittest.constraints.IsTrue;
     import matlab.unittest.constraints.IsFalse;
+    import matlab.unittest.constraints.EveryElementOf;
     
     minEngine = testcase.EngineMinPower;
     maxEngine = testcase.EngineMaxPower;
-    testSz = [1, 4];
-    inBrake_v = testcase.randOutThreshold(testSz, @lt, minEngine, ...
-        @gt, maxEngine);
+    testSz = [1, 2];
+    inBrake_v = testcase.randOutThreshold(testSz, @lt, minEngine);
+    inBrake_v = [inBrake_v, testcase.randOutThreshold(testSz, @gt, maxEngine)];
     expTrue_l = inBrake_v < minEngine | inBrake_v > maxEngine;
+    testSz = [1, 4];
     in_DateTimeUTC = linspace(floor(now), floor(now)+1, prod(testSz));
     data_m = [cellstr(datestr(in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')),...
         num2cell(inBrake_v')];
     [startrow, count] = testcase.insert(data_m, ...
         {'DateTime_UTC', 'Brake_Power'});
+    IMO_s = testcase.AlmavivaIMO;
     
     % Execute
-    testcase.call('filterSFOCOutOfRange');
+    testcase.call('filterSFOCOutOfRange', IMO_s);
     
     % Verify
-    outFilt_v = testcase.read('FilterSFOCOutRange', startrow, count, 'id');
+    outFilt_c = testcase.read('FilterSFOCOutRange', startrow, count, 'id');
+    outFilt_v = logical([outFilt_c{:}]);
     msgFilt = ['Values at indices where brake power is out of range '...
         'are expected to be TRUE'];
-    testcase.verifyThat(outFilt_v(expTrue_l), IsTrue, msgFilt);
-    testcase.verifyThat(outFilt_v(~expTrue_l), IsFalse, msgFilt);
+    testcase.verifyThat(EveryElementOf(outFilt_v(expTrue_l)), IsTrue, msgFilt);
+    testcase.verifyThat(EveryElementOf(outFilt_v(~expTrue_l)), IsFalse, msgFilt);
+    
+    end
+    
+    function testupdateTrim(testcase)
+    % Test that Trim will be calculated from static draft fore and aft.
+    % 1. Test that procedure will return in column Trim the difference
+    % between the static forward draft and the static aft draft.
+    
+    % 1
+    % Input
+    testSz = [2, 1];
+    input_DraftFore = testcase.randOutThreshold(testSz, @gt, 0);
+    input_DraftAft = testcase.randOutThreshold(testSz, @gt, 0);
+    exp_Trim = input_DraftFore - input_DraftAft;
+    in_DateTimeUTC = testISO19030.datetime_utc(testSz);
+    in_Data = [in_DateTimeUTC, num2cell([input_DraftFore, input_DraftAft])];
+    in_Names = {'DateTime_UTC', 'Static_Draught_Fore', 'Static_Draught_Aft'};
+    testcase.insert(in_Data, in_Names);
+    
+    % Execute
+    testcase.call('updateTrim');
+    
+    % Verify
+    act_Trimc = testcase.read({'Trim'});
+    act_Trim = [act_Trimc{:}];
+    msg_Trim = ['Trim expected to be the difference between fore and '...
+        'aft draft.'];
+    testcase.verifyEqual(act_Trim, exp_Trim', 'RelTol', 1e-4, msg_Trim);
     
     end
 end
