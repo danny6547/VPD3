@@ -30,4 +30,7 @@ BEGIN
     /* Calculate Performance Values 5.3.6.1 */
     CALL updateSpeedLoss();
     
+    /* Calculate filter */
+    CALL filterSFOCOutOfRange(imo);
+    
 END;
