@@ -28,7 +28,7 @@ BEGIN
     UPDATE tempRawISO SET Displacement_Correction_Needed = TRUE WHERE NearestDisplacement > Displacement*1.05 OR NearestDisplacement < Displacement*0.95;
     
     /* Get coefficients of speed, power curve for nearest diplacement, trim */ 
-    UPDATE tempRawISO ii JOIN
+    UPDATE IGNORE tempRawISO ii JOIN
 	(SELECT i.id, i.IMO_Vessel_Number, NearestDisplacement, NearestTrim, i.Displacement, i.Trim, s.Exponent_A, s.Exponent_B FROM tempRawISO i
 		JOIN speedpowercoefficients s
 			ON i.IMO_Vessel_Number = s.IMO_Vessel_Number AND
@@ -39,7 +39,7 @@ BEGIN
     WHERE Displacement_Correction_Needed IS FALSE;
     
     /* Get coefficients of speed, power curve for nearest diplacement, trim */ 
-    UPDATE tempRawISO ii JOIN
+    UPDATE IGNORE tempRawISO ii JOIN
 	(SELECT i.id, i.IMO_Vessel_Number, NearestDisplacement, NearestTrim, i.Displacement, i.Trim, s.Exponent_A, s.Exponent_B FROM tempRawISO i
 		JOIN speedpowercoefficients s
 			ON i.IMO_Vessel_Number = s.IMO_Vessel_Number AND
