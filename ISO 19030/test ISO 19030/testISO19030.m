@@ -870,6 +870,13 @@ methods(Test)
     % table BunkerDeliveryNote of the column
     % BDN_Number.
     
+    % Change table name and create tempraw for this procedure
+    originalTable_s = testcase.TableName;
+    testcase.TableName = 'tempRaw';
+    adodb_query(testcase.Connection, 'DROP TABLE IF EXISTS tempRaw;'); 
+    adodb_query(testcase.Connection, 'CREATE TABLE tempRaw LIKE dnvglraw;');
+    testcase.call('convertDNVGLRawToRawData');
+    
     % 1:
     % Input
     LCV_v = [40.5, 42.8, 49.32, 46.5, 40.5, 42.7, 42.7];
@@ -883,14 +890,13 @@ methods(Test)
     bdn_c = {'Default_HFO', 'Default_LNG'};
     bdn_l = ismember(bdnAll_c, bdn_c);
     
-    sqlAddCol_s = 'ALTER TABLE tempRawISO ADD ME_Fuel_BDN VARCHAR(40);';
-    adodb_query(testcase.Connection, sqlAddCol_s);
+%     sqlAddCol_s = 'ALTER TABLE tempRawISO ADD ME_Fuel_BDN VARCHAR(40);';
     
     [startrow, count] = testcase.insert(bdn_c', {'ME_Fuel_BDN'});
     exp_lcv = num2cell( LCV_v(bdn_l) )';
     
     % Execute
-    testcase.call('updateFromBunkerNote');
+    testcase.call('updateFromBunkerNote', testcase.AlmavivaIMO);
     
     % Verify
     act_lcv = testcase.read('Lower_Caloirifc_Value_Fuel_Oil', startrow, ...
@@ -907,13 +913,16 @@ methods(Test)
     exp_lcv = num2cell( dens_v(bdn_l) )';
     
     % Execute
-    testcase.call('updateFromBunkerNote');
+    testcase.call('updateFromBunkerNote', testcase.AlmavivaIMO);
     
     % Verify
     act_lcv = testcase.read('Density_Fuel_Oil_15C', startrow, count);
     msg_lcv = ['LCV values expected to match those in table '...
         'BunkerDeliveryNote for the corresponding rows of BDN_Number.'];
     testcase.verifyEqual(act_lcv, exp_lcv, msg_lcv);
+    
+    % Reassign table name
+    testcase.TableName = originalTable_s;
     
     end
     
@@ -1001,6 +1010,8 @@ methods(Test)
     import matlab.unittest.constraints.EveryElementOf;
     import matlab.unittest.constraints.IsGreaterThan;
     import matlab.unittest.constraints.IsLessThan;
+    import matlab.unittest.constraints.IsTrue;
+    import matlab.unittest.constraints.AnyElementOf;
     testSz = [1, 2];
     
     mintemp = testcase.minTemp;
@@ -1015,7 +1026,16 @@ methods(Test)
     
     % Verify
     temp_act = testcase.read('Seawater_Temperature', startrow, count, 'id');
+    tempFilt_act = testcase.read('Filter_Reference_Seawater_Temp', startrow,...
+        count, 'id');
     temp_act = [temp_act{:}];
+    tempFilt_act = logical([tempFilt_act{:}]);
+    testcase.assertThat(AnyElementOf(tempFilt_act), IsTrue, ['Filt_Reference_Seawater_Temp must '...
+        'have some true values in order to be tested.']);
+    temp_act = temp_act(~tempFilt_act);
+    
+%     testcase.assertNotEmpty(temp_act, ['Filt_Reference_Seawater_Temp must '...
+%         'ahve some true values in order to be tested.']);
     reftemp_act = EveryElementOf(temp_act);
     reftemp_cons = IsGreaterThan(mintemp);
     temp_msg = ['Water temperatures at or below 2 degrees Celsius should ',...
@@ -1029,7 +1049,7 @@ methods(Test)
     maxWind = testcase.MaxWind;
     
     inputNames_c = {'Relative_Wind_Speed'};
-    inWindSpeed_v = testcase.randOutThreshold(testSz, @lt, 7.9, @gt, 0);
+    inWindSpeed_v = testcase.randOutThreshold(testSz, @lt, 7.9);
     inputData_m = inWindSpeed_v';
     [startrow, count] = testcase.insert(inputData_m, inputNames_c);
     
@@ -1037,9 +1057,16 @@ methods(Test)
     testcase.call('deleteWithReferenceConditions', testcase.AlmavivaIMO);
     
     % Verify
-    rudder_act = testcase.read('Relative_Wind_Speed', startrow - 1, count,...
+    rudder_act = testcase.read('Relative_Wind_Speed', startrow, count,...
         'id');
+    rudderFilt_act = testcase.read('Filter_Reference_Wind_Speed', startrow, count,...
+        'id');
+    rudderFilt_act = logical([rudderFilt_act{:}]);
+    testcase.assertThat(AnyElementOf(rudderFilt_act), IsTrue, ...
+        ['Filter_Reference_Wind_Speed must have some true values in order '...
+        'to be tested.']);
     rudder_act = [rudder_act{:}];
+    rudder_act = rudder_act(~rudderFilt_act);
     rudder_act(isnan(rudder_act)) = [];
     refwind_act = EveryElementOf(rudder_act);
     refwind1_cons = IsGreaterThan(minWind);
@@ -1109,8 +1136,12 @@ methods(Test)
     testcase.call('deleteWithReferenceConditions', testcase.AlmavivaIMO);
     
     % Verify
-    depth5_act = testcase.read('Water_Depth', startrow, 1, 'id');
-    depth6_act = testcase.read('Water_Depth', startrow + 1, 1, 'id');
+    depth5_act = testcase.read('Water_Depth', startrow, 2, 'id');
+    depth6_act = testcase.read('Water_Depth', startrow + 2, 2, 'id');
+    depth5Filt_act = testcase.read('Filter_Reference_Water_Depth', ...
+        startrow, 2, 'id');
+    depth6Filt_act = testcase.read('Filter_Reference_Water_Depth', ...
+        startrow + 2, 2, 'id');
     testcase.assertNotEmpty(depth5_act, ['Water_Depth must not be non-empty ',...
         'to be tested.']);
     testcase.assertNotEmpty(depth6_act, ['Water_Depth must not be non-empty ',...
@@ -1119,6 +1150,20 @@ methods(Test)
     depth5_act(isnan(depth5_act)) = [];
     depth6_act = [depth6_act{:}];
     depth6_act(isnan(depth6_act)) = [];
+    
+    depth5Filt_act = [depth5Filt_act{:}];
+    depth5Filt_act = logical(depth5Filt_act);
+    depth5_act = depth5_act(~depth5Filt_act);
+    depth6Filt_act = [depth6Filt_act{:}];
+    depth6Filt_act = logical(depth6Filt_act);
+    depth6_act = depth6_act(~depth6Filt_act);
+    testcase.assertThat(AnyElementOf(depth5Filt_act), IsTrue, ...
+        ['Filter_Reference_Water_Depth must have some true values in order '...
+        'to be tested.']);
+    testcase.assertThat(AnyElementOf(depth6Filt_act), IsTrue, ...
+        ['Filter_Reference_Water_Depth must have some true values in order '...
+        'to be tested.']);
+    
     refdepth5_act = EveryElementOf(depth5_act);
     refdepth5_cons = IsGreaterThan(formula5(1));
     refdepth6_act = EveryElementOf(depth6_act);
@@ -1145,10 +1190,14 @@ methods(Test)
     
     % Verify
     rudder_act = testcase.read('Rudder_Angle', startrow, count, 'id');
+    rudderFilt_act = testcase.read('Filter_Reference_Rudder_Angle', startrow, count, 'id');
     testcase.assertNotEmpty(rudder_act, ['Rudder angle must not be non-empty ',...
         'to be tested.']);
     rudder_act = [rudder_act{:}];
     rudder_act(isnan(rudder_act)) = [];
+    
+    rudderFilt_act = logical([rudderFilt_act{:}]);
+    rudder_act = rudder_act(~rudderFilt_act);
     rudder_act = EveryElementOf(rudder_act);
     rudder_cons = IsLessThan(maxRudder);
     rudder_msg = ['Rudder angles above 5 degrees should be removed by ',...

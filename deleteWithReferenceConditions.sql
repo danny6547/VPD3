@@ -1,4 +1,5 @@
 /* Remove rows containing data which fails the reference conditions given in standard ISO 19030-2 */
+DROP PROCEDURE IF EXISTS deleteWithReferenceConditions;
 
 delimiter //
 
@@ -32,7 +33,14 @@ BEGIN
                 d.DepthFormula6 = 2.75 * POWER(t.Speed_Through_Water, 2) / g1, 
                 d.Water_Depth = t.Water_Depth;
     
-	DELETE FROM tempRawISO WHERE Seawater_Temperature <= 2;
+    UPDATE tempRawISO SET Filter_Reference_Seawater_Temp = TRUE WHERE Seawater_Temperature <= 2;
+    UPDATE tempRawISO SET Filter_Reference_Wind_Speed = TRUE WHERE Relative_Wind_Speed > 7.9;
+    UPDATE tempRawISO SET Filter_Reference_Water_Depth = TRUE WHERE Water_Depth < 3 * SQRT( ShipBreadth * (Static_Draught_Aft + Static_Draught_Fore) / 2 ) 
+		OR Water_Depth < 2.75 * POWER(Speed_Through_Water, 2) / g1;
+    UPDATE tempRawISO SET Filter_Reference_Rudder_Angle = TRUE WHERE Rudder_Angle > 5;
+    
+	/* DELETE FROM tempRawISO WHERE Seawater_Temperature <= 2; */
+    /* 
 	DELETE FROM tempRawISO WHERE Relative_Wind_Speed < 0 OR Relative_Wind_Speed > 7.9;
 	DELETE FROM tempRawISO WHERE Rudder_Angle > 5;
     DELETE d
