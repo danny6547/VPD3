@@ -128,7 +128,7 @@ BEGIN
     /* Is value between limits? */
     
    /* Get boolean column indicating which values of trim and displacement are outside the ranges for nearest-neighbour interpolation */
-   UPDATE tempRawISO SET FilterSPDispTrim = id NOT IN (SELECT Cid FROM
+   /* UPDATE tempRawISO SET FilterSPDispTrim = id NOT IN (SELECT Cid FROM
 	(SELECT c.id AS Cid, d.id AS Did, `Actual Displacement`, `Actual Trim`, SPTrim, SPDisplacement FROM 
 			(SELECT 
 				 b.id, 
@@ -166,7 +166,7 @@ BEGIN
 			) e
 		WHERE Cid = DiD
 		GROUP BY Cid)
-        ;
+        ; */
 	
     /* Update column giving the nearest value of Displacement and Trim for which the Displacement and Trim conditions are both satisfied */
 	/* UPDATE tempRawISO f
@@ -229,8 +229,8 @@ BEGIN
 						(SELECT
 								id,
 							   Trim,
-							  (Trim - 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = 9450648)) AS 'Lower Trim',
-							  (Trim + 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = 9450648)) AS 'Upper Trim'
+							  (Trim - 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AS 'Lower Trim',
+							  (Trim + 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AS 'Upper Trim'
 						FROM tempRawISO) AS b) AS c
 					 INNER JOIN
 						(
@@ -248,8 +248,8 @@ BEGIN
 									(SELECT
 											id,
 										   Trim,
-										  (Trim - 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = 9450648)) AS 'Lower Trim',
-										  (Trim + 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = 9450648)) AS 'Upper Trim'
+										  (Trim - 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AS 'Lower Trim',
+										  (Trim + 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AS 'Upper Trim'
 									FROM tempRawISO) AS d) AS f
 							GROUP BY id) AS e /* 'SPTrim', 'Actual Trim', `Lower Trim`, `Upper Trim`,  */ 
 					  ON
@@ -267,6 +267,7 @@ BEGIN
 				FROM
 					(SELECT
 						 b.id,
+                         a.IMO_Vessel_Number,
 						 a.Displacement AS 'SPDisplacement',
 						 b.Displacement AS 'Actual Displacement',
 						 `Lower Displacement`,
@@ -277,15 +278,18 @@ BEGIN
 						 JOIN
 							(SELECT
 									id,
+                                    IMO_Vessel_Number,
 								   Displacement,
 								  (Displacement*0.95) AS 'Lower Displacement',
 								  (Displacement*1.05) AS 'Upper Displacement'
-							FROM tempRawISO) AS b) AS z
+							FROM tempRawISO) AS b
+						ON a.IMO_Vessel_Number = b.IMO_Vessel_Number) AS z
 				INNER JOIN
 					(
 					SELECT d.id, SPDisplacement, `Actual Displacement`, `Lower Displacement`, `Upper Displacement`, ValidDisplacement, MIN(DiffDisp) AS MinDiff
 					FROM (SELECT
 						 b.id,
+                         a.IMO_Vessel_Number,
 						 a.Displacement AS 'SPDisplacement',
 						 b.Displacement AS 'Actual Displacement',
 						 `Lower Displacement`,
@@ -296,10 +300,12 @@ BEGIN
 						 JOIN
 							(SELECT
 									id,
+                                    IMO_Vessel_Number,
 								   Displacement,
 								  (Displacement*0.95) AS 'Lower Displacement',
 								  (Displacement*1.05) AS 'Upper Displacement'
-							FROM tempRawISO) AS b) AS d
+							FROM tempRawISO) AS b
+						ON a.IMO_Vessel_Number = b.IMO_Vessel_Number) AS d
 					 GROUP BY id) AS x /* 'SPTrim', 'Actual Trim', `Lower Trim`, `Upper Trim`,  */ 
 				  ON
 					z.id= x.id AND
@@ -307,5 +313,8 @@ BEGIN
 					GROUP BY z.id) w
 			 SET t.NearestDisplacement = w.NearestDisplacement,
 				 t.FilterSPDisp = w.ValidDisplacement;
-                
+    
+	/* Get boolean column indicating which values of trim and displacement are outside the ranges for nearest-neighbour interpolation */
+	UPDATE tempRawISO SET FilterSPDispTrim = (FilterSPDisp OR FilterSPTrim);
+    
 END
