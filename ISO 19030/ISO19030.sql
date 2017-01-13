@@ -1,4 +1,5 @@
 /* Process data for vessel performance analysis as described in ISO 19030-2 */
+DROP PROCEDURE ISO19030;
 
 delimiter //
 
@@ -11,16 +12,25 @@ BEGIN
     CALL sortOnDateTime();
     
     /* Normalise frequency rates 5.3.3.1 */
+    CALL normaliseHigherFreq();
+    CALL normaliseLowerFreq();
     
     /* Get validated data set 5.3.4 */
+    CALL updateChauvenetCriteria();
+    CALL updateValidated();
     
     /* Correct for environmental factors 5.3.5 */
     CALL updateDeliveredPower(imo);
-    CALL removeFOCBelowMinimum(imo);
     
+    CALL updateAirDensity();
+    CALL updateTransProjArea(imo);
     CALL updateWindResistanceRelative(imo);
 	CALL updateAirResistanceNoWind(imo);
 	CALL updateWindResistanceCorrection(imo);
+    
+    CALL updateDisplacement(imo);
+    CALL updateTrim();
+    CALL filterSpeedPowerLookup(imo);
     
     CALL updateCorrectedPower();
     
@@ -32,5 +42,6 @@ BEGIN
     
     /* Calculate filter */
     CALL filterSFOCOutOfRange(imo);
+    CALL filterPowerBelowMinimum(imo);
     
 END;
