@@ -965,6 +965,9 @@ methods(Test)
     
     import matlab.unittest.constraints.EveryElementOf;
     import matlab.unittest.constraints.IsGreaterThan;
+    import matlab.unittest.constraints.AnyElementOf;
+    import matlab.unittest.constraints.IsTrue;
+    import matlab.unittest.constraints.HasNaN;
     
     % 1
     % Input
@@ -982,10 +985,20 @@ methods(Test)
     testcase.call('removeFOCBelowMinimum', testcase.AlmavivaIMO);
     
     % Verify
-    mfoc_act = testcase.read('Mass_Consumed_Fuel_Oil', startrow - 2, count);
-    testcase.assertNotEmpty(mfoc_act, 'MFOC cannot be empty for test.')
+    mfoc_act = testcase.read('Mass_Consumed_Fuel_Oil', startrow, count);
+    mfocFilt_act = testcase.read('Filter_SFOC_Out_Range', startrow, count);
+    testcase.assertNotEmpty(mfoc_act, 'MFOC cannot be empty for test to run.')
+    
+    mfocFilt_act = [mfocFilt_act{:}];
+    testcase.assertThat(EveryElementOf(mfocFilt_act), ~HasNaN, ...
+        'Filter_SFOC_Out_Range must have some TRUE values.')
+    mfocFilt_act = logical(mfocFilt_act);
+    testcase.assertThat(AnyElementOf(mfocFilt_act), IsTrue, ...
+        'Filter_SFOC_Out_Range must have some TRUE values.')
     mfoc_act = [mfoc_act{:}];
     mfoc_act(isnan(mfoc_act)) = [];
+    mfoc_act = mfoc_act(~mfocFilt_act);
+    
     minfoc_act = EveryElementOf(mfoc_act);
     minfoc_cons = IsGreaterThan(minFOC);
     minfoc_msg = ['All elements of Mass_Consumed_Fuel_Oil are expected to ',...
@@ -1425,6 +1438,11 @@ methods(Test)
     % 1: Test that after calling the procedure, the column
     % "Chauvenet_Criteria" will have value TRUE for every row at which
     % Chauvenet's criteria, defined in Formula I7 in the standard, is met.
+    % 2: Test that, if the input data is of a frequency less than once very
+    % ten minutes, the procedure will not affect the data.
+    
+    import matlab.unittest.constraints.IsFalse;
+    import matlab.unittest.constraints.EveryElementOf;
     
     % 1
     % Input
@@ -1499,6 +1517,45 @@ methods(Test)
     chauv_msg = ['Chauvenet criterion expected to be calculated based on '...
         'formula I7.'];
     testcase.verifyEqual(actChauv, exp_Chauv, 'RelTol', 1.5E-7, chauv_msg);
+    
+    % 2
+    % Input
+    testcase.dropTable
+    testcase.createTable
+    N = 10;
+    
+    in_SpeedOverGround = abs(randn([1, N])*10);
+    in_RelWindSpeed = abs(randn([1, N])*10);
+    tstep = 1 / (24*(60/11));
+    in_DateTimeUTC = linspace(now, now+(tstep*(N-1)), N);
+    
+    [startrow, count] = testcase.insert([cellstr(datestr(...
+        in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')), ...
+        num2cell(in_SpeedOverGround)',...
+        num2cell(in_RelWindSpeed)'], ...
+        {'DateTime_UTC', 'Speed_Over_Ground', 'Relative_Wind_Speed'});
+    
+    % Execute
+    testcase.call('updateChauvenetCriteria');
+    
+    % Verify
+    outSpeed_c = testcase.read('Speed_Over_Ground', startrow, count, 'id');
+    outWind_c = testcase.read('Relative_Wind_Speed', startrow, count, 'id');
+    outChauv_c = testcase.read('Chauvenet_Criteria', startrow, count, 'id');
+    
+    out_Speed = [outSpeed_c{:}];
+    out_Wind = [outWind_c{:}];
+    out_Chauv = [outChauv_c{:}];
+    out_Chauv = logical(out_Chauv);
+    
+    chauv_msg = ['Chauvenet criterion expected to not affect data when '...
+        'frequency is greater than once per 10 minutes.'];
+    testcase.verifyEqual(out_Speed, in_SpeedOverGround, 'RelTol', 1E-4, chauv_msg);
+    testcase.verifyEqual(out_Wind, in_RelWindSpeed, 'RelTol', 1E-4, chauv_msg);
+    
+    chauvFalse_msg = ['Chauvenet Criteria expected to be false for data '...
+        'with a lower frequency than 10 minutes'];
+    testcase.verifyThat(EveryElementOf(out_Chauv), IsFalse, chauvFalse_msg);
     
     end
     
@@ -1609,7 +1666,7 @@ methods(Test)
     testcase.call('filterSFOCOutOfRange', IMO_s);
     
     % Verify
-    outFilt_c = testcase.read('FilterSFOCOutRange', startrow, count, 'id');
+    outFilt_c = testcase.read('Filter_SFOC_Out_Range', startrow, count, 'id');
     outFilt_v = logical([outFilt_c{:}]);
     msgFilt = ['Values at indices where brake power is out of range '...
         'are expected to be TRUE'];
