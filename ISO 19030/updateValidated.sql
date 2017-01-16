@@ -97,8 +97,10 @@ ELSE
 END IF;
 
 CALL IMOStartEnd(@imo, @startd, @endd);
-INSERT INTO StandardCompliance (IMO_Vessel_Number, StartDate, EndDate, Validated)
-VALUES (@imo, @startd, @endd, @Validated) ON DUPLICATE KEY UPDATE Validated = VALUES(Validated);
+IF @imo IS NOT NULL AND @startd IS NOT NULL AND @endd IS NOT NULL THEN
+	INSERT INTO StandardCompliance (IMO_Vessel_Number, StartDate, EndDate, Validated)
+	VALUES (@imo, @startd, @endd, @Validated) ON DUPLICATE KEY UPDATE Validated = VALUES(Validated);
+END IF;
 
 
 /* UPDATE tempRawISO t3

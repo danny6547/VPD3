@@ -284,4 +284,20 @@ BEGIN
                 (IFNULL(c.Speed_Through_Water, FALSE) OR IFNULL(c.Delivered_Power, FALSE) OR IFNULL(c.Shaft_Revolutions, FALSE) OR IFNULL(c.Relative_Wind_Speed, FALSE) OR
                 IFNULL(c.Relative_Wind_Direction, FALSE) OR IFNULL(c.Speed_Over_Ground, FALSE) OR IFNULL(c.Ship_Heading, FALSE) OR IFNULL(c.Rudder_Angle, FALSE) OR
                 IFNULL(c.Water_Depth, FALSE) OR IFNULL(c.Seawater_Temperature, FALSE));
+                
+    /* Mark analysis as Chauvenet Filtered */
+    SET @timeStep := (SELECT (SELECT to_seconds(DateTime_UTC) FROM tempRawISO WHERE Speed_Over_Ground IS NOT NULL LIMIT 1, 1) - 
+		(SELECT to_seconds(DateTime_UTC) FROM tempRawISO WHERE Speed_Over_Ground IS NOT NULL LIMIT 0, 1) );
+	IF @timeStep < 600 THEN
+		SET @ChauvenetFiltered := TRUE;
+	ELSE
+		SET @ChauvenetFiltered := FALSE;
+	END IF;
+    
+    CALL IMOStartEnd(@imo, @startd, @endd);
+    IF @imo IS NOT NULL AND @startd IS NOT NULL AND @endd IS NOT NULL THEN
+		INSERT INTO StandardCompliance (IMO_Vessel_Number, StartDate, EndDate, ChauvenetFiltered)
+		VALUES (@imo, @startd, @endd, @ChauvenetFiltered) ON DUPLICATE KEY UPDATE ChauvenetFiltered = VALUES(ChauvenetFiltered);
+    END IF;
+    
 END;
