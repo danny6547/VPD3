@@ -1565,7 +1565,13 @@ methods(Test)
     % standard, where the values of their standard error of the mean exceed
     % the stated threshold, the corresponding values of the variable
     % "Validated" for the entire 10-minute block of data will be FALSE, 
-    % and otherwise they will be TRUE. 
+    % and otherwise they will be TRUE.
+    % 2. Test that, if the data has a frequency less than once per 10
+    % minutes, the data will be unaffected and the variable "validated"
+    % will contain only FALSE values.
+    
+    import matlab.unittest.constraints.IsFalse;
+    import matlab.unittest.constraints.EveryElementOf;
     
     % 1
     % Input
@@ -1632,6 +1638,54 @@ methods(Test)
         'standard devaitions of all four fields given in Annex J are not '...
         'exceeded.'];
     testcase.verifyEqual(actValidated, exp_validated, validated_msg);
+    
+    % 2
+    testcase.dropTable
+    testcase.createTable
+    
+    % Input
+    N = 10;
+    in_SpeedThroughWater = abs(randn([1, N]));
+    in_SpeedOverGround = abs(randn([1, N]));
+    in_RudderAngle = abs(randn([1, N]));
+    tstep = 1 / (24*(60/11));
+    in_DateTimeUTC = linspace(now, now+(tstep*(N-1)), N);
+    
+    [startrow, count] = testcase.insert([cellstr(datestr(...
+        in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')), ...
+        num2cell(in_SpeedThroughWater)', ...
+        num2cell(in_SpeedOverGround)',...
+        num2cell(in_RudderAngle)'], ...
+        {'DateTime_UTC', 'Speed_Through_Water', ...
+        'Speed_Over_Ground', 'Rudder_Angle'});
+    
+    % Execute
+    testcase.call('updateValidated');
+    
+    % Verify
+    outValidated_c = testcase.read('Validated', startrow, count, 'id');
+    outValidated_v = [outValidated_c{:}];
+    outValidated_v(isnan(outValidated_v)) = [];
+    actValidated = logical(outValidated_v);
+    validated_msg = ['Field name ''Validated'' expected to be false when '...
+        'data frequency is less than once per 10 minutes.'];
+    testcase.verifyThat(EveryElementOf(actValidated), IsFalse, validated_msg);
+    
+    outSTW_c = testcase.read('Speed_Through_Water', startrow, count, 'id');
+    outSOG_c = testcase.read('Speed_Over_Ground', startrow, count, 'id');
+    outRA_c = testcase.read('Rudder_Angle', startrow, count, 'id');
+    
+    outSTW = [outSTW_c{:}];
+    outSOG = [outSOG_c{:}];
+    outRA = [outRA_c{:}];
+    
+    validated_msg = ['Input data should be unaffected when frequency is '...
+        'less than onece per 10 minutes.'];
+    sqlTol = 9e-3;
+    testcase.verifyEqual(outSTW, in_SpeedThroughWater, 'RelTol', sqlTol,...
+        validated_msg);
+    testcase.verifyEqual(outSOG, in_SpeedOverGround, 'RelTol', sqlTol, validated_msg);
+    testcase.verifyEqual(outRA, in_RudderAngle, 'RelTol', sqlTol, validated_msg);
     
     end
     

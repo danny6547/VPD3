@@ -85,6 +85,22 @@ JOIN
 														NOT InvalidSOG AND
 														NOT InvalidR
 																	;
+
+/* Mark analysis as Validated */
+SET @timeStep := (SELECT (SELECT to_seconds(DateTime_UTC) FROM tempRawISO WHERE Speed_Over_Ground IS NOT NULL LIMIT 1, 1) - 
+	(SELECT to_seconds(DateTime_UTC) FROM tempRawISO WHERE Speed_Over_Ground IS NOT NULL LIMIT 0, 1) );
+IF @timeStep < 600 THEN
+	SET @Validated := TRUE;
+ELSE
+	SET @Validated := FALSE;
+    UPDATE tempRawISO SET Validated = FALSE;
+END IF;
+
+CALL IMOStartEnd(@imo, @startd, @endd);
+INSERT INTO StandardCompliance (IMO_Vessel_Number, StartDate, EndDate, Validated)
+VALUES (@imo, @startd, @endd, @Validated) ON DUPLICATE KEY UPDATE Validated = VALUES(Validated);
+
+
 /* UPDATE tempRawISO t3
     INNER JOIN
 		(SELECT t2.id, 

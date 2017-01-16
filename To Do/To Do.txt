@@ -121,7 +121,7 @@ removeInvalidRecords: check for entirely NULL rows ?
 # deleteWithReferenceConditions: change from DELETE to new filter column
 insertFromDNVGLRawIntoRaw: reduce run time to less than 1s.
 # ChauvenetFilt: verify no change after data with too-high frequency input, standard compliance updated
-Validated: verify no change after data with too-high frequency input
+# Validated: verify no change after data with too-high frequency input, standard compliance updated
 
 updateFromBunkerNote: Include warnings if some BDN numbers not found in BunkerDeliveryNote table?
 Extract "timestep" into high-level metadata table
