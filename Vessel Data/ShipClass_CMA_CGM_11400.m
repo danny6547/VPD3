@@ -28,7 +28,8 @@ disp = 133531;
 trim = 13 - 13;
 AT = 2085;
 CB = 0.6473;
-obj_shp = obj_shp.insertIntoSpeedPowerCoefficients(speed, power, disp, trim);
+[obj_shp, ~, ~, s, p, d, t] = obj_shp.insertIntoSpeedPowerCoefficients(speed, power, disp, trim);
+obj_shp = obj_shp.insertIntoSpeedPower(s, p, d, t);
 
 speed = 24.5:0.5:29.5;
 power = [39234, 42137, 45215, 48503, 52023, 55769, 59741, 63952, 68463, 73339, 78595];
@@ -36,7 +37,8 @@ disp = 64131.9;
 trim = 9.6 - 4.5;
 AT = 2356.82;
 CB = 0.5732;
-obj_shp = obj_shp.insertIntoSpeedPowerCoefficients(speed, power, disp, trim);
+[obj_shp, ~, ~, s, p, d, t] = obj_shp.insertIntoSpeedPowerCoefficients(speed, power, disp, trim);
+obj_shp = obj_shp.insertIntoSpeedPower(s, p, d, t);
 
 speed = 22:0.5:27;
 power = [36531, 39546, 42799, 46319, 50045, 53897, 57997, 62838, 68462, 74479, 80998];
@@ -44,7 +46,8 @@ disp = 159899.1;
 trim = 15 - 15;
 AT = 1993.80;
 CB = 0.6718;
-obj_shp = obj_shp.insertIntoSpeedPowerCoefficients(speed, power, disp, trim);
+[obj_shp, ~, ~, s, p, d, t] = obj_shp.insertIntoSpeedPowerCoefficients(speed, power, disp, trim);
+obj_shp = obj_shp.insertIntoSpeedPower(s, p, d, t);
 
 % Insert wind direction coefficients
 

@@ -95,3 +95,32 @@ updatePI: calculate dd performance, in-service performance (out of scope of this
 
 Find script behind procedure addTimeDNVGLRaw;
 Delete table DNVGLRaw, rewrite loadInfileDNVGLRaw to load data into tempRaw, make ready for RawData, insert without duplicates to RawData;
+updateWindResistanceCorrection: make select from speedPower table based on IMO (EtaD, TA, Crw, C0w)
+call filtering and outlier finding procedures from ISO19030 procedure.
+
+# FiltSPDispTrim: should be true if either Disp or Trim is true?
+# FiltSPBelow: currently all NULL
+# CauvenetFilt: all NULL
+# Validated: all NULL
+# AllFilt: all NULL
+# Check all tested procedures are called from ISO19030.
+	# call updateAirDensity before updateAirResistanceNoWind and updateWindResistanceRelative
+	# call updateTransProjArea before updateWindResistanceRelative and updateAirResistanceNoWind
+	# call updateFromBunkerNote before updateMassFuelOilConsumed
+	# call deleteWithReferenceConditions
+	# call deleteWithReferenceConditions
+	# call normaliseHigherFreq
+	# call normaliseLowerFreq
+	# call updateChauvenetCriteria
+	# call updateValidated
+# Create naming convention for filter columns. (all start with Filter_)
+Create matrix of vessels, filter columns.
+# updateFromBunkerNote: if no data found, assign defaults
+removeInvalidRecords: check for entirely NULL rows ?
+# removeFOCBelowMinimum, filterSFOCOutOfRange: change from DELETE to new filter column
+# deleteWithReferenceConditions: change from DELETE to new filter column
+insertFromDNVGLRawIntoRaw: reduce run time to less than 1s.
+CauvenetFilt: verify no change after data with too-high frequency input
+Validated: verify no change after data with too-high frequency input
+
+updateFromBunkerNote: Include warnings if some BDN numbers not found in BunkerDeliveryNote table?
