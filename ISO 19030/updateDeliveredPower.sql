@@ -1,4 +1,5 @@
 /* Update delivered power */
+DROP PROCEDURE IF EXISTS updateDeliveredPower;
 
 delimiter //
 
@@ -12,11 +13,18 @@ BEGIN
     CALL log_msg(concat('isShaftAvail = ', @isShaftAvail));
 		CALL log_msg(concat('UPDATE shaft power called')); */
 	DECLARE powerIncalculable CONDITION FOR SQLSTATE '45000';
+    
+    DECLARE isShaftRequired BOOLEAN Default TRUE;
+    SET isShaftRequired := (SELECT COUNT(*) FROM tempRawISO WHERE Shaft_Power IS NOT NULL) = 0;
 	
     CALL isShaftPowerAvailable(imo, @isShaftAvail);
     CALL isBrakePowerAvailable(imo, @isBrakeAvail, @isMassNeeded);
     
-    IF @isShaftAvail THEN
+    IF NOT isShaftRequired THEN
+    
+		UPDATE tempRawISO SET Delivered_Power = Shaft_Power;
+    
+    ELSEIF @isShaftAvail THEN
 		
         CALL updateShaftPower(imo);
         UPDATE tempRawISO SET Delivered_Power = Shaft_Power;
