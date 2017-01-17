@@ -1,6 +1,13 @@
-/* Creates RawData table, a table containing the "raw" ship data obtained from DNVGL EcoInsight "Manage Data" page. */ 
-use test2;
-CREATE TABLE tempraw (
+/* Creates temporary table like the RawData table, a table containing the "raw" ship data obtained from DNVGL EcoInsight "Manage Data" page. */ 
+DROP PROCEDURE IF EXISTS createDNVGLRawTempTable;
+
+delimiter //
+
+CREATE PROCEDURE createDNVGLRawTempTable()
+
+BEGIN
+
+CREATE TABLE tempDNVGLRaw (
 id INTEGER AUTO_INCREMENT PRIMARY KEY,
 AE_1_Running_Hours	DOUBLE(20, 5),
 AE_2_Running_Hours	DOUBLE(20, 5), 
@@ -223,3 +230,6 @@ Remarks	DOUBLE(20, 5),
 Entry_Made_By_1	DOUBLE(20, 5), 
 Entry_Made_By_2	DOUBLE(20, 5)
 );
+
+END;
+
