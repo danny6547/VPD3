@@ -32,8 +32,8 @@ properties(Constant, Hidden)
     AlmavivaIMO = sprintf('%u', 9450648);
     AlmavivaBreadth = 42.8;
     AlmavivaLength = 334;
-    AlmavivaBlockCoefficient = 0.62;
-    AlmavivaSpeedPowerCoefficients = [6.037644473511698, -40.659732310548080];
+    AlmavivaBlockCoefficient = 0.643;
+    AlmavivaSpeedPowerCoefficients = [7.07170	-50.54008]; % 6.037644473511698, -40.659732310548080
     AlmavivaSpeedPowerDispTrim = [114050, 0];
     AlmavivaTransProjArea = 1330;
     AlmavivaWindResistCoeffHead = 0.0001512;
@@ -47,7 +47,7 @@ properties(Constant, Hidden)
     MaxRudder = 5;
     LBP = 319;
     LowestPower = 28534;
-    SPTrim = 3.3-9.56;
+    SPTrim = 5.1; % 3.3-9.56;
     EngineMinPower = 22840.84;
     EngineMaxPower = 67544.40;
     
@@ -565,21 +565,24 @@ methods(Test)
     
     Air_Dens = [1.22, 1.21, 1.23];
     RelWindSpeed = [10, 15, 25];
-    TransArea = testcase.AlmavivaTransProjArea;
+    TransArea = abs(randn(1, 3)*1000);
+    
     exp_rel = num2cell(0.5 * Air_Dens .* RelWindSpeed.^2 .* TransArea ...
         .* CoeffRelWind)';
     [startrow, count] = testcase.insert(...
-        [Air_Dens', RelWindSpeed', RelWindDir'], ...
-        {'Air_Density', 'Relative_Wind_Speed', 'Relative_Wind_Direction'});
+        [Air_Dens', RelWindSpeed', RelWindDir', TransArea'], ...
+        {'Air_Density', 'Relative_Wind_Speed', 'Relative_Wind_Direction',...
+        'Transverse_Projected_Area_Current'});
     
     % Execute
+%     testcase.call('updateTransProjArea', testcase.AlmavivaIMO);
     testcase.call('updateWindResistanceRelative', testcase.AlmavivaIMO);
     
     % Verify
     act_rel = testcase.read({'Wind_Resistance_Relative'}, startrow, count);
     msg_rel = ['Relative wind resistance expected to match definition given',...
         'by equation G2 in the standard.'];
-    testcase.verifyEqual(act_rel, exp_rel, 'RelTol', 1e-5, msg_rel);
+    testcase.verifyEqual(act_rel, exp_rel, 'RelTol', 1e-3, msg_rel);
     
     end
     
@@ -592,11 +595,11 @@ methods(Test)
     Air_Dens = [1.22, 1.21, 1.23];
     SOG = [10, 15, 25];
     CoeffHeadWind = testcase.AlmavivaWindResistCoeffHead;
-    TransArea = testcase.AlmavivaTransProjArea;
+    TransArea = abs(randn(1, 3))*1000;
     
     exp_air = num2cell(0.5 * Air_Dens .* SOG.^2 .* TransArea .* CoeffHeadWind)';
-    [startrow, count] = testcase.insert([Air_Dens', SOG'], ...
-        {'Air_Density', 'Speed_Over_Ground'});
+    [startrow, count] = testcase.insert([Air_Dens', SOG', TransArea'], ...
+        {'Air_Density', 'Speed_Over_Ground', 'Transverse_Projected_Area_Current'});
     
     % Execute
     testcase.call('updateAirResistanceNoWind', testcase.AlmavivaIMO);
@@ -605,7 +608,7 @@ methods(Test)
     act_air = testcase.read({'Air_Resistance_No_Wind'}, startrow, count);
     msg_air = ['Air resistance expected to match definition given',...
         'by equation G2 in the standard.'];
-    testcase.verifyEqual(act_air, exp_air, 'RelTol', 1e-6, msg_air);
+    testcase.verifyEqual(act_air, exp_air, 'RelTol', 1e-4, msg_air);
     
     end
     
@@ -674,6 +677,9 @@ methods(Test)
     % an error will be returned.
     
     % 1
+    testcase.dropTable;
+    testcase.createTable;
+    
     % Input
     in_torque = 1e4:1e4:3e4;
     in_revs = 10:10:30;
@@ -974,7 +980,7 @@ methods(Test)
     minFOCph = testcase.MinimumFOCph;
     minFOC = minFOCph*24;
     maxFOC = minFOC + 1e3;
-    nData = 2;
+    nData = 10;
     nBelow = 1;
     mfoc_v = (maxFOC - minFOC).*rand(1, nData) + minFOC;
     belowI = randperm(nData, nBelow);
@@ -1239,32 +1245,34 @@ methods(Test)
     import matlab.unittest.constraints.IsLessThanOrEqualTo;
     testSz = [1, 4];
     
+    spDisp = 114050;
+    spTrim = testcase.SPTrim;
     bothValid_l = false;
     while ~any(bothValid_l) || all(bothValid_l)
         
-        lowerDisp = (1/1.05)*48800;
-        upperDisp = (1/0.95)*48800;
+        lowerDisp = (1/1.05)*spDisp;
+        upperDisp = (1/0.95)*spDisp;
         inDelPower_v = testcase.randOutThreshold(testSz, @gt, 0);
         inDisp_v = testcase.randOutThreshold(testSz, @lt, upperDisp, ...
             @gt, lowerDisp);
         lbp = testcase.LBP;
         
-        spTrim = testcase.SPTrim;
         lowerTrim = spTrim - 0.002*lbp;
         upperTrim = spTrim + 0.002*lbp;
         inTrim_v = testcase.randOutThreshold(testSz, @lt, upperTrim, ...
             @gt, lowerTrim);
         
-        bothValid_l = 48800 >= inDisp_v.*0.95 & 48800 <= inDisp_v.*1.05 & ...
+        bothValid_l = spDisp >= inDisp_v.*0.95 & spDisp <= inDisp_v.*1.05 & ...
                       spTrim <= inTrim_v + 0.002*lbp & spTrim >= inTrim_v - 0.002*lbp;
         
     end
     inStatic_Draught_Aft = randi([0, 2], testSz);
     inStatic_Draught_Fore = inTrim_v + inStatic_Draught_Aft;
+    imo = repmat(str2double(testcase.AlmavivaIMO), testSz);
     
-    inputData_m = [inDelPower_v', inDisp_v', inTrim_v', ...
+    inputData_m = [imo', inDelPower_v', inDisp_v', inTrim_v', ...
         inStatic_Draught_Fore', inStatic_Draught_Aft'];
-    inputNames_c = {'Delivered_Power', 'Displacement', 'Trim', ...
+    inputNames_c = {'IMO_Vessel_Number', 'Delivered_Power', 'Displacement', 'Trim', ...
         'Static_Draught_Fore', 'Static_Draught_Aft'};
     [startrow, count] = testcase.insert(inputData_m, inputNames_c);
     
@@ -1272,11 +1280,11 @@ methods(Test)
     testcase.call('filterSpeedPowerLookup', testcase.AlmavivaIMO);
     
     % Verify
-    filt_act = testcase.read('FilterSPDispTrim', startrow, count, 'id');
+    filt_act = testcase.read('Filter_SpeedPower_Disp_Trim', startrow, count, 'id');
     disp_v = testcase.read('Displacement', startrow, count, 'id');
     testcase.assertNotEmpty(disp_v, ['Displacement cannot be empty',...
         ' for test.']);
-    testcase.assertNotEmpty(filt_act, ['FilterSPDist cannot be empty',...
+    testcase.assertNotEmpty(filt_act, ['Filter_SpeedPower_Disp_Trim cannot be empty',...
         ' for test.']);
     disp_v = [disp_v{:}];
     disp_v(isnan(disp_v)) = [];
@@ -1284,16 +1292,16 @@ methods(Test)
     filt_act(isnan(filt_act)) = [];
     testcase.assertNotEmpty(disp_v, ['Displacement cannot be empty',...
         ' for test.']);
-    testcase.assertNotEmpty(filt_act, ['FilterSPDist cannot be empty',...
+    testcase.assertNotEmpty(filt_act, ['Filter_SpeedPower_Disp_Trim cannot be empty',...
         ' for test.']);
-    disp_act = EveryElementOf(disp_v(~filt_act));
+    disp_act = EveryElementOf(repmat(spDisp, 1, numel(disp_v(~filt_act))));
     minDisp_cons = IsGreaterThanOrEqualTo(disp_v(~filt_act)*0.95);
-    minDisp_msg = ['Elements of FilterSPDist corresponding to those ',...
+    minDisp_msg = ['Elements of Filter_SpeedPower_Disp corresponding to those ',...
         'below the minimum power values in the speed power curve are ',...
         'expected to be TRUE.'];
     testcase.verifyThat(disp_act, minDisp_cons, minDisp_msg);
     minDisp_cons = IsLessThanOrEqualTo(disp_v(~filt_act)*1.05);
-    minDisp_msg = ['Elements of FilterSPDist corresponding to those ',...
+    minDisp_msg = ['Elements of Filter_SpeedPower_Disp corresponding to those ',...
         'above the maximum power values in the speed power curve are ',...
         'expected to be TRUE.'];
     testcase.verifyThat(disp_act, minDisp_cons, minDisp_msg);
@@ -1304,14 +1312,14 @@ methods(Test)
 %     filt_act = testcase.read('FilterSPDispTrim', startrow, count, 'id');
 %     filt_act = [filt_act{:}];
 %     filt_act(isnan(filt_act)) = [];
-    trim_act = EveryElementOf(trim_v(~filt_act));
+    trim_act = EveryElementOf(repmat(spTrim, 1, numel(trim_v(~filt_act))));
     minTrim_cons = IsGreaterThanOrEqualTo(trim_v(~filt_act) - 0.002*lbp);
-    minTrim_msg = ['Elements of FilterSPTrim corresponding to those ',...
+    minTrim_msg = ['Elements of Filter_SpeedPower_Trim corresponding to those ',...
         'outside of +/- 0.2% of the LBP of the vessel are expected to be ',...
         'FALSE.'];
     testcase.verifyThat(trim_act, minTrim_cons, minTrim_msg);
     minTrim_cons = IsLessThanOrEqualTo(trim_v(~filt_act) + 0.002*lbp);
-    minTrim_msg = ['Elements of FilterSPTrim corresponding to those ',...
+    minTrim_msg = ['Elements of Filter_SpeedPower_Trim corresponding to those ',...
         'outside of +/- 0.2% of the LBP of the vessel are expected to be ',...
         'FALSE.'];
     testcase.verifyThat(trim_act, minTrim_cons, minTrim_msg);
@@ -1348,7 +1356,7 @@ methods(Test)
     outPower_v = testcase.read('Delivered_Power', startrow, count, 'id');
     outPower_v = [outPower_v{:}];
     outPower_v(isnan(outPower_v)) = [];
-    filt_act = testcase.read('FilterSPBelow', startrow, count, 'id');
+    filt_act = testcase.read('Filter_SpeedPower_Below', startrow, count, 'id');
     filt_act = [filt_act{:}];
     filt_act(isnan(filt_act)) = [];
     size_msg = ['FilterSPBelow is expected to have some values TRUE before ',...
@@ -1370,6 +1378,9 @@ methods(Test)
     % input resulting in average values at that lower frequency.
     
     % 1
+    testcase.dropTable;
+    testcase.createTable;
+    
     % Input
     import matlab.unittest.constraints.HasSize;
     testSz = [1, 10];
@@ -1446,6 +1457,8 @@ methods(Test)
     
     % 1
     % Input
+    testcase.dropTable
+    testcase.createTable
     N = 5E2;
     nBlock = 5;
     k = 20;
@@ -1550,8 +1563,9 @@ methods(Test)
     
     chauv_msg = ['Chauvenet criterion expected to not affect data when '...
         'frequency is greater than once per 10 minutes.'];
-    testcase.verifyEqual(out_Speed, in_SpeedOverGround, 'RelTol', 1E-4, chauv_msg);
-    testcase.verifyEqual(out_Wind, in_RelWindSpeed, 'RelTol', 1E-4, chauv_msg);
+    relTol = 9e-3;
+    testcase.verifyEqual(out_Speed, in_SpeedOverGround, 'RelTol', relTol, chauv_msg);
+    testcase.verifyEqual(out_Wind, in_RelWindSpeed, 'RelTol', relTol, chauv_msg);
     
     chauvFalse_msg = ['Chauvenet Criteria expected to be false for data '...
         'with a lower frequency than 10 minutes'];
@@ -1572,6 +1586,8 @@ methods(Test)
     
     import matlab.unittest.constraints.IsFalse;
     import matlab.unittest.constraints.EveryElementOf;
+    testcase.dropTable
+    testcase.createTable
     
     % 1
     % Input
@@ -1743,17 +1759,17 @@ methods(Test)
     in_DateTimeUTC = testISO19030.datetime_utc(testSz);
     in_Data = [in_DateTimeUTC, num2cell([input_DraftFore, input_DraftAft])];
     in_Names = {'DateTime_UTC', 'Static_Draught_Fore', 'Static_Draught_Aft'};
-    testcase.insert(in_Data, in_Names);
+    [startrow, count] = testcase.insert(in_Data, in_Names);
     
     % Execute
     testcase.call('updateTrim');
     
     % Verify
-    act_Trimc = testcase.read({'Trim'});
+    act_Trimc = testcase.read({'Trim'}, startrow, count);
     act_Trim = [act_Trimc{:}];
     msg_Trim = ['Trim expected to be the difference between fore and '...
         'aft draft.'];
-    testcase.verifyEqual(act_Trim, exp_Trim', 'RelTol', 1e-4, msg_Trim);
+    testcase.verifyEqual(act_Trim, exp_Trim', 'RelTol', 9e-3, msg_Trim);
     
     end
 end
