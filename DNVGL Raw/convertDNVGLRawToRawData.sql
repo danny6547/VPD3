@@ -102,4 +102,5 @@ BEGIN
     /* Wind_Resistance_Correction is a derived variable. */
     
     /* Corrected_Power is a derived variable. */
+    
 END;
