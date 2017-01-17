@@ -110,9 +110,9 @@ BEGIN
 		INNER JOIN tempSpeedPowerConditions d
 			ON t.Displacement = d.Displacement
 				SET
-                t.FilterSPDisp = Displacement_Condition,
-                t.FilterSPTrim = Trim_Condition;
-    CALL log_msg('Max tempRaw Dist Cond = ', (SELECT MAX(FilterSPDisp) FROM tempRawISO));
+                t.Filter_SpeedPower_Disp = Displacement_Condition,
+                t.Filter_SpeedPower_Trim = Trim_Condition;
+    CALL log_msg('Max tempRaw Dist Cond = ', (SELECT MAX(Filter_SpeedPower_Disp) FROM tempRawISO));
     
     /* Update Nearest Neighbour Condition */
 	/* UPDATE tempSpeedPowerConditions
@@ -128,7 +128,7 @@ BEGIN
     /* Is value between limits? */
     
    /* Get boolean column indicating which values of trim and displacement are outside the ranges for nearest-neighbour interpolation */
-   /* UPDATE tempRawISO SET FilterSPDispTrim = id NOT IN (SELECT Cid FROM
+   /* UPDATE tempRawISO SET Filter_SpeedPower_Disp_Trim = id NOT IN (SELECT Cid FROM
 	(SELECT c.id AS Cid, d.id AS Did, `Actual Displacement`, `Actual Trim`, SPTrim, SPDisplacement FROM 
 			(SELECT 
 				 b.id, 
@@ -215,14 +215,14 @@ BEGIN
     /* Get valid trim and nearest trim */
     UPDATE tempRawISO t
 		JOIN (
-			SELECT c.SPTrim, c.InvalidTrim
+			SELECT c.id, c.SPTrim, c.ValidTrim
 				FROM (SELECT 
 					 b.id, 
 					 a.Trim AS 'SPTrim',
 					 b.Trim AS 'Actual Trim',
 					 `Lower Trim`,
 					 `Upper Trim`,
-					 (a.Trim > `Lower Trim` AND a.Trim < `Upper Trim`) AS InvalidTrim,
+					 (a.Trim > `Lower Trim` AND a.Trim < `Upper Trim`) AS ValidTrim,
 					 ABS((ABS(a.Trim) - ABS(b.Trim))) AS DiffTrim
 					 FROM speedpowercoefficients a
 					 JOIN
@@ -234,14 +234,14 @@ BEGIN
 						FROM tempRawISO) AS b) AS c
 					 INNER JOIN
 						(
-						SELECT f.id, 'SPTrim', 'Actual Trim', `Lower Trim`, `Upper Trim`, InvalidTrim, MIN(DiffTrim) AS MinDiff
+						SELECT f.id, 'SPTrim', 'Actual Trim', `Lower Trim`, `Upper Trim`, ValidTrim, MIN(DiffTrim) AS MinDiff
 						FROM (SELECT 
 								 d.id, 
 								 a.Trim AS 'SPTrim',
 								 d.Trim AS 'Actual Trim',
 								 `Lower Trim`,
 								 `Upper Trim`,
-								 (a.Trim > `Lower Trim` AND a.Trim < `Upper Trim`) AS InvalidTrim,
+								 (a.Trim > `Lower Trim` AND a.Trim < `Upper Trim`) AS ValidTrim,
 								 ABS((ABS(a.Trim) - ABS(d.Trim))) AS DiffTrim
 								 FROM speedpowercoefficients a
 								 JOIN
@@ -256,14 +256,15 @@ BEGIN
 						c.id= e.id AND
 						c.DiffTrim = e.MinDiff
 					  GROUP BY c.id) w
-		SET t.FilterSPTrim = w.InvalidTrim,
+                    ON t.id = w.id
+		SET t.Filter_SpeedPower_Trim = NOT(w.ValidTrim),
 			t.NearestTrim = w.SPTrim
 				;
 	
     /* Get valid displacement and nearest displacement */
     UPDATE tempRawISO t
 		JOIN (
-			SELECT z.ValidDisplacement, z.SPDisplacement AS 'NearestDisplacement'
+			SELECT z.id, z.ValidDisplacement, z.SPDisplacement AS 'NearestDisplacement'
 				FROM
 					(SELECT
 						 b.id,
@@ -311,10 +312,11 @@ BEGIN
 					z.id= x.id AND
 					z.DiffDisp = x.MinDiff
 					GROUP BY z.id) w
+                    ON t.id = w.id
 			 SET t.NearestDisplacement = w.NearestDisplacement,
-				 t.FilterSPDisp = w.ValidDisplacement;
+				 t.Filter_SpeedPower_Disp = NOT(w.ValidDisplacement);
     
 	/* Get boolean column indicating which values of trim and displacement are outside the ranges for nearest-neighbour interpolation */
-	UPDATE tempRawISO SET FilterSPDispTrim = (FilterSPDisp OR FilterSPTrim);
+	UPDATE tempRawISO SET Filter_SpeedPower_Disp_Trim = (Filter_SpeedPower_Disp OR Filter_SpeedPower_Trim);
     
 END

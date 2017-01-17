@@ -8,13 +8,13 @@ CREATE PROCEDURE filterPowerBelowMinimum(imo INT)
 
 BEGIN
 	
-    /* Get nearest displacements and trim FilterSPDispTrim*/
+    /* Get nearest displacements and trim Filter_SpeedPower_Disp_Trim*/
 	/* UPDATE tempRawISO t
 		JOIN SpeedPower p
 		ON t.IMO_Vessel_Number = p.IMO_Vessel_Number AND
 			t.NearestTrim = p.Trim AND
             t.NearestDisplacement = p.Displacement
-		SET t.FilterSPBelow = t.Delivered_Power < MIN(p.Power)
+		SET t.Filter_SpeedPower_Below = t.Delivered_Power < MIN(p.Power)
         ; */
     
 	/* Get the minimum power of the power curve corresponding to delivered power, then whether DeliveredPower is less than this value. */
@@ -41,6 +41,6 @@ BEGIN
 			q.Power = e.Power
 			GROUP BY q.id) u
 	ON y.id = u.id
-	SET y.FilterSPBelow = u.BelowMin
+	SET y.Filter_SpeedPower_Below = u.BelowMin
 		;
 END
