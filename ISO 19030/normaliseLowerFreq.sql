@@ -19,8 +19,8 @@ BEGIN
     /* Average all secondary parameters to this value */
     UPDATE tempRawISO AS t1
 		INNER JOIN
-			(SELECT id, IMO_Vessel_Number, DateTime_UTC, Speed_Over_Ground, @lastb := IFNULL(Relative_Wind_Speed, @lastb) AS Relative_Wind_Speed, @lastc := IFNULL(Relative_Wind_Direction, @lastc) AS Relative_Wind_Direction, @laste := IFNULL(Ship_Heading, @laste) AS Ship_Heading, @lastf := IFNULL(Shaft_Revolutions, @lastf) AS Shaft_Revolutions, @lastg := IFNULL(Static_Draught_Fore, @lastg) AS Static_Draught_Fore, @lasth := IFNULL(Static_Draught_Aft, @lasth) AS Static_Draught_Aft, @lasti := IFNULL(Water_Depth, @lasti) AS Water_Depth, @lastj := IFNULL(Rudder_Angle, @lastj) AS Rudder_Angle, @lastk := IFNULL(Seawater_Temperature, @lastk) AS Seawater_Temperature, @lastl := IFNULL(Air_Temperature, @lastl) AS Air_Temperature, @lastm := IFNULL(Air_Pressure, @lastm) AS Air_Pressure, @lastn := IFNULL(Air_Density, @lastn) AS Air_Density, @lasto := IFNULL(Speed_Through_Water, @lasto) AS Speed_Through_Water, @lastq := IFNULL(Shaft_Power, @lastq) AS Shaft_Power, @lastr := IFNULL(Brake_Power, @lastr) AS Brake_Power, @lasts := IFNULL(Shaft_Torque, @lasts) AS Shaft_Torque, @lastt := IFNULL(Mass_Consumed_Fuel_Oil, @lastt) AS Mass_Consumed_Fuel_Oil, @lastu := IFNULL(Volume_Consumed_Fuel_Oil, @lastu) AS Volume_Consumed_Fuel_Oil, @lastv := IFNULL(Lower_Caloirifc_Value_Fuel_Oil, @lastv) AS Lower_Caloirifc_Value_Fuel_Oil, @lastw := IFNULL(Normalised_Energy_Consumption, @lastw) AS Normalised_Energy_Consumption, @lastx := IFNULL(Density_Fuel_Oil_15C, @lastx) AS Density_Fuel_Oil_15C, @lasty := IFNULL(Density_Change_Rate_Per_C, @lasty) AS Density_Change_Rate_Per_C, @lastz := IFNULL(Temp_Fuel_Oil_At_Flow_Meter, @lastz) AS Temp_Fuel_Oil_At_Flow_Meter, @lastaa := IFNULL(Wind_Resistance_Relative, @lastaa) AS Wind_Resistance_Relative, @lastbb := IFNULL(Air_Resistance_No_Wind, @lastbb) AS Air_Resistance_No_Wind, @lastcc := IFNULL(Expected_Speed_Through_Water, @lastcc) AS Expected_Speed_Through_Water, @lastdd := IFNULL(Displacement, @lastdd) AS Displacement, @lastee := IFNULL(Speed_Loss, @lastee) AS Speed_Loss, @lastff := IFNULL(Transverse_Projected_Area_Current, @lastff) AS Transverse_Projected_Area_Current, @lastgg := IFNULL(Wind_Resistance_Correction, @lastgg) AS Wind_Resistance_Correction, @lasthh := IFNULL(Corrected_Power, @lasthh) AS Corrected_Power, @lastii := IFNULL(Filter_SpeedPower_Disp_Trim, @lastii) AS Filter_SpeedPower_Disp_Trim, @lastjj := IFNULL(Filter_SpeedPower_Trim, @lastjj) AS Filter_SpeedPower_Trim, @lastkk := IFNULL(Filter_SpeedPower_Disp, @lastkk) AS Filter_SpeedPower_Disp, @lastll := IFNULL(Filter_SpeedPower_Below, @lastll) AS Filter_SpeedPower_Below, @lastmm := IFNULL(NearestDisplacement, @lastmm) AS NearestDisplacement, @lastnn := IFNULL(NearestTrim, @lastnn) AS NearestTrim, @lastoo := IFNULL(Trim, @lastoo) AS Trim
-				FROM (SELECT id, IMO_Vessel_Number, DateTime_UTC, Speed_Over_Ground, Relative_Wind_Speed, Relative_Wind_Direction, Ship_Heading, Shaft_Revolutions, Static_Draught_Fore, Static_Draught_Aft, Water_Depth, Rudder_Angle, Seawater_Temperature, Air_Temperature, Air_Pressure, Air_Density, Speed_Through_Water, Delivered_Power, Shaft_Power, Brake_Power, Shaft_Torque, Mass_Consumed_Fuel_Oil, Volume_Consumed_Fuel_Oil, Lower_Caloirifc_Value_Fuel_Oil, Normalised_Energy_Consumption, Density_Fuel_Oil_15C, Density_Change_Rate_Per_C, Temp_Fuel_Oil_At_Flow_Meter, Wind_Resistance_Relative, Air_Resistance_No_Wind, Expected_Speed_Through_Water, Displacement, Speed_Loss, Transverse_Projected_Area_Current, Wind_Resistance_Correction, Corrected_Power, Filter_SpeedPower_Disp_Trim, Filter_SpeedPower_Trim, Filter_SpeedPower_Disp, Filter_SpeedPower_Below, NearestDisplacement, NearestTrim, Trim FROM tempRawISO) AS q
+			(SELECT id, IMO_Vessel_Number, DateTime_UTC, Speed_Over_Ground, @lastb := IFNULL(Relative_Wind_Speed, @lastb) AS Relative_Wind_Speed, @lastc := IFNULL(Relative_Wind_Direction, @lastc) AS Relative_Wind_Direction, @laste := IFNULL(Ship_Heading, @laste) AS Ship_Heading, @lastf := IFNULL(Shaft_Revolutions, @lastf) AS Shaft_Revolutions, @lastg := IFNULL(Static_Draught_Fore, @lastg) AS Static_Draught_Fore, @lasth := IFNULL(Static_Draught_Aft, @lasth) AS Static_Draught_Aft, @lasti := IFNULL(Water_Depth, @lasti) AS Water_Depth, @lastj := IFNULL(Rudder_Angle, @lastj) AS Rudder_Angle, @lastk := IFNULL(Seawater_Temperature, @lastk) AS Seawater_Temperature, @lastl := IFNULL(Air_Temperature, @lastl) AS Air_Temperature, @lastm := IFNULL(Air_Pressure, @lastm) AS Air_Pressure, @lastn := IFNULL(Air_Density, @lastn) AS Air_Density, @lasto := IFNULL(Speed_Through_Water, @lasto) AS Speed_Through_Water, @lastq := IFNULL(Shaft_Power, @lastq) AS Shaft_Power, @lastr := IFNULL(Brake_Power, @lastr) AS Brake_Power, @lasts := IFNULL(Shaft_Torque, @lasts) AS Shaft_Torque, @lastt := IFNULL(Mass_Consumed_Fuel_Oil, @lastt) AS Mass_Consumed_Fuel_Oil, @lastu := IFNULL(Volume_Consumed_Fuel_Oil, @lastu) AS Volume_Consumed_Fuel_Oil, @lastdd := IFNULL(Displacement, @lastdd) AS Displacement
+				FROM (SELECT id, IMO_Vessel_Number, DateTime_UTC, Speed_Over_Ground, Relative_Wind_Speed, Relative_Wind_Direction, Ship_Heading, Shaft_Revolutions, Static_Draught_Fore, Static_Draught_Aft, Water_Depth, Rudder_Angle, Seawater_Temperature, Air_Temperature, Air_Pressure, Air_Density, Speed_Through_Water, Delivered_Power, Shaft_Power, Brake_Power, Shaft_Torque, Mass_Consumed_Fuel_Oil, Volume_Consumed_Fuel_Oil, Displacement FROM tempRawISO) AS q
 					CROSS JOIN (SELECT @lastb := NULL) AS var_b  
 					CROSS JOIN (SELECT @lastc := NULL) AS var_c  
 					CROSS JOIN (SELECT @lastd := NULL) AS var_d  
@@ -80,26 +80,7 @@ BEGIN
 						t1.Shaft_Torque = t2.Shaft_Torque,
 						t1.Mass_Consumed_Fuel_Oil = t2.Mass_Consumed_Fuel_Oil,
 						t1.Volume_Consumed_Fuel_Oil = t2.Volume_Consumed_Fuel_Oil,
-						t1.Lower_Caloirifc_Value_Fuel_Oil = t2.Lower_Caloirifc_Value_Fuel_Oil,
-						t1.Normalised_Energy_Consumption = t2.Normalised_Energy_Consumption,
-						t1.Density_Fuel_Oil_15C = t2.Density_Fuel_Oil_15C,
-						t1.Density_Change_Rate_Per_C = t2.Density_Change_Rate_Per_C,
-						t1.Temp_Fuel_Oil_At_Flow_Meter = t2.Temp_Fuel_Oil_At_Flow_Meter,
-						t1.Wind_Resistance_Relative = t2.Wind_Resistance_Relative,
-						t1.Air_Resistance_No_Wind = t2.Air_Resistance_No_Wind,
-						t1.Expected_Speed_Through_Water = t2.Expected_Speed_Through_Water,
-						t1.Displacement = t2.Displacement,
-						t1.Speed_Loss = t2.Speed_Loss,
-						t1.Transverse_Projected_Area_Current = t2.Transverse_Projected_Area_Current,
-						t1.Wind_Resistance_Correction = t2.Wind_Resistance_Correction,
-						t1.Corrected_Power = t2.Corrected_Power,
-						t1.Filter_SpeedPower_Disp_Trim = t2.Filter_SpeedPower_Disp_Trim,
-						t1.Filter_SpeedPower_Trim = t2.Filter_SpeedPower_Trim,
-						t1.Filter_SpeedPower_Disp = t2.Filter_SpeedPower_Disp,
-						t1.Filter_SpeedPower_Below = t2.Filter_SpeedPower_Below,
-						t1.NearestDisplacement = t2.NearestDisplacement,
-						t1.NearestTrim = t2.NearestTrim,
-						t1.Trim = t2.Trim
+						t1.Displacement = t2.Displacement
 						;
     
     /* UPDATE tempRawISO AS t1
