@@ -26,9 +26,7 @@ INSERT INTO rawdata (IMO_Vessel_Number,
 							 Air_Pressure,
 							 Mass_Consumed_Fuel_Oil,
                              Shaft_Power,
-                             Displacement, 
-                             Lower_Caloirifc_Value_Fuel_Oil,
-                             Density_Fuel_Oil_15C
+                             Displacement
                              )
 SELECT IMO_Vessel_Number, 
 							 Water_Depth, 
@@ -45,8 +43,6 @@ SELECT IMO_Vessel_Number,
 							 Air_Pressure,
 							 Mass_Consumed_Fuel_Oil,
                              ME_1_Load,
-                             Draft_Displacement_Actual,
-                             Lower_Caloirifc_Value_Fuel_Oil,
-                             Density_Fuel_Oil_15C
+                             Draft_Displacement_Actual
 							 FROM tempRaw;
 END;
