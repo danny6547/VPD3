@@ -96,6 +96,10 @@ end
 
 varargout{1} = coeffs;
 varargout{2} = R2;
+varargout{3} = speed;
+varargout{4} = power;
+varargout{5} = displacement;
+varargout{6} = trim;
 
 % Remove records found in database
 % Server = 'localhost';

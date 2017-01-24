@@ -137,6 +137,29 @@ classdef cShip
        
        end
        
+       function obj = insertIntoSpeedPower(obj, speed, power, displacement, trim)
+       % insertIntoSpeedPower Insert speed, power, draft, trim data.
+       
+       % Repeat scalar inputs to match uniform size (call SPCoeffs)
+       imo = repmat(obj.IMO_Vessel_Number, size(speed, 1));
+       
+       data_c = arrayfun(@(x) [repmat(x, size(speed, 1), 1), ...
+           speed, displacement, trim, power]', [obj.IMO_Vessel_Number],...
+           'Uni', 0);
+       data = [data_c{:}]';
+       
+       % Insert
+%        data = [imo, speed, displacement, trim, power];
+       toTable = 'speedPower';
+       key = 'id';
+       uniqueColumns = {'IMO_Vessel_Number', 'Speed', 'Displacement', 'Trim', };
+       otherColumns = {'Power'};
+       format_s = '%u, %f, %f, %f, %f';
+       insertWithoutDuplicates(data, toTable, key, uniqueColumns, ...
+           otherColumns, format_s);
+       
+       end
+       
 %        function obj = fitSpeedPower(obj, speed, power, varargin)
 %        % fitSpeedPower Fit speed, power data to model
 %        
