@@ -20,17 +20,18 @@ conn_ch = ['driver=MySQL ODBC 5.3 ANSI Driver;', ...
 sqlConn = adodb_connect(conn_ch);
 
 % Drop temp loading table if exists
-tempTable = 'tempraw';
+tempTable = 'tempDNVGLRaw';
 drop_s = ['DROP TABLE IF EXISTS `' tempTable '`;'];
 adodb_query(sqlConn, drop_s);
 
 % Create temp table
-filename = ['C:\Users\damcl\Documents\SQL\tests\EcoInsight Test Scripts\',...
-    'Create Tables\createDNVGLRawTempTable.sql'];
-cid = fopen(filename);
-create_s = fscanf(cid, '%c');
-fclose(cid);
-create_s(1:130) = [];
+% filename = ['C:\Users\damcl\Documents\SQL\tests\EcoInsight Test Scripts\',...
+%     'Create Tables\createDNVGLRawTempTable.sql'];
+% cid = fopen(filename);
+% create_s = fscanf(cid, '%c');
+% fclose(cid);
+% create_s(1:130) = [];
+create_s = 'CALL createDNVGLRawTempTable';
 adodb_query(sqlConn, create_s);
 
 % Load infile defaults for DNVGL raw table
@@ -49,12 +50,14 @@ noNulls_s = 'CALL removeNullRows';
 adodb_query(sqlConn, noNulls_s);
 
 % Call procedure to add time into DateTime
-addTime_s = 'CALL addTimeDNVGLRaw;';
+addTimeCol_s = 'ALTER TABLE tempDNVGLRaw ADD DateTime_UTC DATETIME AFTER Date_UTC;';
+adodb_query(sqlConn, addTimeCol_s);
+addTime_s = 'UPDATE tempDNVGLRaw SET DateTime_UTC = ADDTIME(Date_UTC, Time_UTC);';
 adodb_query(sqlConn, addTime_s);
 
 % Call procedure to add time into DateTime
-convertRaw_s = 'CALL convertDNVGLRawToRawData;';
-adodb_query(sqlConn, convertRaw_s);
+% convertRaw_s = 'CALL convertDNVGLRawToRawData;';
+% adodb_query(sqlConn, convertRaw_s);
 
 % Move data to final table, ignoring non-unique values
 toTable = 'DNVGLRaw';
@@ -145,8 +148,8 @@ columns =   {
             'AE_Projected_Consumption'
             'Air_Compr_1_Running_Time'
             'Air_Compr_2_Running_Time'
-            'Air_Pressure'
-            'Air_Temperature'
+%             'Air_Pressure'
+%             'Air_Temperature'
             'Apparent_Slip'
             'Boiler_1_Consumption'
             'Boiler_1_Feed_Water_Flow'
@@ -175,7 +178,7 @@ columns =   {
             'Current_Speed'
             'Date_Local'
             'Date_UTC'
-            'Density_Fuel_Oil_15C'
+%             'Density_Fuel_Oil_15C'
             'Distance'
             'Draft_Actual_Aft'
             'Draft_Actual_Fore'
@@ -195,9 +198,9 @@ columns =   {
             'Longitude_Degree'
             'Longitude_East_West'
             'Longitude_Minutes'
-            'Lower_Caloirifc_Value_Fuel_Oil'
+%             'Lower_Caloirifc_Value_Fuel_Oil'
             'Lube_Oil_System_Type_Of_Pump_In_Service'
-            'Mass_Consumed_Fuel_Oil'
+%             'Mass_Consumed_Fuel_Oil'
             'ME_1_Aux_Blower'
             'ME_1_Charge_Air_Inlet_Temp'
             'ME_1_Consumption'
@@ -256,19 +259,19 @@ columns =   {
             'People'
             'Prop_1_Pitch'
             'Prop_2_Pitch'
-            'Relative_Wind_Direction'
-            'Relative_Wind_Speed'
+%             'Relative_Wind_Direction'
+%             'Relative_Wind_Speed'
             'Remarks'
             'Sea_state_Dir'
             'Sea_state_Force_Douglas'
-            'Seawater_Temperature'
-            'Shaft_Revolutions'
+%             'Seawater_Temperature'
+%             'Shaft_Revolutions'
             'Speed_GPS'
-            'Speed_Over_Ground'
+%             'Speed_Over_Ground'
             'Speed_Projected_From_Charter_Party'
             'Speed_Through_Water'
-            'Static_Draught_Aft'
-            'Static_Draught_Fore'
+%             'Static_Draught_Aft'
+%             'Static_Draught_Fore'
             'Swell_Dir'
             'Swell_Force'
             'Temperature_Ambient'

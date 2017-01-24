@@ -6,3 +6,4 @@ connectDatabase: write function to connect to given database, return connection 
 connectDatabase: test
 validateCellStr: write function to return validateAttributes-style error message if all elements of input cell are not strings.
 parseEcoInsightXLS: parse when aggregation is selected
+cShip: repeat scalar inputs to uniform size
