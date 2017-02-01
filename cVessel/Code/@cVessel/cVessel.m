@@ -1,5 +1,5 @@
-classdef cShip
-    %CSHIP Summary of this class goes here
+classdef cVessel
+    %CVESSEL Summary of this class goes here
     %   Detailed explanation goes here
     
     properties
@@ -24,7 +24,7 @@ classdef cShip
     
     methods
     
-       function obj = cShip(varargin)
+       function obj = cVessel(varargin)
        % Class constructor. Construct new object, assign array of IMO.
          
        
@@ -59,32 +59,32 @@ classdef cShip
        end
        end
        
-       function obj = assignClass(obj, shipclass)
-       % assignClass Assign ship to ship class.
+       function obj = assignClass(obj, vesselclass)
+       % assignClass Assign vessel to vessel class.
        
        % Inputs
-       validateattributes(shipclass, {'cShipClass'}, {'scalar'}, ...
-           'assignClass', 'shipclass', 1);
-       if isscalar(shipclass)
-           shipclass = repmat(shipclass, size(obj));
+       validateattributes(vesselclass, {'cVesselClass'}, {'scalar'}, ...
+           'assignClass', 'vesselclass', 1);
+       if isscalar(vesselclass)
+           vesselclass = repmat(vesselclass, size(obj));
        end
        
-       [obj.LBP] = shipclass(:).LBP;
-       [obj.Engine] = shipclass(:).Engine;
-       [obj.Wind_Resist_Coeff_Dir] = shipclass(:).Wind_Resist_Coeff_Dir;
-       [obj.Transverse_Projected_Area_Design] = shipclass(:).Transverse_Projected_Area_Design;
-       [obj.Block_Coefficient] = shipclass(:).Block_Coefficient;
-       [obj.Length_Overall] = shipclass(:).Length_Overall;
-       [obj.Breadth_Moulded] = shipclass(:).Breadth_Moulded;
-       [obj.Draft_Design] = shipclass(:).Draft_Design;
-       [obj.Class] = shipclass(:).WeightTEU;
+       [obj.LBP] = vesselclass(:).LBP;
+       [obj.Engine] = vesselclass(:).Engine;
+       [obj.Wind_Resist_Coeff_Dir] = vesselclass(:).Wind_Resist_Coeff_Dir;
+       [obj.Transverse_Projected_Area_Design] = vesselclass(:).Transverse_Projected_Area_Design;
+       [obj.Block_Coefficient] = vesselclass(:).Block_Coefficient;
+       [obj.Length_Overall] = vesselclass(:).Length_Overall;
+       [obj.Breadth_Moulded] = vesselclass(:).Breadth_Moulded;
+       [obj.Draft_Design] = vesselclass(:).Draft_Design;
+       [obj.Class] = vesselclass(:).WeightTEU;
        
        end
        
        function obj = insertIntoVessels(obj)
-       % insertIntoVessels Insert ship data into table 'Vessels'.
+       % insertIntoVessels Insert vessel data into table 'Vessels'.
        
-       % Table of ship data
+       % Table of vessel data
        numShips = numel(obj);
        numColumns = 11;
        data = cell(numShips, numColumns);
@@ -127,8 +127,8 @@ classdef cShip
        
        if isempty(obj.Engine)
            
-          errid = 'ShipPer:EngineNeeded';
-          errmsg = ['Ship Engine needed before SFOC data can be inserted'...
+          errid = 'VesselPer:EngineNeeded';
+          errmsg = ['Vessel Engine needed before SFOC data can be inserted'...
               ' into database.'];
           error(errid, errmsg);
        end

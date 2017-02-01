@@ -7,3 +7,6 @@ connectDatabase: test
 validateCellStr: write function to return validateAttributes-style error message if all elements of input cell are not strings.
 parseEcoInsightXLS: parse when aggregation is selected
 cShip: repeat scalar inputs to uniform size
+cShip, cShipEngine: rename to cVessel_
+# Ship Performance: rename repo to Vessel Performance
+Vessel Performance: Remove files unrelated to analysis of database values (ie. remove functions related to data insertion)

@@ -1,4 +1,4 @@
-classdef testcShipEngine < matlab.unittest.TestCase
+classdef testcVesselEngine < matlab.unittest.TestCase
 %TESTCSHIPENGINE
 %   Detailed explanation goes here
 

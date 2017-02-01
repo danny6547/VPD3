@@ -1,5 +1,5 @@
-classdef cShipEngine < handle
-    %CSHIPENGINE Ship Engine details and SFOC curve.
+classdef cVesselEngine < handle
+    %CVESSELENGINE Ship Engine details and SFOC curve.
     %   Detailed explanation goes here
     
     properties
@@ -14,7 +14,7 @@ classdef cShipEngine < handle
     
     methods
     
-       function obj = cShipEngine()
+       function obj = cVesselEngine()
            
            
            

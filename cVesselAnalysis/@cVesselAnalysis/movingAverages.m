@@ -1,4 +1,4 @@
-function avgStruct = movingAverages( perStruct, durations, varargin)
+function [obj, avgStruct] = movingAverages(obj, perStruct, durations, varargin)
 %movingAverages Calculate moving averages of time-series data
 %   avgStruct = movingAverages(perStruct, duration) will return in 
 %   AVGSTRUCT a struct with field names 'Average', 'StartDate' and 
@@ -30,6 +30,9 @@ function avgStruct = movingAverages( perStruct, durations, varargin)
 %   data, or an array, in which case it must be the same size as PERSTRUCT.
 %   The default value is FALSE.
 
+% Assign
+perStruct = obj.(obj.Variable);
+
 % Initialise Outpus
 avgStruct = struct('Duration', []);
 sizeStruct = size(perStruct);
@@ -41,7 +44,7 @@ errorSizeMatch_f = @(varname) error('moveAvg:InputSizeMismatch', ...
     'input PERSTRUCT']);
 resizeMatch_f = @(match, this) repmat(match, size(this));
 
-if nargin > 2
+if nargin > 3
     validateattributes(varargin{1}, {'logical'}, {}, ...
         'movingAverages', 'reverse', 3);
     
@@ -59,7 +62,7 @@ if isscalar(reverse_l)
 end
 
 trim_l = false;
-if nargin > 3
+if nargin > 4
     
     validateattributes(varargin{2}, {'logical'}, {}, ...
         'movingAverages', 'trim', 4);
@@ -74,7 +77,7 @@ if isscalar(trim_l)
 end
     
 remove_l = false;
-if nargin > 4
+if nargin > 5
     ci = 3;
     validateattributes(varargin{ci}, {'logical'}, {}, ...
         'movingAverages', 'remove', 5);

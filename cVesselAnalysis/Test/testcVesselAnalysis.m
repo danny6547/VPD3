@@ -1,5 +1,5 @@
-classdef testcShipClass < matlab.unittest.TestCase
-%TESTCSHIPCLASS
+classdef testcVesselAnalysis < matlab.unittest.TestCase
+%TESTCSHIPANALYSIS
 %   Detailed explanation goes here
 
 properties

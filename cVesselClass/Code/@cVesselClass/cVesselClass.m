@@ -1,4 +1,4 @@
-classdef cShipClass < handle
+classdef cVesselClass < handle
     %CSHIPCLASS Weight class of ship.
     %   Detailed explanation goes here
     
@@ -18,7 +18,7 @@ classdef cShipClass < handle
     
     methods
     
-       function obj = cShipClass()
+       function obj = cVesselClass()
     
        end
     

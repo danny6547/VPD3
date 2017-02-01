@@ -1,5 +1,5 @@
-classdef cShipWindCoefficient
-    %CSHIPWINDCOEFFICIENT Wind resistance coefficents for ships.
+classdef cVesselWindCoefficient
+    %CVESSELWINDCOEFFICIENT Wind resistance coefficents for ships.
     %   Detailed explanation goes here
     
     properties
@@ -11,7 +11,7 @@ classdef cShipWindCoefficient
     
     methods
     
-       function obj = cShipWindCoefficient()
+       function obj = cVesselWindCoefficient()
     
        end
     
