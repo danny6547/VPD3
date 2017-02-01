@@ -12,14 +12,21 @@ if nargin > 1
     varname = varargin{1};
     validateattributes(varname, {'char'}, {'vector'}, ...
         'inServicePerformance', 'varname', 2);
+    
+    if ~ismember(varname, fieldnames(perStruct))
+
+        errid = 'DB:NameUnknown';
+        errmsg = 'Input VARNAME must be a field name of input struct PERSTRUCT';
+        error(errid, errmsg);
+    end
+
+else
+    
+    varname = 'Performance_Index';
 end
 
-if ~ismember(varname, fieldnames(perStruct))
-    
-    errid = 'DB:NameUnknown';
-    errmsg = 'Input VARNAME must be a field name of input struct PERSTRUCT';
-    error(errid, errmsg);
-end
+% Convert dates
+perStruct = convertDate(perStruct);
 
 % Iterate over elements of data array
 for si = 1:numel(perStruct)
@@ -31,7 +38,8 @@ for si = 1:numel(perStruct)
     end
     
     % Index into input and get dates
-    currDate = datenum(char(currStruct.DateTime_UTC), 'dd-mm-yyyy');
+%     currDate = datenum(char(currStruct.DateTime_UTC), 'dd-mm-yyyy');
+    currDate = currStruct.DateTime_UTC;
     currPerf = currStruct.(varname);
     [ri, ci] = ind2sub(sizeStruct, si);
     
@@ -59,32 +67,36 @@ for si = 1:numel(perStruct)
 %     output(1) = mean(currPerf(1:endDateI(1)));
 %     output(2) = mean(currPerf(1:endDateI(1)));
     
-    firstYear_l = filtDate <= ( min(filtDate) + 365.25);
-    remainingYears_l = filtDate > ( min(filtDate) + 365.25);
-    
-    output(1) = nanmean(currPerf(firstYear_l));
-    output(2) = nanmean(currPerf(remainingYears_l));
-    
-    startDate(1) = min(filtDate(firstYear_l));
-    startDate(2) = min(filtDate(remainingYears_l));
-    endDate(1) = max(filtDate(firstYear_l));
-    endDate(2) = max(filtDate(remainingYears_l));
-    
     % Initialise output struct
     Duration_st = struct('Average', [], 'StartDate', [], 'EndDate', []);
     
-    % Make all Row vectors
-    output = output(:)';
-    startDate = startDate(:)';
-    endDate = endDate(:)';
+    % Separate first and second years
+    firstYear_l = filtDate <= ( min(filtDate) + 365.25);
+    remainingYears_l = filtDate > ( min(filtDate) + 365.25);
     
-    % Assign into outputs
-    Duration_st(1).Average = output(1);
-    Duration_st(1).StartDate = startDate(1);
-    Duration_st(1).EndDate = endDate(1);
-    Duration_st(2).Average = output(2);
-    Duration_st(2).StartDate = startDate(2);
-    Duration_st(2).EndDate = endDate(2);
+    if any(remainingYears_l)
+        
+        output(1) = nanmean(currPerf(firstYear_l));
+        output(2) = nanmean(currPerf(remainingYears_l));
+        
+        startDate(1) = min(filtDate(firstYear_l));
+        startDate(2) = min(filtDate(remainingYears_l));
+        endDate(1) = max(filtDate(firstYear_l));
+        endDate(2) = max(filtDate(remainingYears_l));
+        
+        % Make all Row vectors
+        output = output(:)';
+        startDate = startDate(:)';
+        endDate = endDate(:)';
+        
+        % Assign into outputs
+        Duration_st(1).Average = output(1);
+        Duration_st(1).StartDate = startDate(1);
+        Duration_st(1).EndDate = endDate(1);
+        Duration_st(2).Average = output(2);
+        Duration_st(2).StartDate = startDate(2);
+        Duration_st(2).EndDate = endDate(2);
+    end
     
     % Re-assign into Outputs
     servStruct(ri, ci).Duration = Duration_st;
