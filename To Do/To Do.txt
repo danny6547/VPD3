@@ -125,3 +125,35 @@ insertFromDNVGLRawIntoRaw: reduce run time to less than 1s.
 
 updateFromBunkerNote: Include warnings if some BDN numbers not found in BunkerDeliveryNote table?
 Extract "timestep" into high-level metadata table
+
+Organise repository:
+	Tidy up folders
+	Remove redundant files
+	Remove redundant procedures
+	Remove redundant tables
+	Rename database
+Investigate withoutDuplicates performance issues
+Duplicate rows:
+	# Issue where insertFromDNVGLRawIntoRaw will insert duplicates if given
+	# Requirements for data returned when duplicate inserts attempted: all transactions logged somewhere? row numbers returned in output?
+	# Requirements for detection of data duplication:
+		If duplicates detected on key columns, can we see when other columns are different? Yes, ROW_COUNT after on duplicate key update = 0 when no change, = N when N rows changed.
+		# Negative consequences of puttin unique key contraints on only IDENTIFYING columns (ie IMO, Time)? This would allow updating the non-key columns, otherwise deletion necessary. 
+		# Replace withoutDuplicates syntax with unique constraints
+			# Drop rawdata, write constraint into create script
+			# Drop dnvglraw, write constraint into create script
+			# Drop performanceData, write constraint into create script
+			# Drop DNVGLperformanceData, write constraint into create script
+			# Replace insertWithoutDuplicates with new cMySQL
+			# Rewrite insertFromDNVGLRawIntoRaw to call ON DUPLICATE KEY UPDATE
+			# Rewrite insertIntoPerformanceData to call ON DUPLICATE KEY UPDATE
+	Performance comparison with alternatives
+Access database:
+	from external machince
+	via internet
+
+Finalise processing of data from various sources:
+	Write remainder of MATLAB code: insertIntoSFOCCoefficients, insertIntoOthers
+	Write single-call procedure for ISO on raw, insert into performance
+	
+Implement Annex E to go from annemometre-height wind to reference-height wind

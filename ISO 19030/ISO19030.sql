@@ -5,7 +5,7 @@ delimiter //
 
 CREATE PROCEDURE ISO19030(imo int)
 BEGIN
-
+	
 	/* Get retreived data set 5.3.3 */
     CALL createTempRawISO(imo);
     CALL removeInvalidRecords();

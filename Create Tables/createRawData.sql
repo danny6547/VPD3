@@ -3,6 +3,7 @@
 CREATE TABLE rawdata (id INT PRIMARY KEY AUTO_INCREMENT,
 						 DateTime_UTC DATETIME(3),
                          IMO_Vessel_Number INT(7),
+                         CONSTRAINT UniqueDateIMO UNIQUE(IMO_Vessel_Number, DateTime_UTC),
 						 Relative_Wind_Speed DOUBLE(10, 5),
 						 Relative_Wind_Direction DOUBLE(10, 5),
 						 Speed_Over_Ground DOUBLE(10, 5),

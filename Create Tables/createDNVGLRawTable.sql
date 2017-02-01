@@ -2,6 +2,9 @@
 use test2;
 CREATE TABLE DNVGLRaw (
 id INTEGER AUTO_INCREMENT PRIMARY KEY,
+IMO_Vessel_Number	INT,
+DateTime_UTC 		DATETIME,
+CONSTRAINT UniqueIMODates UNIQUE(IMO_Vessel_Number, DateTime_UTC),
 AE_1_Running_Hours	DOUBLE(20, 5),
 AE_2_Running_Hours	DOUBLE(20, 5), 
 Date_Local	DOUBLE(20, 5), 
@@ -24,7 +27,6 @@ Sea_state_Force_Douglas	DOUBLE(20, 5),
 Draft_Actual_Aft	DOUBLE(20, 5), 
 Draft_Actual_Fore	DOUBLE(20, 5), 
 Draft_Displacement_Actual	DOUBLE(20, 5), 
-IMO_Vessel_Number	INT, 
 Temperature_Ambient	DOUBLE(20, 5), 
 Latitude_Degree	INT, 
 Latitude_Minutes	INT, 
@@ -224,6 +226,7 @@ Entry_Made_By_1	DOUBLE(20, 5),
 Entry_Made_By_2	DOUBLE(20, 5)
 );
 
+/* 
 ALTER TABLE DNVGLRaw ADD DateTime_UTC DATETIME AFTER Date_UTC;
 
 /* 

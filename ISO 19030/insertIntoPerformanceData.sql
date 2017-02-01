@@ -46,13 +46,22 @@ IF SFOCFilt THEN
 END IF;
 
 /* Insert data from temporary table into performance data after filtering */
-INSERT INTO PerformanceData
+/* INSERT INTO PerformanceData
 	(DateTime_UTC, IMO_Vessel_Number, Speed_Index)
 		SELECT DateTime_UTC, IMO_Vessel_Number, Speed_Loss
 			FROM tempRawISO AS aa WHERE NOT EXISTS(
 				Select DateTime_UTC, IMO_Vessel_Number, Speed_Loss
 					FROM PerformanceData AS bb WHERE
 						aa.DateTime_UTC = bb.DateTime_UTC AND
-						aa.IMO_Vessel_Number = bb.IMO_Vessel_Number);
+						aa.IMO_Vessel_Number = bb.IMO_Vessel_Number); */
+
+INSERT INTO PerformanceData
+	(DateTime_UTC, IMO_Vessel_Number, Speed_Index)
+		SELECT DateTime_UTC, IMO_Vessel_Number, Speed_Loss
+			FROM tempRawISO
+				ON DUPLICATE KEY UPDATE	
+					DateTime_UTC = VALUES(DateTime_UTC),
+					IMO_Vessel_Number = VALUES(IMO_Vessel_Number),
+					Speed_Index = VALUES(Speed_Index);
 
 END;
