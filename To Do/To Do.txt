@@ -160,3 +160,4 @@ Implement Annex E to go from annemometre-height wind to reference-height wind
 # Rename "Database" to "Vessel Performance Database"
 
 Convert insertIntoTable into cMySQL method
+removeNullRows: set filter for rows where any primary or secondary parameter is NULL

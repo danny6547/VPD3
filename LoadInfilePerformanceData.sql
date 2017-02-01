@@ -1,3 +1,0 @@
-/* Script to load data into table "Performance Data" from tab-delimited text file with Performance Index, Time and Ship Name columns */
-USE test2;
-LOAD DATA LOCAL INFILE 'L:\\RD\\Group\\Marine Business Support\\Hull and propeller performance\\Harmstorf\\Ship Data\\061216\\HarmstorfCapBlanche.tab' INTO TABLE PerformanceDataDNVGL IGNORE 0 LINES (Performance_Index, Speed_Index, DateTime_UTC, IMO_Vessel_Number);

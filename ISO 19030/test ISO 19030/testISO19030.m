@@ -1013,7 +1013,7 @@ methods(Test)
     
     end
     
-    function testdeleteWithReferenceConditions(testcase)
+    function testfilterReferenceConditions(testcase)
     % Test that values are filtered based on reference conditions
     % Test that values for the reference conditions outlined in section
     % 6.2.1 of the ISO 19030-2 standard are fullfilled.
@@ -1041,7 +1041,7 @@ methods(Test)
     [startrow, count] = testcase.insert(inputData_m, inputNames_c);
     
     % Execute
-    testcase.call('deleteWithReferenceConditions', testcase.AlmavivaIMO);
+    testcase.call('filterReferenceConditions', testcase.AlmavivaIMO);
     
     % Verify
     temp_act = testcase.read('Seawater_Temperature', startrow, count, 'id');
@@ -1073,7 +1073,7 @@ methods(Test)
     [startrow, count] = testcase.insert(inputData_m, inputNames_c);
     
     % Execute
-    testcase.call('deleteWithReferenceConditions', testcase.AlmavivaIMO);
+    testcase.call('filterReferenceConditions', testcase.AlmavivaIMO);
     
     % Verify
     rudder_act = testcase.read('Relative_Wind_Speed', startrow, count,...
@@ -1152,7 +1152,7 @@ methods(Test)
     adodb_query(testcase.Connection, update4_s);
     
     % Execute
-    testcase.call('deleteWithReferenceConditions', testcase.AlmavivaIMO);
+    testcase.call('filterReferenceConditions', testcase.AlmavivaIMO);
     
     % Verify
     depth5_act = testcase.read('Water_Depth', startrow, 2, 'id');
@@ -1205,7 +1205,7 @@ methods(Test)
     [startrow, count] = testcase.insert(inputData_m, inputNames_c);
     
     % Execute
-    testcase.call('deleteWithReferenceConditions', testcase.AlmavivaIMO);
+    testcase.call('filterReferenceConditions', testcase.AlmavivaIMO);
     
     % Verify
     rudder_act = testcase.read('Rudder_Angle', startrow, count, 'id');
