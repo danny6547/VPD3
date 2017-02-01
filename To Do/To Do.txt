@@ -158,3 +158,5 @@ Finalise processing of data from various sources:
 	
 Implement Annex E to go from annemometre-height wind to reference-height wind
 # Rename "Database" to "Vessel Performance Database"
+
+Convert insertIntoTable into cMySQL method

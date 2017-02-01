@@ -1,9 +1,9 @@
 /* Remove rows containing data which fails the reference conditions given in standard ISO 19030-2 */
-DROP PROCEDURE IF EXISTS deleteWithReferenceConditions;
+DROP PROCEDURE IF EXISTS filterReferenceConditions;
 
 delimiter //
 
-CREATE PROCEDURE deleteWithReferenceConditions(imo INT)
+CREATE PROCEDURE filterReferenceConditions(imo INT)
 
 BEGIN
 	
