@@ -16,7 +16,7 @@ filename = cellstr(filename);
 
 % Initalise Outputs
 numFiles = numel(filename);
-timedata = struct('dates', [], 'pidx', [], 'regr', []);
+timedata = struct('dates', [], 'pidx', [], 'sidx', [], 'regr', []);
 % ship = repmat(struct(), [numFiles, 1]);
 dataStartRow = nan(1, numFiles);
 
@@ -41,9 +41,16 @@ for fi = 1:numFiles
         end
     end
     
+    % Is data Performance or speed Index?
+    if strcmpi(txt{dataStartRow(fi) - 1, 2}, 'Performance index')
+        pidx = dat(:, 1);
+        sidx = nan(size(dat(:, 1)));
+    elseif strcmpi(txt{dataStartRow(fi) - 1, 2}, 'Speed deviation')
+        sidx = dat(:, 1);
+        pidx = nan(size(dat(:, 1)));
+    end
     
     date_c = txt(dataStartRow(fi):end, 1);
-    pidx = dat(:, 1);
     regr = dat(:, 3);
     
     if version == 2
@@ -75,6 +82,7 @@ for fi = 1:numFiles
     
     timedata(fi).dates = dates;
     timedata(fi).pidx = pidx;
+    timedata(fi).sidx = sidx;
     timedata(fi).regr = regr;
     
 end
