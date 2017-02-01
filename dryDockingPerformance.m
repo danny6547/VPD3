@@ -1,6 +1,13 @@
-function [ ddPer ] = dryDockingPerformance( perData )
+function [ ddPer ] = dryDockingPerformance( perData, varargin )
 %dryDockingPerformance Performance improvement due to dry-docking.
 %   Detailed explanation goes here
+
+% Inputs
+varname = 'Performance_Index';
+if nargin > 1
+    
+    checkVarname( perStruct, varargin{1} );
+end
 
 % Output
 ddPer = struct('AvgPerPrior', [], 'AvgPerAfter', [], ...
@@ -30,7 +37,7 @@ for ii = 1:nDDi:numel(perData)
        
        % Skip DDi if empty
        currData = perData(ddi, idx_c{2:end});
-       if all(isnan(currData.Performance_Index))
+       if all(isnan(currData.(varname)))
            continue
        end
        
