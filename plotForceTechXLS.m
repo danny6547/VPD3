@@ -8,8 +8,16 @@ dataTable = table();
 
 if nargin > 2
     
-    ShipName = varargin{1};
+    shipname = varargin{1};
     
+else
+    [~, shipname] = fileparts(filename);
+    
+end
+    
+if nargin > 3
+    
+    ShipName = varargin{2};
 else
     
     % Processing
@@ -171,12 +179,12 @@ else
     
     fid = fopen(filename);
     temp_c = textscan(fid, strForm_s, 'Headerlines', 1, ...
-        'Delimiter', {','}, 'Whitespace', '', 'TreatAsEmpty', '-');
+        'Delimiter', {';'}, 'Whitespace', '', 'TreatAsEmpty', '-');
     
     while ~feof(fid)
         
         temp2_c = textscan(fid, strForm_s, 'Headerlines', 1, ...
-        'Delimiter', {','}, 'Whitespace', '', 'TreatAsEmpty', '-');
+        'Delimiter', {';'}, 'Whitespace', '', 'TreatAsEmpty', '-');
         temp_c(end+1, :) = temp2_c;
     end
     
@@ -189,7 +197,12 @@ end
 
 % Filter
 if iscell(ShipName.ReportEndUtcTime)
-    rawDate = cellfun(@(x) datenum(x{1}, 'yyyy-mm-dd HH:MM'), ...
+    
+    if all(cellfun(@(x) iscell(x), ShipName.ReportEndUtcTime))
+        ShipName.ReportEndUtcTime = cellfun(@(x) [x{:}], ShipName.ReportEndUtcTime, 'Uni', 0);
+    end
+    
+    rawDate = cellfun(@(x) datenum(x, 'yyyy-mm-dd HH:MM'), ...
         ShipName.ReportEndUtcTime, 'Uni', 1, 'Err', @(x, y) nan(1));
 else
     rawDate = datenum(ShipName.ReportEndUtcTime, 'yyyy-mm-dd HH:MM'); %'dd-mm-yyyy HH:MM' ); %  );
@@ -254,7 +267,7 @@ si_line.Color = [0, 0.75, 0];
 % hold off;
 % unFilt_line.MarkerFaceColor = unFilt_line.Color;
 
-[~, shipname] = fileparts(filename);
+% [~, shipname] = fileparts(filename);
 title_s = 'Combined Speed Index against Time';
 if isempty(shipname)
     title_s = [title_s, ' for Vessel ', shipname];
