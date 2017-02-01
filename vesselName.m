@@ -18,12 +18,15 @@ conn = adodb_connect(['driver=MySQL ODBC 5.3 ANSI Driver;',...
     'Uid=root;',...
     'Pwd=HullPerf2016;']);
 
-w = strcat(strcat(' IMO = ', num2str(IMOin')), ' OR ');
+IMOin = IMOin(:);
+w = strcat(strcat(' IMO = ', num2str(IMOin)), ' OR ');
 e = w';
 r = e(:)';
 t = r(1:end-3);
 
 out = adodb_query(conn, ['SELECT name, IMO FROM ships WHERE ', t]);
+% out = arrayfun(@(t) adodb_query(conn, ...
+%     ['SELECT name, IMO FROM ships WHERE ', t]), IMOin, 'Uni', 0);
 
 if isempty(out)
     
