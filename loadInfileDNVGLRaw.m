@@ -19,20 +19,16 @@ conn_ch = ['driver=MySQL ODBC 5.3 ANSI Driver;', ...
     'Pwd=HullPerf2016;'];
 sqlConn = adodb_connect(conn_ch);
 
-% Drop temp loading table if exists
+% Drop temp loading table if exists, then re-create 
 tempTable = 'tempDNVGLRaw';
 drop_s = ['DROP TABLE IF EXISTS `' tempTable '`;'];
 adodb_query(sqlConn, drop_s);
 
-% Create temp table
-% filename = ['C:\Users\damcl\Documents\SQL\tests\EcoInsight Test Scripts\',...
-%     'Create Tables\createDNVGLRawTempTable.sql'];
-% cid = fopen(filename);
-% create_s = fscanf(cid, '%c');
-% fclose(cid);
-% create_s(1:130) = [];
 create_s = 'CALL createDNVGLRawTempTable';
 adodb_query(sqlConn, create_s);
+
+addTimeCol_s = 'ALTER TABLE tempDNVGLRaw ADD DateTime_UTC DATETIME AFTER Date_UTC;';
+adodb_query(sqlConn, addTimeCol_s);
 
 % Load infile defaults for DNVGL raw table
 delimiter_s = ',';
@@ -50,14 +46,8 @@ noNulls_s = 'CALL removeNullRows';
 adodb_query(sqlConn, noNulls_s);
 
 % Call procedure to add time into DateTime
-addTimeCol_s = 'ALTER TABLE tempDNVGLRaw ADD DateTime_UTC DATETIME AFTER Date_UTC;';
-adodb_query(sqlConn, addTimeCol_s);
 addTime_s = 'UPDATE tempDNVGLRaw SET DateTime_UTC = ADDTIME(Date_UTC, Time_UTC);';
 adodb_query(sqlConn, addTime_s);
-
-% Call procedure to add time into DateTime
-% convertRaw_s = 'CALL convertDNVGLRawToRawData;';
-% adodb_query(sqlConn, convertRaw_s);
 
 % Move data to final table, ignoring non-unique values
 toTable = 'DNVGLRaw';
@@ -294,9 +284,15 @@ columns =   {
             'Wind_Force_Bft'
             'Wind_Force_Kn'
             };
-duplicateCols = {'DateTime_UTC', 'IMO_Vessel_Number'};
-format = '%s, %u, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f';
-insertWithoutDuplicates(tempTable, toTable, 'id', duplicateCols, columns, format);
+duplicateCols = {'DateTime_UTC'; 'IMO_Vessel_Number'};
+% format = '%s, %u, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f';
+
+allCols = [duplicateCols; columns];
+obj_sql = cMySQL();
+obj_sql = obj_sql.insertSelectDuplicate(tempTable, allCols, toTable, allCols);
+obj_sql.disconnect;
+
+% insertWithoutDuplicates(tempTable, toTable, 'id', duplicateCols, columns, format);
 
 % final_s = 'CALL insertWithoutDuplicates';
 % adodb_query(sqlConn, final_s);
