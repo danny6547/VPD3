@@ -1,4 +1,4 @@
-function bytesWritten = convertEcoInsightXLS2tab( xlsfile, tabfile, varargin )
+function [bytesWritten, perFile, speedFile, allFile] = convertEcoInsightXLS2tab( xlsfile, tabfile, varargin )
 %convertEcoInsightXLS2tab Convert EcoInsight xlsx file to delimited ASCII
 %   convertEcoInsightXLS2tab(XLSFILE, TABFILE) will convert the .xlsx file
 %   given by file-path string XLSFILE to an equivalent tab-delimited text 
@@ -13,6 +13,11 @@ function bytesWritten = convertEcoInsightXLS2tab( xlsfile, tabfile, varargin )
 %   addition to the above, write the IMO numbers of the vessels given in
 %   numeric vector IMO into TABFILE and will not write the vessel name. IMO
 %   must have the same number of elements as XLSFILE.
+
+% Output
+perFile = [];
+speedFile = [];
+allFile = {};
 
 % Input
 if nargin > 2
@@ -96,29 +101,104 @@ if ~mysql_b
 
 else
 
-    % Write File with Ship Name and Column Heading
-    fid = fopen(tabfile, 'a');
-    for fi = 1:numfiles
+    % Separate data by performance values
+    timedata_st = arrayfun(@(x) structfun(@(y) y', x, 'Uni', 0), timedata_st);
+%     imo_c = num2cell(imo);
+    imo_c = arrayfun(@(x, y) repmat(x, size(y.dates)), imo(:)', timedata_st,...
+        'Uni', 0);
+    [timedata_st(:).IMO] = deal(imo_c{:});
+    sidx = [timedata_st(:).sidx];
+    pidx = [timedata_st(:).pidx];
+    dates = [timedata_st(:).dates];
+    imo = [timedata_st(:).IMO];
+    
+    speed_l = ~isnan(sidx);
+    per_l = ~isnan(pidx);
+    speedIMO_v = imo(speed_l);
+    perIMO_v = imo(per_l);
+    dates_ch = datestr(dates, 'yyyymmddHHMMSS');
+    t = str2num(dates_ch);
+    
+    speedDates_s = t(speed_l, :);
+    perDates_s = t(per_l, :);
+    
+    if ~any(speed_l) && ~any(per_l)
         
-        pidx = timedata_st(fi).pidx;
-        dates = timedata_st(fi).dates;
-        dates_ch = datestr(dates, 'yyyymmddHHMMSS');
-        t = str2num(dates_ch);
-        
-        if imo_l
-            shipname = sprintf('%u', imo(fi));
-        else
-            shipname = ship_s.Single_vessel;
-        end
-        writeCount_m = fprintf(fid, ['%f\t%u\t', shipname, '\n'], [pidx, t]');
+        errid = 'cEIFile:NoData';
+        errmsg = 'No performance data read from input files';
+        error(errid, errmsg);
     end
-    fclose(fid);
+    
+    % Write files for speed, performance index, whichever have data
+    [~, tabf, tabe] = fileparts(tabfile);
+    speedFile = '';
+    perFile = '';
+    
+%     if imo_l
+%         shipname = sprintf('%u', imo(fi));
+%     else
+%         shipname = ship_s.Single_vessel;
+%     end
+     
+    if any(speed_l)
+        
+        speedFile = strrep(tabfile, [tabf, tabe], [tabf, '_speed', tabe]);
+        sfid = fopen(speedFile, 'w');
+        fprintf(sfid, ...
+            'Speed_Index\tDateTime_UTC\tIMO_Vessel_Number\n');
+        
+        writeCount_m = fprintf(sfid, '%f\t%u\t%u\n',...
+            [sidx(speed_l)', speedDates_s, speedIMO_v']');
+        fclose(sfid);
+        allFile = [allFile, {speedFile}];
+    end
+    
+    if any(per_l)
+        
+        perFile = strrep(tabfile, [tabf, tabe], [tabf, '_performance', tabe]);
+        pfid = fopen(perFile, 'w');
+        fprintf(pfid, ...
+            'Performance_Index\tDateTime_UTC\tIMO_Vessel_Number\n');
+        writeCount_m = fprintf(pfid, '%f\t%u\t%u\n',...
+            [pidx(per_l)', perDates_s, perIMO_v']');
+        fclose(pfid);
+        allFile = [allFile, {perFile}];
+    end
+    
+%     fid = fopen(tabfile, 'a');
+%     fprintf(fid, ...
+%         'Performance_Index\tSpeed_Index\tDateTime_UTC\tIMO_Vessel_Number\n');
+    
+%     for fi = 1:numfiles
+%         
+%         sidx = timedata_st(fi).sidx;
+%         pidx = timedata_st(fi).pidx;
+%         dates = timedata_st(fi).dates;
+%         dates_ch = datestr(dates, 'yyyymmddHHMMSS');
+%         t = str2num(dates_ch);
+%         
+%         if imo_l
+%             shipname = sprintf('%u', imo(fi));
+%         else
+%             shipname = ship_s.Single_vessel;
+%         end
+%         writeCount_m = fprintf(fid, ['%f\t%f\t%u\t', shipname, '\n'],...
+%             [pidx, sidx, t]');
+%     end
+%     fclose(fid);
     bytesWritten = writeCount_m;
-
+    
     % Convert NAN to MySQL-friendly NULL values
     perlCmd = sprintf('"%s"', fullfile(matlabroot, 'sys\perl\win32\bin\perl'));
     perlstr = sprintf('%s -i.bak -pe"s/%s/%s/g" "%s"', perlCmd, 'NaN',...
-        '\\N', tabfile);
+        '\\N', speedFile);
+    [s, msg] = dos(perlstr);
+    if s ~= 0
+        error(char({'Windows command prompt returned the follwing error: ',...
+            msg}))
+    end
+    perlstr = sprintf('%s -i.bak -pe"s/%s/%s/g" "%s"', perlCmd, 'NaN',...
+        '\\N', perFile);
     [s, msg] = dos(perlstr);
     if s ~= 0
         error(char({'Windows command prompt returned the follwing error: ',...
