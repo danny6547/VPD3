@@ -1,4 +1,6 @@
-/* Check if shaft power is available */
+/* Check if shaft power can be calculated */
+/* Returns TRUE in output isAvailable when there is at least one row containing both non-NULL values for 
+Shaft_Torque and Shaft_Revolutions. */
 
 delimiter //
 

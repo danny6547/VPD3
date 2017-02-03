@@ -1,4 +1,4 @@
-/* Create temporary table for ISO 19030 analysis with */
+/* Create table for data required by ISO 19030 analysis */
 
 CREATE TABLE rawdata (id INT PRIMARY KEY AUTO_INCREMENT,
 						 DateTime_UTC DATETIME(3),

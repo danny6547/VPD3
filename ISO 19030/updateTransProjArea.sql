@@ -1,4 +1,4 @@
-/* Update Transverse Projected Area in Current loading condition */
+/* Update Transverse Projected Area based on Current loading condition */
 DROP PROCEDURE IF EXISTS updateTransProjArea;
 
 delimiter //

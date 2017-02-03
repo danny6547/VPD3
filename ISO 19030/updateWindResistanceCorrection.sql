@@ -1,4 +1,4 @@
-/* Updates the wind resistance correction */
+/* Updates the wind resistance correction based on equation G2. */
 
 DROP PROCEDURE IF EXISTS updateWindResistanceCorrection;
 

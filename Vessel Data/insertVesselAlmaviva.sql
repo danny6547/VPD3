@@ -1,4 +1,4 @@
-/* Add data for Vessel Almaviva */
+/* Add Vessel data for CMA CGM Almaviva */
 
 use test2;
 

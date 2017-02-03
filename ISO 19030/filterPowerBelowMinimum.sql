@@ -1,4 +1,5 @@
-/* Create filter for values below the lowest value of power in the appropriate speed-power curve */
+/* Create filter for values below the lowest value of power in the speed,
+power data. */
 
 DROP PROCEDURE IF EXISTS filterPowerBelowMinimum;
 

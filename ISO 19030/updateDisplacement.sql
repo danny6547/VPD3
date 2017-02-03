@@ -1,4 +1,5 @@
-/* Set values of displacement in ISO analysis from current draft, trim values and diplacement table values */
+/* Set values of displacement in ISO analysis from current draft, trim 
+values and diplacement table values */
 
 DROP PROCEDURE IF EXISTS updateDisplacement;
 

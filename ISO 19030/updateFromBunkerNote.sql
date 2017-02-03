@@ -1,4 +1,6 @@
-/* Update LCV and Density at 15 degrees of bunker from bunker notes */
+/* Update LCV and Density at 15 degrees Celsius of bunker fuel from bunker 
+notes */
+
 DROP PROCEDURE IF EXISTS updateFromBunkerNote;
 
 delimiter //

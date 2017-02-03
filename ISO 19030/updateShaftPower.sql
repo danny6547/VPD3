@@ -1,4 +1,4 @@
-/* Calculate shaft power in temp ISO raw table */
+/* Calculate shaft power from torque and revolutions */
 
 delimiter //
 

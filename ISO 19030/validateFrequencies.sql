@@ -1,5 +1,7 @@
-/* Check whether data shows that measurement frequencies are sufficient for ISO19030-2 standard */
-/* Procedure must be called prior to data being averaged over higher-frequencies or repeated over lower-frequencies. */
+/* Check whether data shows that measurement frequencies are sufficient for 
+ISO19030-2 standard.
+Procedure must be called prior to data being averaged over higher-
+frequencies or repeated over lower-frequencies. */
 
 DROP PROCEDURE IF EXISTS validateFrequencies;
 

@@ -1,4 +1,4 @@
-/* Sort data in temp raw ISO by time */
+/* Sort data by time */
 
 delimiter //
 

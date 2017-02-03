@@ -1,4 +1,5 @@
 /* Insert coatings for TMS vessels */
+
 INSERT INTO vesselcoating (IMO_Vessel_Number, CoatingName, DryDockId) VALUES 
 							(9389083, 'Globic 78950', 24),
 							(9308833, 'Hempaguard X7', 30),

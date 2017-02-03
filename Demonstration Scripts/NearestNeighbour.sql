@@ -1,3 +1,5 @@
+/* Demonstrate different approaches to finding the nearest-neighbours of one column in another, where the lengths of the two columns may differ. */
+
 /* Create Tables */
 /* CREATE TABLE numbers (id INT PRIMARY KEY AUTO_INCREMENT, number INT, nearest INT, Diff DOUBLE(10, 5), Cond Bool);
 INSERT INTO numbers (number) VALUES (2502);

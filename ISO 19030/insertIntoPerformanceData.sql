@@ -1,4 +1,14 @@
-/* Insert from temporary analysis table into final performance data table */
+/* Insert from temporary analysis table into final performance data table.
+Procedure will apply the input filters to the performance values prior to 
+inserting the data into table PerformanceData, i.e. data will not be 
+inserted for any row where any of the corresponding filter columns have the
+value TRUE.
+allFilt: A value of TRUE will filter data for all filter columns.
+speedPowerFilt: A value of TRUE will filter data out of range of the speed,
+power data.
+SFOCFilt: A value of TRUE will filter data out of range of the engine SFOC 
+data.
+*/
 
 DROP PROCEDURE IF EXISTS insertIntoPerformanceData;
 

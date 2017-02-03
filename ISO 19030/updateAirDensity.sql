@@ -1,4 +1,4 @@
-/* Update air density  */
+/* Update air density */
 
 delimiter //
 

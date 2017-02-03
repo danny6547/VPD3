@@ -1,4 +1,4 @@
-/* Update Wind Resistance Relative */
+/* Update Wind Resistance Relative based on equation G2. */
 DROP PROCEDURE IF EXISTS updateWindResistanceRelative;
 
 delimiter //

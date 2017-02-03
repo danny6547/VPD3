@@ -1,4 +1,5 @@
-/* Calculate expected speed from delivered power and speed-power-draft-trim data */
+/* Calculate expected speed from delivered power and speed,power,draft,trim 
+data */
 
 DROP PROCEDURE IF EXISTS updateExpectedSpeed;
 

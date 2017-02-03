@@ -1,6 +1,6 @@
 /* Average high-frequency data to a lower frequency */
 /* Assumptions: */
-/* 1. The first two non-null values of the primary parameter will be taken as the timestep to which all secondary parameters will be averaged. */
+/* 1. The first two non-null values of the primary parameter will be taken as the timestep to which all secondary parameters at a higher frequency will be averaged. */
 /* 2. The series of durations over which the parameters will be averaged begins at the first row. */
 /* 3. The highest precision in DateTime_UTC is 1 second (procedure may work as intended if additional precision given for this value). */
 

@@ -1,4 +1,4 @@
-/* Remove values of Mass of fuel consumed corresponding to those below the minimum hourly rate of consumption for which SFOC data is available */
+/* Remove values of Mass of fuel consumed corresponding to those below the minimum rate of consumption for which SFOC data is available */
 DROP PROCEDURE IF EXISTS removeFOCBelowMinimum;
 
 delimiter //

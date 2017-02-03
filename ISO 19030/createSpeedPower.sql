@@ -1,4 +1,4 @@
-/* Create Speed Power Reference Table for Vessels */
+/* Create table of vessel speed, power, draft, trim data */
 
 CREATE TABLE SpeedPower (id INT PRIMARY KEY AUTO_INCREMENT, 
 							IMO_Vessel_Number INT,

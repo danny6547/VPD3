@@ -1,3 +1,5 @@
+/* Demonstration of insert...on duplicate key update with statements demonstrating whether data is affected when duplicate keys are inserted. */
+
 DROP TABLE IF EXISTS temp1;
 CREATE TABLE temp1 (id INT PRIMARY KEY, a INT, b INT, c INT, d INT, e INT, CONSTRAINT ida UNIQUE(a, b));
 INSERT INTO temp1 (id, a, b) VALUES (1, 2, 0);

@@ -1,4 +1,4 @@
-/* Create table for Chauvenet Filters */
+/* Create temp table for Chauvenet Filters, used in calculation of Chauvenet_Filter column by procedure updateChauvenetCriteria */
 
 DROP PROCEDURE IF EXISTS createTempChauvenetFilter;
 

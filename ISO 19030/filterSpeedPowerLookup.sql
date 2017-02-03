@@ -1,4 +1,5 @@
-/* Detect rows where displacement is outside the range of +/-5% of the nearest value in the SpeedPower table*/
+/* Detect rows where displacement is outside the range of +/-5% of the 
+nearest value in the SpeedPower table. */
 
 DROP PROCEDURE IF EXISTS filterSpeedPowerLookup;
 

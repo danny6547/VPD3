@@ -1,4 +1,4 @@
-/* Create vessel table, containing all vessel data required */
+/* Create vessel table, containing all time-invariant vessel data relevant for vessel identification and processing of performance values. */
 
 CREATE TABLE Vessels (id INT PRIMARY KEY AUTO_INCREMENT,
 						 IMO_Vessel_Number INT,

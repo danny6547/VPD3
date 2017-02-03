@@ -1,4 +1,4 @@
-/* Select data for ISO 19030 analysis from raw data table for a given IMO and store in temporary table for analysis, temp raw iso. */
+/* Select data for ISO 19030 analysis from RawData table for a given IMO and store in temporary table for analysis, TempRawIso. */
 DROP PROCEDURE IF EXISTS createTempRawISO;
 
 delimiter //

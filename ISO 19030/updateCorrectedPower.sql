@@ -1,4 +1,4 @@
-/* Correct delivered power values for environmental factors */
+/* Correct delivered power values for environmental factors. */
 DROP PROCEDURE IF EXISTS updateCorrectedPower;
 
 delimiter //

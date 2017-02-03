@@ -1,4 +1,4 @@
-/* Creates temporary table like the RawData table, a table containing the "raw" ship data obtained from DNVGL EcoInsight "Manage Data" page. */ 
+/* Creates temporary table like the RawData table, a table containing the "raw" ship data obtained from DNVGL EcoInsight "Manage Data" facility. */ 
 DROP PROCEDURE IF EXISTS createDNVGLRawTempTable;
 
 delimiter //

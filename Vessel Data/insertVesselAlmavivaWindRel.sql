@@ -1,4 +1,4 @@
-/* Add data for Vessel Almaviva to WindCoefficients */
+/* Add data for Vessel CMA CGM Almaviva to WindCoefficients */
 
 use test2;
 

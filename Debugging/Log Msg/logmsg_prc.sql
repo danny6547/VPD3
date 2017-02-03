@@ -1,4 +1,7 @@
-/* Procedure for storing debugging data */
+/* Procedure for storing data in a "Log Table" for debugging. */
+/* Place the below syntax into your code to store the state of variable VAR in table LOGT: 
+CALL log_msg('VAR = ', VAR);
+*/
 
 delimiter //
 DROP PROCEDURE IF EXISTS `log_msg`//

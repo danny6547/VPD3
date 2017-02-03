@@ -1,4 +1,4 @@
-/* Calculate brake power based on SFOC curve */
+/* Calculate brake power based on SFOC curve and mass of consumed fuel */
 
 delimiter //
 

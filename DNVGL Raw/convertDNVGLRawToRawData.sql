@@ -1,4 +1,4 @@
-/* Create columns and update values in temp DNVGL raw table to match those of RawData, based on the RawData definitions given in the ISO 19030 standard */
+/* Create columns and update values in temp DNVGL raw table to match those of table RawData, based on the RawData definitions given in the ISO 19030 standard */
 DROP PROCEDURE IF EXISTS convertDNVGLRawToRawData;
 
 delimiter //

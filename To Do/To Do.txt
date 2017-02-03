@@ -161,3 +161,15 @@ Implement Annex E to go from annemometre-height wind to reference-height wind
 
 Convert insertIntoTable into cMySQL method
 removeNullRows: set filter for rows where any primary or secondary parameter is NULL
+Write ON DUPLICATE KEY UPDATE calls into tables:
+	BunkerDeliveryNote
+	DryDockDates
+	SFOCCoefficints
+	SpeedPower
+	SpeedPowerCoefficients
+	VesselCoating
+	Vessels
+	windcoefficientdirection: Unique(imo, start direction) and Unique(imo, end direction)
+	
+insertBunkerDeliveryNoteDNVGL: convert from function to method of cVesselDB, use insertDuplicate
+rename table PerformanceDataDNVGL to DNVGLPerformanceData

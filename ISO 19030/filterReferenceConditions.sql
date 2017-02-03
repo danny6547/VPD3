@@ -1,4 +1,6 @@
-/* Remove rows containing data which fails the reference conditions given in standard ISO 19030-2 */
+/* Update filter columns for rows which do not meet the reference 
+conditions given in standard ISO 19030-2. */
+
 DROP PROCEDURE IF EXISTS filterReferenceConditions;
 
 delimiter //

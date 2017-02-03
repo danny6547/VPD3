@@ -1,4 +1,4 @@
-/* Remove rows containing any invalid data */
+/* Remove rows containing any invalid data (don't worry, I'm gonna rewrite this later.) */
 
 delimiter //
 

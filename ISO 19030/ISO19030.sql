@@ -1,4 +1,8 @@
-/* Process data for vessel performance analysis as described in ISO 19030-2 */
+/* Retrieve the Prepared data set as described in ISO 19030-2 by calculating 
+the performance values from the raw data. */
+
+       function [obj, sql] = insertSelectDuplicate(obj, tab1, cols1, tab2, 
+
 DROP PROCEDURE ISO19030;
 
 delimiter //

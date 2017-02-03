@@ -160,6 +160,12 @@ classdef cVessel
        
        end
        
+       function obj = insertBunkerDeliveryNote(obj)
+       % insertBunkerDeliveryNote Insert data from 
+           
+           
+       end
+       
 %        function obj = fitSpeedPower(obj, speed, power, varargin)
 %        % fitSpeedPower Fit speed, power data to model
 %        

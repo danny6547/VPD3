@@ -1,4 +1,4 @@
-/* Add data for Man engine */
+/* Add data for Man B&W engine 12K98ME-C Mk7 */
 
 use test2;
 

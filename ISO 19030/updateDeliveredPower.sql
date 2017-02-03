@@ -1,4 +1,10 @@
-/* Update delivered power */
+/* Update delivered power from either shaft power or delivered power. 
+Procedure will check if shaft power if already provided and, if so, assign
+it to delivered power. If not, it will check whether shaft power can be 
+calculated and, if so, it will call updateShaftPower. If not, it will check 
+whether brake power can be calculated and if so, it will call 
+updateBrakePower. If not, an error will be returned. */
+
 DROP PROCEDURE IF EXISTS updateDeliveredPower;
 
 delimiter //

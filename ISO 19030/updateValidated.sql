@@ -1,3 +1,5 @@
+/* Determine whether data is validated based on the criteria in Annex J */
+
 DROP PROCEDURE IF EXISTS updateValidated;
 
 delimiter //

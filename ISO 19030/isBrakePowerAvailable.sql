@@ -1,4 +1,11 @@
-/* Check if brake power is available */
+/* Check if brake power can be calculated.
+Returns value of TRUE for parameter isAvailable when at least one non-NULL
+value can be found in the same row for columns 
+Lower_Caloirifc_Value_Fuel_Oil and Mass_Consumed_Fuel_Oil. If all data for 
+Mass_Consumed_Fuel_Oil is NULL, output parameter isMassNeeded will have 
+value TRUE indicating that the mass of consumed fuel oil can be calculated 
+from the volume amongst other variables.
+*/
 
 delimiter //
 

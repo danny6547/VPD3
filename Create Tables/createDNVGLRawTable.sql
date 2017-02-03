@@ -1,4 +1,4 @@
-/* Creates RawData table, a table containing the "raw" ship data obtained from DNVGL EcoInsight "Manage Data" page. */ 
+/* Creates RawData table, a table containing the "raw" ship data obtained from DNVGL EcoInsight "Manage Data" facility. */ 
 use test2;
 CREATE TABLE DNVGLRaw (
 id INTEGER AUTO_INCREMENT PRIMARY KEY,

@@ -1,4 +1,5 @@
-/* Insert raw dnvgl data into raw data for a given vessel, after some manipulation */
+/* Insert data from DNVGLRaw into RawData for a given vessel, after some 
+modification. */
 
 DROP PROCEDURE IF EXISTS insertFromDNVGLRawIntoRaw;
 
