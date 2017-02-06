@@ -1,4 +1,4 @@
-function loadInfileDNVGLRaw(csvfile)
+function obj = loadInfileDNVGLRaw(obj, csvfile)
 % loadInfileDNVGLRaw Load raw file from DNVGL into table in database
 % loadInfileDNVGLRaw(csvfile, database, table) will call SQL function LOAD
 % INFILE on the CSV file given by string CSVFILE into the table TABLE in 
@@ -288,9 +288,9 @@ duplicateCols = {'DateTime_UTC'; 'IMO_Vessel_Number'};
 % format = '%s, %u, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f';
 
 allCols = [duplicateCols; columns];
-obj_sql = cMySQL();
-obj_sql = obj_sql.insertSelectDuplicate(tempTable, allCols, toTable, allCols);
-obj_sql.disconnect;
+% obj_sql = cMySQL();
+obj = obj.insertSelectDuplicate(tempTable, allCols, toTable, allCols);
+obj.disconnect;
 
 % insertWithoutDuplicates(tempTable, toTable, 'id', duplicateCols, columns, format);
 
