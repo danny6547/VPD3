@@ -1,4 +1,4 @@
-classdef cVesselDB < cMySQL
+classdef cHullPerDB < cMySQL
     %CVESSELDB Manage vessel databases
     %   Detailed explanation goes here
     
@@ -7,7 +7,7 @@ classdef cVesselDB < cMySQL
     
     methods
     
-       function obj = cVesselDB()
+       function obj = cHullPerDB()
     
        end
        
