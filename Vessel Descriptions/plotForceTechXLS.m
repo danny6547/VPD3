@@ -1,5 +1,5 @@
 function [ dataTable, dates, si, figHandle ] = plotForceTechXLS(filename, DDdate, varargin )
-%UNTITLED Summary of this function goes here
+%plotForceTechXLS Parse and plot content of Force Tech processed data file
 %   Detailed explanation goes here
 
 
@@ -15,9 +15,17 @@ else
     
 end
     
+delimiter = ';';
+if nargin > 4
+    
+    delimiter = varargin{3};
+    validateattributes(delimiter, {'char'}, {'vector'}, 'plotForceTechXLS',...
+        'delimiter', 5);
+end
+
 if nargin > 3
     
-    ShipName = varargin{2};
+    FileTable = varargin{2};
 else
     
     % Processing
@@ -179,36 +187,37 @@ else
     
     fid = fopen(filename);
     temp_c = textscan(fid, strForm_s, 'Headerlines', 1, ...
-        'Delimiter', {';'}, 'Whitespace', '', 'TreatAsEmpty', '-');
+        'Delimiter', {delimiter}, 'Whitespace', '', 'TreatAsEmpty', '-');
     
     while ~feof(fid)
         
         temp2_c = textscan(fid, strForm_s, 'Headerlines', 1, ...
-        'Delimiter', {';'}, 'Whitespace', '', 'TreatAsEmpty', '-');
+        'Delimiter', {delimiter}, 'Whitespace', '', 'TreatAsEmpty', '-');
         temp_c(end+1, :) = temp2_c;
     end
     
     fclose(fid);
     temp_c(end, :) = [];
     
-    ShipName = cell2table(temp_c, 'VariableNames', headers_c);
+    FileTable = cell2table(temp_c, 'VariableNames', headers_c);
     
 end
 
+
 % Filter
-if iscell(ShipName.ReportEndUtcTime)
+if iscell(FileTable.ReportEndUtcTime)
     
-    if all(cellfun(@(x) iscell(x), ShipName.ReportEndUtcTime))
-        ShipName.ReportEndUtcTime = cellfun(@(x) [x{:}], ShipName.ReportEndUtcTime, 'Uni', 0);
+    if all(cellfun(@(x) iscell(x), FileTable.ReportEndUtcTime))
+        FileTable.ReportEndUtcTime = cellfun(@(x) [x{:}], FileTable.ReportEndUtcTime, 'Uni', 0);
     end
     
     rawDate = cellfun(@(x) datenum(x, 'yyyy-mm-dd HH:MM'), ...
-        ShipName.ReportEndUtcTime, 'Uni', 1, 'Err', @(x, y) nan(1));
+        FileTable.ReportEndUtcTime, 'Uni', 1, 'Err', @(x, y) nan(1));
 else
-    rawDate = datenum(ShipName.ReportEndUtcTime, 'yyyy-mm-dd HH:MM'); %'dd-mm-yyyy HH:MM' ); %  );
+    rawDate = datenum(FileTable.ReportEndUtcTime, 'yyyy-mm-dd HH:MM'); %'dd-mm-yyyy HH:MM' ); %  );
 end
 
-rawSI = ShipName.SpeedIndexCombined;
+rawSI = FileTable.SpeedIndexCombined;
 if iscell(rawSI)
     rawSI(cellfun(@(x) isequal(x, '-'), rawSI)) = {nan};
     rawSI(cellfun(@isempty, rawSI)) = {nan};
@@ -220,24 +229,24 @@ if iscell(rawSI)
     end
 end
 
-datefilt_l = rawDate >= datenum(DDdate, 'dd-mm-yy');
+datefilt_l = rawDate >= datenum(DDdate, 'dd-mm-yyyy');
 
-if iscell(ShipName.WavesState)
-    waves_c = ShipName.WavesState;
+if iscell(FileTable.WavesState)
+    waves_c = FileTable.WavesState;
     waves_c(cellfun(@isempty, waves_c)) = {nan};
     waves_c(~cellfun(@isscalar, waves_c)) = {nan};
     waves_v = [waves_c{:}];
 else
-    waves_v = ShipName.WavesState;
+    waves_v = FileTable.WavesState;
 end
 
-if iscell(ShipName.MinimumWaterDepth)
-    depth_c = ShipName.MinimumWaterDepth;
+if iscell(FileTable.MinimumWaterDepth)
+    depth_c = FileTable.MinimumWaterDepth;
     depth_c(cellfun(@isempty, depth_c)) = {nan};
     depth_c(~cellfun(@isscalar, depth_c)) = {nan};
     depth_v = [depth_c{:}];
 else
-    depth_v = ShipName.MinimumWaterDepth;
+    depth_v = FileTable.MinimumWaterDepth;
 end
 
 waves_v = waves_v(datefilt_l);
@@ -278,7 +287,7 @@ title(title_s, 'fontsize', 13);
 set(gcf, 'Color', [1, 1, 1])
 datetick('x', 'yyyy')
 
-dataTable = ShipName;
+dataTable = FileTable;
 
 
 end
