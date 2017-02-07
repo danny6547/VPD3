@@ -1,5 +1,7 @@
 /* Create vessel table, containing all time-invariant vessel data relevant for vessel identification and processing of performance values. */
 
+USE hull_performance;
+
 CREATE TABLE Vessels (id INT PRIMARY KEY AUTO_INCREMENT,
 						 IMO_Vessel_Number INT,
 						 Name VARCHAR(100),
@@ -13,4 +15,6 @@ CREATE TABLE Vessels (id INT PRIMARY KEY AUTO_INCREMENT,
                          Length_Overall DOUBLE(10, 5),
                          Draft_Design DOUBLE(10, 5),
                          Speed_Power_Source TEXT,
-						 LBP DOUBLE(10, 5));
+						 LBP DOUBLE(10, 5),
+                         CONSTRAINT UNIQUE(IMO_Vessel_Number)
+                         );
