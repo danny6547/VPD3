@@ -128,6 +128,46 @@ classdef cHullPerDB < cMySQL
 %            delete(sTab); 
         end
         end
+        
+        function obj = loadDNVGLRaw(obj, filename)
+        % loadDNVGLRaw Load raw data sourced from DNVGL
+        
+        % Drop if exists
+        tempTab = 'tempDNVGLRaw';
+        obj = obj.drop('TABLE', tempTab, true);
+        
+        % Create temp table
+        permTab = 'DNVGLRaw';
+        obj = obj.createLike(tempTab, permTab);
+        
+        % Load into temp table
+        cols_c = [];
+        delimiter_s = ',';
+        ignore_s = 1;
+        set_s = ['SET Date_UTC = STR_TO_DATE(@Date_UTC, ''%d/%m/%Y''), ', ...
+         'Time_UTC = STR_TO_DATE(@Time_UTC, '' %H:%i''), '];
+        setnull_c = {'Date_UTC', 'Time_UTC'};
+        [obj, cols] = obj.loadInFile(filename, tempTab, cols_c, ...
+            delimiter_s, ignore_s, set_s, setnull_c);
+        
+        % Generate DateTime prior to using it for identification
+        expr_sql = 'ADDTIME(Date_UTC, Time_UTC)';
+        col = 'DateTime_UTC';
+        obj = obj.update(tempTab, col, expr_sql);
+        
+        % Update insert into final table
+        tab1 = tempTab;
+        finalCols = [cols, {col}];
+        cols1 = finalCols;
+        tab2 = permTab;
+        cols2 = finalCols;
+        obj = obj.insertSelectDuplicate(tab1, cols1, tab2, cols2);
+        
+        % Drop temp
+        obj = obj.drop('TABLE', tempTab);
+        
+        end
+        
     end
     
     methods(Static)
