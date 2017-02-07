@@ -173,3 +173,7 @@ Write ON DUPLICATE KEY UPDATE calls into tables:
 	
 insertBunkerDeliveryNoteDNVGL: convert from function to method of cVesselDB, use insertDuplicate
 rename table PerformanceDataDNVGL to DNVGLPerformanceData
+create high-level table for "meta-data" of performance data
+# remove table "ships", replace relevant data into "vessels"
+Write "use hull_performance" at start of all files??
+Procedure to call ISO19030 with input filters, add data to performance.
