@@ -19,3 +19,4 @@ cShip: repeat scalar inputs to uniform size
 	#Move parseShipXLS  to Vessel Performance Database
 	#Move plotForceTechXLS  to Vessel Performance Database
 	#Move writeSQLLoadInFileTab  to Vessel Performance Database
+vesselName: look in table vessels instead of ships
