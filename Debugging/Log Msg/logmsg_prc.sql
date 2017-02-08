@@ -3,6 +3,9 @@
 CALL log_msg('VAR = ', VAR);
 */
 
+USE hull_performance;
+
+
 delimiter //
 DROP PROCEDURE IF EXISTS `log_msg`//
 CREATE PROCEDURE `log_msg`(msg1 VARCHAR(255), msg2 VARCHAR(255))

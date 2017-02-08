@@ -1,5 +1,8 @@
 /* Create Temporary Bunker Delivery Note Table, storing data prior to inserting into final table without duplicates */
 
+USE hull_performance;
+
+
 delimiter //
 
 CREATE PROCEDURE createTempBunkerDeliveryNote()

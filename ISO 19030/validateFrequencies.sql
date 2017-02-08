@@ -3,6 +3,8 @@ ISO19030-2 standard.
 Procedure must be called prior to data being averaged over higher-
 frequencies or repeated over lower-frequencies. */
 
+USE hull_performance;
+
 DROP PROCEDURE IF EXISTS validateFrequencies;
 
 delimiter //

@@ -1,5 +1,8 @@
 /* Create displacement table for vessel */
 
+USE hull_performance;
+
+
 CREATE TABLE Displacement (id INT PRIMARY KEY AUTO_INCREMENT,
 							 IMO_Vessel_Number INT,
 							 Draft_Aft DOUBLE(10, 5),

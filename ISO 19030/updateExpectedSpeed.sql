@@ -1,6 +1,9 @@
 /* Calculate expected speed from delivered power and speed,power,draft,trim 
 data */
 
+USE hull_performance;
+
+
 DROP PROCEDURE IF EXISTS updateExpectedSpeed;
 
 delimiter //

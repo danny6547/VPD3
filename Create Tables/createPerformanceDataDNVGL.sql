@@ -1,5 +1,8 @@
 /* Create table for Performance Data calculated by DNVGL, sourced from EcoInsight */
 
+USE hull_performance;
+
+
 CREATE TABLE PerformanceDataDNVGL (id INT PRIMARY KEY AUTO_INCREMENT,
 						 DateTime_UTC DATETIME,
                          IMO_Vessel_Number INT(7),

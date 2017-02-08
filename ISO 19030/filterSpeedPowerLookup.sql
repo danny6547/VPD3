@@ -1,6 +1,9 @@
 /* Detect rows where displacement is outside the range of +/-5% of the 
 nearest value in the SpeedPower table. */
 
+USE hull_performance;
+
+
 DROP PROCEDURE IF EXISTS filterSpeedPowerLookup;
 
 delimiter //

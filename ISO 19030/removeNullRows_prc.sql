@@ -1,5 +1,8 @@
 /* Removes any rows containing NULL values for Date_UTC or Time_UTC from table tempraw. */
 
+USE hull_performance;
+
+
 delimiter //
 
 CREATE PROCEDURE removeNullRows()

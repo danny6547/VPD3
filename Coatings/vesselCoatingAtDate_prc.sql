@@ -1,5 +1,8 @@
 /* Get coating for ship at input DateTime */
 
+USE hull_performance;
+
+
 delimiter //
 
 CREATE PROCEDURE vesselCoatingAtDate(OUT coating VARCHAR(255), INOUT datet DATETIME, imo INT(7))

@@ -7,6 +7,9 @@ value TRUE indicating that the mass of consumed fuel oil can be calculated
 from the volume amongst other variables.
 */
 
+USE hull_performance;
+
+
 delimiter //
 
 CREATE PROCEDURE isBrakePowerAvailable(imo INT, OUT isAvailable BOOLEAN, OUT isMassNeeded BOOLEAN)

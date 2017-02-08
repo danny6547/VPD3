@@ -1,5 +1,8 @@
 /* Create temp table for Chauvenet Filters, used in calculation of Chauvenet_Filter column by procedure updateChauvenetCriteria */
 
+USE hull_performance;
+
+
 DROP PROCEDURE IF EXISTS createTempChauvenetFilter;
 
 delimiter //

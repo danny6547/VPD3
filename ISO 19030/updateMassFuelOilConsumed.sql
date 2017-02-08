@@ -1,5 +1,8 @@
 /* Calculate mass of fuel oil consumed based on volume of fuel oil consumed */
 
+USE hull_performance;
+
+
 delimiter //
 
 CREATE PROCEDURE updateMassFuelOilConsumed(IMO INT)

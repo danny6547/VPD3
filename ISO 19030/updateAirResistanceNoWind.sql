@@ -1,5 +1,8 @@
 /* Update Air Resistance in no-wind condition */
 
+USE hull_performance;
+
+
 DROP PROCEDURE IF EXISTS updateAirResistanceNoWind;
 
 delimiter //

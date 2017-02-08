@@ -1,5 +1,8 @@
 /* Create table detailing whether analysis complies with standard ISO19030-2 and if not, which part is non-compliant. */
 
+USE hull_performance;
+
+
 CREATE TABLE StandardCompliance (id INT PRIMARY KEY AUTO_INCREMENT,
 								 IMO_Vessel_Number INT(7) NOT NULL,
                                  StartDate DATETIME NOT NULL,

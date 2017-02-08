@@ -1,4 +1,7 @@
 /* Update Wind Resistance Relative based on equation G2. */
+
+USE hull_performance;
+
 DROP PROCEDURE IF EXISTS updateWindResistanceRelative;
 
 delimiter //

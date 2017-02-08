@@ -1,5 +1,7 @@
 /* Update trim based on fore and aft draft */
 
+USE hull_performance;
+
 DROP PROCEDURE IF EXISTS updateTrim;
 
 delimiter //

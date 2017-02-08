@@ -1,5 +1,8 @@
 /* Create table for data required by ISO 19030 analysis */
 
+USE hull_performance;
+
+
 CREATE TABLE rawdata (id INT PRIMARY KEY AUTO_INCREMENT,
 						 DateTime_UTC DATETIME(3),
                          IMO_Vessel_Number INT(7),

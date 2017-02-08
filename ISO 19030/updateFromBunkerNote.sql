@@ -1,6 +1,9 @@
 /* Update LCV and Density at 15 degrees Celsius of bunker fuel from bunker 
 notes */
 
+USE hull_performance;
+
+
 DROP PROCEDURE IF EXISTS updateFromBunkerNote;
 
 delimiter //

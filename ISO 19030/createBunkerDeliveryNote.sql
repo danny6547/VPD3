@@ -1,5 +1,8 @@
 /* Create Bunker Delivery Note Table for Vessels */
 
+USE hull_performance;
+
+
 delimiter //
 
 CREATE PROCEDURE createBunkerDeliveryNote()

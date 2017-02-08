@@ -1,6 +1,9 @@
 /* Set values of displacement in ISO analysis from current draft, trim 
 values and diplacement table values */
 
+USE hull_performance;
+
+
 DROP PROCEDURE IF EXISTS updateDisplacement;
 
 delimiter //

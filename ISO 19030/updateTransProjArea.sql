@@ -1,4 +1,7 @@
 /* Update Transverse Projected Area based on Current loading condition */
+
+USE hull_performance;
+
 DROP PROCEDURE IF EXISTS updateTransProjArea;
 
 delimiter //

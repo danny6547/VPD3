@@ -1,6 +1,9 @@
 /* Insert data from DNVGLRaw into RawData for a given vessel, after some 
 modification. */
 
+USE hull_performance;
+
+
 DROP PROCEDURE IF EXISTS insertFromDNVGLRawIntoRaw;
 
 delimiter //

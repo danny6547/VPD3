@@ -1,6 +1,9 @@
 /* Create filter for values below the lowest value of power in the speed,
 power data. */
 
+USE hull_performance;
+
+
 DROP PROCEDURE IF EXISTS filterPowerBelowMinimum;
 
 delimiter //
