@@ -80,23 +80,23 @@ Vessels.Speed_Power_Source: what if file is moved? Generate ordered, protected, 
 # validteData: write
 # validteData: update for standard error of angles calculations
 
-Sensors: create table to store sensors and their accuracies
-ISO19030Compliant: create table to store boolean indicating whether analysis was compliant with standard
-checkSensorRequirements: insert value for column "Compliant" into table ISO19030Compliant based on comparison of values in Sensors and the requirements in the standard
+# Sensors: create table to store sensors and their accuracies
+# ISO19030Compliant: create table to store boolean indicating whether analysis was compliant with standard
+# checkSensorRequirements: (validateFrequencies) insert value for column "Compliant" into table ISO19030Compliant based on comparison of values in Sensors and the requirements in the standard
 
 # PerformanceData: rename to PerformanceDataDNVGL
-PerformanceDataISO19030: create table for data processed from ISO19030
-insertPerformanceDataISO19030: insert performance data derived from RawData into PerformanceDataISO19030
+? PerformanceDataISO19030: create table for data processed from ISO19030
+# insertPerformanceDataISO19030: insert performance data derived from RawData into PerformanceDataISO19030 (insertIntoPerformanceData)
 
 propulsiveEfficiency: figure out how to calculate EtaD for "calm" and "actual voyage" conditions
 
-staticShip: insert static ship data ie speed-power, LBP, 
-updatePI: calculate dd performance, in-service performance (out of scope of this project?)
+? staticShip: insert static ship data ie speed-power, LBP, (table vessels works for now)
+updateKPI: calculate dd performance, in-service performance (out of scope of this project?)
 
-Find script behind procedure addTimeDNVGLRaw;
-Delete table DNVGLRaw, rewrite loadInfileDNVGLRaw to load data into tempRaw, make ready for RawData, insert without duplicates to RawData;
-updateWindResistanceCorrection: make select from speedPower table based on IMO (EtaD, TA, Crw, C0w)
-call filtering and outlier finding procedures from ISO19030 procedure.
+# Find script behind procedure addTimeDNVGLRaw;
+? Delete table DNVGLRaw, rewrite loadInfileDNVGLRaw to load data into tempRaw, make ready for RawData, insert without duplicates to RawData;
+# updateWindResistanceCorrection: make select from speedPower table based on IMO (EtaD, TA, Crw, C0w)
+# call filtering and outlier finding procedures from ISO19030 procedure.
 
 # FiltSPDispTrim: should be true if either Disp or Trim is true?
 # FiltSPBelow: currently all NULL
@@ -119,21 +119,21 @@ Create matrix of vessels, filter columns.
 removeInvalidRecords: check for entirely NULL rows ?
 # removeFOCBelowMinimum, filterSFOCOutOfRange: change from DELETE to new filter column
 # deleteWithReferenceConditions: change from DELETE to new filter column
-insertFromDNVGLRawIntoRaw: reduce run time to less than 1s.
+# insertFromDNVGLRawIntoRaw: reduce run time to less than 1s. (1.4s, close enough)
 # ChauvenetFilt: verify no change after data with too-high frequency input, standard compliance updated
 # Validated: verify no change after data with too-high frequency input, standard compliance updated
 
 updateFromBunkerNote: Include warnings if some BDN numbers not found in BunkerDeliveryNote table?
 Extract "timestep" into high-level metadata table
 
-Organise repository:
-	Tidy up folders
-	Remove redundant files
-	Remove redundant procedures
-	Remove redundant tables
-	Rename database
-Investigate withoutDuplicates performance issues
-Duplicate rows:
+# Organise repository:
+	# Tidy up folders
+	# Remove redundant files
+	# Remove redundant procedures
+	# Remove redundant tables
+	# Rename database
+# Investigate withoutDuplicates performance issues (replace with unique constraints)
+# Duplicate rows:
 	# Issue where insertFromDNVGLRawIntoRaw will insert duplicates if given
 	# Requirements for data returned when duplicate inserts attempted: all transactions logged somewhere? row numbers returned in output?
 	# Requirements for detection of data duplication:
@@ -149,7 +149,7 @@ Duplicate rows:
 			# Rewrite insertIntoPerformanceData to call ON DUPLICATE KEY UPDATE
 	Performance comparison with alternatives
 Access database:
-	from external machince
+	# from external machince
 	via internet
 
 Finalise processing of data from various sources:
@@ -172,10 +172,11 @@ Write ON DUPLICATE KEY UPDATE calls into tables:
 	windcoefficientdirection: Unique(imo, start direction) and Unique(imo, end direction)
 	
 insertBunkerDeliveryNoteDNVGL: convert from function to method of cVesselDB, use insertDuplicate
-rename table PerformanceDataDNVGL to DNVGLPerformanceData
+# rename table PerformanceDataDNVGL to DNVGLPerformanceData
 create high-level table for "meta-data" of performance data
 # remove table "ships", replace relevant data into "vessels"
-Write "use hull_performance" at start of all files??
+# Write "use hull_performance" at start of all files
 Procedure to call ISO19030 with input filters, add data to performance.
 Allow MATLAB table output from SQL queries
 Write code for (re-)building DB from downloaded files
+Write timestep into metadata table for each vessel, parameter

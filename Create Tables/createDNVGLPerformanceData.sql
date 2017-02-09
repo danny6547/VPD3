@@ -2,8 +2,7 @@
 
 USE hull_performance;
 
-
-CREATE TABLE PerformanceDataDNVGL (id INT PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE DNVGLPerformanceData (id INT PRIMARY KEY AUTO_INCREMENT,
 						 DateTime_UTC DATETIME,
                          IMO_Vessel_Number INT(7),
 						 Performance_Index DOUBLE(10, 7),
