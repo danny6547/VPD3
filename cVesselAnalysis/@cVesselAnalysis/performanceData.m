@@ -27,7 +27,7 @@ if nargin > 1
 end
 
 % Build SQL commands from basic statements
-sqlPerformanceDataBase = {'SELECT ', ' FROM test2.PerformanceDataDNVGL'};
+sqlPerformanceDataBase = {'SELECT ', ' FROM hull_performance.DNVGLPerformanceData'};
 
 % SQL command for Column Names
 PerformanceDataColumnsNames_c = {'IMO_Vessel_Number', 'DateTime_UTC',...
@@ -50,7 +50,7 @@ sqlMulti_c = strsplit(sqlSingle, '\n');
 % Connect to Database
 conn = adodb_connect(['driver=MySQL ODBC 5.3 ANSI Driver;',...
     'Server=localhost;',...
-    'Database=test2;',...
+    'Database=hull_performance;',...
     'Uid=root;',...
     'Pwd=HullPerf2016;']);
 
@@ -60,7 +60,7 @@ if ddi_l
 
 
     % Get all DD dates per IMO
-    sqlDDDates = ['SELECT `StartDate`, `EndDate` FROM test2.`DryDockDates` WHERE ',...
+    sqlDDDates = ['SELECT `StartDate`, `EndDate` FROM hull_performance.`DryDockDates` WHERE ',...
         'IMO_Vessel_Number = '];
     sqlDDDatesSingle = sprintf([sqlDDDates, '%u', ' ORDER BY StartDate;\n'], imo);
     sqlDDDatesSingle(end) = [];
