@@ -1,30 +1,29 @@
-function [regStruct] = regressions(perStruct, order)
+function [obj, regStruct] = regressions(obj, order)
 %regressions Caluclate regression statistics for performance data.
 %   Detailed explanation goes here
 
 % Output
 regStruct = struct('Coefficients', []);
+regStruct = repmat(regStruct, size(obj));
 
 % Input
-validateattributes(perStruct, {'struct'}, {}, 'regressions', 'perStruct', 1);
+% validateattributes(obj, {'struct'}, {}, 'regressions', 'obj', 1);
 validateattributes(order, {'numeric'}, {'scalar', 'integer'}, 'regressions',...
     'order', 2);
 
-regStruct = repmat(regStruct, size(perStruct));
-
-szPer = size(perStruct);
+szPer = size(obj);
 
 % Iterate over performance struct
-for pi = 1:numel(perStruct)
+for pi = 1:numel(obj)
     
-    currStruct = perStruct(pi);
+    currStruct = obj(pi);
     
     if isnan(currStruct.IMO_Vessel_Number)
         continue;
     end
     
-    x = datenum(currStruct.DateTime_UTC, 'dd-mm-yyyy');
-    y = currStruct.Performance_Index;
+    x = currStruct.DateTime_UTC;
+    y = currStruct.(currStruct.Variable);
     
     nany = isnan(y);
     y(nany) = [];
@@ -33,8 +32,12 @@ for pi = 1:numel(perStruct)
     p = polyfit(x, y, order);
     
     % Get output index to assign
-    [r, c] = ind2sub(szPer, pi);
-    regStruct(r, c).Coefficients = p;
+%     [r, c] = ind2sub(szPer, pi);
     
+    % Assign outputs
+    regStruct(pi).Coefficients = p;
+    regStruct(pi).Order = order;
+    regStruct(pi).Model = 'polynomial';
+    obj(pi).Regression = regStruct(pi);
 end
 end

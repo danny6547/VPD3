@@ -1,6 +1,6 @@
-function [ figHandles, dataLines, avgLines, regrLines ] = plotPerformanceData(perfData, varargin)
+function [obj, figHandles, dataLines, avgLines, regrLines ] = plotPerformanceData(obj, varargin)
 %plotPerformanceData Plot performance against time, with statistics.
-%   figHandles = plotPerformanceData(perfData) will return in FIGHANDLES an
+%   figHandles = plotPerformanceData(obj) will return in FIGHANDLES an
 %   array of figure handles to graphs containing the data in the
 %   corresponding elements of PERFDATA. FIGHANDLES will be the same size as
 %   PERFDATA.
@@ -10,40 +10,17 @@ function [ figHandles, dataLines, avgLines, regrLines ] = plotPerformanceData(pe
 dataLines = [];
 avgLines = [];
 regrLines = [];
-
-avg_l = false;
-numDur = 1;
-if nargin > 1
-    
-    avg_l = true;
-    avgStruct = varargin{1};
-    validateattributes(avgStruct, {'struct'}, {}, 'plotPerformanceData',...
-        'avgStruct', 2);
-    numDur = numel(avgStruct(1).Duration);
-end
-
-regr_l = false;
-if nargin > 2
-    
-    regr_l = true;
-    regri = 1;
-    regrStruct = varargin{2};
-    validateattributes(regrStruct, {'struct'}, {}, 'plotPerformanceData',...
-        'regrStruct', 3);
-end
-
-varname = 'Performance_Index';
-if nargin > 3
-    
-    varname = varargin{3};
-    validateattributes(varname, {'char'}, {'vector'}, 'plotPerformanceData',...
-        'varname', 4);
-end
+% if nargin > 3
+%     
+%     varname = varargin{3};
+%     validateattributes(varname, {'char'}, {'vector'}, 'plotPerformanceData',...
+%         'varname', 4);
+% end
 
 % Plot all dry dock intervals for each vessel
-sz = size(perfData);
+sz = size(obj);
 nDDi = sz(1);
-if ismatrix(perfData)
+if ismatrix(obj)
     szOut = [1, sz(2)];
 else
     szOut = sz(2:end);
@@ -51,12 +28,12 @@ end
 
 figHandles = nan(szOut);
 
-idx_c = cell(1, ndims(perfData));
+idx_c = cell(1, ndims(obj));
 lineColours_m = get(groot, 'defaultAxesColorOrder');
 numColours = size(lineColours_m, 1);
 DDColourOrder = repmat(1:numColours, [1, ceil(nDDi/numColours)]);
 
-for ii = 1:nDDi:numel(perfData)
+for ii = 1:nDDi:numel(obj)
    
    currFig = figure;
    currAx = axes('Parent', currFig);
@@ -68,17 +45,41 @@ for ii = 1:nDDi:numel(perfData)
    for ddi = 1:nDDi
        
        % Skip DDi if empty
-       currData = perfData(ddi, idx_c{2:end});
+       currData = obj(ddi, idx_c{2:end});
+       varname = currData.Variable;
        if all(isnan(currData.(varname)))
            continue
        end
+      
+        avg_l = false;
+        numDur = 1;
+        if ~isempty(currData.MovingAverages)
+
+            avg_l = true;
+            avgStruct = currData.MovingAverages; % varargin{1};
+            validateattributes(avgStruct, {'struct'}, {}, 'plotPerformanceData',...
+                'avgStruct', 2);
+            numDur = numel(avgStruct(1).Duration);
+        end
+
+        regr_l = false;
+        if ~isempty(currData.Regression)
+
+            regr_l = true;
+            regri = 1;
+            regrStruct = currData.Regression; %varargin{2};
+            validateattributes(regrStruct, {'struct'}, {}, 'plotPerformanceData',...
+                'regrStruct', 3);
+        end
+
+        % varname = obj.Variable; %'Performance_Index';
        
        % Get data series colour
        currColour = lineColours_m(DDColourOrder(ddi), :);
        
        % Plot data
        hold on
-       xdata = datenum(currData.DateTime_UTC, 'dd-mm-yyyy');
+       xdata = currData.DateTime_UTC; % datenum(currData.DateTime_UTC, 'dd-mm-yyyy');
        pi_line = plot(currAx, xdata, ...
            currData.(varname) * 100, 'o', 'Color', currColour);
        hold off
@@ -122,7 +123,8 @@ for ii = 1:nDDi:numel(perfData)
        % Plot regressions
        if regr_l
            
-           currRegr_st = regrStruct(ddi, idx_c{2:end});
+           currRegr_st = currData.Regression;
+%            currRegr_st = regrStruct(ddi, idx_c{2:end});
            coeffs = currRegr_st.Coefficients;
            
            % Figure out plotting any order later...
@@ -150,8 +152,8 @@ for ii = 1:nDDi:numel(perfData)
    end
    
    % Vertical starts at zero
-   oldy = get(currAx, 'YLim'); 
-   set(currAx, 'YLim', [0, oldy(2)]);
+%    oldy = get(currAx, 'YLim'); 
+%    set(currAx, 'YLim', [0, oldy(2)]);
 
    % Put ticks on axis keeping horizontal ticks and limits
 %    oldxlim = get(currAx, 'XLim');

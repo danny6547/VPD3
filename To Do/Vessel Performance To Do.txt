@@ -4,7 +4,7 @@ plotPerformnceData: Fix bug in name of graph in case of no vessel name informati
 # loadInfileDNVGLRaw: rename to loadInfileCSV, extract csv-relavant part, rewrite loadInfileDNVGLRaw with one input
 connectDatabase: write function to connect to given database, return connection object.
 connectDatabase: test
-validateCellStr: write function to return validateAttributes-style error message if all elements of input cell are not strings.
+# validateCellStr: write function to return validateAttributes-style error message if all elements of input cell are not strings.
 parseEcoInsightXLS: parse when aggregation is selected
 cShip: repeat scalar inputs to uniform size
 # cShip, cShipEngine: rename to cVessel_
@@ -19,4 +19,13 @@ cShip: repeat scalar inputs to uniform size
 	#Move parseShipXLS  to Vessel Performance Database
 	#Move plotForceTechXLS  to Vessel Performance Database
 	#Move writeSQLLoadInFileTab  to Vessel Performance Database
-vesselName: look in table vessels instead of ships
+# vesselName: look in table vessels instead of ships
+# cVA.plotPerformanceData: change graph axes limits
+# cVA.movingAverages: remove second input
+
+Apply appropriate iteration to methods:
+	regressions
+	movingAverages
+	
+Delete file convertDate
+Delete file annualAverages

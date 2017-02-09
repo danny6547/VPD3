@@ -1,6 +1,6 @@
-function [obj, avgStruct] = movingAverages(obj, perStruct, durations, varargin)
+function [obj, avgStruct] = movingAverages(obj, durations, varargin)
 %movingAverages Calculate moving averages of time-series data
-%   avgStruct = movingAverages(perStruct, duration) will return in 
+%   avgStruct = movingAverages(obj, duration) will return in 
 %   AVGSTRUCT a struct with field names 'Average', 'StartDate' and 
 %   'EndDate' containing the corresponding data over the durations given by
 %   vector DURATION for the data in struct PERSTRUCT. AVGSTRUCT will be the
@@ -10,20 +10,20 @@ function [obj, avgStruct] = movingAverages(obj, perStruct, durations, varargin)
 %   many columns as elements in DURATION. Note that the number of durations
 %   found in the data is based on the contents of the 'Date' field in
 %   PERSTRUCT.
-%   avgStruct = movingAverages(perStruct, duration, reverse) will, in
+%   avgStruct = movingAverages(obj, duration, reverse) will, in
 %   addition to the above, return the averages over the durations
 %   calculated from the end of the data in PERSTRUCT backwards when logical
 %   REVERSE is TRUE and vice versa. REVERSE can be either scalar, in which
 %   case the same value is applied to all data, or an array, in which case
 %   it must be the same size as PERSTRUCT. The default value is FALSE.
-%   avgStruct = movingAverages(perStruct, duration, reverse, trim) will, in
+%   avgStruct = movingAverages(obj, duration, reverse, trim) will, in
 %   addition to the above, trim the outputs for durations which do not
 %   fully overlap with those of non-nan data in PERSTRUCT so that their
 %   'StartDate' and/or 'EndDate' values match those of the lowest and/or
 %   highest date values which they overlap. TRIM can be either scalar, in 
 %   which case the same value is applied to all data, or an array, in which
 %   case it must be the same size as PERSTRUCT. The default value is FALSE.
-%   avgStruct = movingAverages(perStruct, duration, reverse, trim, remove)
+%   avgStruct = movingAverages(obj, duration, reverse, trim, remove)
 %   will, in addition to the above, remove outputs for durations which are
 %   not fully within the range of the date values input in PERSTRUCT. TRIM 
 %   can be either scalar, in which case the same value is applied to all 
@@ -31,11 +31,11 @@ function [obj, avgStruct] = movingAverages(obj, perStruct, durations, varargin)
 %   The default value is FALSE.
 
 % Assign
-perStruct = obj.(obj.Variable);
+% obj = obj.(obj.Variable);
 
 % Initialise Outpus
 avgStruct = struct('Duration', []);
-sizeStruct = size(perStruct);
+sizeStruct = size(obj);
 
 % Inputs
 reverse_l = false;
@@ -58,7 +58,7 @@ if nargin > 3
     reverse_l = varargin{1};
 end
 if isscalar(reverse_l)
-    reverse_l = resizeMatch_f(reverse_l, perStruct);
+    reverse_l = resizeMatch_f(reverse_l, obj);
 end
 
 trim_l = false;
@@ -73,7 +73,7 @@ if nargin > 4
     trim_l = varargin{2};
 end
 if isscalar(trim_l)
-    trim_l = resizeMatch_f(trim_l, perStruct);
+    trim_l = resizeMatch_f(trim_l, obj);
 end
     
 remove_l = false;
@@ -88,21 +88,22 @@ if nargin > 5
     remove_l = varargin{ci};
 end
 if isscalar(remove_l)
-    remove_l = resizeMatch_f(remove_l, perStruct);
+    remove_l = resizeMatch_f(remove_l, obj);
 end
 
 % Iterate over elements of data array
-for si = 1:numel(perStruct)
+for si = 1:numel(obj)
     
     % Skip if empty
-    currStruct = perStruct(si);
-    if all(isnan(currStruct.Performance_Index))
+    currObj = obj(si);
+    if all(isnan(currObj.Performance_Index))
         continue
     end
     
     % Index into input and get dates
-    currDate = datenum(char(currStruct.DateTime_UTC), 'dd-mm-yyyy');
-    currPerf = currStruct.Performance_Index;
+%     currDate = datenum(char(currObj.DateTime_UTC), 'dd-mm-yyyy');
+    currDate = currObj.DateTime_UTC;
+    currPerf = currObj.(currObj.Variable);
     [ri, ci] = ind2sub(sizeStruct, si);
     
     % Remove duplicate date data (redundant when no duplicates in db)
@@ -134,8 +135,8 @@ for si = 1:numel(perStruct)
 %         numDurations = ceil(rangeDates / currDur);
         
         % Create timestep vector for current dates
-        tstep = unique(diff(currDate));
-        tstep(tstep==0) = [];
+        tstep = 1; % Replace with proper timestep value in DB later % unique(diff(currDate));
+%         tstep(tstep==0) = [];
         tstep_v = repmat(tstep, size(currDate));
         
         preDates = currDate - 0.5*tstep_v;
@@ -230,5 +231,5 @@ for si = 1:numel(perStruct)
     
     % Re-assign into Outputs
     avgStruct(ri, ci).Duration = Duration_st;
-    
+    obj(ri, ci).MovingAverages = avgStruct;
 end

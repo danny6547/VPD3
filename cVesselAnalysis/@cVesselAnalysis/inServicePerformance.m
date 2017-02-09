@@ -1,10 +1,10 @@
-function [ servStruct ] = inServicePerformance(perStruct, varargin)
+function [obj, servStruct ] = inServicePerformance(obj, varargin)
 %inServicePerformance In-service performance as defined by ISO 190303-2.
 %   Detailed explanation goes here
 
 % Outputs
 servStruct = struct('Duration', []);
-sizeStruct = size(perStruct);
+sizeStruct = size(obj);
 
 % Inputs
 if nargin > 1
@@ -13,7 +13,7 @@ if nargin > 1
     validateattributes(varname, {'char'}, {'vector'}, ...
         'inServicePerformance', 'varname', 2);
     
-    if ~ismember(varname, fieldnames(perStruct))
+    if ~ismember(varname, fieldnames(obj))
 
         errid = 'DB:NameUnknown';
         errmsg = 'Input VARNAME must be a field name of input struct PERSTRUCT';
@@ -26,13 +26,13 @@ else
 end
 
 % Convert dates
-perStruct = convertDate(perStruct);
+% obj = convertDate(obj); redundant function replaced with set method
 
 % Iterate over elements of data array
-for si = 1:numel(perStruct)
+for si = 1:numel(obj)
     
     % Skip if empty
-    currStruct = perStruct(si);
+    currStruct = obj(si);
     if all(isnan(currStruct.(varname)))
         continue
     end

@@ -1,4 +1,4 @@
-function [ out ] = performanceData( imo, varargin )
+function [ out ] = performanceData(imo, varargin)
 %performanceData Read ship performance data from database, over time range
 %   [out] = performanceData(imo) will read all data for the ship
 %   identified by numeric vector IMO from the database into output 
@@ -55,19 +55,19 @@ conn = adodb_connect(['driver=MySQL ODBC 5.3 ANSI Driver;',...
     'Pwd=HullPerf2016;']);
 
 if ddi_l
-    
+
     % Refine by Dry Dock interval
-    
-    
+
+
     % Get all DD dates per IMO
     sqlDDDates = ['SELECT `StartDate`, `EndDate` FROM test2.`DryDockDates` WHERE ',...
         'IMO_Vessel_Number = '];
     sqlDDDatesSingle = sprintf([sqlDDDates, '%u', ' ORDER BY StartDate;\n'], imo);
     sqlDDDatesSingle(end) = [];
     sqlDDDatesMulti = strsplit(sqlDDDatesSingle, '\n');
-    
+
     [~, dddates] = cellfun(@(x) adodb_query(conn, x), sqlDDDatesMulti, 'Uni', 0);
-    
+
     % Replicate statements for each interval
     a = cellfun(@(x) rot90(x'), dddates, 'Uni', 0);
     b = cellfun(@(x) [{'31-12-9999'}, x(:)', ...
@@ -76,18 +76,18 @@ if ddi_l
         'yyyy-mm-dd') '"'], x, 'Uni', 0), b, 'Uni', 0);
     intervalDates_c = cellfun(@(x, y) reshape(fliplr(x), size(y, 1)+1, 2),...
         b, dddates, 'Uni', 0);
-    
+
     % Remove unwanted Dry-Docking intervals
     if ~isequal(ddi, 0)
-        
+
         numIntervals = cellfun(@(x) size(x, 1), intervalDates_c);
         numIntervals(numIntervals > max(ddi)) = numIntervals;
         numIntervals_c = num2cell(numIntervals);
-        
+
         intervalDates_c = cellfun(@(x, y) x(y, :), intervalDates_c,...
             numIntervals_c, 'Uni', 0);
     end
-    
+
     numShips = numel(imo);
     numDocks = cellfun(@(x) size(x, 1), intervalDates_c, 'Uni', 0);
     maxNumDocks = max([numDocks{:}]);
@@ -96,12 +96,12 @@ if ddi_l
 %     r = cat(2, e{:});
     r = cat(2, eprime{:});
 %     t = cat(2, intervalDates_c{:});
-    
+
     y = cellfun(@(x) num2cell(x, 2),  intervalDates_c, 'Uni', 0);
     yprime = cellfun(@(x) [x; cell(maxNumDocks - length(x), 1)], y, 'Uni', 0);
 %     u = cat(2, y{:});
     u = cat(2, yprime{:});
-    
+
     o = cellfun(@(x, y) [x ' AND DateTime_UTC > ' y{1} ' AND DateTime_UTC < ' y{2}], r, u,...
         'Uni', 0, 'ErrorHandler', @(strct, a, b) (''));
     sqlMulti_c = o;

@@ -14,12 +14,15 @@ classdef cVesselAnalysis
         RandomValue = 1;
         TimeStep = 1;
         
-        Duration
+        MovingAverages
+        Regression
         ServiceInterval
         GuaranteeDurations
         PerformanceMark
         DryDockingPerformance
         AnnualSavingsDD
+        
+        IMO_Vessel_Number
     end
     
     methods
@@ -27,26 +30,39 @@ classdef cVesselAnalysis
        function obj = cVesselAnalysis( varargin )
        % cShipAnalysis Constructor for class cShipAnalysis
        
-       
+       % Detect whether input is struct, or IMO data for retreiving struct
        if nargin > 0
           
-           shipData = varargin{1};
-           validateattributes(shipData, {'struct'}, {});
-           szIn = size(shipData);
-       end
-       
-       
-       if nargin ~= 0
+           structInput_l = nargin == 1 && isstruct(varargin{1});
+           imoDDInput_l = nargin == 2 && ...
+               isnumeric(varargin{1}) && isnumeric(varargin{2});
+           
+           if structInput_l
+               
+               shipData = varargin{1};
+               validateattributes(shipData, {'struct'}, {});
             
+           elseif imoDDInput_l
+               
+               shipData = performanceData(varargin{:});
+               
+           else
+               
+               % Error when inputs not recognised
+           end
+           
+            szIn = size(shipData);
+
             numOuts = prod(szIn);
             obj(numOuts) = cVesselAnalysis;
 
             validFields = {'DateTime_UTC', ...
                             'Performance_Index',...
-                            'Speed_Index'};
+                            'Speed_Index',...
+                            'IMO_Vessel_Number'};
             inputFields = fieldnames(shipData);
             fields2read = intersect(validFields, inputFields);
-            
+
             for ii = 1:numel(obj)
                 for fi = 1:numel(fields2read)
 
@@ -55,6 +71,7 @@ classdef cVesselAnalysis
                 end
             end
             obj = reshape(obj, szIn);
+        
        end
        end
        
@@ -162,6 +179,9 @@ classdef cVesselAnalysis
         end
         
         end
+        
+        [ out ] = performanceData(imo, varargin)
+        
     end
     
     methods
@@ -170,19 +190,40 @@ classdef cVesselAnalysis
         % Set property method for DateTime_UTC
         
             dateFormStr = obj.DateFormStr;
+            errid = 'ShipAnalysis:InvalidDateType';
+            errmsg = ['Values representing dates must either be numeric '...
+                'MATLAB serial date values, strings representing those '...
+                'values or a cell array of strings representing those '...
+                'values.'];
+            
+            if iscell(dates)
+                
+                try dates = char(dates);
+                    
+                catch e
+                    
+                    error(errid, errmsg);
+                end
+            end
+            
             if ischar(dates)
                 date_v = datenum(char(dates), dateFormStr);
             elseif isnumeric(dates)
                 date_v = dates;
             else
-                errid = 'ShipAnalysis:InvalidDateType';
-                errmsg = ['Values representing dates must either be numeric '...
-                    'MATLAB serial date numbers of strings'];
                 error(errid, errmsg);
             end
             obj.DateTime_UTC = date_v;
         
-        end
+       end
+       
+       function obj = set.Variable(obj, variable)
+       % Set property method for Variable
+        
+       obj.checkVarname( variable );
+       obj.Variable = variable;
+           
+       end
        
     end
 end
