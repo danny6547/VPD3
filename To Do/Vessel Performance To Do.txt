@@ -27,5 +27,5 @@ Apply appropriate iteration to methods:
 	regressions
 	movingAverages
 	
-Delete file convertDate
-Delete file annualAverages
+# Delete file convertDate
+# Delete file annualAverages
