@@ -53,6 +53,6 @@ for ii = 1:nDDi:numel(obj)
        ddPer(ddi - 1, idx_c{2:end}).AvgPerAfter = avgAfter;
        ddPer(ddi - 1, idx_c{2:end}).AbsDDPerformance = ddPerAbs;
        ddPer(ddi - 1, idx_c{2:end}).RelDDPerformance = ddPerRel;
-       obj(idx_c{:}).DryDockingPerformance = ddPer;
+       obj(idx_c{:}).DryDockingPerformance = ddPer(idx_c{:});
    end
 end
