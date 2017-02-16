@@ -44,7 +44,7 @@ classdef cVesselAnalysis
             
            elseif imoDDInput_l
                
-               shipData = performanceData(varargin{:});
+               shipData = cVesselAnalysis.performanceData(varargin{:});
                
            else
                
@@ -62,10 +62,10 @@ classdef cVesselAnalysis
                             'IMO_Vessel_Number'};
             inputFields = fieldnames(shipData);
             fields2read = intersect(validFields, inputFields);
-
+            
             for ii = 1:numel(obj)
                 for fi = 1:numel(fields2read)
-
+                    
                     currField = fields2read{fi};
                     obj(ii).(currField) = shipData(ii).(currField);
                 end
@@ -198,11 +198,21 @@ classdef cVesselAnalysis
             
             if iscell(dates)
                 
+                
                 try dates = char(dates);
                     
                 catch e
                     
-                    error(errid, errmsg);
+                    try allNan_l = all(cellfun(@isnan, dates));
+
+                        if allNan_l
+                            dates = [dates{:}];
+                        end
+
+                    catch ee
+                        
+                        error(errid, errmsg);
+                    end
                 end
             end
             
