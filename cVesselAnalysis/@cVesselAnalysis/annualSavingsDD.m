@@ -25,31 +25,30 @@ if nargin > 3
 end
 
 % Get all DD Performance Improvement
-ddPer = dryDockingPerformance(obj);
-sz = size(ddPer);
+obj = dryDockingPerformance(obj);
+sz = size(obj);
 savingsDDStruc = repmat(savingsDDStruc, sz);
 
 % Iterate over guarantee struct to get averages
-idx_c = cell(1, ndims(ddPer));
+idx_c = cell(1, ndims(obj));
 daysPerYear = 365.25;
-for ii = 1:numel(ddPer)
+for ii = 1:numel(obj)
    
    [idx_c{:}] = ind2sub(sz, ii);
-   currData = ddPer(idx_c{:});
+   currData = obj(idx_c{:});
    currActivity = activity( idx_c{2} );
    
    % Skip DDi if empty
-   if all(isnan(currData.RelDDPerformance))
+   if isempty(currData.DryDockingPerformance)
        continue
    end
    
    % Get this DD Performance Improvement
-   currDDPer = ddPer(idx_c{:}).RelDDPerformance / 100;
+   currDDPer = obj(idx_c{:}).DryDockingPerformance.RelDDPerformance / 100;
    currDDSavings = currDDPer * fuelPricePerTonne * ...
        fuelConsumptionTonnesPerDay * daysPerYear * currActivity;
    savingsDDStruc(idx_c{:}).Savings_MUSD = currDDSavings / 1E6;
    
+   % Assign
+   obj(idx_c{:}).AnnualSavingsDD = savingsDDStruc((idx_c{:}));
 end
-
-% Assign
-obj.AnnualSavingsDD = savingsDDStruc;

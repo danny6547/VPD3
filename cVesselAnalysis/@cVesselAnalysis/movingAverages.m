@@ -44,7 +44,7 @@ errorSizeMatch_f = @(varname) error('moveAvg:InputSizeMismatch', ...
     'input PERSTRUCT']);
 resizeMatch_f = @(match, this) repmat(match, size(this));
 
-if nargin > 3
+if nargin > 2
     validateattributes(varargin{1}, {'logical'}, {}, ...
         'movingAverages', 'reverse', 3);
     
@@ -62,7 +62,7 @@ if isscalar(reverse_l)
 end
 
 trim_l = false;
-if nargin > 4
+if nargin > 3
     
     validateattributes(varargin{2}, {'logical'}, {}, ...
         'movingAverages', 'trim', 4);
@@ -77,7 +77,7 @@ if isscalar(trim_l)
 end
     
 remove_l = false;
-if nargin > 5
+if nargin > 4
     ci = 3;
     validateattributes(varargin{ci}, {'logical'}, {}, ...
         'movingAverages', 'remove', 5);

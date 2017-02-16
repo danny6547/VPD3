@@ -29,3 +29,8 @@ Apply appropriate iteration to methods:
 	
 # Delete file convertDate
 # Delete file annualAverages
+# cVessel: remove property RelDDPerformance
+# cVessel: remove property RandomValue
+# cVessel: remove method randomMethod
+
+# Make DateFormStr hidden property

@@ -5,14 +5,12 @@ classdef cVesselAnalysis
     properties
         
         Variable = 'Speed_Index';
-        DateFormStr = 'dd-mm-yyyy';
         
         Performance_Index
         Speed_Index
         DateTime_UTC
         
-        RandomValue = 1;
-        TimeStep = 1;
+        TimeStep double = 1;
         
         MovingAverages
         Regression
@@ -23,6 +21,11 @@ classdef cVesselAnalysis
         AnnualSavingsDD
         
         IMO_Vessel_Number
+    end
+    
+    properties(Hidden)
+        
+        DateFormStr char = 'dd-mm-yyyy';
     end
     
     methods
@@ -75,17 +78,8 @@ classdef cVesselAnalysis
        end
        end
        
-       function obj = randomMethod(obj)
-           
-           for ii = 1:numel(obj)
-           
-                obj(ii).RandomValue = randn([1, 1]);
-           end
-       end
-       
        function skip = isPerDataEmpty(obj)
        % isPerDataEmpty True if performance data variable empty.
-       
        
        vars = {obj.Variable};
        skip = arrayfun(@(x, y) all(isnan(isempty(x.(y{:})))), obj, vars);
@@ -141,6 +135,7 @@ classdef cVesselAnalysis
        % 
        
        end
+       
     end
     
     methods(Static)
