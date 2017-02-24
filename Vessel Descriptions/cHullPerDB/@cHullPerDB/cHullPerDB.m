@@ -92,7 +92,8 @@ classdef cHullPerDB < cMySQL
 %         tabfile = validateCellStr(tabfile);
         % Load performance, speed files
         tempTab = 'tempDNVPer';
-        permTab = 'PerformanceDataDNVGL';
+        permTab = 'DNVGLPerformanceData';
+        delimiter_ch = '\t';
         ignore_i = 1;
         
 %         if ~isempty(pTab)
@@ -117,7 +118,7 @@ classdef cHullPerDB < cMySQL
             currCols_cc = textscan(currTabid, '%s', 3);
             currCols_c = [currCols_cc{:}];
             obj = obj.loadInFileDuplicate(currTab, currCols_c, tempTab,...
-                permTab, ignore_i);
+                permTab, delimiter_ch, ignore_i);
         end
         
         % Delete tab file, unless requested

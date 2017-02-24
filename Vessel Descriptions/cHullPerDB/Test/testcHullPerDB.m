@@ -1,5 +1,5 @@
-classdef testcVesselDB < matlab.unittest.TestCase
-%TESTCVESSELDB
+classdef testcHullPerDB < matlab.unittest.TestCase
+%testcHullPerDB
 %   Detailed explanation goes here
 
 properties
@@ -7,7 +7,7 @@ end
 
 methods(Test)
 
-    function firsttest(testcase)
+    function testInsertIntoSFOCCoefficient(testcase)
     
     end
     
