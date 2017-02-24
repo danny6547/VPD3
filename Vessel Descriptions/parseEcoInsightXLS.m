@@ -20,6 +20,7 @@ timedata = struct('dates', [], 'pidx', [], 'sidx', [], 'regr', []);
 % ship = repmat(struct(), [numFiles, 1]);
 dataStartRow = nan(1, numFiles);
 
+
 for fi = 1:numFiles
     
     % Read
@@ -71,8 +72,13 @@ for fi = 1:numFiles
         
     else
         
-        ship = struct();
+%         ship = struct();
 
+    end
+    
+    % Assign output
+    if ~exist('ship', 'var')
+        ship = struct();
     end
     
     % Convert Date
