@@ -48,79 +48,79 @@ classdef cVessel < cMySQL
        function obj = cVessel(varargin)
        % Class constructor. Construct new object, assign array of IMO.
        
-       
-       % Inputs
-       szIn = [0, 1];
        if nargin > 0
-            
-            imo = varargin{1};
-            validateattributes(imo, {'numeric'},...
-              {'positive', 'real', 'integer'}, 'cShip constructor', 'IMO',...
-              1);
-            szIn = size(imo);
-       end
-       if nargin > 1
-            name = varargin{2};
-            name = validateCellStr(name, 'cShip constructor', 'name', 2);
-       else
-            name = repmat({''}, szIn);
-       end
-       
-       if nargin ~= 0
-            
-            numOuts = prod(szIn);
-            obj(numOuts) = cShip;
-            
-            for ii = 1:numel(imo)
-                obj(ii).IMO_Vessel_Number = imo(ii);
-                obj(ii).Name = name{ii};
-            end
-            
-            obj = reshape(obj, szIn);
-       end
-       
-       % Detect whether input is struct, or IMO data for retreiving struct
-       if nargin > 0
-          
+           
+           szIn = [0, 1];
+           
+           % Inputs
            structInput_l = nargin == 1 && isstruct(varargin{1});
            imoDDInput_l = nargin == 2 && ...
                isnumeric(varargin{1}) && isnumeric(varargin{2});
+           imoInput_l = nargin == 1 && isnumeric(varargin{1}) && ...
+               isscalar(varargin{1});
            
-           if structInput_l
-               
-               shipData = varargin{1};
-               validateattributes(shipData, {'struct'}, {});
-            
-           elseif imoDDInput_l
-               
-               shipData = cVesselAnalysis.performanceData(varargin{:});
-               
+           if nargin > 1
+                name = varargin{2};
+                name = validateCellStr(name, 'cShip constructor', 'name', 2);
            else
-               
-               % Error when inputs not recognised
+                name = repmat({''}, szIn);
            end
            
-            szIn = size(shipData);
+            if imoInput_l
+                
+                imo = varargin{1};
+                validateattributes(imo, {'numeric'},...
+                  {'positive', 'real', 'integer'}, 'cShip constructor', 'IMO',...
+                  1);
+                szIn = size(imo);
+                
+                numOuts = prod(szIn);
+                obj(numOuts) = cShip;
 
-            numOuts = prod(szIn);
-            obj(numOuts) = cVesselAnalysis;
-
-            validFields = {'DateTime_UTC', ...
-                            'Performance_Index',...
-                            'Speed_Index',...
-                            'IMO_Vessel_Number'};
-            inputFields = fieldnames(shipData);
-            fields2read = intersect(validFields, inputFields);
-            
-            for ii = 1:numel(obj)
-                for fi = 1:numel(fields2read)
-                    
-                    currField = fields2read{fi};
-                    obj(ii).(currField) = shipData(ii).(currField);
+                for ii = 1:numel(imo)
+                    obj(ii).IMO_Vessel_Number = imo(ii);
+                    obj(ii).Name = name{ii};
                 end
-            end
+
+                obj = reshape(obj, szIn);
+                
+            else
+                
+                if structInput_l
+                
+                   shipData = varargin{1};
+                   validateattributes(shipData, {'struct'}, {});
             
-            obj = reshape(obj, szIn);
+                elseif imoDDInput_l
+               
+                   shipData = cVesselAnalysis.performanceData(varargin{:});
+                   
+                end
+                
+                szIn = size(shipData);
+
+                numOuts = prod(szIn);
+                obj(numOuts) = cVesselAnalysis;
+
+                validFields = {'DateTime_UTC', ...
+                                'Performance_Index',...
+                                'Speed_Index',...
+                                'IMO_Vessel_Number'};
+                inputFields = fieldnames(shipData);
+                fields2read = intersect(validFields, inputFields);
+
+                for ii = 1:numel(obj)
+                    for fi = 1:numel(fields2read)
+
+                        currField = fields2read{fi};
+                        obj(ii).(currField) = shipData(ii).(currField);
+                    end
+                end
+
+                obj = reshape(obj, szIn);
+                
+                % Error when inputs not recognised
+            end
        end
        
        end
