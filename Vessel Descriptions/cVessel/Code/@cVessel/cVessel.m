@@ -5,6 +5,7 @@ classdef cVessel < cMySQL
     properties
         
         IMO_Vessel_Number double, single, int = [];
+        DryDockInterval double = [];
         Name char = '';
         Owner char = '';
         Class = [];
