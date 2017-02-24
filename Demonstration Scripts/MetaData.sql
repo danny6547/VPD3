@@ -5,7 +5,7 @@ SELECT Name, v.IMO_Vessel_Number,
     TIMESTAMPDIFF(MONTH, MIN(DateTime_UTC), MAX(DateTime_UTC)) AS 'Data Duration (months)',
     MIN(DATE(DateTime_UTC)) AS 'Start Date'
 		FROM vessels v
-			JOIN performancedatadnvgl pd
+			JOIN DNVGLPerformanceData pd
 				ON v.IMO_Vessel_Number = pd.IMO_Vessel_Number
 					GROUP BY IMO_Vessel_Number
 						ORDER BY Name;
