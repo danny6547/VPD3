@@ -34,3 +34,56 @@ Apply appropriate iteration to methods:
 # cVessel: remove method randomMethod
 
 # Make DateFormStr hidden property
+
+Document cVA, include meaning of dimensions
+Provide user with prerequisite property data for each method
+
+cVesselAnalysis: write iteration methods
+	cVessel uses same iteration methods to insert (just iterates over all elements).
+	cHullPerDB methods return multiple cVessels with time-series data.
+	cV, cVA, cHPDB become one class: cV.
+	cV instantiatable without inputs.
+	cV instantiated with IMO returns obj with time-series metadata only, read from DB.
+	cV method loadFilePerformance:
+		check file contents to identify source
+		call cMySQL.loadFileDuplicate to appropriate table (eg. DNVGLPerformance)
+		update time-series metadata
+	cV method regression:
+		call performance data with properties IMO, DDi
+		calculate coefficients, assign to property Regressions
+	A set of methods would be defined which call performanceData and perform some operation 
+	returning data to some properties. To be efficient, a "queue" of method calls would be 
+	built and the data read once.
+	Time-series data is not read from DB until requested, where a request 
+	is a call to method which requires that data to function. Instead, only
+	 data required to read the time-series data is gathered (number of 
+	 objects returned depends on number of DDi requested and DDi index 
+	 assigned to those objects.)
+
+Copy methods from cVA, cHPDB into cV. (All history information for two copied classes lost.)
+Inherit from cVA and cHPDB to cV (history remains but arguably redundant classes exist)
+
+Pull "Vessel Performance" into Database repo, copy methods into cV (history
+ of cVA will exist in repo along with others, but won't "follow" the 
+ methods from one file to the other. Commit message stating that methods 
+ are being moved will have to do).
+Copy methods from cVA to cV
+Copy methods from cHPDB to cV
+	Both methods return cV array, either row vect if no DD data in DB or 
+	matrix otherwise
+Create property DryDockInterval for cV
+Write iteration methods for cV
+Write constructor sub call to detect file inputs or IMO inputs
+Write cV.loadFilePerformance
+
+Create hidden property SQLQueue, containing a cell array vector, with each 
+cell containing a row vector with the first element being a function handle
+ and the rest the appropriate inputs.
+Write function callSQLQueue to iterate over the elements of SQLQueue and 
+call each function with the corresponding inputs. Include optional input to
+ return only the SQL syntax instead of outputs. Clear queue upon succesful 
+execution.
+Write property Mode, with two values: "queue" or "call". Default is "queue".
+Write set.Mode, when mode is changed to "call", method callSQLQueue is 
+called and thereafter all "time-series functions" called will read from the
+ database directly.
