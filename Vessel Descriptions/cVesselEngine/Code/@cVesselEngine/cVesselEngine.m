@@ -5,10 +5,12 @@ classdef cVesselEngine < handle
     properties
         
         Name char = '';
-        MinimumFOC_ph numeric = [];
-        X0 numeric = [];
-        X1 numeric = [];
-        X2 numeric = [];
+        X0 double = [];
+        X1 double = [];
+        X2 double = [];
+        MinimumFOC_ph double = [];
+        Lowest_Given_Brake_Power double = [];
+        Highest_Given_Brake_Power double = [];
         
     end
     
