@@ -1,0 +1,19 @@
+syntax: glob
+<<<<<<< local
+scriptTest2.sql
+BuildFromTab.sql
+scriptTest1.sql
+
+syntax: regexp
+(?i)\.asv
+=======
+convertEcoInsightXLS2tab.asv
+parseEcoInsightXLS.asv
+parseShipXLS.asv
+pctdemo_task_radar.ps
+070916.mat
+
+syntax: regexp
+(?i)\.asv
+
+>>>>>>> other
