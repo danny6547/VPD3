@@ -49,6 +49,11 @@ if numObj > 1 && numUniDispTrim == 1
     power = repmat(power, [numObj, 1]);
     
     IMO = IMO(:);
+    
+else
+    
+    IMO = repmat(IMO, [size(displacement), 1]);
+    
 end
 
 uniImoDispTrim = unique([IMO, displacement, trim], 'rows');
@@ -138,10 +143,17 @@ varargout{6} = trim;
 % adodb_query(conn, insertTempCommand_s);
 
 % Generate table of data for insertion
+% data = [uniImoDispTrim, coeffs, R2];
+% toTable = 'speedPowerCoefficients';
+% key = 'id';
+% uniqueColumns = {'IMO_Vessel_Number', 'Displacement', 'Trim'};
+% otherColumns = {'Exponent_A', 'Exponent_B', 'R_Squared'};
+% format_s = '%u, %f, %f, %f, %f, %f';
+% insertWithoutDuplicates(data, toTable, key, uniqueColumns, otherColumns, format_s);
+
 data = [uniImoDispTrim, coeffs, R2];
-toTable = 'speedPowerCoefficients';
-key = 'id';
-uniqueColumns = {'IMO_Vessel_Number', 'Displacement', 'Trim'};
-otherColumns = {'Exponent_A', 'Exponent_B', 'R_Squared'};
-format_s = '%u, %f, %f, %f, %f, %f';
-insertWithoutDuplicates(data, toTable, key, uniqueColumns, otherColumns, format_s);
+tab_ch = 'speedPowerCoefficients';
+cols_c = {'IMO_Vessel_Number', 'Displacement', 'Trim', 'Exponent_A', ...
+    'Exponent_B', 'R_Squared'};
+obj = obj.insertValuesDuplicate(tab_ch, cols_c, data);
+obj = obj.insertIntoSpeedPower(speed, power, displacement, trim);

@@ -1,4 +1,4 @@
-classdef cVessel
+classdef cVessel < cMySQL
     %CVESSEL Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -104,6 +104,7 @@ classdef cVessel
            data{ii, 11} = obj(ii).LBP;
        end
        
+       
        % Prepate inputs to insert data without duplicates
        otherCols_c = {'Name', ...
                         'Owner', ...
@@ -115,9 +116,23 @@ classdef cVessel
                         'Length_Overall', ...
                         'Draft_Design', ...
                         'LBP'};
-       format_s = '%u, %s, %s, %s, %f, %f, %f, %f, %f, %f, %f';
-       insertWithoutDuplicates(data, 'Vessels', 'id', 'IMO_Vessel_Number',...
-           otherCols_c, format_s);
+%        format_s = '%u, %s, %s, %s, %f, %f, %f, %f, %f, %f, %f';
+       
+       % Remove any columns with any empty values
+       cols_c = [{'IMO_Vessel_Number'}, otherCols_c];
+       emptyMat_l = cellfun(@isempty, data);
+       if isvector(emptyMat_l)
+           emptyVect_l = emptyMat_l;
+       else
+           emptyVect_l = any(emptyMat_l);
+       end
+       cols_c(emptyVect_l) = [];
+       data(emptyVect_l) = [];
+       
+       obj = obj.insertValuesDuplicate('Vessels', cols_c, data);
+       
+%        insertWithoutDuplicates(data, 'Vessels', 'id', 'IMO_Vessel_Number',...
+%            otherCols_c, format_s);
        
        end
        
@@ -133,7 +148,13 @@ classdef cVessel
           error(errid, errmsg);
        end
        
-       % 
+       % Iterate over engines, build matrix
+       [obj.Engine]
+       
+       % Keep only unique engines
+       
+       % Call SQL
+       obj = obj.insertValuesDuplicate();
        
        end
        
@@ -150,13 +171,18 @@ classdef cVessel
        
        % Insert
 %        data = [imo, speed, displacement, trim, power];
-       toTable = 'speedPower';
-       key = 'id';
-       uniqueColumns = {'IMO_Vessel_Number', 'Speed', 'Displacement', 'Trim', };
-       otherColumns = {'Power'};
-       format_s = '%u, %f, %f, %f, %f';
-       insertWithoutDuplicates(data, toTable, key, uniqueColumns, ...
-           otherColumns, format_s);
+%        toTable = 'speedPower';
+%        key = 'id';
+%        uniqueColumns = {'IMO_Vessel_Number', 'Speed', 'Displacement', 'Trim', };
+%        otherColumns = {'Power'};
+%        format_s = '%u, %f, %f, %f, %f';
+       
+       table = 'speedPower';
+       columns_c = {'IMO_Vessel_Number', 'Speed', 'Displacement', 'Trim',...
+           'Power'};
+       obj = obj.insertValuesDuplicate(table, columns_c, data);
+%        insertWithoutDuplicates(data, toTable, key, uniqueColumns, ...
+%            otherColumns, format_s);
        
        end
        
