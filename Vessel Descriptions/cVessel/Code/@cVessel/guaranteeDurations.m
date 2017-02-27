@@ -19,15 +19,19 @@ if nargin > 1
     validateattributes(remove_l, {'logical'}, {'scalar'});
 end
 
-idx_c = cell(1, ndims(obj));
-sz = size(obj);
+% idx_c = cell(1, ndims(obj));
+% sz = size(obj);
 avgMonthDuration = 365.25 / 12;
 
-for ii = 1:numel(obj)
+while ~obj.iterFinished
+
+% for ii = 1:numel(obj)
    
    % Iterate
-   [idx_c{:}] = ind2sub(sz, ii);
-   currData = obj(idx_c{:});
+   [obj, ii] = obj.iter;
+   
+%    [idx_c{:}] = ind2sub(sz, ii);
+%    currData = obj(idx_c{:});
    
    % Skip DDi if empty
    if obj(ii).isPerDataEmpty
@@ -35,12 +39,12 @@ for ii = 1:numel(obj)
    end
    
    % Indices to data
-   dat = currData.DateTime_UTC; % unique(datenum(currData.DateTime_UTC, 'dd-mm-yyyy'));
-   per = currData.(currData.Variable) * 100;
+   dat = obj(ii).DateTime_UTC; % unique(datenum(currData.DateTime_UTC, 'dd-mm-yyyy'));
+   per = obj(ii).(obj(ii).Variable) * 100;
    [dat, dati] = sort(dat);
    per = per(dati);
-   relStartDates = ( guarStruct(idx_c{:}).StartMonth - 1)*avgMonthDuration;
-   relEndDates = ( guarStruct(idx_c{:}).EndMonth) * avgMonthDuration;
+   relStartDates = ( guarStruct(ii).StartMonth - 1)*avgMonthDuration;
+   relEndDates = ( guarStruct(ii).EndMonth) * avgMonthDuration;
    absStartDates = min(dat) + relStartDates;
    absEndDates = min(dat) + relEndDates;
    
@@ -58,7 +62,7 @@ for ii = 1:numel(obj)
    
 %     tstep = unique(diff(dat));
 %     tstep(tstep==0) = [];
-    tstep = currData.TimeStep;
+    tstep = obj(ii).TimeStep;
     tstep_v = repmat(tstep, [1, size(absStartDates, 2)]);
     
     preStartDates = absStartDates - 0.5*tstep_v;
@@ -71,7 +75,7 @@ for ii = 1:numel(obj)
 %    [~, endi, ~] = FindNearestInVector(postEndDates, dat);
    
    % Averages and differences
-   avg = nan(1, numel( guarStruct(idx_c{:}).StartMonth ));
+   avg = nan(1, numel( guarStruct(ii).StartMonth ));
    avg(~outOfRange_l) = arrayfun(@(x, y) nanmean(per(dat >= x & dat < y)),...
        preStartDates, postEndDates);
    baseline = repmat(avg(1), [1, numel(avg) - 1]);
@@ -80,8 +84,8 @@ for ii = 1:numel(obj)
    reldif = ( dif ./ baseline ) * 100;
    
    % Output
-   guarStruct(idx_c{:}).Average = avg;
-   guarStruct(idx_c{:}).Difference = dif;
-   guarStruct(idx_c{:}).RelativeDifference = reldif;
-   obj(ii).GuaranteeDurations = guarStruct(idx_c{:});
+   guarStruct(ii).Average = avg;
+   guarStruct(ii).Difference = dif;
+   guarStruct(ii).RelativeDifference = reldif;
+   obj(ii).GuaranteeDurations = guarStruct(ii);
 end

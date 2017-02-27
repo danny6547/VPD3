@@ -11,12 +11,14 @@ regStruct = repmat(regStruct, size(obj));
 validateattributes(order, {'numeric'}, {'scalar', 'integer'}, 'regressions',...
     'order', 2);
 
-szPer = size(obj);
+% szPer = size(obj);
 
 % Iterate over performance struct
-for pi = 1:numel(obj)
+while ~obj.iterFinished
+% for pi = 1:numel(obj)
     
-    currStruct = obj(pi);
+    [obj, ii] = obj.iter;
+    currStruct = obj(ii);
     
     if isnan(currStruct.IMO_Vessel_Number)
         continue;
@@ -35,9 +37,9 @@ for pi = 1:numel(obj)
 %     [r, c] = ind2sub(szPer, pi);
     
     % Assign outputs
-    regStruct(pi).Coefficients = p;
-    regStruct(pi).Order = order;
-    regStruct(pi).Model = 'polynomial';
-    obj(pi).Regression = regStruct(pi);
+    regStruct(ii).Coefficients = p;
+    regStruct(ii).Order = order;
+    regStruct(ii).Model = 'polynomial';
+    obj(ii).Regression = regStruct(ii);
 end
 end

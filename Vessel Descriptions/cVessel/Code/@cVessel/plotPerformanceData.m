@@ -28,26 +28,34 @@ end
 
 figHandles = nan(szOut);
 
-idx_c = cell(1, ndims(obj));
+% idx_c = cell(1, ndims(obj));
 lineColours_m = get(groot, 'defaultAxesColorOrder');
 numColours = size(lineColours_m, 1);
 DDColourOrder = repmat(1:numColours, [1, ceil(nDDi/numColours)]);
 
-for ii = 1:nDDi:numel(obj)
+% for ii = 1:nDDi:numel(obj)
+figCount = length(findall(0,'type','figure')) + ...
+    length(findobj(0,'type','figure'));
+while ~obj.iterFinished
+   
+   [obj, ~, vesselI] = obj.iterVessel;
+   figCount = figCount + 1;
    
    currFig = figure;
    currAx = axes('Parent', currFig);
    
    % Find indices into input struct
-   [idx_c{:}] = ind2sub(sz, ii);
+%    [idx_c{:}] = ind2sub(sz, ii);
    
    % Plot each DDi separately
-   for ddi = 1:nDDi
+   for ddii = 1:numel(vesselI) % nDDi
+       
+       ddi = vesselI(ddii);
        
        % Skip DDi if empty
-       currData = obj(ddi, idx_c{2:end});
+       currData = obj(ddi);
        varname = currData.Variable;
-       if all(isnan(currData.(varname)))
+       if obj(ddi).isPerDataEmpty
            continue
        end
       
@@ -90,7 +98,7 @@ for ii = 1:nDDi:numel(obj)
        % Plot averages
        if avg_l
            
-           currAvg_st = avgStruct(ddi, idx_c{2:end});
+           currAvg_st = avgStruct(ddi);
            
            % Make average colors a series of increasingly light orange
 %            numDur = numel(currAvg.Duration);
@@ -163,7 +171,7 @@ for ii = 1:nDDi:numel(obj)
 %    set(currAx, 'XTick', oldxtick);
    
    % Assign figure handle into outputs
-   figHandles(idx_c{2:end}) = currFig;
+   figHandles(figCount) = currFig;
    
    % Labels
    labFontsz = 12;

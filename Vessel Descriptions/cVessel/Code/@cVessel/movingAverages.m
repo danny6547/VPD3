@@ -92,10 +92,13 @@ if isscalar(remove_l)
 end
 
 % Iterate over elements of data array
-for si = 1:numel(obj)
+while ~obj.iterFinished
+    
+   [obj, ii] = obj.iter;
+% for si = 1:numel(obj)
     
     % Skip if empty
-    currObj = obj(si);
+    currObj = obj(ii);
     if all(isnan(currObj.Performance_Index))
         continue
     end
@@ -104,7 +107,7 @@ for si = 1:numel(obj)
 %     currDate = datenum(char(currObj.DateTime_UTC), 'dd-mm-yyyy');
     currDate = currObj.DateTime_UTC;
     currPerf = currObj.(currObj.Variable);
-    [ri, ci] = ind2sub(sizeStruct, si);
+%     [ri, ci] = ind2sub(sizeStruct, si);
     
     % Remove duplicate date data (redundant when no duplicates in db)
     [currDate, udi] = unique(currDate);
@@ -143,7 +146,7 @@ for si = 1:numel(obj)
         postDates = currDate + 0.5*tstep_v;
         numDur = ceil( (max(postDates) - min(preDates)) / currDur);
         
-        if reverse_l(si)
+        if reverse_l(ii)
             
 %             delimDates = postDates(1):currDur:preDates(1);
             delimDates = linspace(postDates(end) - (currDur*numDur), ...
@@ -188,7 +191,7 @@ for si = 1:numel(obj)
         endDates(nanFilt_l) = [];
         
         % Remove outputs not within range
-        if remove_l(si)
+        if remove_l(ii)
             startFilt = startDates + 0.5*tstep < min(currDate);
             startDates(startFilt) = [];
             endDates(startFilt) = [];
@@ -206,7 +209,7 @@ for si = 1:numel(obj)
         end
         
         % Trim start, end dates
-        if trim_l(si)
+        if trim_l(ii)
             startDates(startDates < min(filtDate)) = min(filtDate);
 %             startDates(startDates > max(currDate)) = max(currDate);
 %             endDates(endDates < min(currDate)) = min(currDate);
@@ -230,6 +233,6 @@ for si = 1:numel(obj)
     end
     
     % Re-assign into Outputs
-    avgStruct(ri, ci).Duration = Duration_st;
-    obj(ri, ci).MovingAverages = avgStruct;
+    avgStruct(ii).Duration = Duration_st;
+    obj(ii).MovingAverages = avgStruct(ii);
 end

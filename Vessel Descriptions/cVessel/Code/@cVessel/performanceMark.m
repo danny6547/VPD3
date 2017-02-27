@@ -24,12 +24,15 @@ grade_m = cell2mat(grade(:, 1:2));
 grade_c = grade(:, 3);
 
 % Iterate over guarantee struct to get averages
-idx_c = cell(1, ndims(obj));
-for ii = 1:numel(obj)
+while ~obj.iterFinished
+    
+   [obj, ii] = obj.iter;
+% idx_c = cell(1, ndims(obj));
+% for ii = 1:numel(obj)
    
-   [idx_c{:}] = ind2sub(sz, ii);
+%    [idx_c{:}] = ind2sub(sz, ii);
    % currData = guarStruct(idx_c{:});
-   currData = obj(idx_c{:}).GuaranteeDurations;
+   currData = obj(ii).GuaranteeDurations;
    
    % Skip DDi if empty
    if obj(ii).isPerDataEmpty
@@ -40,13 +43,13 @@ for ii = 1:numel(obj)
        continue
    end
    
-   % Get this "power increase over service interval"
+    % Get this "power increase over service interval"
     currRelDiff = currData.RelativeDifference;
     powerInc = currRelDiff(find(~isnan(currRelDiff), 1, 'last'));
     
     % Assign value based on grade
     grade_l = powerInc >= grade_m(:, 1) & powerInc < grade_m(:, 2);
     grade_s = [grade_c{grade_l}];
-    markStruct(idx_c{:}).PerformanceMark = grade_s;
-    obj(idx_c{:}).PerformanceMark = grade_s;
+    markStruct(ii).PerformanceMark = grade_s;
+    obj(ii).PerformanceMark = grade_s;
 end

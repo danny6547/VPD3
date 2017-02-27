@@ -30,25 +30,31 @@ sz = size(obj);
 savingsDDStruc = repmat(savingsDDStruc, sz);
 
 % Iterate over guarantee struct to get averages
-idx_c = cell(1, ndims(obj));
+% idx_c = cell(1, ndims(obj));
 daysPerYear = 365.25;
-for ii = 1:numel(obj)
+
+while ~obj.iterFinished
    
-   [idx_c{:}] = ind2sub(sz, ii);
-   currData = obj(idx_c{:});
-   currActivity = activity( idx_c{2} );
+   [obj, ii] = obj.iterDD;
+   
+% for ii = 1:numel(obj)
+%    [idx_c{:}] = ind2sub(sz, ii);
+
+%    currData = obj(idx_c{:});
    
    % Skip DDi if empty
-   if isempty(currData.DryDockingPerformance)
+   if isempty(obj(ii).DryDockingPerformance)
        continue
    end
    
    % Get this DD Performance Improvement
-   currDDPer = obj(idx_c{:}).DryDockingPerformance.RelDDPerformance / 100;
+   [~, currVesseli] = obj.ind2sub( ii );
+   currActivity = activity( currVesseli );
+   currDDPer = obj(ii).DryDockingPerformance.RelDDPerformance / 100;
    currDDSavings = currDDPer * fuelPricePerTonne * ...
        fuelConsumptionTonnesPerDay * daysPerYear * currActivity;
-   savingsDDStruc(idx_c{:}).Savings_MUSD = currDDSavings / 1E6;
+   savingsDDStruc(ii).Savings_MUSD = currDDSavings / 1E6;
    
    % Assign
-   obj(idx_c{:}).AnnualSavingsDD = savingsDDStruc((idx_c{:}));
+   obj(ii).AnnualSavingsDD = savingsDDStruc(ii);
 end

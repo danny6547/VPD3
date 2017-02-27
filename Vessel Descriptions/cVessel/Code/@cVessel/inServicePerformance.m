@@ -29,40 +29,42 @@ end
 % obj = convertDate(obj); redundant function replaced with set method
 
 % Iterate over elements of data array
-for si = 1:numel(obj)
+while ~obj.iterFinished
+    
+   [obj, ii] = obj.iter;
+% for si = 1:numel(obj)
     
     % Skip if empty
-    currStruct = obj(si);
-    if all(isnan(currStruct.(varname)))
-        continue
-    end
+   if obj(ii).isPerDataEmpty
+       continue
+   end
     
     % Index into input and get dates
 %     currDate = datenum(char(currStruct.DateTime_UTC), 'dd-mm-yyyy');
-    currDate = currStruct.DateTime_UTC;
-    currPerf = currStruct.(varname);
-    [ri, ci] = ind2sub(sizeStruct, si);
+    currDate = obj(ii).DateTime_UTC;
+    currPerf = obj(ii).(varname);
+%     [ri, ci] = ind2sub(sizeStruct, si);
     
     % Remove duplicate date data (redundant when no duplicates in db)
-    [currDate, udi] = unique(currDate);
-    currPerf = currPerf(udi);
-    
-    % Get dates filtered by nan in performance data
-    filtDate = currDate(~isnan(currPerf));
+%     [currDate, udi] = unique(currDate);
+%     currPerf = currPerf(udi);
+%     
+%     % Get dates filtered by nan in performance data
+%     currDate = currDate(~isnan(currPerf));
     
     % NB. TAKE THE DRY-DOCK DATE FROM SERIES
     
     % If first DDi, calculate from end backwards
 %     dd = currDate(end);
     
-%     startDate(1) = min(filtDate);
+%     startDate(1) = min(currDate);
 %     endTime(1) = startDate(1) + 365.25;
 %     startDateI(1) = 1;
-%     [endDate(1), endDateI(1)] = FindNearestInVector(endTime(1), filtDate);
+%     [endDate(1), endDateI(1)] = FindNearestInVector(endTime(1), currDate);
 % 
-%     startDateI(2) = find(filtDate > startDate(1), 1);
-%     startDate(2) = filtDate(startDateI);
-%     endDate(2) = max(filtDate);
+%     startDateI(2) = find(currDate > startDate(1), 1);
+%     startDate(2) = currDate(startDateI);
+%     endDate(2) = max(currDate);
 %     
 %     output(1) = mean(currPerf(1:endDateI(1)));
 %     output(2) = mean(currPerf(1:endDateI(1)));
@@ -71,18 +73,18 @@ for si = 1:numel(obj)
     Duration_st = struct('Average', [], 'StartDate', [], 'EndDate', []);
     
     % Separate first and second years
-    firstYear_l = filtDate <= ( min(filtDate) + 365.25);
-    remainingYears_l = filtDate > ( min(filtDate) + 365.25);
+    firstYear_l = currDate <= ( min(currDate) + 365.25);
+    remainingYears_l = currDate > ( min(currDate) + 365.25);
     
     if any(remainingYears_l)
         
         output(1) = nanmean(currPerf(firstYear_l));
         output(2) = nanmean(currPerf(remainingYears_l));
         
-        startDate(1) = min(filtDate(firstYear_l));
-        startDate(2) = min(filtDate(remainingYears_l));
-        endDate(1) = max(filtDate(firstYear_l));
-        endDate(2) = max(filtDate(remainingYears_l));
+        startDate(1) = min(currDate(firstYear_l));
+        startDate(2) = min(currDate(remainingYears_l));
+        endDate(1) = max(currDate(firstYear_l));
+        endDate(2) = max(currDate(remainingYears_l));
         
         % Make all Row vectors
         output = output(:)';
@@ -99,5 +101,5 @@ for si = 1:numel(obj)
     end
     
     % Re-assign into Outputs
-    servStruct(ri, ci).Duration = Duration_st;
+    obj(ii).InServicePerformance = Duration_st;
 end

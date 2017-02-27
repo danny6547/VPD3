@@ -21,12 +21,14 @@ if nargin > 2
         'calendar', 3);
 end
 
-idx_c = cell(1, ndims(obj));
-for ii = 1:numel(obj)
+% idx_c = cell(1, ndims(obj));
+while ~obj.iterFinished
+% for ii = 1:numel(obj)
    
    % Iterate
-   [idx_c{:}] = ind2sub(sz, ii);
-   currData = obj(idx_c{:});
+   [obj, ii] = obj.iter;
+%    [idx_c{:}] = ind2sub(sz, ii);
+%    currData = obj(ii);
    
    % Skip DDi if empty
    if obj(ii).isPerDataEmpty
@@ -34,7 +36,7 @@ for ii = 1:numel(obj)
    end
    
    % Get range of date numbers in days
-   dates = currData.DateTime_UTC; % datenum(currData.DateTime_UTC, 'dd-mm-yyyy');
+   dates = obj(ii).DateTime_UTC; % datenum(currData.DateTime_UTC, 'dd-mm-yyyy');
    numdays = max(dates) - min(dates);
    dvec = datevec(numdays);
    
@@ -61,8 +63,8 @@ for ii = 1:numel(obj)
    end
    
    % Assign into output
-   servStruct(idx_c{:}).ServiceInterval = interval;
-   servStruct(idx_c{:}).Units = units;
-   obj(idx_c{:}).ServiceInterval = numdays;
+   servStruct(ii).ServiceInterval = interval;
+   servStruct(ii).Units = units;
+   obj(ii).ServiceInterval = numdays;
    
 end
