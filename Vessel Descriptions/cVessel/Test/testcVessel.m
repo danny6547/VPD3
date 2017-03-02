@@ -17,7 +17,7 @@ methods(Test)
     
     % 1
     % Input
-    inputUnique = 'DateTime_UTC';
+    inputIndex = 'DateTime_UTC';
     inputProp = {'Speed_Index', 'Performance_Index'};
     nonUniDate = repmat(now-1:now+1, [3, 1]);
     nonUniDate = nonUniDate(:);
@@ -29,16 +29,17 @@ methods(Test)
     expUni = inputObj;
     actUni = inputObj;
     [uniqueData, uniI] = unique(nonUniDate);
-    [expUni.(inputUnique)] = deal(uniqueData);
+    [expUni.(inputIndex)] = deal(uniqueData);
     
     for ii = 1:numel(inputProp)
         
         inData = expUni.(inputProp{ii});
         [expUni.(inputProp{ii})] = deal(inData(uniI));
     end
+    expUni = expUni.iterReset;
     
     % Execute
-    actUni = actUni.filterOnUniqueIndex(inputUnique, inputProp);
+    actUni = actUni.filterOnUniqueIndex(inputIndex, inputProp);
     
     % Verify
     msgUni = ['Non-unique elements are expected to be removed from data in '...

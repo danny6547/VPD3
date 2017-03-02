@@ -37,6 +37,7 @@ classdef cVessel < cMySQL % & handle
         DryDockingPerformance
         AnnualSavingsDD
         InServicePerformance
+        
     end
     
     properties(Hidden)
@@ -44,6 +45,10 @@ classdef cVessel < cMySQL % & handle
         DateFormStr char = 'dd-mm-yyyy';
         CurrIter = 1;
         IterFinished = false;
+    end
+    
+    properties(Hidden, Dependent)
+        
     end
     
     methods
@@ -592,10 +597,29 @@ classdef cVessel < cMySQL % & handle
         
         end
 
-        function obj = filterOnUniqueIndex(obj, uniqueprop, prop)
+        function obj = filterOnUniqueIndex(obj, index, prop)
         % filterOnUniqueIndex Filter data based on duplicate keys.
         
+        % Input
+        validateattributes(index, {'char'}, {'vector'}, ...
+            'filterOnUniqueIndex', 'index', 2);
+        prop = validateCellStr(prop, 'filterOnUniqueIndex', 'prop', 3);
+        
+        % Iterate and filter non-unique indices of index data
+        while ~obj.iterFinished
             
+            [obj, ii] = obj.iter;
+            [uniIndex, uniIndexI] = unique(obj(ii).(index));
+            
+            for pi = 1:numel(prop)
+                
+                currData = obj(ii).(prop{pi});
+                obj(ii).(prop{pi}) = currData(uniIndexI);
+            end
+            
+            obj(ii).(index) = uniIndex;
+        end
+        obj = obj.iterReset;
         
         end
         
@@ -683,18 +707,24 @@ classdef cVessel < cMySQL % & handle
     
     methods(Hidden)
         
-        function finished = iterFinished(obj)
+        function [finished, obj] = iterFinished(obj)
         % iterFinished Scalar indicating whether array iteration finished
             
             % Return value
             finished = obj(1).IterFinished;
+            
+        end
+        
+        function obj = iterReset(obj)
+        % iterReset Reset counters for iteration
+            
+            finished = iterFinished(obj);
             
             % Value is reset if true
             if finished
                 [obj.IterFinished] = deal(false);
                 [obj.CurrIter] = deal(1);
             end
-            
         end
         
     end
@@ -758,5 +788,27 @@ classdef cVessel < cMySQL % & handle
            
        end
        
+%        function IterFinished = get.IterFinished(obj)
+%        % get.IterFinished Reset iteration when done
+%        
+%         IterFinished = obj(1).CurrIter >= numel(obj);
+%        
+%        end
+%        
+%        function obj = set.IterFinished(obj, value)
+%        % set.IterFinished Apply value
+%         
+% %         obj.IterFinished = value;
+%         
+%        end
+%        
+%        function obj = set.CurrIter(obj, value)
+%            
+%            obj.CurrIter = value;
+%            
+%            if value == 1
+%               obj.IterFinished = false;
+%            end
+%        end
     end
 end
