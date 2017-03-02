@@ -80,12 +80,18 @@ if ddi_l
     % Remove unwanted Dry-Docking intervals
     if ~isequal(ddi, 0)
 
-        numIntervals = cellfun(@(x) size(x, 1), intervalDates_c);
-        numIntervals(numIntervals > max(ddi)) = numIntervals;
-        numIntervals_c = num2cell(numIntervals);
+        numIntervals_c = cellfun(@(x) size(x, 1), intervalDates_c, 'Uni', 0);
+%         if any(numIntervals > max(ddi))
+%             numIntervals(numIntervals > max(ddi)) = numIntervals;
+%         end
+%         numIntervals_c = num2cell(numIntervals);
+        intervalsI_c = repmat({ddi}, size(intervalDates_c));
+        intervalsI_c = cellfun(@(x, y) x(x<=y), intervalsI_c, numIntervals_c, 'Uni', 0);
 
+%         intervalDates_c = cellfun(@(x, y) x(y, :), intervalDates_c,...
+%             numIntervals_c, 'Uni', 0);
         intervalDates_c = cellfun(@(x, y) x(y, :), intervalDates_c,...
-            numIntervals_c, 'Uni', 0);
+            intervalsI_c, 'Uni', 0);
     end
 
     numShips = numel(imo);

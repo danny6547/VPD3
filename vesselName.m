@@ -46,8 +46,13 @@ elseif isscalar(IMOin)
 else
     
     outName_c = out.name;
+    outName_c = validateCellStr(outName_c);
     outIMO_c = out.imo_vessel_number;
-    outIMO_v = [outIMO_c{:}];
+    if iscell(outIMO_c)
+        outIMO_v = [outIMO_c{:}];
+    else
+        outIMO_v = outIMO_c;
+    end
     [inorder_l, inorder_i] = ismember(IMOin, outIMO_v);
     
     IMOout = int32(nan(size(IMOin)));

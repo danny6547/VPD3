@@ -1,4 +1,4 @@
-classdef cVessel < cMySQL & handle
+classdef cVessel < cMySQL % & handle
     %CVESSEL Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -53,60 +53,134 @@ classdef cVessel < cMySQL & handle
        
        if nargin > 0
            
-%            szIn = [0, 1];
-           
            % Inputs
-           structInput_l = nargin == 1 && isstruct(varargin{1});
-           imoInput_l = nargin == 1 && isnumeric(varargin{1});
-           imoDDInput_l = nargin == 2 && ...
-               isnumeric(varargin{1}) && isnumeric(varargin{2});
-           szIn = size(varargin{1});
+           p = inputParser();
+           p.addParameter('IMO', []);
+           p.addParameter('FileName', '');
+           p.addParameter('DDi', []);
+           p.addParameter('ShipData', []);
+           p.addParameter('Name', '');
+           p.parse(varargin{:});
+           res = p.Results;
            
+           file = res.FileName;
+           imo = res.IMO;
+           DDi = res.DDi;
+           shipDataInput = res.ShipData;
+           vesselNames = res.Name;
            
-%             if imoInput_l
-%                 
-%                 imo = varargin{1};
-%                 validateattributes(imo, {'numeric'},...
-%                   {'positive', 'real', 'integer'}, 'cVessel constructor', 'IMO',...
-%                   1);
-%                 szIn = size(imo);
-%                 
-%                 numOuts = prod(szIn);
-%                 obj(numOuts) = cVessel;
-% 
-%                 for ii = 1:numel(imo)
-%                     obj(ii).IMO_Vessel_Number = imo(ii);
-%                     obj(ii).Name = name{ii};
-%                 end
-% 
-%                 obj = reshape(obj, szIn);
-%                 
-%             else
+           file_l = ~isempty(file);
+           imo_l = ~isempty(imo);
+           ddi_l = ~isempty(DDi);
+           shipData_l = ~isempty(shipDataInput);
+           vesselName_l = ~isempty(vesselNames);
+           
+           % Append DDi to list of inputs for reading from DB, if input
+           readInputs_c = {imo};
+           if ddi_l
+               
+               readInputs_c = [readInputs_c, {DDi}];
+           end
+           
+           if shipData_l
+               
+               validateattributes(shipDataInput, {'struct'}, {});
+           end
+           
+           if file_l
+               
+               % Load data from file into DB
+               file = validateCellStr(file, 'cVessel constructor', 'IMO');
+               [valid, errmsg] = cellfun(@(x) cVessel.validateFileExists(x), file,...
+                   'Uni', 0);
+               valid = [valid{:}];
+               if any(~valid)
+                  
+                   errmsg = errmsg{find(~valid, 1)};
+                   errid = 'cVA:FileNotFound';
+                   error(errid, errmsg);
+               end
+               
+               firstFile_ch = file{1};
+               
+               dnvglProc_l = strcmp(xlsfinfo(firstFile_ch), ...
+                   'Microsoft Excel Spreadsheet');
+               fid = fopen(firstFile_ch);
+                headerLine = textscan(fid, '%s', 1, 'delimiter', '\n');
+               fclose(fid);
+               dnvglRaw_l = length(strsplit(headerLine{1}{:}, ',')) == 220;
+               
+               if dnvglRaw_l
+                   
+                   [obj, imoFile] = loadDNVGLRaw(obj, file);
+                   
+                   if imo_l && ~isequal(sort(imoFile), sort(file))
+                       
+                       errid = 'cVA:IMOInputFileMismatch';
+                       errmsg = ['IMO numbers contained in files input do '...
+                           'not match those of input parameter IMO.'];
+                       error(errid, errmsg);
+                   end
+                   
+                   imo = unique(imoFile);
+                   
+               elseif dnvglProc_l
+                   
+                   if ~imo_l
+                       
+                       errid = 'cVA:FileRequiresIMO';
+                       errmsg = ['When filenames input are paths to DNVGL '...
+                           'processed data files, the IMO of the vessels '...
+                           'must also be given.'];
+                       error(errid, errmsg);
+                   end
+                   
+                   obj = obj.loadDNVGLPerformance(file, imo);
+               end
+               
+               readInputs_c = [{imo}, DDi];
+               shipData = cVessel.performanceData(readInputs_c{:});
+           end
+           
+           if imo_l
                 
-            if structInput_l
-
-               shipData = varargin{1};
-               validateattributes(shipData, {'struct'}, {});
-
-            elseif imoDDInput_l || imoInput_l
-
-                % Get struct from imo
-                imo = varargin{1};
+                % Read data out from DB
                 validateattributes(imo, {'numeric'},...
-                  {'positive', 'real', 'integer'}, 'cVessel constructor', 'IMO',...
-                  1);
-                shipData = cVessel.performanceData(varargin{:});
-
-            end
+                  {'positive', 'real', 'integer'}, 'cVessel constructor',...
+                  'IMO', 1);
+                shipData = cVessel.performanceData(readInputs_c{:});
+           end
+           
+           if shipData_l && file_l
+               
+               % Concatenate time-series data
+               allDates_c = arrayfun(@(x, y) cat(1, x.DateTime_UTC, ...
+                   y.DateTime_UTC), shipDataInput, shipData, 'Uni', 0);
+               allPI_c = arrayfun(@(x, y) cat(1, x.Performance_Index, ...
+                   y.Performance_Index), shipDataInput, shipData, 'Uni', 0);
+               allSI_c = arrayfun(@(x, y) cat(1, x.Speed_Index, ...
+                   y.Speed_Index), shipDataInput, shipData, 'Uni', 0);
+               [shipData.DateTime_UTC] = deal(allDates_c{:});
+               [shipData.Performance_Index] = deal(allPI_c{:});
+               [shipData.Speed_Index] = deal(allSI_c{:});
+           end
+           
+           if shipData_l && ~any([file_l, imo_l])
+               
+               shipData = shipDataInput;
+           end
 
            % Get IMO from struct
            imo = deal([shipData(:).IMO_Vessel_Number]);
-
-           if nargin > 1 && ~imoDDInput_l
-                name = varargin{2};
-                name = validateCellStr(name, 'cVessel constructor', 'name', 2);
+           if vesselName_l
+                name = validateCellStr(vesselNames, 'cVessel constructor',...
+                    'name', 2);
+                if isscalar(name)
+                    name = repmat(name, size(imo));
+                end
            else
                 name = vesselName(imo);
+                name = validateCellStr(name);
            end
 
             szIn = size(shipData);
@@ -123,19 +197,19 @@ classdef cVessel < cMySQL & handle
 
             for ii = 1:numel(obj)
                 for fi = 1:numel(fields2read)
-
+                    
                     currField = fields2read{fi};
                     obj(ii).(currField) = shipData(ii).(currField);
                     obj(ii).IMO_Vessel_Number = imo(ii);
                     obj(ii).Name = name{ii};
                 end
             end
-
+            
             obj = reshape(obj, szIn);
-                % Error when inputs not recognised
-%             end
+            
+            % Error when inputs not recognised
+            
        end
-       
        end
        
        function obj = assignClass(obj, vesselclass)
@@ -434,6 +508,7 @@ classdef cVessel < cMySQL & handle
             currTab = tabfile{ti};
             currTabid = fopen(currTab);
             currCols_cc = textscan(currTabid, '%s', 3);
+            fclose(currTabid);
             currCols_c = [currCols_cc{:}];
             obj = obj.loadInFileDuplicate(currTab, currCols_c, tempTab,...
                 permTab, delimiter_ch, ignore_i);
@@ -448,17 +523,23 @@ classdef cVessel < cMySQL & handle
         end
         end
 
-        function obj = loadDNVGLRaw(obj, filename)
+        function [obj, IMO] = loadDNVGLRaw(obj, filename)
         % loadDNVGLRaw Load raw data sourced from DNVGL
 
         % Drop if exists
         tempTab = 'tempDNVGLRaw';
         obj = obj.drop('TABLE', tempTab, true);
-
+        
         % Create temp table
         permTab = 'DNVGLRaw';
         obj = obj.createLike(tempTab, permTab);
-
+        
+        % Drop unique constraint, allowing for duplicates in temporary
+        % loading table which will not carry through to final table
+        dropCons_sql = ['ALTER TABLE `' tempTab '` DROP INDEX ' ...
+            '`UniqueIMODates`'];
+        execute(obj, dropCons_sql);
+        
         % Load into temp table
         cols_c = [];
         delimiter_s = ',';
@@ -468,25 +549,56 @@ classdef cVessel < cMySQL & handle
         setnull_c = {'Date_UTC', 'Time_UTC'};
         [obj, cols] = obj.loadInFile(filename, tempTab, cols_c, ...
             delimiter_s, ignore_s, set_s, setnull_c);
-
+        
         % Generate DateTime prior to using it for identification
         expr_sql = 'ADDTIME(Date_UTC, Time_UTC)';
         col = 'DateTime_UTC';
         obj = obj.update(tempTab, col, expr_sql);
-
+        
         % Update insert into final table
+        if ~isscalar(filename)
+            cols = cols{1}(:)';
+        end
         tab1 = tempTab;
         finalCols = [cols, {col}];
         cols1 = finalCols;
         tab2 = permTab;
         cols2 = finalCols;
         obj = obj.insertSelectDuplicate(tab1, cols1, tab2, cols2);
-
+        
         % Drop temp
         obj = obj.drop('TABLE', tempTab);
-
+        
+        if nargout > 1
+           
+           % Get IMO contained in file
+           filename = cellstr(filename);
+           IMO = [];
+           for fi = 1:numel(filename)
+               
+               filei = filename{fi};
+               fid = fopen(filei);
+               w = {};
+               while fgetl(fid) ~= -1
+                   
+                   q = textscan(fid, '%[0123456789]', 'Headerlines', 1,...
+                       'TreatAsEmpty', '');
+                   w = [w, q{1}];
+               end
+               
+               IMO = [IMO, str2double(unique(w))];
+           end
+        end
+        
         end
 
+        function obj = filterOnUniqueIndex(obj, uniqueprop, prop)
+        % filterOnUniqueIndex Filter data based on duplicate keys.
+        
+            
+        
+        end
+        
 %        function obj = fitSpeedPower(obj, speed, power, varargin)
 %        % fitSpeedPower Fit speed, power data to model
 %        
@@ -550,9 +662,9 @@ classdef cVessel < cMySQL & handle
         
         % Create error message in case either criteria fail
         if existCriteria
-            errmsg = 'Input FILENAME must exist.';
+            errmsg = ['Input ' filename ' must exist.'];
         else
-            errmsg = 'Input FILENAME must not exist.';
+            errmsg = ['Input ' filename ' must not exist.'];
         end
         
         % Check if file exists
@@ -596,7 +708,7 @@ classdef cVessel < cMySQL & handle
            obj.IMO_Vessel_Number = IMO;
            
        end
-        
+       
        function obj = set.DateTime_UTC(obj, dates)
         % Set property method for DateTime_UTC
         
@@ -640,9 +752,9 @@ classdef cVessel < cMySQL & handle
        
        function obj = set.Variable(obj, variable)
        % Set property method for Variable
-        
-       obj.checkVarname( variable );
-       obj.Variable = variable;
+           
+           obj.checkVarname( variable );
+           obj.Variable = variable;
            
        end
        
