@@ -113,7 +113,10 @@ classdef cVessel < cMySQL % & handle
                fid = fopen(firstFile_ch);
                 headerLine = textscan(fid, '%s', 1, 'delimiter', '\n');
                fclose(fid);
-               dnvglRaw_l = length(strsplit(headerLine{1}{:}, ',')) == 220;
+               
+               validLengths = [235, 220];
+               dnvglRaw_l = ismember(length(strsplit(headerLine{1}{:}, ',')),...
+                   validLengths);
                
                if dnvglRaw_l
                    
@@ -168,6 +171,7 @@ classdef cVessel < cMySQL % & handle
                [shipData.DateTime_UTC] = deal(allDates_c{:});
                [shipData.Performance_Index] = deal(allPI_c{:});
                [shipData.Speed_Index] = deal(allSI_c{:});
+               
            end
            
            if shipData_l && ~any([file_l, imo_l])
@@ -209,8 +213,15 @@ classdef cVessel < cMySQL % & handle
                     obj(ii).Name = name{ii};
                 end
             end
-            
             obj = reshape(obj, szIn);
+            
+            % Check that no duplicates were added when concatenating struct
+            % data with that read from DB
+            index_c = 'DateTime_UTC';
+            prop_c = {'Performance_Index'...
+                    'Speed_Index'};
+            obj = obj.filterOnUniqueIndex(index_c, prop_c);
+            
             
             % Error when inputs not recognised
             
@@ -788,27 +799,5 @@ classdef cVessel < cMySQL % & handle
            
        end
        
-%        function IterFinished = get.IterFinished(obj)
-%        % get.IterFinished Reset iteration when done
-%        
-%         IterFinished = obj(1).CurrIter >= numel(obj);
-%        
-%        end
-%        
-%        function obj = set.IterFinished(obj, value)
-%        % set.IterFinished Apply value
-%         
-% %         obj.IterFinished = value;
-%         
-%        end
-%        
-%        function obj = set.CurrIter(obj, value)
-%            
-%            obj.CurrIter = value;
-%            
-%            if value == 1
-%               obj.IterFinished = false;
-%            end
-%        end
     end
 end
