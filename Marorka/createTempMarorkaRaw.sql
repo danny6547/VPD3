@@ -30,7 +30,9 @@ BEGIN
 		`Draft aft [m]` 	DOUBLE(20, 5),
 		`Relative wind speed [m/s]` 	DOUBLE(20, 5),
 		`Relative wind direction [Â°]` 	DOUBLE(20, 5),
+		`Relative wind direction [°]` 	DOUBLE(20, 5),
 		`COG heading [Â°]` 	DOUBLE(20, 5),
+		`COG heading [°]` 	DOUBLE(20, 5),
 		`GPS speed [knots]` 	DOUBLE(20, 5),
 		`Log speed [knots]` 	DOUBLE(20, 5),
 		`Shaft generator power [kW]` 	DOUBLE(20, 5),
@@ -104,6 +106,21 @@ BEGIN
 		`DG Group 1 No. Running Actual [-]` 	DOUBLE(20, 5),
 		`DG Group 1 No. Running Recommended [-]` 	DOUBLE(20, 5),
 		`DG Potential Savings 2 [%]` 	DOUBLE(20, 5),
-		`ME Power [KW]` 	DOUBLE(20, 5)
+		`ME Power [KW]` 	DOUBLE(20, 5),
+        `DG4 Power [kW]` 	DOUBLE(20, 5),
+        `Vessel progress [nm]` 	DOUBLE(20, 5),
+        `CURRENT_RPM_OF_ENGINE []`  	DOUBLE(20, 5),
+        `WHR - ST speed []`  	DOUBLE(20, 5),
+        `WHR - HP FW pressure []`  	DOUBLE(20, 5),                        
+		`WHR - HP ST steam dump valve available power []`  	DOUBLE(20, 5),
+		`WHR - LP EVA water-steam pressure []`  	DOUBLE(20, 5),
+        `ME Load measured [%]`  	DOUBLE(20, 5),                           
+		`OO Conversion Pitch 1 [%]`  	DOUBLE(20, 5),                      
+		`OO Conversion RPM 1 [rpm]`  	DOUBLE(20, 5),                      
+		`OO Conversion Speed [knots]`  	DOUBLE(20, 5),                    
+		`OO Conversion Trim [m]`  	DOUBLE(20, 5),
+        `WHR - HP EVA water-steam pressure []`        	DOUBLE(20, 5),     
+		`WHR - LP ST steam dump valve available power []`  	DOUBLE(20, 5),                          
+		`WHR - ST water-steam outlet temperature []`  	DOUBLE(20, 5)
 										);
 END;

@@ -123,6 +123,21 @@ removeInvalidRecords: check for entirely NULL rows ?
 # ChauvenetFilt: verify no change after data with too-high frequency input, standard compliance updated
 # Validated: verify no change after data with too-high frequency input, standard compliance updated
 
+
+# Pull "Vessel Performance" into Database repo, copy methods into cV (history
+# of cVA will exist in repo along with others, but won't "follow" the 
+# methods from one file to the other. Commit message stating that methods 
+# are being moved will have to do).
+# Copy methods from cVA to cV
+# Copy methods from cHPDB to cV
+	Both methods return cV array, either row vect if no DD data in DB or 
+	matrix otherwise
+# Create property DryDockInterval for cV
+# Write iteration methods for cV
+# Replace existing iteration calls with new ones
+# Write constructor sub call to detect file inputs or IMO inputs
+Write cV.loadFilePerformance
+
 updateFromBunkerNote: Include warnings if some BDN numbers not found in BunkerDeliveryNote table?
 Extract "timestep" into high-level metadata table
 
@@ -180,3 +195,24 @@ Procedure to call ISO19030 with input filters, add data to performance.
 Allow MATLAB table output from SQL queries
 Write code for (re-)building DB from downloaded files
 Write timestep into metadata table for each vessel, parameter
+
+Apply appropriate iteration to methods:
+  regressions
+  movingAverages
+
+# cVA.filterOnUniqueIndex: allow only unique values, remove corresponding 
+# non-unique values in other variables
+Store variable names defined for files
+isFileDNVGLRaw: detect if file contains data from DNVGL "Manage Data"
+isFileDNVGLProcessed: detect if file contains data from EI widgets
+fileTypes: function to determine type of each element of cellstr FILENAME
+loadDNVGLRaw: return IMO of contained vessels as additional output
+cMySQL.executeIfOneOutput: modify to (include) zero output, if class 
+	remains handle.
+cVessel.readFromVessels: populate data from table "vessels"
+cVessel.readFromTable: match object properties to table columns
+cV.constructor: error if one name and multiple imo input
+# cV.iterReset: if finished, reset Iter to zero
+cV.cV: include input to specify loading function
+# write cV.iterReset after all while ~obj.iterFinished so that cV can be 
+# 	value class again.
