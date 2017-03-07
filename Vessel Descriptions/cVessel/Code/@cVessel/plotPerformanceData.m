@@ -183,3 +183,4 @@ while ~obj.iterFinished
    title(titleStr, 'fontsize', titleFontsz);
    
 end
+obj = obj.iterReset;

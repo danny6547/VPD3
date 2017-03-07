@@ -53,3 +53,4 @@ while ~obj.iterFinished
     markStruct(ii).PerformanceMark = grade_s;
     obj(ii).PerformanceMark = grade_s;
 end
+obj = obj.iterReset;

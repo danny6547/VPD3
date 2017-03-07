@@ -58,3 +58,4 @@ while ~obj.iterFinished
    % Assign
    obj(ii).AnnualSavingsDD = savingsDDStruc(ii);
 end
+obj = obj.iterReset;

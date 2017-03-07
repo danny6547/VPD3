@@ -89,3 +89,4 @@ while ~obj.iterFinished
    guarStruct(ii).RelativeDifference = reldif;
    obj(ii).GuaranteeDurations = guarStruct(ii);
 end
+obj = obj.iterReset;

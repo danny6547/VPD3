@@ -103,3 +103,4 @@ while ~obj.iterFinished
     % Re-assign into Outputs
     obj(ii).InServicePerformance = Duration_st;
 end
+obj = obj.iterReset;

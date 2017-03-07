@@ -236,3 +236,4 @@ while ~obj.iterFinished
     avgStruct(ii).Duration = Duration_st;
     obj(ii).MovingAverages = avgStruct(ii);
 end
+obj = obj.iterReset;

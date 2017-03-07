@@ -60,3 +60,4 @@ while ~obj.iterFinished
        obj(ii).DryDockingPerformance = ddPer(ddPeri);
 %    end
 end
+obj = obj.iterReset;

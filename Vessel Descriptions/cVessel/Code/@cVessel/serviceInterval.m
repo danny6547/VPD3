@@ -68,3 +68,4 @@ while ~obj.iterFinished
    obj(ii).ServiceInterval = numdays;
    
 end
+obj = obj.iterReset;

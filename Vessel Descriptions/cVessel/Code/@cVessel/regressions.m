@@ -42,4 +42,5 @@ while ~obj.iterFinished
     regStruct(ii).Model = 'polynomial';
     obj(ii).Regression = regStruct(ii);
 end
+obj = obj.iterReset;
 end
