@@ -634,6 +634,12 @@ classdef cVessel < cMySQL % & handle
         
         end
         
+        function obj = readFromTable(obj, table)
+        % readFromTable Assign object properties from table column values
+        
+            
+        
+        end
 %        function obj = fitSpeedPower(obj, speed, power, varargin)
 %        % fitSpeedPower Fit speed, power data to model
 %        

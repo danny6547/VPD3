@@ -3,6 +3,80 @@ classdef testcVessel < matlab.unittest.TestCase
 %   Detailed explanation goes here
 
 properties
+    
+    Connection = [];
+    MySQL = cMySQL();
+    
+    ReadFromTableInputs = { {'testReadFrom'} };
+    ReadFromTableVales = struct('Owner', {'A', 'B'}, ...
+                                'Draft_Design', num2cell([1.2345, -1]));
+    
+end
+
+methods(TestClassSetup)
+    
+    function connect(testcase)
+    % Create connection object to test DB
+    
+        testcase.Connection = cConnectMySQLDB('Server', 'localhost',...
+                                        'Database',  'hull_performance',...
+                                        'UserID',  'root',...
+                                        'Password',  'HullPerf2016'...
+                                              );
+    end
+    
+%     function createTestDBRequirements(testcase)
+%     % Check that all DB components exist and if not, create them.
+%     
+%         
+%     
+%     end
+    
+    function requirementsReadFromTable(testcase)
+    % Create DB requirements for method testreadFromTable
+    
+        table = 'testReadFrom';
+        cols{1} = 'Owner';
+        cols{2} = 'Draft_Design';
+        types{1} = 'TEXT';
+        types{2} = 'DOUBLE(10, 5)';
+        
+        tblExist_ch = ['Table ' table ' already exists'];
+        
+        % Drop table
+        testcase.MySQL.drop('TABLE', table, true);
+        
+        % Create table
+        try
+            testcase.MySQL.createTable(table, cols, types);
+            
+        catch e
+            
+            if isempty(strfind(e.message, tblExist_ch))
+                
+                rethrow(e);
+            end
+        end
+        
+        % Insert data
+        testcase.MySQL.insertValues(table, cols, ...
+            [{testcase.ReadFromTableVales.Owner}', ...
+            {testcase.ReadFromTableVales.Draft_Design}'])
+        
+    end
+    
+end
+
+methods(TestClassTeardown)
+    
+    function disconnect(testcase)
+    % Create connection object to test DB
+    
+        testcase.Connection = testcase.Connection.disconnect;
+        testcase.Connection = [];
+    
+    end
+    
 end
 
 methods(Test)
@@ -47,11 +121,41 @@ methods(Test)
     testcase.verifyEqual(actUni, expUni, msgUni);
     
     end
+    
+    function testreadFromTable(testcase)
+    % Test that method will read from DB table into object properties
+    % 1. Test that, for the given database, method will read values from
+    % the table given by input string TABLE into the properties of object
+    % given by OBJ which match the column names of TABLE.
+    % 2. Test that, when input IDENTIFIER is given, the length of the 
+    % output will equal the number of unique elements of the field matching
+    % INDENTIFIER in TABLE, and all elements of COLUMNS will be added as
+    % vectors to the appropriate properties of OBJ.
+    
+    % 1
+    % Input
+    ownerAB_c = {testcase.ReadFromTableVales.Owner};
+    draft_v = {testcase.ReadFromTableVales.Draft_Design};
+    
+    expObj = cVessel();
+    actObj = cVessel();
+    for ii = 1:length(ownerAB_c)
+    
+        expObj(ii).Owner = ownerAB_c{ii};
+        expObj(ii).Draft_Design = draft_v(ii);
+    end
+    
+    inputs_c = testcase.ReadFromTableInputs{1};
+    
+    % Execute
+    actObj = actObj.readFromTable(inputs_c{:});
+    
+    % Verify
+    msgObj = ['Objects properties which match those of the fields of '...
+        'TABLE are expected to be populated with data from TABLE.'];
+    testcase.verifyEqual(actObj, expObj, msgObj);
+    
+    end
 end
 
-% Input
-
-% Execute
-
-% Verify
 end
