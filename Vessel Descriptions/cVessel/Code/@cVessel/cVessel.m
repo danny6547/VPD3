@@ -690,6 +690,35 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
         end
         
         end
+        
+        function insertIntoTable(obj, table)
+        % insertIntoTable Insert object property values in table
+        
+        % Get matching field names
+        matchFields_c = matchingFields(obj, table);
+        
+        % Create cell matrix of data, repeating where necessary
+        data_c = cell(0, numel(matchFields_c));
+        tempData_c = cell(1, numel(matchFields_c));
+        for oi = 1:numel(obj)
+            
+            currData_c = cell(1, numel(matchFields_c));
+            for mi = 1:length(matchFields_c)
+                
+                currField = matchFields_c{mi};
+                tempData_c{mi} = obj(oi).(currField);
+            end
+            
+            [currData_c{:}] = obj.repeatInputs(tempData_c);
+            currData_c = cellfun(@(x) x(:), currData_c, 'Uni', 0);
+            data_c = [data_c; currData_c];
+        end
+        
+        % Insert matrix of data into table
+        obj(1).insertValuesDuplicate(table, matchFields_c, data_c);
+        
+        end
+        
 %        function obj = fitSpeedPower(obj, speed, power, varargin)
 %        % fitSpeedPower Fit speed, power data to model
 %        
@@ -704,13 +733,6 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
 %        
 %            
 %        end
-
-        function insertIntoTable(obj, table)
-        % insertIntoTable Insert object property values in table
-        
-        
-        
-        end
     end
     
     methods(Static)
@@ -723,17 +745,21 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
         empty_l = cellfun(@isempty, inputs);
         emptyOrScalar_l = scalars_l | empty_l;
         allSizes_c = cellfun(@size, inputs(~emptyOrScalar_l), 'Uni', 0);
-        szMat_c = allSizes_c(1);
-        chkSize_c = repmat(szMat_c, size(allSizes_c));
-        if ~isequal(allSizes_c, chkSize_c)
-           errid = 'DBTab:SizesMustMatch';
-           errmsg = 'All inputs must be the same size, or any can be scalar';
-           error(errid, errmsg);
-        end
         
-        % Repeat scalars
-        inputs(scalars_l) = cellfun(@(x) repmat(x, chkSize_c{1}),...
-            inputs(scalars_l), 'Uni', 0);
+        if ~isempty(allSizes_c)
+        
+            szMat_c = allSizes_c(1);
+            chkSize_c = repmat(szMat_c, size(allSizes_c));
+            if ~isequal(allSizes_c, chkSize_c)
+               errid = 'DBTab:SizesMustMatch';
+               errmsg = 'All inputs must be the same size, or any can be scalar';
+               error(errid, errmsg);
+            end
+
+            % Repeat scalars
+            inputs(scalars_l) = cellfun(@(x) repmat(x, chkSize_c{1}),...
+                inputs(scalars_l), 'Uni', 0);
+        end
         
         % Assign outputs
         varargout = inputs;
@@ -801,6 +827,15 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
             end
         end
         
+        function match = matchingFields(obj, table)
+        % matchingFields Fields of table which match properties of object
+            
+            temp_st = obj(1).execute(['DESCRIBE ', table]);
+            fields_c = temp_st.field;
+            prop_c = properties(obj);
+            match = intersect(fields_c, prop_c);
+        
+        end
     end
     
     methods
