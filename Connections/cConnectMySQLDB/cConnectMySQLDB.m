@@ -61,11 +61,16 @@ classdef cConnectMySQLDB
        function obj = disconnect(obj)
        % disconnect Close connection to database if it exists
            
-        if ~isempty(obj.Connection)
+        if ~isempty(obj.Connection) && ismethod(obj.Connection, 'release')
             
             obj.Connection.release;
             obj.Connection = [];
             
+        end
+        
+        if ~isempty(obj.Connection)
+            
+            obj.Connection = [];
         end
        end
        

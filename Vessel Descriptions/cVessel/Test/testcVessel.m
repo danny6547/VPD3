@@ -4,12 +4,25 @@ classdef testcVessel < matlab.unittest.TestCase
 
 properties
     
-    Connection = [];
     MySQL = cMySQL();
-    
-    ReadFromTableInputs = { {'testReadFrom'} };
+    ReadFromTableInputs = { {'testReadFrom', 'IMO_Vessel_Number'} };
     ReadFromTableVales = struct('Owner', {'A', 'B'}, ...
-                                'Draft_Design', num2cell([1.2345, -1]));
+                                'Draft_Design', num2cell([1.2345, -1]),...
+                                'IMO_Vessel_Number', num2cell([1234567, 7654321]));
+    
+end
+
+methods
+    
+    function vessel = testVessel(testcase)
+    % Return cVessel object connected to test database
+    
+        vessel = cVessel();
+        vessel = vessel.test;
+        vessel = vessel.disconnect;
+        vessel.Connection = testcase.MySQL.Connection;
+        
+    end
     
 end
 
@@ -18,19 +31,9 @@ methods(TestClassSetup)
     function connect(testcase)
     % Create connection object to test DB
     
-        testcase.Connection = cConnectMySQLDB('Server', 'localhost',...
-                                        'Database',  'hull_performance',...
-                                        'UserID',  'root',...
-                                        'Password',  'HullPerf2016'...
-                                              );
+        testcase.MySQL = testcase.MySQL.test;
+        
     end
-    
-%     function createTestDBRequirements(testcase)
-%     % Check that all DB components exist and if not, create them.
-%     
-%         
-%     
-%     end
     
     function requirementsReadFromTable(testcase)
     % Create DB requirements for method testreadFromTable
@@ -38,8 +41,10 @@ methods(TestClassSetup)
         table = 'testReadFrom';
         cols{1} = 'Owner';
         cols{2} = 'Draft_Design';
+        cols{3} = 'IMO_Vessel_Number';
         types{1} = 'TEXT';
         types{2} = 'DOUBLE(10, 5)';
+        types{3} = 'INT(7)';
         
         tblExist_ch = ['Table ' table ' already exists'];
         
@@ -61,7 +66,8 @@ methods(TestClassSetup)
         % Insert data
         testcase.MySQL.insertValues(table, cols, ...
             [{testcase.ReadFromTableVales.Owner}', ...
-            {testcase.ReadFromTableVales.Draft_Design}'])
+            {testcase.ReadFromTableVales.Draft_Design}', ...
+            {testcase.ReadFromTableVales.IMO_Vessel_Number}'])
         
     end
     
@@ -72,8 +78,7 @@ methods(TestClassTeardown)
     function disconnect(testcase)
     % Create connection object to test DB
     
-        testcase.Connection = testcase.Connection.disconnect;
-        testcase.Connection = [];
+        testcase.MySQL = testcase.MySQL.disconnect;
     
     end
     
@@ -126,26 +131,30 @@ methods(Test)
     % Test that method will read from DB table into object properties
     % 1. Test that, for the given database, method will read values from
     % the table given by input string TABLE into the properties of object
-    % given by OBJ which match the column names of TABLE.
-    % 2. Test that, when input IDENTIFIER is given, the length of the 
-    % output will equal the number of unique elements of the field matching
-    % INDENTIFIER in TABLE, and all elements of COLUMNS will be added as
-    % vectors to the appropriate properties of OBJ.
+    % given by OBJ which match the column names of TABLE at the rows where
+    % values match those of OBJ property IDENTIFIER.
     
     % 1
     % Input
-    ownerAB_c = {testcase.ReadFromTableVales.Owner};
-    draft_v = {testcase.ReadFromTableVales.Draft_Design};
+    expObj = testcase.testVessel;
+    expObj = repmat(expObj, size(testcase.ReadFromTableVales));
+    actObj = testcase.testVessel;
+    value_c = struct2cell(testcase.ReadFromTableVales);
+    prop_c = fieldnames(testcase.ReadFromTableVales);
     
-    expObj = cVessel();
-    actObj = cVessel();
-    for ii = 1:length(ownerAB_c)
-    
-        expObj(ii).Owner = ownerAB_c{ii};
-        expObj(ii).Draft_Design = draft_v(ii);
+    for ii = 1:numel(testcase.ReadFromTableVales)
+        for pi = 1:length(prop_c)
+            
+            expObj(ii).(prop_c{pi}) = value_c{pi, ii};
+        end
     end
     
     inputs_c = testcase.ReadFromTableInputs{1};
+    actObj = repmat(actObj, [1, 2]);
+    actObj(1).IMO_Vessel_Number = ...
+        testcase.ReadFromTableVales(1).IMO_Vessel_Number;
+    actObj(2).IMO_Vessel_Number = ...
+        testcase.ReadFromTableVales(2).IMO_Vessel_Number;
     
     % Execute
     actObj = actObj.readFromTable(inputs_c{:});
@@ -155,6 +164,12 @@ methods(Test)
         'TABLE are expected to be populated with data from TABLE.'];
     testcase.verifyEqual(actObj, expObj, msgObj);
     
+    end
+    
+    function testinsertIntoTable(testcase)
+    % Test that method will insert data from object into table
+    % 
+        
     end
 end
 

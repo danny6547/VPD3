@@ -634,10 +634,60 @@ classdef cVessel < cMySQL % & handle
         
         end
         
-        function obj = readFromTable(obj, table)
+        function obj = readFromTable(obj, table, identifier)
         % readFromTable Assign object properties from table column values
         
+        % Input
+        validateattributes(table, {'char'}, {'vector'}, ...
+            'cVessel.readFromTable', 'table', 2);
+        validateattributes(identifier, {'char'}, {'vector'}, ...
+            'cVessel.readFromTable', 'identifier', 3);
+        
+        % Get matching field names and object properties
+        temp_st = obj(1).execute(['DESCRIBE ', table]);
+        fields_c = temp_st.field;
+        prop_c = properties(obj);
+        matchField_c = intersect(fields_c, prop_c);
+        
+        % Error if identifier is not in both fields and properties
+        if ~ismember(identifier, matchField_c)
             
+            errid = 'readTable:IdentifierMissing';
+            errmsg = ['Input IDENTIFIER must be both a property of OBJ '...
+                'and a field of table TABLE.'];
+            error(errid, errmsg);
+        end
+        
+        % Select table where rows match identifier values in object
+        objID_c = {obj.(identifier)};
+        objID_cs = cellfun(@num2str, objID_c, 'Uni', 0);
+        objIDvals_ch = obj(1).colList(objID_cs);
+        [obj(1), sqlWhereIn_ch] = obj(1).combineSQL('WHERE', identifier, 'IN',...
+            objIDvals_ch);
+        [obj(1), sqlSelect] = obj(1).select(table, '*');
+        [obj(1), sqlSelect] = obj(1).determinateSQL(sqlSelect);
+        [obj(1), sqlSelectWhereIn_ch] = obj(1).combineSQL(sqlSelect, sqlWhereIn_ch);
+        table_st = obj(1).execute(sqlSelectWhereIn_ch);
+        
+        % Get indices to OBJ identified in table
+        lowerId_ch = lower(identifier);
+        tableID_c = table_st.(lowerId_ch);
+        [obj_l, obj_i] = ismember([tableID_c{:}], [objID_c{:}]);
+        nID = sum(obj_l);
+        
+        % Iterate over properties of matching obj and assign values
+        for ii = 1:length(matchField_c)
+            
+            currField = matchField_c{ii};
+            lowerField = lower(currField);
+            currData = table_st.(lowerField);
+            
+            for oi = 1:nID
+                
+                currObji = obj_i(oi);
+                obj(currObji).(currField) = currData{oi};
+            end
+        end
         
         end
 %        function obj = fitSpeedPower(obj, speed, power, varargin)
