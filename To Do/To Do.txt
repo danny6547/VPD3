@@ -210,9 +210,10 @@ loadDNVGLRaw: return IMO of contained vessels as additional output
 cMySQL.executeIfOneOutput: modify to (include) zero output, if class 
 	remains handle.
 cVessel.readFromVessels: populate data from table "vessels"
-cVessel.readFromTable: match object properties to table columns
+# cVessel.readFromTable: match object properties to table columns
 cV.constructor: error if one name and multiple imo input
 # cV.iterReset: if finished, reset Iter to zero
 cV.cV: include input to specify loading function
 # write cV.iterReset after all while ~obj.iterFinished so that cV can be 
 # 	value class again.
+cVessel.insertIntoTable: match object properties to table columns

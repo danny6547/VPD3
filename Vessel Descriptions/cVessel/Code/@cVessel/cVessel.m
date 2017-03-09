@@ -1,4 +1,4 @@
-classdef cVessel < cMySQL % & handle
+classdef cVessel < cMySQL & cVesselWindCoefficient
     %CVESSEL Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -704,6 +704,13 @@ classdef cVessel < cMySQL % & handle
 %        
 %            
 %        end
+
+        function insertIntoTable(obj, table)
+        % insertIntoTable Insert object property values in table
+        
+        
+        
+        end
     end
     
     methods(Static)

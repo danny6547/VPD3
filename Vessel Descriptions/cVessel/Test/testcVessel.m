@@ -9,6 +9,7 @@ properties
     ReadFromTableVales = struct('Owner', {'A', 'B'}, ...
                                 'Draft_Design', num2cell([1.2345, -1]),...
                                 'IMO_Vessel_Number', num2cell([1234567, 7654321]));
+    InsertIntoTableInputs = { {'testReadFrom' } };
     
 end
 
@@ -21,7 +22,6 @@ methods
         vessel = vessel.test;
         vessel = vessel.disconnect;
         vessel.Connection = testcase.MySQL.Connection;
-        
     end
     
 end
@@ -46,7 +46,7 @@ methods(TestClassSetup)
         types{2} = 'DOUBLE(10, 5)';
         types{3} = 'INT(7)';
         
-        tblExist_ch = ['Table ' table ' already exists'];
+        tblExist_ch = ['Table ''' lower(table) ''' already exists'];
         
         % Drop table
         testcase.MySQL.drop('TABLE', table, true);
@@ -71,6 +71,23 @@ methods(TestClassSetup)
         
     end
     
+    function requirementsInsertIntoTable(testcase)
+    % Create DB requirements for method testinsertIntoTable
+        
+        table = 'testReadFrom';
+        cols{1} = 'Owner';
+        cols{2} = 'Draft_Design';
+        cols{3} = 'IMO_Vessel_Number';
+        types{1} = 'TEXT';
+        types{2} = 'DOUBLE(10, 5)';
+        types{3} = 'INT(7)';
+        
+        % Drop table
+        testcase.MySQL.drop('TABLE', table, true);
+        
+        % Create table
+        testcase.MySQL.createTable(table, cols, types);
+    end
 end
 
 methods(TestClassTeardown)
@@ -168,9 +185,42 @@ methods(Test)
     
     function testinsertIntoTable(testcase)
     % Test that method will insert data from object into table
-    % 
-        
+    % 1. Test that method will, for each property of OBJ matching the field
+    % names of input TABLE, insert values into the appropriate rows.
+    
+    % 1
+    % Input
+    expTable = struct2table(testcase.ReadFromTableVales);
+    testDBTable = testcase.ReadFromTableInputs{1}{1};
+    inputObj = testcase.testVessel;
+    prop_c = fieldnames(testcase.ReadFromTableVales);
+    value_c = struct2cell(testcase.ReadFromTableVales);
+    
+    for ii = 1:numel(testcase.ReadFromTableVales)
+        for pi = 1:length(prop_c)
+            
+            inputObj(ii).(prop_c{pi}) = value_c{pi, ii};
+        end
+    end
+    
+    input_c = testcase.InsertIntoTableInputs{1};
+    
+    % Execute
+    inputObj.insertIntoTable(input_c{:});
+    
+    % Verify
+    actTable = testcase.MySQL.select(testDBTable, ...
+        expTable.Properties.VariableNames);
+    msgTable = ['Data read from DB table is expected to match that in input'...
+        ' OBJ properties.'];
+    testcase.verifyEqual(actTable, expTable, msgTable);
+    
     end
 end
 
+% Input
+
+% Execute
+
+% Verify
 end
