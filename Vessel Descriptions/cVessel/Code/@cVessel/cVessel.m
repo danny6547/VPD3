@@ -253,53 +253,55 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
        function obj = insertIntoVessels(obj)
        % insertIntoVessels Insert vessel data into table 'Vessels'.
        
-       % Table of vessel data
-       numShips = numel(obj);
-       numColumns = 11;
-       data = cell(numShips, numColumns);
        
-       for ii = 1:numel(obj)
-           
-           data{ii, 1} = obj(ii).IMO_Vessel_Number;
-           data{ii, 2} = obj(ii).Name;
-           data{ii, 3} = obj(ii).Owner;
-           data{ii, 4} = obj(ii).Engine;
-           data{ii, 5} = obj(ii).Wind_Resist_Coeff_Dir;
-           data{ii, 6} = obj(ii).Transverse_Projected_Area_Design;
-           data{ii, 7} = obj(ii).Block_Coefficient;
-           data{ii, 8} = obj(ii).Breadth_Moulded;
-           data{ii, 9} = obj(ii).Length_Overall;
-           data{ii, 10} = obj(ii).Draft_Design;
-           data{ii, 11} = obj(ii).LBP;
-       end
+       obj = obj.insertIntoTable('Vessels');
        
-       
-       % Prepate inputs to insert data without duplicates
-       otherCols_c = {'Name', ...
-                        'Owner', ...
-                        'Engine_Model', ...
-                        'Wind_Resist_Coeff_Dir', ...
-                        'Transverse_Projected_Area_Design', ...
-                        'Block_Coefficient', ...
-                        'Breadth_Moulded', ...
-                        'Length_Overall', ...
-                        'Draft_Design', ...
-                        'LBP'};
-%        format_s = '%u, %s, %s, %s, %f, %f, %f, %f, %f, %f, %f';
-       
-       % Remove any columns with any empty values
-       cols_c = [{'IMO_Vessel_Number'}, otherCols_c];
-       emptyMat_l = cellfun(@isempty, data);
-       if isvector(emptyMat_l)
-           emptyVect_l = emptyMat_l;
-       else
-           emptyVect_l = any(emptyMat_l);
-       end
-       cols_c(emptyVect_l) = [];
-       data(emptyVect_l) = [];
-       
-       obj = obj.insertValuesDuplicate('Vessels', cols_c, data);
-       
+%        % Table of vessel data
+%        numShips = numel(obj);
+%        numColumns = 11;
+%        data = cell(numShips, numColumns);
+%        
+%        for ii = 1:numel(obj)
+%            
+%            data{ii, 1} = obj(ii).IMO_Vessel_Number;
+%            data{ii, 2} = obj(ii).Name;
+%            data{ii, 3} = obj(ii).Owner;
+%            data{ii, 4} = obj(ii).Engine;
+%            data{ii, 5} = obj(ii).Wind_Resist_Coeff_Dir;
+%            data{ii, 6} = obj(ii).Transverse_Projected_Area_Design;
+%            data{ii, 7} = obj(ii).Block_Coefficient;
+%            data{ii, 8} = obj(ii).Breadth_Moulded;
+%            data{ii, 9} = obj(ii).Length_Overall;
+%            data{ii, 10} = obj(ii).Draft_Design;
+%            data{ii, 11} = obj(ii).LBP;
+%        end
+%        
+%        
+%        % Prepate inputs to insert data without duplicates
+%        otherCols_c = {'Name', ...
+%                         'Owner', ...
+%                         'Engine_Model', ...
+%                         'Wind_Resist_Coeff_Dir', ...
+%                         'Transverse_Projected_Area_Design', ...
+%                         'Block_Coefficient', ...
+%                         'Breadth_Moulded', ...
+%                         'Length_Overall', ...
+%                         'Draft_Design', ...
+%                         'LBP'};
+% %        format_s = '%u, %s, %s, %s, %f, %f, %f, %f, %f, %f, %f';
+%        
+%        % Remove any columns with any empty values
+%        cols_c = [{'IMO_Vessel_Number'}, otherCols_c];
+%        emptyMat_l = cellfun(@isempty, data);
+%        if isvector(emptyMat_l)
+%            emptyVect_l = emptyMat_l;
+%        else
+%            emptyVect_l = any(emptyMat_l);
+%        end
+%        cols_c(emptyVect_l) = [];
+%        data(emptyVect_l) = [];
+%        
+%        obj = obj.insertValuesDuplicate('Vessels', cols_c, data);
 %        insertWithoutDuplicates(data, 'Vessels', 'id', 'IMO_Vessel_Number',...
 %            otherCols_c, format_s);
        
@@ -668,6 +670,12 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
         [obj(1), sqlSelect] = obj(1).determinateSQL(sqlSelect);
         [obj(1), sqlSelectWhereIn_ch] = obj(1).combineSQL(sqlSelect, sqlWhereIn_ch);
         table_st = obj(1).execute(sqlSelectWhereIn_ch);
+        if isempty(table_st)
+            
+            errid = 'readTable:IdentifierDataMissing';
+            errmsg = 'No data could be read for the values of IDENTIFIER.';
+            error(errid, errmsg);
+        end
         
         % Get indices to OBJ identified in table
         lowerId_ch = lower(identifier);
