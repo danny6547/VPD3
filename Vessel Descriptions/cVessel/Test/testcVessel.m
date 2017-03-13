@@ -9,7 +9,7 @@ properties
     ReadFromTableVales = struct('Owner', {'A', 'B'}, ...
                                 'Draft_Design', num2cell([1.2345, -1]),...
                                 'IMO_Vessel_Number', num2cell([1234567, 7654321]));
-    InsertIntoTableInputs = { {'testReadFrom' } };
+    InsertIntoTableInputs = { {'testInsertInto' } };
     
 end
 
@@ -22,17 +22,6 @@ methods
         vessel = vessel.test;
         vessel = vessel.disconnect;
         vessel.Connection = testcase.MySQL.Connection;
-    end
-    
-end
-
-methods(TestClassSetup)
-    
-    function connect(testcase)
-    % Create connection object to test DB
-    
-        testcase.MySQL = testcase.MySQL.test;
-        
     end
     
     function requirementsReadFromTable(testcase)
@@ -74,7 +63,7 @@ methods(TestClassSetup)
     function requirementsInsertIntoTable(testcase)
     % Create DB requirements for method testinsertIntoTable
         
-        table = 'testReadFrom';
+        table = testcase.InsertIntoTableInputs{1}{1};
         cols{1} = 'Owner';
         cols{2} = 'Draft_Design';
         cols{3} = 'IMO_Vessel_Number';
@@ -87,6 +76,25 @@ methods(TestClassSetup)
         
         % Create table
         testcase.MySQL.createTable(table, cols, types);
+    end
+    
+end
+
+methods(TestClassSetup)
+    
+    function connect(testcase)
+    % Create connection object to test DB
+    
+        testcase.MySQL = testcase.MySQL.test;
+        
+    end
+    
+    function requirements(testcase)
+    % Ensure requirements for all methods are met
+    
+        requirementsReadFromTable(testcase);
+        requirementsInsertIntoTable(testcase);
+        
     end
 end
 
@@ -124,14 +132,14 @@ methods(Test)
     inputObj = cVessel('ShipData', shipdata, 'Name', 'Example Vessel');
     expUni = inputObj;
     actUni = inputObj;
-    [uniqueData, uniI] = unique(nonUniDate);
+    uniqueData = unique(nonUniDate);
     [expUni.(inputIndex)] = deal(uniqueData);
     
-    for ii = 1:numel(inputProp)
-        
-        inData = expUni.(inputProp{ii});
-        [expUni.(inputProp{ii})] = deal(inData(uniI));
-    end
+%     for ii = 1:numel(inputProp)
+%         
+%         inData = expUni.(inputProp{ii});
+%         [expUni.(inputProp{ii})] = deal(inData(uniI));
+%     end
     expUni = expUni.iterReset;
     
     % Execute
