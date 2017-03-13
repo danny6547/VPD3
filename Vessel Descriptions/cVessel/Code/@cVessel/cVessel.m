@@ -1,4 +1,4 @@
-classdef cVessel < cMySQL & cVesselWindCoefficient
+classdef cVessel < cMySQL & cVesselWindCoefficient & cSpeedPower
     %CVESSEL Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -312,7 +312,7 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
        
        
        if isempty(obj.Engine)
-           
+          
           errid = 'VesselPer:EngineNeeded';
           errmsg = ['Vessel Engine needed before SFOC data can be inserted'...
               ' into database.'];
@@ -327,31 +327,43 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
        % Call SQL
        obj = obj.insertValuesDuplicate();
        
+       
+       % 
+       
+       
        end
        
        function obj = insertIntoSpeedPower(obj, speed, power, displacement, trim)
        % insertIntoSpeedPower Insert speed, power, draft, trim data.
        
-       % Repeat scalar inputs to match uniform size (call SPCoeffs)
-       imo = repmat(obj.IMO_Vessel_Number, size(speed, 1));
+%        % Repeat scalar inputs to match uniform size (call SPCoeffs)
+%        imo = repmat(obj.IMO_Vessel_Number, size(speed, 1));
+%        
+%        data_c = arrayfun(@(x) [repmat(x, size(speed, 1), 1), ...
+%            speed, displacement, trim, power]', [obj.IMO_Vessel_Number],...
+%            'Uni', 0);
+%        data = [data_c{:}]';
+%        
+%        % Insert
+% %        data = [imo, speed, displacement, trim, power];
+% %        toTable = 'speedPower';
+% %        key = 'id';
+% %        uniqueColumns = {'IMO_Vessel_Number', 'Speed', 'Displacement', 'Trim', };
+% %        otherColumns = {'Power'};
+% %        format_s = '%u, %f, %f, %f, %f';
+%        
+%        table = 'speedPower';
+%        columns_c = {'IMO_Vessel_Number', 'Speed', 'Displacement', 'Trim',...
+%            'Power'};
+%        obj = obj.insertValuesDuplicate(table, columns_c, data);
        
-       data_c = arrayfun(@(x) [repmat(x, size(speed, 1), 1), ...
-           speed, displacement, trim, power]', [obj.IMO_Vessel_Number],...
-           'Uni', 0);
-       data = [data_c{:}]';
-       
-       % Insert
-%        data = [imo, speed, displacement, trim, power];
-%        toTable = 'speedPower';
-%        key = 'id';
-%        uniqueColumns = {'IMO_Vessel_Number', 'Speed', 'Displacement', 'Trim', };
-%        otherColumns = {'Power'};
-%        format_s = '%u, %f, %f, %f, %f';
-       
-       table = 'speedPower';
-       columns_c = {'IMO_Vessel_Number', 'Speed', 'Displacement', 'Trim',...
-           'Power'};
-       obj = obj.insertValuesDuplicate(table, columns_c, data);
+       [speed, power, displacement, trim] = repeatInputs(speed, power, ...
+           displacement, trim);
+       obj.Speed = speed;
+       obj.Power = power;
+       obj.Displacement = displacement;
+       obj.Trim = trim;
+       obj = obj.insertIntoTable('speedPower');
 %        insertWithoutDuplicates(data, toTable, key, uniqueColumns, ...
 %            otherColumns, format_s);
        
