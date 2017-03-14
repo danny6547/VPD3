@@ -11,8 +11,8 @@ properties
                                 'IMO_Vessel_Number', num2cell([1234567, 7654321]));
     InsertIntoTableInputs = { {'testInsertInto' } };
     InsertIntoDryDockDatesValues = struct('IMO_Vessel_Number', num2cell([1234567, 7654321])', ...
-                                'StartDate', cellstr(datestr(now:now+1, 'yyyy-mm-dd HH:MM')),...
-                                'EndDate', cellstr(datestr(now+2:now+3, 'yyyy-mm-dd HH:MM')));
+                                'StartDate', cellstr(datestr(now:now+1, 'yyyy-mm-dd')),...
+                                'EndDate', cellstr(datestr(now+2:now+3, 'yyyy-mm-dd')));
     
 end
 
@@ -252,8 +252,22 @@ methods(Test)
     expTable = struct2table(testcase.InsertIntoDryDockDatesValues);
     testDBTable = 'DryDockDates';
     inputObj = testcase.testVessel;
-    inputObj.DryDockDates = inputObj;
-    [inputObj, ~, sql] = inputObj.select(testDBTable, '*');
+    
+    numDDi = numel(testcase.InsertIntoDryDockDatesValues);
+    inputDDD(numDDi) = cVesselDryDockDates();
+    for si = 1:numDDi
+        
+        inputDDD(si).IMO_Vessel_Number = ...
+            testcase.InsertIntoDryDockDatesValues(si).IMO_Vessel_Number;
+        inputDDD(si) = inputDDD(si).assignDates(...
+            testcase.InsertIntoDryDockDatesValues(si).StartDate,...
+            testcase.InsertIntoDryDockDatesValues(si).EndDate, ...
+            'yyyy-mm-dd');
+    end
+    inputObj.DryDockDates = inputDDD;
+    
+    [inputObj, ~, sql] = inputObj.select(testDBTable, ...
+        {'imo_vessel_number', 'startdate', 'enddate'});
     [~, sql] = inputObj.determinateSQL(sql);
     sql = [sql, ' ORDER BY id DESC LIMIT 2;'];
     
@@ -267,6 +281,11 @@ methods(Test)
     actTable = cell2table(outC, 'VariableNames', fieldnames(outSt));
     expTable.Properties.VariableNames = ...
         lower(expTable.Properties.VariableNames);
+    
+    [inputDDD(:).DateStrFormat] = deal('dd-mm-yyyy');
+    expTable.startdate = {inputDDD.StartDate}';
+    expTable.enddate = {inputDDD.EndDate}';
+    expTable = flipud(expTable);
     msgTable = 'Table of dry docking dates should match that input.';
     testcase.verifyEqual(actTable, expTable, msgTable);
     

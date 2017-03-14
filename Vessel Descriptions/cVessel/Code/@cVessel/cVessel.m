@@ -380,7 +380,9 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
        function obj = insertIntoDryDockDates(obj)
        % insertIntoDryDocking Insert data into table "DryDockDates"
        
-%        insertIntoTable
+       dataObj = [obj.DryDockDates];
+       tab = 'DryDockDates';
+       obj.insertIntoTable(tab, dataObj);
        
        end
        
@@ -720,26 +722,35 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
         
         end
         
-        function insertIntoTable(obj, table)
+        function insertIntoTable(obj, table, varargin)
         % insertIntoTable Insert object property values in table
         
+        % Input
+        dataObj = obj;
+        if nargin > 2
+            
+            dataObj = varargin{1};
+        end
+        
         % Get matching field names
-        matchFields_c = matchingFields(obj, table);
+        matchFields_c = matchingFields(obj, table, dataObj);
         
         % Create cell matrix of data, repeating where necessary
         data_c = cell(0, numel(matchFields_c));
         tempData_c = cell(1, numel(matchFields_c));
-        for oi = 1:numel(obj)
+        for oi = 1:numel(dataObj)
             
             currData_c = cell(1, numel(matchFields_c));
             for mi = 1:length(matchFields_c)
                 
                 currField = matchFields_c{mi};
-                tempData_c{mi} = obj(oi).(currField);
+                tempData_c{mi} = dataObj(oi).(currField);
             end
             
             [currData_c{:}] = obj.repeatInputs(tempData_c);
-            currData_c = cellfun(@(x) x(:), currData_c, 'Uni', 0);
+            charData_l = cellfun(@ischar, currData_c);
+            currData_c(~charData_l) = ...
+                cellfun(@(x) x(:), currData_c(~charData_l), 'Uni', 0);
             data_c = [data_c; currData_c];
         end
         
@@ -768,9 +779,16 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
         
         function varargout = repeatInputs(inputs)
         % repeatInputs Repeat any scalar inputs to match others' size
+        % [A, B, ...] = repeatInputs(inputs) will return in A, B... vectors
+        % of size equal to the size of any non-scalar in INPUTS, i.e. any
+        % scalars in INPUTS will be repeated to match the size of the
+        % non-scalars and returned in A, B... There can be multiple scalars
+        % and non-scalars but all non-scalars they must all be the same 
+        % size. If any of INPUTS are strings, they will be treated as
+        % scalars.
         
         % Check that all inputs are the same size or are scalar
-        scalars_l = cellfun(@isscalar, inputs);
+        scalars_l = cellfun(@(x) isscalar(x) || ischar(x), inputs);
         empty_l = cellfun(@isempty, inputs);
         emptyOrScalar_l = scalars_l | empty_l;
         allSizes_c = cellfun(@size, inputs(~emptyOrScalar_l), 'Uni', 0);
@@ -856,12 +874,18 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
             end
         end
         
-        function match = matchingFields(obj, table)
+        function match = matchingFields(obj, table,varargin)
         % matchingFields Fields of table which match properties of object
+            
+            dataObj = obj;
+            if nargin > 2
+
+                dataObj = varargin{1};
+            end
             
             temp_st = obj(1).execute(['DESCRIBE ', table]);
             fields_c = temp_st.field;
-            prop_c = properties(obj);
+            prop_c = properties(dataObj);
             match = intersect(fields_c, prop_c);
         
         end
