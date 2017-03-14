@@ -8,6 +8,9 @@ classdef cVesselSpeedPower
         Power double;
         Trim double;
         Displacement double;
+        Speed_Power_Source char = '';
+        SpeedPowerCoefficients double = [];
+        SpeedPowerRSquared double = [];
         
     end
     

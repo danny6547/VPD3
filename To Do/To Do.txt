@@ -217,3 +217,7 @@ cV.cV: include input to specify loading function
 # write cV.iterReset after all while ~obj.iterFinished so that cV can be 
 # 	value class again.
 # cVessel.insertIntoTable: match object properties to table columns
+executeIfOneOutput: replace third (optional) input with something sensible
+performanceData: bug where multiplie structs returned when duplicate IMO input
+
+Should vessel speed, power data be nested in property SpeedPower?
