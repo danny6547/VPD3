@@ -1,4 +1,4 @@
-classdef cVessel < cMySQL & cVesselWindCoefficient & cSpeedPower
+classdef cVessel < cMySQL & cVesselWindCoefficient
     %CVESSEL Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -17,9 +17,11 @@ classdef cVessel < cMySQL & cVesselWindCoefficient & cSpeedPower
         Length_Overall = [];
         Breadth_Moulded = [];
         Draft_Design = [];
-        Speed_Power_Source char = '';
-        SpeedPowerCoefficients double = [];
-        SpeedPowerRSquared double = [];
+        SpeedPower = [];
+        DryDockDates = [];
+%         Speed_Power_Source char = '';
+%         SpeedPowerCoefficients double = [];
+%         SpeedPowerRSquared double = [];
         
         Variable = 'Speed_Index';
         
@@ -375,6 +377,13 @@ classdef cVessel < cMySQL & cVesselWindCoefficient & cSpeedPower
            
        end
        
+       function obj = insertIntoDryDockDates(obj)
+       % insertIntoDryDocking Insert data into table "DryDockDates"
+       
+%        insertIntoTable
+       
+       end
+       
        function skip = isPerDataEmpty(obj)
        % isPerDataEmpty True if performance data variable empty.
        
@@ -678,7 +687,7 @@ classdef cVessel < cMySQL & cVesselWindCoefficient & cSpeedPower
         objIDvals_ch = obj(1).colList(objID_cs);
         [obj(1), sqlWhereIn_ch] = obj(1).combineSQL('WHERE', identifier, 'IN',...
             objIDvals_ch);
-        [obj(1), sqlSelect] = obj(1).select(table, '*');
+        [obj(1), ~, sqlSelect] = obj(1).select(table, '*');
         [obj(1), sqlSelect] = obj(1).determinateSQL(sqlSelect);
         [obj(1), sqlSelectWhereIn_ch] = obj(1).combineSQL(sqlSelect, sqlWhereIn_ch);
         table_st = obj(1).execute(sqlSelectWhereIn_ch);

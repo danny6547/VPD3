@@ -10,6 +10,9 @@ properties
                                 'Draft_Design', num2cell([1.2345, -1]),...
                                 'IMO_Vessel_Number', num2cell([1234567, 7654321]));
     InsertIntoTableInputs = { {'testInsertInto' } };
+    InsertIntoDryDockDatesValues = struct('IMO_Vessel_Number', num2cell([1234567, 7654321])', ...
+                                'StartDate', cellstr(datestr(now:now+1, 'yyyy-mm-dd HH:MM')),...
+                                'EndDate', cellstr(datestr(now+2:now+3, 'yyyy-mm-dd HH:MM')));
     
 end
 
@@ -78,6 +81,16 @@ methods
         testcase.MySQL.createTable(table, cols, types);
     end
     
+    function requirementsinsertIntoDryDockDates(testcase)
+    % Create DB requirements for method testinsertIntoDryDockDates
+        
+        % Delete any existing rows in the test table for test vessels
+        testIMO_c = [testcase.InsertIntoDryDockDatesValues.IMO_Vessel_Number];
+        testIMO_ch = strjoin(cellfun(@num2str, testIMO_c), ', ');
+        testcase.MySQL.execute(['DELETE FROM DryDockDates WHERE '...
+            'IMO_Vessel_Number IN (', testIMO_ch ,')']);
+        
+    end
 end
 
 methods(TestClassSetup)
@@ -217,7 +230,7 @@ methods(Test)
     inputObj.insertIntoTable(input_c{:});
     
     % Verify
-    [~, ~, actTable] = testcase.MySQL.select(testDBTable, ...
+    [~, actTable] = testcase.MySQL.select(testDBTable, ...
         expTable.Properties.VariableNames);
     expTable.Properties.VariableNames = ...
         lower(expTable.Properties.VariableNames);
@@ -226,11 +239,38 @@ methods(Test)
     testcase.verifyEqual(actTable, expTable, msgTable);
     
     end
+    
+    function testinsertIntoDryDockDates(testcase)
+    % Test that method will insert all dry docking dates given into table
+    % "DryDockDates".
+    % 1. Test that each cVesselDryDock in property DryDockDates of input
+    % OBJ will have its property data assigned to the similarly-named field
+    % of table "DryDockDates".
+    
+    % 1.
+    % Input
+    expTable = struct2table(testcase.InsertIntoDryDockDatesValues);
+    testDBTable = 'DryDockDates';
+    inputObj = testcase.testVessel;
+    inputObj.DryDockDates = inputObj;
+    [inputObj, ~, sql] = inputObj.select(testDBTable, '*');
+    [~, sql] = inputObj.determinateSQL(sql);
+    sql = [sql, ' ORDER BY id DESC LIMIT 2;'];
+    
+    % Execute
+    inputObj = inputObj.insertIntoDryDockDates();
+    
+    % Verify
+%     [~, actTable] = testcase.MySQL.select(testDBTable, ...
+%         expTable.Properties.VariableNames);
+    [outSt, outC] = inputObj.executeIfOneOutput(nargout, sql, 1);
+    actTable = cell2table(outC, 'VariableNames', fieldnames(outSt));
+    expTable.Properties.VariableNames = ...
+        lower(expTable.Properties.VariableNames);
+    msgTable = 'Table of dry docking dates should match that input.';
+    testcase.verifyEqual(actTable, expTable, msgTable);
+    
+    end
 end
 
-% Input
-
-% Execute
-
-% Verify
 end
