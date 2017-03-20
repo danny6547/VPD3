@@ -54,6 +54,8 @@ while ~obj.iterFinished
    currDDSavings = currDDPer * fuelPricePerTonne * ...
        fuelConsumptionTonnesPerDay * daysPerYear * currActivity;
    savingsDDStruc(ii).Savings_MUSD = currDDSavings / 1E6;
+   savingsDDStruc(ii).Savings_mt = currDDPer * ...
+       fuelConsumptionTonnesPerDay * daysPerYear * currActivity;
    
    % Assign
    obj(ii).AnnualSavingsDD = savingsDDStruc(ii);
