@@ -126,11 +126,21 @@ if any(s)
     starts = first(col_l);
     x = arrayfun(@(x) circshift((1:size(s, 1))', [-x + 1, 0]), starts, 'Uni', 0);
     c = [x{:}]';
-    repr = sub2ind(size(s), c, repmat(find(col_l), size(c, 1), size(c, 2)));
-    orig = sub2ind(size(s), repmat(1:size(s, 1), size(c, 1), 1), ...
-        repmat(find(col_l), size(c, 1), size(c, 2)));
+    if isscalar(find(col_l))
+        repr = sub2ind(size(s), c, repmat(find(col_l), size(c, 1), size(c, 2)));
+        orig = sub2ind(size(s), repmat(1:size(s, 1), size(c, 1), 1), ...
+            repmat(find(col_l), size(c, 1), size(c, 2)));
+    else
+        repr = sub2ind(size(s), c, repmat(find(col_l), 1, size(c, 2)));
+        orig = sub2ind(size(s), repmat(1:size(s, 1), size(c, 1), 1), ...
+            repmat(find(col_l), 1, size(c, 2)));
+    end
     w(orig) = w(repr);
 end
+
+% Remove any indices of DD dimension which are empty
+emptyDD_l = all(cellfun(@isempty, w)');
+w(emptyDD_l, :) = [];
 
 % Assemble outputs into struct
 fieldnames_c = strrep(PerformanceDataColumnsNames_c, ' ', '_');
@@ -146,6 +156,6 @@ d = cellfun(@(x, y, z) [x, y, z], t, u, e, 'Uni', 0);
 % SQL syntax ensures each column corresponds to different IMO, so vector of
 % IMO can be reduced to scalar
 out = cellfun(@(x) cell2struct(x, fieldnames_c, 2), d);
-out = arrayfun(@(x, y) setfield(y, 'IMO_Vessel_Number', unique(x.IMO_Vessel_Number)), out, out);
+out = arrayfun(@(x, y) setfield(y, 'IMO_Vessel_Number', double(unique(x.IMO_Vessel_Number))), out, out);
 
 end

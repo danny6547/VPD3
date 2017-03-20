@@ -8,6 +8,12 @@ function [ name ] = vesselName( IMOin )
 %   found, both outputs will be empty.
 
 % Initialise Outputs
+
+% Get indices to valid IMO in vector
+validIMO_l = ~isnan(IMOin) & (IMOin ~= 0);
+IMOOut = IMOin;
+nameOut = repmat({''}, size(IMOOut));
+IMOin = IMOin(validIMO_l);
 name = repmat({''}, size(IMOin));
 
 % Inputs
@@ -65,6 +71,9 @@ else
 %         IMOout = [out.imo_vessel_number];
 %     end
 end
+
+nameOut(validIMO_l) = name;
+name = nameOut;
 
 % % Sort by input order
 % if ~isscalar(IMOout)

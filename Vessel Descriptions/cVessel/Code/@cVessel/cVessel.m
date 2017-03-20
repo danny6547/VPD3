@@ -895,9 +895,15 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
        
        function obj = set.IMO_Vessel_Number(obj, IMO)
            
-           validateattributes(IMO, {'numeric'}, ...
-               {'positive', 'real', 'nonnan', 'integer'});
-           obj.IMO_Vessel_Number = IMO;
+           if ~isempty(IMO(~isnan(IMO)))
+                validateattributes(IMO, {'numeric'}, ...
+                    {'scalar', 'positive', 'real', 'nonnan', 'integer'});
+           else
+                validateattributes(IMO, {'numeric'}, ...
+                    {'scalar'});
+                IMO = [];
+                obj.IMO_Vessel_Number = IMO;
+           end
            
        end
        
