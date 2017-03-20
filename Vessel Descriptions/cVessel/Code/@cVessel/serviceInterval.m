@@ -65,7 +65,7 @@ while ~obj.iterFinished
    % Assign into output
    servStruct(ii).ServiceInterval = interval;
    servStruct(ii).Units = units;
-   obj(ii).ServiceInterval = numdays;
+   obj(ii).ServiceInterval = interval;
    
 end
 obj = obj.iterReset;
