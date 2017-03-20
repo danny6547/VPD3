@@ -2,4 +2,8 @@
 
 USE hull_performance;
 
-CREATE TABLE vesselCoating (id INT PRIMARY KEY AUTO_INCREMENT, IMO_Vessel_Number INT(7), CoatingName VARCHAR(255), DryDockId INT)
+CREATE TABLE vesselCoating (id INT PRIMARY KEY AUTO_INCREMENT, 
+								IMO_Vessel_Number INT(7),
+								 CoatingName VARCHAR(255),
+								 DryDockId INT, 
+								 CONSTRAINT UniIMODDI UNIQUE(IMO_Vessel_Number, DryDockId))
