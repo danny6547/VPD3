@@ -205,7 +205,7 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
                             'IMO_Vessel_Number'};
             inputFields = fieldnames(shipData);
             fields2read = intersect(validFields, inputFields);
-
+            
             for ii = 1:numel(obj)
                 for fi = 1:numel(fields2read)
                     
@@ -256,7 +256,7 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
        % insertIntoVessels Insert vessel data into table 'Vessels'.
        
        
-       obj = obj.insertIntoTable('Vessels');
+       obj.insertIntoTable('Vessels');
        
 %        % Table of vessel data
 %        numShips = numel(obj);

@@ -209,7 +209,7 @@ fileTypes: function to determine type of each element of cellstr FILENAME
 loadDNVGLRaw: return IMO of contained vessels as additional output
 cMySQL.executeIfOneOutput: modify to (include) zero output, if class 
 	remains handle.
-cVessel.readFromVessels: populate data from table "vessels"
+# cVessel.readFromVessels: populate data from table "vessels"
 # cVessel.readFromTable: match object properties to table columns
 cV.constructor: error if one name and multiple imo input
 # cV.iterReset: if finished, reset Iter to zero
@@ -221,3 +221,8 @@ executeIfOneOutput: replace third (optional) input with something sensible
 performanceData: bug where multiplie structs returned when duplicate IMO input
 
 Should vessel speed, power data be nested in property SpeedPower?
+cV.iterDD: error when only one DD interval
+cV.ServiceInterval: make same as struct output by method
+cV.annualSavingsDD: method should iterate over dry dockings and vessels.
+cV.cV: error when DNVGL speed and per index files input together
+# cV.cV: fix bug where different number of DDIs leads to error
