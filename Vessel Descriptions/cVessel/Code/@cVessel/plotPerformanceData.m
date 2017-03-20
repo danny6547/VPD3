@@ -98,7 +98,7 @@ while ~obj.iterFinished
        % Plot averages
        if avg_l
            
-           currAvg_st = avgStruct(ddi);
+           currAvg_st = avgStruct; %(ddi);
            
            % Make average colors a series of increasingly light orange
 %            numDur = numel(currAvg.Duration);
