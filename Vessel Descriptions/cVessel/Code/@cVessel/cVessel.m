@@ -17,8 +17,8 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
         Length_Overall = [];
         Breadth_Moulded = [];
         Draft_Design = [];
-        SpeedPower = [];
-        DryDockDates = [];
+        SpeedPower cVesselSpeedPower = cVesselSpeedPower();
+        DryDockDates = cVesselDryDockDates();
 %         Speed_Power_Source char = '';
 %         SpeedPowerCoefficients double = [];
 %         SpeedPowerRSquared double = [];
@@ -51,6 +51,8 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
     
     properties(Hidden, Dependent)
         
+        Speed;
+        Power;
     end
     
     methods
@@ -105,7 +107,7 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
                   
                    errmsg = errmsg{find(~valid, 1)};
                    errid = 'cVA:FileNotFound';
-                   error(errid, errmsg);
+                   error(errid, strrep(errmsg, '\', '/'));
                end
                
                firstFile_ch = file{1};
@@ -379,10 +381,10 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
        
        function obj = insertIntoDryDockDates(obj)
        % insertIntoDryDocking Insert data into table "DryDockDates"
-       
-       dataObj = [obj.DryDockDates];
-       tab = 'DryDockDates';
-       obj.insertIntoTable(tab, dataObj);
+
+           dataObj = [obj.DryDockDates];
+           tab = 'DryDockDates';
+           obj.insertIntoTable(tab, dataObj);
        
        end
        
@@ -721,44 +723,7 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
         end
         
         end
-        
-        function insertIntoTable(obj, table, varargin)
-        % insertIntoTable Insert object property values in table
-        
-        % Input
-        dataObj = obj;
-        if nargin > 2
-            
-            dataObj = varargin{1};
-        end
-        
-        % Get matching field names
-        matchFields_c = matchingFields(obj, table, dataObj);
-        
-        % Create cell matrix of data, repeating where necessary
-        data_c = cell(0, numel(matchFields_c));
-        tempData_c = cell(1, numel(matchFields_c));
-        for oi = 1:numel(dataObj)
-            
-            currData_c = cell(1, numel(matchFields_c));
-            for mi = 1:length(matchFields_c)
-                
-                currField = matchFields_c{mi};
-                tempData_c{mi} = dataObj(oi).(currField);
-            end
-            
-            [currData_c{:}] = obj.repeatInputs(tempData_c);
-            charData_l = cellfun(@ischar, currData_c);
-            currData_c(~charData_l) = ...
-                cellfun(@(x) x(:), currData_c(~charData_l), 'Uni', 0);
-            data_c = [data_c; currData_c];
-        end
-        
-        % Insert matrix of data into table
-        obj(1).insertValuesDuplicate(table, matchFields_c, data_c);
-        
-        end
-        
+
 %        function obj = fitSpeedPower(obj, speed, power, varargin)
 %        % fitSpeedPower Fit speed, power data to model
 %        
@@ -833,9 +798,9 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
         
         % Create error message in case either criteria fail
         if existCriteria
-            errmsg = ['Input ' filename ' must exist.'];
+            errmsg = ['Input file ' filename ' must exist.'];
         else
-            errmsg = ['Input ' filename ' must not exist.'];
+            errmsg = ['Input file ' filename ' must not exist.'];
         end
         
         % Check if file exists
@@ -874,21 +839,7 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
             end
         end
         
-        function match = matchingFields(obj, table,varargin)
-        % matchingFields Fields of table which match properties of object
-            
-            dataObj = obj;
-            if nargin > 2
-
-                dataObj = varargin{1};
-            end
-            
-            temp_st = obj(1).execute(['DESCRIBE ', table]);
-            fields_c = temp_st.field;
-            prop_c = properties(dataObj);
-            match = intersect(fields_c, prop_c);
-        
-        end
+    
     end
     
     methods
@@ -902,9 +853,13 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
                 validateattributes(IMO, {'numeric'}, ...
                     {'scalar'});
                 IMO = [];
-                obj.IMO_Vessel_Number = IMO;
            end
+           obj.IMO_Vessel_Number = IMO;
            
+           if ~isempty(obj.DryDockDates)
+               
+               [obj.DryDockDates(:).IMO_Vessel_Number] = deal(IMO);
+           end
        end
        
        function obj = set.DateTime_UTC(obj, dates)
@@ -956,5 +911,16 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
            
        end
        
+       function obj = get.Speed(obj)
+       % Get Speed from SpeedPower object
+       
+       % Iterate over cSP
+       
+       % Concatenate vector
+           [speed, power, draft, trim] = [];
+           speed = cSpeedPower.Speed;
+           speed = obj.repeatInputs(inputs);
+           
+       end
     end
 end
