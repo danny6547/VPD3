@@ -83,7 +83,7 @@ while ~obj.iterFinished
         % varname = obj.Variable; %'Performance_Index';
        
        % Get data series colour
-       currColour = lineColours_m(DDColourOrder(ddi), :);
+       currColour = lineColours_m(DDColourOrder(ddii), :);
        
        % Plot data
        hold on
