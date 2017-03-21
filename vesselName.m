@@ -70,10 +70,14 @@ else
 %     else
 %         IMOout = [out.imo_vessel_number];
 %     end
+    nameOut(validIMO_l) = name;
+    name = nameOut;
 end
 
-nameOut(validIMO_l) = name;
-name = nameOut;
+
+if isscalar(name)
+    name = [name{:}];
+end
 
 % % Sort by input order
 % if ~isscalar(IMOout)
