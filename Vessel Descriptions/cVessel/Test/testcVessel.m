@@ -147,12 +147,6 @@ methods(Test)
     actUni = inputObj;
     uniqueData = unique(nonUniDate);
     [expUni.(inputIndex)] = deal(uniqueData);
-    
-%     for ii = 1:numel(inputProp)
-%         
-%         inData = expUni.(inputProp{ii});
-%         [expUni.(inputProp{ii})] = deal(inData(uniI));
-%     end
     expUni = expUni.iterReset;
     
     % Execute
@@ -275,8 +269,6 @@ methods(Test)
     inputObj = inputObj.insertIntoDryDockDates();
     
     % Verify
-%     [~, actTable] = testcase.MySQL.select(testDBTable, ...
-%         expTable.Properties.VariableNames);
     [outSt, outC] = inputObj.executeIfOneOutput(nargout, sql, 1);
     actTable = cell2table(outC, 'VariableNames', fieldnames(outSt));
     expTable.Properties.VariableNames = ...
