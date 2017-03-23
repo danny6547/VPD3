@@ -753,9 +753,19 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
         function obj = insertIntoSpeedPowerCoefficients(obj)
         % insertIntoSpeedPowerCoefficients Insert into table SPCoefficients
             
-        
+            % Vector all SP objects
+            allSP = [obj.SpeedPower];
+            
+            % Insert into table, giving IMO
+            tabName = 'speedpowercoefficients';
+            
+            imo_c = arrayfun(@(x) repmat(x.IMO_Vessel_Number, ...
+                [1, numel(x.SpeedPower)]), obj, 'Uni', 0);
+            imo_v = [imo_c{:}];
+            obj.insertIntoTable(tabName, allSP, 'IMO_Vessel_Number', imo_v);
             
         end
+        
 %        function obj = fitSpeedPower(obj, speed, power, varargin)
 %        % fitSpeedPower Fit speed, power data to model
 %        

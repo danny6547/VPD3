@@ -31,7 +31,11 @@ properties
                                 'Exponent_B', ...
                                 num2cell(100:100:300)', ...
                                 'R_Squared', ...
-                                num2cell(0.9:0.03:0.96)');
+                                num2cell(0.9:0.03:0.96)', ...
+                                'Trim', ...
+                                num2cell([1, 0, -1.5])', ...
+                                'Displacement', ...
+                                num2cell([1e5, 1e5, 2e5])');
     
 end
 
@@ -408,6 +412,10 @@ methods(Test)
             testcase.InsertIntoSpeedPowerCoefficientsValues(si).Exponent_B;
         inputSP(si).R_Squared = ...
             testcase.InsertIntoSpeedPowerCoefficientsValues(si).R_Squared;
+        inputSP(si).Trim = ...
+            testcase.InsertIntoSpeedPowerCoefficientsValues(si).Trim;
+        inputSP(si).Displacement = ...
+            testcase.InsertIntoSpeedPowerCoefficientsValues(si).Displacement;
     end
     
     ObjSPi_c = {1:2, 3};
@@ -415,7 +423,9 @@ methods(Test)
     for oi = 1:numel(inputObj)
         
         inputObj(oi).IMO_Vessel_Number = ...
-            testcase.InsertIntoSpeedPowerCoefficientsValues(ObjIMOi_c{oi}).IMO_Vessel_Number;
+            testcase...
+            .InsertIntoSpeedPowerCoefficientsValues(ObjIMOi_c{oi})...
+            .IMO_Vessel_Number;
         inputObj(oi).SpeedPower = inputSP(ObjSPi_c{oi});
     end
     
@@ -424,16 +434,22 @@ methods(Test)
     
     % Verify
     [inputObj, ~, sql] = inputObj.select(testDBTable, ...
-        {'imo_vessel_number', 'Exponent_A', 'Exponent_B', 'R_Squared'});
+        {'imo_vessel_number', 'Exponent_A', 'Exponent_B', 'R_Squared', ...
+        'Trim', 'Displacement'});
     [~, sql] = inputObj.determinateSQL(sql);
     sql = [sql, ' ORDER BY id DESC LIMIT 3;'];
     [outSt, outC] = inputObj(1).executeIfOneOutput(nargout, sql, 1);
     actTable = cell2table(outC, 'VariableNames', fieldnames(outSt));
-    expTable.Properties.VariableNames = ...
-        lower(expTable.Properties.VariableNames);
+    actTable = varfun(@double, actTable);
+    expTable = varfun(@double, expTable);
+    actTable = table2array(actTable);
+    expTable = table2array(expTable);
+%     expTable.Properties.VariableNames = ...
+%         lower(expTable.Properties.VariableNames);
     expTable = flipud(expTable);
+    
     msgTable = 'Table speedpowercoefficients data should match that input.';
-    testcase.verifyEqual(actTable, expTable, msgTable);
+    testcase.verifyEqual(actTable, expTable, 'RelTol', 1e-14, msgTable);
     
     end
 end
