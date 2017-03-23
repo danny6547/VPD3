@@ -18,11 +18,12 @@ properties
                                 'Speed', ...
                                 num2cell([5, 10, 5, 7, 12])', ...
                                 'Power', ...
-                                num2cell([1e4, 5e4, 3e4, 2e4, 10e4])', ...
+                                num2cell([1e4, 5e4, 3e4, 2e4, 9e4])', ...
                                 'Trim', ...
                                 num2cell([1, 1, 0, -1.5, -1.5])', ...
                                 'Displacement', ...
                                 num2cell([1e5, 1e5, 2e5, 1e4, 1e4])');
+                            
     
 end
 
@@ -95,9 +96,20 @@ methods
     % Create DB requirements for method testinsertIntoDryDockDates
         
         % Delete any existing rows in the test table for test vessels
-        testIMO_c = [testcase.InsertIntoDryDockDatesValues.IMO_Vessel_Number];
-        testIMO_ch = strjoin(cellfun(@num2str, testIMO_c), ', ');
+        testIMO_c = {testcase.InsertIntoDryDockDatesValues.IMO_Vessel_Number};
+        testIMO_ch = strjoin(cellfun(@num2str, testIMO_c, 'Uni', 0), ', ');
         testcase.MySQL.execute(['DELETE FROM DryDockDates WHERE '...
+            'IMO_Vessel_Number IN (', testIMO_ch ,')']);
+        
+    end
+    
+    function requirementsinsertIntoSpeedPower(testcase)
+    % Create DB requirements for method testinsertIntoDryDockDates
+        
+        % Delete any existing rows in the test table for test vessels
+        testIMO_c = {testcase.InsertIntoSpeedPowerValues.IMO_Vessel_Number};
+        testIMO_ch = strjoin(cellfun(@num2str, testIMO_c, 'Uni', 0), ', ');
+        testcase.MySQL.execute(['DELETE FROM SpeedPower WHERE '...
             'IMO_Vessel_Number IN (', testIMO_ch ,')']);
         
     end
@@ -117,6 +129,8 @@ methods(TestClassSetup)
     
         requirementsReadFromTable(testcase);
         requirementsInsertIntoTable(testcase);
+        requirementsinsertIntoDryDockDates(testcase);
+        requirementsinsertIntoSpeedPower(testcase);
         
     end
 end
@@ -308,7 +322,8 @@ methods(Test)
     
     inputObj = repmat(inputObj, [numVessels, 1]);
     SPi_c = {1:2, 3, 4:5};
-    Obji_c = {1:2, 3};
+    ObjSPi_c = {1:2, 3};
+    ObjIMOi_c = {1, 4};
     numSP = numel(SPi_c);
     inputSP(numSP) = cVesselSpeedPower();
     for si = 1:numSP
@@ -326,8 +341,8 @@ methods(Test)
     for oi = 1:numel(inputObj)
         
         inputObj(oi).IMO_Vessel_Number = ...
-            testcase.InsertIntoSpeedPowerValues(Obji_c{oi}(1)).IMO_Vessel_Number;
-        inputObj(oi).SpeedPower = inputSP(Obji_c{oi});
+            testcase.InsertIntoSpeedPowerValues(ObjIMOi_c{oi}).IMO_Vessel_Number;
+        inputObj(oi).SpeedPower = inputSP(ObjSPi_c{oi});
     end
     
     % Execute
@@ -337,7 +352,7 @@ methods(Test)
     [inputObj, ~, sql] = inputObj.select(testDBTable, ...
         {'imo_vessel_number', 'Speed', 'Power', 'Trim', 'Displacement'});
     [~, sql] = inputObj.determinateSQL(sql);
-    sql = [sql, ' ORDER BY id DESC LIMIT 4;'];
+    sql = [sql, ' ORDER BY id DESC LIMIT 5;'];
     
     [outSt, outC] = inputObj(1).executeIfOneOutput(nargout, sql, 1);
     actTable = cell2table(outC, 'VariableNames', fieldnames(outSt));

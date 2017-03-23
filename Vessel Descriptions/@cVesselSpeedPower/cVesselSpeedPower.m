@@ -49,7 +49,7 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
             
             for oi = 1:numel(obj)
                 [out_c{:}] = cVessel.repeatInputs({obj(oi).Speed, obj(oi).Power,...
-                    obj(oi).Trim, obj(oi).Displacement});
+                    obj(oi).Displacement, obj(oi).Trim});
                 out_c = cellfun(@(x) x(:), out_c, 'Uni', 0);
 %                 currOut_m = [currOut_m; cell2mat(out_c)];'
                 currMat = cell2mat(out_c);

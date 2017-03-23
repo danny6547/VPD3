@@ -49,11 +49,11 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
         IterFinished = false;
     end
     
-    properties(Hidden, Dependent)
+    properties(Dependent)
         
         Speed;
         Power;
-        Draft;
+        Displacement;
         Trim;
     end
     
@@ -372,6 +372,30 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
 %        obj = obj.insertIntoTable('speedPower');
 %        insertWithoutDuplicates(data, toTable, key, uniqueColumns, ...
 %            otherColumns, format_s);
+        
+%         % Pre-allocate
+%         numObj = numel(obj);
+%         imo_c = cell(1, numObj);
+%         speed_c = cell(1, numObj);
+%         power_c = cell(1, numObj);
+%         trim_c = cell(1, numObj);
+%         displacement_c = cell(1, numObj);
+%         
+%         % Generate matrix of all speed, power curves for all vessels
+%         for oi = 1:numObj
+%             
+%             speed_c{oi} = obj(oi).Speed;
+%             power_c{oi} = obj(oi).Power;
+%             trim_c{oi} = obj(oi).Trim;
+%             displacement_c{oi} = obj(oi).Displacement;
+%             imo_c{oi} = obj.repeatInputs(obj.IMO_Vessel_Number, ...
+%                 obj(oi).Speed);
+%         end
+%         
+%         tableMat = cell2mat([imo_c, displacement_c, trim_c, speed_c, ...
+%             power_c]);
+        tableName = 'SpeedPower';
+        obj.insertIntoTable(tableName);
        
        end
        
@@ -934,14 +958,14 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
            
        end
        
-       function draft = get.Draft(obj)
+       function disp = get.Displacement(obj)
        % Get Speed from SpeedPower object
        
        % Get matrix of speed, power, draft, trim
        spdt = obj.SpeedPower.speedPowerDraftTrim;
        
        % Index appropriately
-       draft = spdt(:, 3);
+       disp = spdt(:, 3);
            
        end
        
