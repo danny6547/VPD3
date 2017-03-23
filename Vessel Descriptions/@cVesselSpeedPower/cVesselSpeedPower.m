@@ -1,4 +1,4 @@
-classdef cVesselSpeedPower < handle
+classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
     %CVESSELSPEEDPOWER Vessel speed and power data
     %   Detailed explanation goes here
     
@@ -22,10 +22,54 @@ classdef cVesselSpeedPower < handle
     
     methods
     
-       function obj = cVesselSpeedPower()
-            
+       function obj = cVesselSpeedPower(varargin)
+           
+%            if nargin > 0
+%               
+%                size_c = num2cell(size(varargin{1}));
+%                obj(size_c{:}) = cVesselSpeedPower();
+%                
+%            end
        end
        
+       
+    end
+    
+    methods(Hidden)
+       
+       function spdt = speedPowerDraftTrim(obj)
+          
+           % Repeat all to the same size
+           allLengths_c = arrayfun(@(x) length(x.Speed), obj, 'Uni', 0);
+           numRows = sum([allLengths_c{:}]);
+           
+           out_c = cell(1, 4);
+           currOut_m = nan(numRows, 4);
+           currRow = 1;
+            
+            for oi = 1:numel(obj)
+                [out_c{:}] = cVessel.repeatInputs({obj(oi).Speed, obj(oi).Power,...
+                    obj(oi).Trim, obj(oi).Displacement});
+                out_c = cellfun(@(x) x(:), out_c, 'Uni', 0);
+%                 currOut_m = [currOut_m; cell2mat(out_c)];'
+                currMat = cell2mat(out_c);
+                currNumRows = size(currMat);
+                currOut_m(currRow : currRow + currNumRows - 1, :) = currMat;
+                currRow = currRow + currNumRows;
+            end
+            spdt = currOut_m;
+       end
+       
+       function spc = speedPowerCoefficientsTable(obj)
+       % speedPowerCoefficientsTable Table of speed, power coefficient data
+           
+           % Repeat all to the same size
+           allLengths_c = arrayfun(@(x) length(x.Trim), obj, 'Uni', 0);
+           numRows = sum([allLengths_c{:}]);
+           
+           
+           
+       end
     end
     
     methods
@@ -33,17 +77,10 @@ classdef cVesselSpeedPower < handle
         function spdt = get.SpeedPowerDraftTrim(obj)
         % 
             
-            % Repeat all to the same size
-            out_c = cell(1, 4);
-            currOut_m = nan(1, 4);
-            
-            for oi = 1:numel(obj)
-                [out_c{:}] = cVessel.repeatInputs({obj(oi).Speed, obj(oi).Power,...
-                    obj(oi).Trim, obj(oi).Displacement});
-                out_c = cellfun(@(x) x(:), out_c, 'Uni', 0);
-                currOut_m = [currOut_m; cell2mat(out_c)];
-            end
-            spdt = currOut_m;
+            % Repeat all to the same size, make into matrix
+            [speed, power, draft, trim] = cVessel.repeatInputs({obj.Speed,...
+                obj.Power, obj.Trim, obj.Displacement});
+            spdt = [speed(:), power(:), draft(:), trim(:)];
             
         end
         
@@ -54,8 +91,17 @@ classdef cVesselSpeedPower < handle
             validateattributes(speed, {'numeric'}, {'real', 'vector',...
                 'nonnan'});
         end
-        obj.Speed = speed;
+        
+        power = obj.Power;
+        if ~isempty(power) && (~isempty(speed) && ~isempty(power))...
+                && ~isequal(size(power), speed)
             
+            errID = 'cSP:SPSizeMismatch';
+            errMsg = 'Speed vector length must match that of Power';
+            error(errID, errMsg);
+        end
+        
+        obj.Speed = speed;
         end
         
         function set.Power(obj, power)
@@ -65,6 +111,16 @@ classdef cVesselSpeedPower < handle
             validateattributes(power, {'numeric'}, {'real', 'vector',...
                 'nonnan'});
         end
+        
+        speed = obj.Speed;
+        if ~isempty(power) && (~isempty(speed) && ~isempty(power))...
+                && ~isequal(size(power), size(speed))
+            
+            errID = 'cSP:SPSizeMismatch';
+            errMsg = 'Power vector length must match that of Speed';
+            error(errID, errMsg);
+        end
+        
         obj.Power = power;
             
         end

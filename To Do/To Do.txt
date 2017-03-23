@@ -229,10 +229,11 @@ cV.cV: error when DNVGL speed and per index files input together
 annualSavingsDD: error when activity vector doesn't match size of object
 annualSavingsDD: calculate differently if variable speed index
 insertIntoSFOCCoefficients: call insertIntoTable
-insertIntoSFOCCoefficients: call insertIntoTable
 # make cSpeedPower a handle.
 # make cV.SP only accept handles.
-Write properties Speed, Power, Draft, Trim etc for cV (dependent, maybe hidden)
-Write get methods for Speed, Power etc to obtain (equal-length) vectors
-cV.insertIntoSpeedPower: now needs only work on cV
+# Write properties Speed, Power, Draft, Trim etc for cV (dependent, maybe hidden)
+# Write get methods for Speed, Power etc to obtain (equal-length) vectors
+# cV.insertIntoSpeedPower: now needs only work on cV
 # cSP.Speed, Power ... : make vectors
+cSP.Speed, Power: make vectors of the same length
+cSP.Draft, Trim: make scalars
