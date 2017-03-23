@@ -53,6 +53,8 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
         
         Speed;
         Power;
+        Draft;
+        Trim;
     end
     
     methods
@@ -916,10 +918,41 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
        
        % Iterate over cSP
        
-       % Concatenate vector
-           [speed, power, draft, trim] = [];
-           speed = cSpeedPower.Speed;
-           speed = obj.repeatInputs(inputs);
+       % Index appropriately
+       speed = spdt(:, 1);
+           
+       end
+       
+       function power = get.Power(obj)
+       % Get Speed from SpeedPower object
+       
+       % Get matrix of speed, power, draft, trim
+       spdt = obj.SpeedPower.speedPowerDraftTrim;
+       
+       % Index appropriately
+       power = spdt(:, 2);
+           
+       end
+       
+       function draft = get.Draft(obj)
+       % Get Speed from SpeedPower object
+       
+       % Get matrix of speed, power, draft, trim
+       spdt = obj.SpeedPower.speedPowerDraftTrim;
+       
+       % Index appropriately
+       draft = spdt(:, 3);
+           
+       end
+       
+       function trim = get.Trim(obj)
+       % Get Speed from SpeedPower object
+       
+       % Get matrix of speed, power, draft, trim
+       spdt = obj.SpeedPower.speedPowerDraftTrim;
+       
+       % Index appropriately
+       trim = spdt(:, 4);
            
        end
     end
