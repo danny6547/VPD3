@@ -750,6 +750,12 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
         
         end
 
+        function obj = insertIntoSpeedPowerCoefficients(obj)
+        % insertIntoSpeedPowerCoefficients Insert into table SPCoefficients
+            
+        
+            
+        end
 %        function obj = fitSpeedPower(obj, speed, power, varargin)
 %        % fitSpeedPower Fit speed, power data to model
 %        

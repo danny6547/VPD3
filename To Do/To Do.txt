@@ -239,4 +239,6 @@ cSP.Speed, Power: make vectors of the same length
 cSP.Draft, Trim: make scalars
 cV.Speed_Power_Source: make dependent
 cV.get.Speed_Power_Source: return cellstr vector with values for all SP, all OBJ
-cV.insertIntoSpeedPower: make cV method work on arrays of cV and of cSP
+# cV.insertIntoSpeedPower: make cV method work on arrays of cV and of cSP
+cV.insertIntoSpeedPowerCoefficients: make cV method work on arrays of cV and of cSP
+cMySQL.readTable: output table from input name, columns, order, limit (ie SELECT inputs)

@@ -10,7 +10,9 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
         Displacement double;
         Speed_Power_Source char = '';
         SpeedPowerCoefficients double = [];
-        SpeedPowerRSquared double = [];
+        Exponent_A double = [];
+        Exponent_B double = [];
+        R_Squared double = [];
         
     end
     

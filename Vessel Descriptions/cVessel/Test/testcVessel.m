@@ -23,7 +23,15 @@ properties
                                 num2cell([1, 1, 0, -1.5, -1.5])', ...
                                 'Displacement', ...
                                 num2cell([1e5, 1e5, 2e5, 1e4, 1e4])');
-                            
+    InsertIntoSpeedPowerCoefficientsValues = ...
+                                struct('IMO_Vessel_Number', ...
+                                num2cell([1234567, 1234567, 7654321])', ...
+                                'Exponent_A', ...
+                                num2cell(0.7:0.1:0.9)', ...
+                                'Exponent_B', ...
+                                num2cell(100:100:300)', ...
+                                'R_Squared', ...
+                                num2cell(0.9:0.03:0.96)');
     
 end
 
@@ -110,6 +118,18 @@ methods
         testIMO_c = {testcase.InsertIntoSpeedPowerValues.IMO_Vessel_Number};
         testIMO_ch = strjoin(cellfun(@num2str, testIMO_c, 'Uni', 0), ', ');
         testcase.MySQL.execute(['DELETE FROM SpeedPower WHERE '...
+            'IMO_Vessel_Number IN (', testIMO_ch ,')']);
+        
+    end
+    
+    function requirementsinsertIntoSpeedPowerCoefficients(testcase)
+    % Create DB requirements for method testinsertIntoDryDockDates
+        
+        % Delete any existing rows in the test table for test vessels
+        testIMO_c = {testcase...
+            .InsertIntoSpeedPowerValuesCoefficients.IMO_Vessel_Number};
+        testIMO_ch = strjoin(cellfun(@num2str, testIMO_c, 'Uni', 0), ', ');
+        testcase.MySQL.execute(['DELETE FROM SpeedPowerCoefficients WHERE '...
             'IMO_Vessel_Number IN (', testIMO_ch ,')']);
         
     end
@@ -360,6 +380,59 @@ methods(Test)
         lower(expTable.Properties.VariableNames);
     expTable = flipud(expTable);
     msgTable = 'Table of speed, power data should match that input.';
+    testcase.verifyEqual(actTable, expTable, msgTable);
+    
+    end
+    
+    function testinsertIntoSpeedPowerCoefficients(testcase)
+    % Test that method will insert all speed, power data given into tables
+    % "SpeedPowerCoefficients".
+    % 1. Test that each cSpeedPower in property SpeedPower of input
+    % OBJ will have its property data assigned to the similarly-named field
+    % of table "SpeedPowerCoefficients" for all elements of OBJ.
+    
+    % Input
+    expTable = struct2table(testcase.InsertIntoSpeedPowerCoefficientsValues);
+    testDBTable = 'speedpowercoefficients';
+    inputObj = testcase.testVessel;
+    numVessels = 2;
+    
+    inputObj = repmat(inputObj, [numVessels, 1]);
+    numSP = numel(testcase.InsertIntoSpeedPowerCoefficientsValues);
+    inputSP(numSP) = cVesselSpeedPower();
+    for si = 1:numSP
+        
+        inputSP(si).Exponent_A = ...
+            testcase.InsertIntoSpeedPowerCoefficientsValues(si).Exponent_A;
+        inputSP(si).Exponent_B = ...
+            testcase.InsertIntoSpeedPowerCoefficientsValues(si).Exponent_B;
+        inputSP(si).R_Squared = ...
+            testcase.InsertIntoSpeedPowerCoefficientsValues(si).R_Squared;
+    end
+    
+    ObjSPi_c = {1:2, 3};
+    ObjIMOi_c = {1, 3};
+    for oi = 1:numel(inputObj)
+        
+        inputObj(oi).IMO_Vessel_Number = ...
+            testcase.InsertIntoSpeedPowerCoefficientsValues(ObjIMOi_c{oi}).IMO_Vessel_Number;
+        inputObj(oi).SpeedPower = inputSP(ObjSPi_c{oi});
+    end
+    
+    % Execute
+    inputObj = inputObj.insertIntoSpeedPowerCoefficients();
+    
+    % Verify
+    [inputObj, ~, sql] = inputObj.select(testDBTable, ...
+        {'imo_vessel_number', 'Exponent_A', 'Exponent_B', 'R_Squared'});
+    [~, sql] = inputObj.determinateSQL(sql);
+    sql = [sql, ' ORDER BY id DESC LIMIT 3;'];
+    [outSt, outC] = inputObj(1).executeIfOneOutput(nargout, sql, 1);
+    actTable = cell2table(outC, 'VariableNames', fieldnames(outSt));
+    expTable.Properties.VariableNames = ...
+        lower(expTable.Properties.VariableNames);
+    expTable = flipud(expTable);
+    msgTable = 'Table speedpowercoefficients data should match that input.';
     testcase.verifyEqual(actTable, expTable, msgTable);
     
     end
