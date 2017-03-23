@@ -485,6 +485,8 @@ methods(Test)
         inputWC(si).Coefficient = ...
             testcase.InsertIntoWindCoefficientsValues(si).Coefficient;
         inputObj(si).WindResistance = inputWC(si);
+        inputObj(si).IMO_Vessel_Number = ...
+            testcase.InsertIntoWindCoefficientsValues(si).IMO_Vessel_Number;
     end
     
     % Execute

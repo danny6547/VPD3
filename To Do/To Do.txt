@@ -242,3 +242,4 @@ cV.get.Speed_Power_Source: return cellstr vector with values for all SP, all OBJ
 # cV.insertIntoSpeedPower: make cV method work on arrays of cV and of cSP
 # cV.insertIntoSpeedPowerCoefficients: make cV method work on arrays of cV and of cSP
 cMySQL.readTable: output table from input name, columns, order, limit (ie SELECT inputs)
+# cV.insertIntoWindCoefficient: 

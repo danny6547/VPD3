@@ -770,7 +770,11 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
         function obj = insertIntoWindCoefficients(obj)
         % insertIntoWindCoefficient Insert data into wind coefficient table
             
-            
+            windCoeffs_v = [obj.WindResistance];
+            imo_v = [obj.IMO_Vessel_Number];
+            tabName = 'WindCoefficientDirection';
+            obj.insertIntoTable(tabName, windCoeffs_v, ...
+                'IMO_Vessel_Number', imo_v);
             
         end
 %        function obj = fitSpeedPower(obj, speed, power, varargin)
