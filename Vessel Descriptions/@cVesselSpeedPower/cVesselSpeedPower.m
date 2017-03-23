@@ -62,16 +62,6 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
             spdt = currOut_m;
        end
        
-       function spc = speedPowerCoefficientsTable(obj)
-       % speedPowerCoefficientsTable Table of speed, power coefficient data
-           
-           % Repeat all to the same size
-           allLengths_c = arrayfun(@(x) length(x.Trim), obj, 'Uni', 0);
-           numRows = sum([allLengths_c{:}]);
-           
-           
-           
-       end
     end
     
     methods

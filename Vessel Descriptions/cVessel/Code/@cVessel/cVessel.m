@@ -4,7 +4,7 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
     
     properties
         
-        IMO_Vessel_Number double, single, int = [];
+        IMO_Vessel_Number double = [];
         DryDockInterval double = [];
         Name char = '';
         Owner char = '';
@@ -19,6 +19,7 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
         Draft_Design = [];
         SpeedPower cVesselSpeedPower = cVesselSpeedPower();
         DryDockDates = cVesselDryDockDates();
+        WindResistance = cVesselWindCoefficient();
 %         Speed_Power_Source char = '';
 %         SpeedPowerCoefficients double = [];
 %         SpeedPowerRSquared double = [];
@@ -766,6 +767,12 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
             
         end
         
+        function obj = insertIntoWindCoefficients(obj)
+        % insertIntoWindCoefficient Insert data into wind coefficient table
+            
+            
+            
+        end
 %        function obj = fitSpeedPower(obj, speed, power, varargin)
 %        % fitSpeedPower Fit speed, power data to model
 %        

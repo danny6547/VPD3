@@ -4,8 +4,9 @@ classdef cVesselWindCoefficient
     
     properties
         
-        Direction double = [];
-        Value double = [];
+        Start_Direction double = [];
+        End_Direction double = [];
+        Coefficient double = [];
         
     end
     

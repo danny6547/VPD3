@@ -36,6 +36,15 @@ properties
                                 num2cell([1, 0, -1.5])', ...
                                 'Displacement', ...
                                 num2cell([1e5, 1e5, 2e5])');
+    InsertIntoWindCoefficientsValues = ...
+                                struct('IMO_Vessel_Number', ...
+                                num2cell([1234567, 7654321])', ...
+                                'Start_Direction', ...
+                                num2cell([45, 90])', ...
+                                'End_Direction', ...
+                                num2cell([90, 135])', ...
+                                'Coefficient', ...
+                                num2cell([2, 3])');
     
 end
 
@@ -389,7 +398,7 @@ methods(Test)
     end
     
     function testinsertIntoSpeedPowerCoefficients(testcase)
-    % Test that method will insert all speed, power data given into tables
+    % Test that method will insert all speed, power data given into table
     % "SpeedPowerCoefficients".
     % 1. Test that each cSpeedPower in property SpeedPower of input
     % OBJ will have its property data assigned to the similarly-named field
@@ -447,6 +456,55 @@ methods(Test)
     expTable = flipud(expTable);
     
     msgTable = 'Table speedpowercoefficients data should match that input.';
+    testcase.verifyEqual(actTable, expTable, 'RelTol', 1e-14, msgTable);
+    
+    end
+    
+    function testinsertIntoWindCoefficient(testcase)
+    % Test that method will insert all wind coefficient data given into 
+    % tables "WindCoefficient".
+    % 1. Test that each cVesselWindCoefficient in property 
+    % VesselWindCoefficient of input OBJ will have its property data 
+    % assigned to the similarly-named field of table "WindCoefficient" for 
+    % all elements of OBJ.
+    
+    % Input
+    expTable = struct2table(testcase.InsertIntoWindCoefficientsValues);
+    testDBTable = 'windcoefficientdirection';
+    inputObj = testcase.testVessel;
+    
+    numVessels = numel(testcase.InsertIntoWindCoefficientsValues);
+    inputObj = repmat(inputObj, [numVessels, 1]);
+    inputWC(numVessels) = cVesselWindCoefficient();
+    for si = 1:numVessels
+        
+        inputWC(si).Start_Direction = ...
+            testcase.InsertIntoWindCoefficientsValues(si).Start_Direction;
+        inputWC(si).End_Direction = ...
+            testcase.InsertIntoWindCoefficientsValues(si).End_Direction;
+        inputWC(si).Coefficient = ...
+            testcase.InsertIntoWindCoefficientsValues(si).Coefficient;
+        inputObj(si).WindResistance = inputWC(si);
+    end
+    
+    % Execute
+    inputObj = inputObj.insertIntoWindCoefficients();
+    
+    % Verify
+    [inputObj, ~, sql] = inputObj.select(testDBTable, ...
+        {'imo_vessel_number', 'Start_Direction', 'End_Direction', ...
+        'Coefficient'});
+    [~, sql] = inputObj.determinateSQL(sql);
+    sql = [sql, ' ORDER BY id DESC LIMIT 2;'];
+    [outSt, outC] = inputObj(1).executeIfOneOutput(nargout, sql, 1);
+    actTable = cell2table(outC, 'VariableNames', fieldnames(outSt));
+    actTable = varfun(@double, actTable);
+    expTable = varfun(@double, expTable);
+    actTable = table2array(actTable);
+    expTable = table2array(expTable);
+    expTable = flipud(expTable);
+    
+    msgTable = 'Table WindCoefficient data should match that input.';
     testcase.verifyEqual(actTable, expTable, 'RelTol', 1e-14, msgTable);
     
     end
