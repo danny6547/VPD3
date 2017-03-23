@@ -444,8 +444,6 @@ methods(Test)
     expTable = varfun(@double, expTable);
     actTable = table2array(actTable);
     expTable = table2array(expTable);
-%     expTable.Properties.VariableNames = ...
-%         lower(expTable.Properties.VariableNames);
     expTable = flipud(expTable);
     
     msgTable = 'Table speedpowercoefficients data should match that input.';
