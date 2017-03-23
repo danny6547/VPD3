@@ -339,7 +339,7 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
        
        end
        
-       function obj = insertIntoSpeedPower(obj, speed, power, displacement, trim)
+       function obj = insertIntoSpeedPower(obj) %, speed, power, displacement, trim)
        % insertIntoSpeedPower Insert speed, power, draft, trim data.
        
 %        % Repeat scalar inputs to match uniform size (call SPCoeffs)
@@ -363,13 +363,13 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
 %            'Power'};
 %        obj = obj.insertValuesDuplicate(table, columns_c, data);
        
-       [speed, power, displacement, trim] = repeatInputs(speed, power, ...
-           displacement, trim);
-       obj.Speed = speed;
-       obj.Power = power;
-       obj.Displacement = displacement;
-       obj.Trim = trim;
-       obj = obj.insertIntoTable('speedPower');
+%        [speed, power, displacement, trim] = repeatInputs(speed, power, ...
+%            displacement, trim);
+%        obj.Speed = speed;
+%        obj.Power = power;
+%        obj.Displacement = displacement;
+%        obj.Trim = trim;
+%        obj = obj.insertIntoTable('speedPower');
 %        insertWithoutDuplicates(data, toTable, key, uniqueColumns, ...
 %            otherColumns, format_s);
        
@@ -841,7 +841,6 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
             end
         end
         
-    
     end
     
     methods
@@ -913,10 +912,11 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
            
        end
        
-       function obj = get.Speed(obj)
+       function speed = get.Speed(obj)
        % Get Speed from SpeedPower object
        
-       % Iterate over cSP
+       % Get matrix of speed, power, draft, trim
+       spdt = obj.SpeedPower.speedPowerDraftTrim;
        
        % Index appropriately
        speed = spdt(:, 1);

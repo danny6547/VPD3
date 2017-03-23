@@ -13,6 +13,16 @@ properties
     InsertIntoDryDockDatesValues = struct('IMO_Vessel_Number', num2cell([1234567, 7654321])', ...
                                 'StartDate', cellstr(datestr(now:now+1, 'yyyy-mm-dd')),...
                                 'EndDate', cellstr(datestr(now+2:now+3, 'yyyy-mm-dd')));
+    InsertIntoSpeedPowerValues = struct('IMO_Vessel_Number', ...
+                                num2cell([1234567, 1234567, 1234567, 7654321, 7654321])', ...
+                                'Speed', ...
+                                num2cell([5, 10, 5, 7, 12])', ...
+                                'Power', ...
+                                num2cell([1e4, 5e4, 3e4, 2e4, 10e4])', ...
+                                'Trim', ...
+                                num2cell([1, 1, 0, -1.5, -1.5])', ...
+                                'Displacement', ...
+                                num2cell([1e5, 1e5, 2e5, 1e4, 1e4])');
     
 end
 
@@ -282,6 +292,68 @@ methods(Test)
     testcase.verifyEqual(actTable, expTable, msgTable);
     
     end
+    
+    function testinsertIntoSpeedPower(testcase)
+    % Test that method will insert all speed, power data given into tables
+    % "SpeedPower".
+    % 1. Test that each cSpeedPower in property SpeedPower of input
+    % OBJ will have its property data assigned to the similarly-named field
+    % of table "SpeedPower" for all elements of OBJ.
+    
+    % Input
+    expTable = struct2table(testcase.InsertIntoSpeedPowerValues);
+    testDBTable = 'SpeedPower';
+    inputObj = testcase.testVessel;
+    numVessels = 2;
+    
+    inputObj = repmat(inputObj, [numVessels, 1]);
+    SPi_c = {1:2, 3, 4:5};
+    Obji_c = {1:2, 3};
+    numSP = numel(SPi_c);
+    inputSP(numSP) = cVesselSpeedPower();
+    for si = 1:numSP
+        
+        inputSP(si).Speed = ...
+            [testcase.InsertIntoSpeedPowerValues(SPi_c{si}).Speed];
+        inputSP(si).Power = ...
+            [testcase.InsertIntoSpeedPowerValues(SPi_c{si}).Power];
+        inputSP(si).Trim = ...
+            [testcase.InsertIntoSpeedPowerValues(SPi_c{si}(1)).Trim];
+        inputSP(si).Displacement = ...
+            [testcase.InsertIntoSpeedPowerValues(SPi_c{si}(1)).Displacement];
+    end
+    
+    for oi = 1:numel(inputObj)
+        
+        inputObj(oi).IMO_Vessel_Number = ...
+            testcase.InsertIntoSpeedPowerValues(Obji_c{oi}(1)).IMO_Vessel_Number;
+        inputObj(oi).SpeedPower = inputSP(Obji_c{oi});
+    end
+    
+    % Execute
+    inputObj = inputObj.insertIntoSpeedPower();
+    
+    % Verify
+    [inputObj, ~, sql] = inputObj.select(testDBTable, ...
+        {'imo_vessel_number', 'Speed', 'Power', 'Trim', 'Displacement'});
+    [~, sql] = inputObj.determinateSQL(sql);
+    sql = [sql, ' ORDER BY id DESC LIMIT 4;'];
+    
+    [outSt, outC] = inputObj(1).executeIfOneOutput(nargout, sql, 1);
+    actTable = cell2table(outC, 'VariableNames', fieldnames(outSt));
+    expTable.Properties.VariableNames = ...
+        lower(expTable.Properties.VariableNames);
+    expTable = flipud(expTable);
+    msgTable = 'Table of speed, power data should match that input.';
+    testcase.verifyEqual(actTable, expTable, msgTable);
+    
+    end
 end
+
+% Input
+
+% Execute
+
+% Verify
 
 end
