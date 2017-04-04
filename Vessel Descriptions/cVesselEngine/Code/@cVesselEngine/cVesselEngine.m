@@ -11,7 +11,7 @@ classdef cVesselEngine < handle
         X0 double = [];
         X1 double = [];
         X2 double = [];
-        MinimumFOC_ph double = [];
+        Minimum_FOC_ph double = [];
         Lowest_Given_Brake_Power double = [];
         Highest_Given_Brake_Power double = [];
         

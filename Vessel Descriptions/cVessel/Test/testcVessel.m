@@ -60,8 +60,6 @@ properties
                                 num2cell([9000, 1350])', ...
                                 'Highest_Given_Brake_Power', ...
                                 num2cell([2e4, 1.5e4])');
-                                
-    
 end
 
 methods
@@ -160,6 +158,18 @@ methods
         testIMO_ch = strjoin(cellfun(@num2str, testIMO_c, 'Uni', 0), ', ');
         testcase.MySQL.execute(['DELETE FROM SpeedPowerCoefficients WHERE '...
             'IMO_Vessel_Number IN (', testIMO_ch ,')']);
+        
+    end
+    
+    function requirementsinsertIntoSFOCCoefficients(testcase)
+    % Create DB requirements for method testinsertIntoDryDockDates
+        
+        % Delete any existing rows in the test table for test vessels
+        testModel_c = {testcase...
+            .InsertIntoSpeedPowerValuesCoefficients.Engine_Model};
+        testModel_ch = strjoin(testModel_c, ', ');
+        testcase.MySQL.execute(['DELETE FROM SFOCCoefficients WHERE '...
+            'Engine_Model IN (', testModel_ch ,')']);
         
     end
 end
@@ -552,7 +562,7 @@ methods(Test)
             testcase.InsertIntoSFOCCoefficientsValues(si).X1;
         input_Engine(si).X2 = ...
             testcase.InsertIntoSFOCCoefficientsValues(si).X2;
-        input_Engine(si).MinimumFOC_ph = ...
+        input_Engine(si).Minimum_FOC_ph = ...
             testcase.InsertIntoSFOCCoefficientsValues(si).Minimum_FOC_ph;
         input_Engine(si).Lowest_Given_Brake_Power = ...
             testcase.InsertIntoSFOCCoefficientsValues(si).Lowest_Given_Brake_Power;
@@ -572,7 +582,9 @@ methods(Test)
     sql = [sql, ' ORDER BY id DESC LIMIT 2;'];
     [outSt, outC] = inputObj(1).executeIfOneOutput(nargout, sql, 1);
     actTable = cell2table(outC, 'VariableNames', fieldnames(outSt));
-    expTable = varfun(@double, expTable, 'InputVariables', fieldNames_c(2:end));
+    
+    expFieldNames_c = [{''}];
+    expTable(:, 2:end) = varfun(@double, expTable, 'InputVariables', fieldNames_c(2:end));
     actTable = table2cell(actTable);
     expTable = table2cell(expTable);
     expTable = flipud(expTable);
