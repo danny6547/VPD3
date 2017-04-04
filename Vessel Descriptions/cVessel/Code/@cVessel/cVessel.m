@@ -5,31 +5,26 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
     properties
         
         IMO_Vessel_Number double = [];
-        DryDockInterval double = [];
         Name char = '';
         Owner char = '';
         Class = [];
         LBP = [];
         Engine = [];
-        Wind_Resist_Coeff_Dir = [];
         Transverse_Projected_Area_Design = [];
         Block_Coefficient = [];
         Length_Overall = [];
         Breadth_Moulded = [];
         Draft_Design = [];
+        
+        DryDockInterval double = [];
         SpeedPower cVesselSpeedPower = cVesselSpeedPower();
         DryDockDates = cVesselDryDockDates();
         WindResistance = cVesselWindCoefficient();
-%         Speed_Power_Source char = '';
-%         SpeedPowerCoefficients double = [];
-%         SpeedPowerRSquared double = [];
         
         Variable = 'Speed_Index';
-        
         Performance_Index
         Speed_Index
         DateTime_UTC
-        
         TimeStep double = 1;
         
         MovingAverages
@@ -247,7 +242,7 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
        
        [obj.LBP] = vesselclass(:).LBP;
        [obj.Engine] = vesselclass(:).Engine;
-       [obj.Wind_Resist_Coeff_Dir] = vesselclass(:).Wind_Resist_Coeff_Dir;
+%        [obj.Wind_Resist_Coeff_Dir] = vesselclass(:).Wind_Resist_Coeff_Dir;
        [obj.Transverse_Projected_Area_Design] = vesselclass(:).Transverse_Projected_Area_Design;
        [obj.Block_Coefficient] = vesselclass(:).Block_Coefficient;
        [obj.Length_Overall] = vesselclass(:).Length_Overall;

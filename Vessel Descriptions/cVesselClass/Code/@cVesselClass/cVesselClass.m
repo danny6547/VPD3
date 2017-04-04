@@ -7,7 +7,6 @@ classdef cVesselClass < handle
         WeightTEU = [];
         LBP = [];
         Engine = [];
-        Wind_Resist_Coeff_Dir = [];
         Transverse_Projected_Area_Design = [];
         Block_Coefficient = [];
         Length_Overall = [];
