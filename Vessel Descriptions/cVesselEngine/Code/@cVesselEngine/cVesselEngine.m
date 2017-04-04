@@ -26,18 +26,32 @@ classdef cVesselEngine < handle
        end
        
        function obj = fitData2Quadratic(obj, mcr, sfoc, perCentMcr)
-           
+       % 
            
            
        end
        
        function [LowestFOCph, LowestPower, HighestPower] = limitsOfData(obj)
-       % limitsOfData 
+       % limitsOfData Find limits of power, fuel consumption data
        
-           LowestFOCph = [];
-           LowestPower = [];
-           HighestPower = [];
+       numObj = numel(obj);
+       LowestFOCph = nan(1, numObj);
+       LowestPower = nan(1, numObj);
+       HighestPower = nan(1, numObj);
+       
+       for oi = 1:numObj
            
+           if ~isempty(obj(oi).Power) && ~isempty(obj(oi).MCR)
+               currPower = (obj(oi).Power/100) .* obj(oi).MCR;
+               LowestPower(oi) = min(currPower);
+               HighestPower(oi) = max(currPower);
+               
+               if ~isempty(obj(oi).SFOC)
+                   currFOC = obj(oi).SFOC .* currPower;
+                   LowestFOCph(oi) = min(currFOC);
+               end
+           end
+       end
        end
     end
 end
