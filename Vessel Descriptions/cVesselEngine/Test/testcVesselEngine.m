@@ -16,11 +16,38 @@ methods(Test)
     
     % 1
     % Input
-
+    szIn = [1, 1e3];
+%     SFOC = abs(randn(szIn)) * 1e2;
+    FOC = abs(randn(szIn)) * 1e3;
+    a = 1.1; b = 2; c = 0.5;
+    Power = FOC.^2.*a + FOC.*b + c;
+%     Power = abs(randn(szIn)) * 1e4;
+    input_MCR = max(Power);
+    input_SFOC = FOC./Power;
+    input_Power = Power; %(Power/input_MCR) * 100;
+    input_obj = cVesselEngine();
+%     input_obj.MCR = input_MCR;
+%     input_obj.Power = input_Power;
+%     input_obj.SFOC = input_SFOC;
+    
+    expObj = cVesselEngine();
+    expObj.MCR = input_MCR;
+    expObj.Power = (input_Power/input_MCR) * 100;
+    expObj.SFOC = input_SFOC;
+    FOC = input_SFOC.*Power;
+    
+    p = polyfit(FOC, Power, 2);
+    expObj.X0 = c;
+    expObj.X1 = b;
+    expObj.X2 = a;
+    
     % Execute
-
+    actObj = input_obj.fitData2Quadratic(input_MCR, input_SFOC, input_Power);
+    
     % Verify
-
+    msgObj = ['Object is expected to have coefficient values assigned to'...
+        ' properties after method call.'];
+    testcase.verifyEqual(actObj, expObj, msgObj);
     
     end
     
@@ -60,6 +87,7 @@ methods(Test)
     testcase.verifyEqual(actHiPow, expHiPow, msgHiPow);
     
     end
+    
 end
 
 end
