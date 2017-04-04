@@ -312,22 +312,23 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
        function obj = insertIntoSFOCCoefficients(obj)
        % insertIntoSFOCCoefficients Insert engine data into table
        
-       
-       if isempty(obj.Engine)
-          
-          errid = 'VesselPer:EngineNeeded';
-          errmsg = ['Vessel Engine needed before SFOC data can be inserted'...
-              ' into database.'];
-          error(errid, errmsg);
+       for oi = 1:numel(obj)
+           
+           if isempty(obj(oi).Engine)
+
+              errid = 'VesselPer:EngineNeeded';
+              errmsg = ['Vessel Engine needed before SFOC data can be inserted'...
+                  ' into database.'];
+              error(errid, errmsg);
+           end
        end
-       
        % Iterate over engines, build matrix
-       [obj.Engine]
+%        [obj.Engine]
        
        % Keep only unique engines
        
        % Call SQL
-       obj = obj.insertValuesDuplicate();
+%        obj = obj.insertValuesDuplicate();
        
        
        % 

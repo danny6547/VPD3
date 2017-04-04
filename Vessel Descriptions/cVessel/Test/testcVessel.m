@@ -45,6 +45,22 @@ properties
                                 num2cell([90, 135])', ...
                                 'Coefficient', ...
                                 num2cell([2, 3])');
+    InsertIntoSFOCCoefficientsValues = ...
+                                struct('Engine_Model', ...
+                                {'Test Engine 1', 'Test Engine 2'}', ...
+                                'X0', ...
+                                num2cell([1, 1.5])', ...
+                                'X1', ...
+                                num2cell([0, 1])', ...
+                                'X2', ...
+                                num2cell([2, 3])',...
+                                'Minimum_FOC_ph', ...
+                                num2cell([450, 90])', ...
+                                'Lowest_Given_Brake_Power', ...
+                                num2cell([9000, 1350])', ...
+                                'Highest_Given_Brake_Power', ...
+                                num2cell([2e4, 1.5e4])');
+                                
     
 end
 
@@ -507,6 +523,61 @@ methods(Test)
     expTable = flipud(expTable);
     
     msgTable = 'Table WindCoefficient data should match that input.';
+    testcase.verifyEqual(actTable, expTable, 'RelTol', 1e-14, msgTable);
+    
+    end
+    
+    function testinsertIntoSFOCCoefficient(testcase)
+    % Test that SFOC coefficients are inserted into appropriate table.
+    % 1. Test that, each cVesselEngine in property Engine of input OBJ will
+    % have its property data assigned to the similarly-named fields of 
+    % table "SFOCCoefficient" for all elements of OBJ.
+    
+    % 1.
+    % Input
+    expTable = struct2table(testcase.InsertIntoSFOCCoefficientsValues);
+    testDBTable = 'SFOCcoefficients';
+    inputObj = testcase.testVessel;
+    
+    numVessels = numel(testcase.InsertIntoSFOCCoefficientsValues);
+    inputObj = repmat(inputObj, [numVessels, 1]);
+    input_Engine(numVessels) = cVesselEngine();
+    for si = 1:numVessels
+        
+        input_Engine(si).Name = ...
+            testcase.InsertIntoSFOCCoefficientsValues(si).Engine_Model;
+        input_Engine(si).X0 = ...
+            testcase.InsertIntoSFOCCoefficientsValues(si).X0;
+        input_Engine(si).X1 = ...
+            testcase.InsertIntoSFOCCoefficientsValues(si).X1;
+        input_Engine(si).X2 = ...
+            testcase.InsertIntoSFOCCoefficientsValues(si).X2;
+        input_Engine(si).MinimumFOC_ph = ...
+            testcase.InsertIntoSFOCCoefficientsValues(si).Minimum_FOC_ph;
+        input_Engine(si).Lowest_Given_Brake_Power = ...
+            testcase.InsertIntoSFOCCoefficientsValues(si).Lowest_Given_Brake_Power;
+        input_Engine(si).Highest_Given_Brake_Power = ...
+            testcase.InsertIntoSFOCCoefficientsValues(si).Highest_Given_Brake_Power;
+        
+        inputObj(si).Engine = input_Engine(si);
+    end
+    
+    % Execute
+    inputObj = inputObj.insertIntoSFOCCoefficients();
+    
+    % Verify
+    fieldNames_c = fieldnames(testcase.InsertIntoSFOCCoefficientsValues);
+    [inputObj, ~, sql] = inputObj.select(testDBTable, fieldNames_c);
+    [~, sql] = inputObj.determinateSQL(sql);
+    sql = [sql, ' ORDER BY id DESC LIMIT 2;'];
+    [outSt, outC] = inputObj(1).executeIfOneOutput(nargout, sql, 1);
+    actTable = cell2table(outC, 'VariableNames', fieldnames(outSt));
+    expTable = varfun(@double, expTable, 'InputVariables', fieldNames_c(2:end));
+    actTable = table2cell(actTable);
+    expTable = table2cell(expTable);
+    expTable = flipud(expTable);
+    
+    msgTable = 'Table SFOCCoefficient data should match that input.';
     testcase.verifyEqual(actTable, expTable, 'RelTol', 1e-14, msgTable);
     
     end
