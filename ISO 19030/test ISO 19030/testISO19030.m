@@ -37,6 +37,21 @@ properties(Constant, Hidden)
     AlmavivaSpeedPowerDispTrim = [114050, 0];
     AlmavivaTransProjArea = 1330;
     AlmavivaWindResistCoeffHead = 0.0001512;
+    AlmavivaWindResistCoeff = [-0.67766500
+                                -0.74222815
+                                -0.77252740
+                                -0.73429870
+                                -0.66942290
+                                -0.40641463
+                                -0.25761423
+                                -0.22303768
+                                -0.27221212
+                                -0.06631846
+                                0.34516430
+                                0.67289070
+                                0.88259417
+                                0.83342505
+                                0.64720550];
     AlmavivaDesignDraft = 15;
     AlmavivaPropulsiveEfficiency = 0.71;
     MinimumFOCph = 3989.96;
@@ -556,10 +571,11 @@ methods(Test)
     % according to equation G2 of the ISO 19030-2 standard.
     
     % Input
-    Coeffs = [testcase.AlmavivaWindResistCoeffHead, [0.2:0.1:0.6, ...
-        0.55:-0.1:0.05].*1e-5];
+%     Coeffs = [testcase.AlmavivaWindResistCoeffHead, [0.2:0.1:0.6, ...
+%         0.55:-0.1:0.05].*1e-5];
+    Coeffs = testcase.AlmavivaWindResistCoeff(:)';
     RelWindDir = [30, 45, 0];
-    CoeffDirEdges = 0:30:360;
+    CoeffDirEdges = [-7.5/2 : 7.5 : 30, 45:15:180];
     [~, relwind_i] = histc(RelWindDir, CoeffDirEdges);
     CoeffRelWind = Coeffs(relwind_i);
     
