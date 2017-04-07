@@ -36,7 +36,7 @@ properties(Constant, Hidden)
     AlmavivaSpeedPowerCoefficients = [7.07170	-50.54008]; % 6.037644473511698, -40.659732310548080
     AlmavivaSpeedPowerDispTrim = [114050, 0];
     AlmavivaTransProjArea = 1330;
-    AlmavivaWindResistCoeffHead = 0.0001512;
+    AlmavivaWindResistCoeffHead = -0.67766500;
     AlmavivaWindResistCoeff = [-0.67766500
                                 -0.74222815
                                 -0.77252740

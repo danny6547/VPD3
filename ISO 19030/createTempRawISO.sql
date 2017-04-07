@@ -42,7 +42,7 @@ BEGIN
 							 Density_Change_Rate_Per_C DOUBLE(10, 5),
 							 Temp_Fuel_Oil_At_Flow_Meter DOUBLE(10, 5),
 							 Wind_Resistance_Relative DOUBLE(10, 5),
-							 Air_Resistance_No_Wind DOUBLE(10, 5),
+							 Air_Resistance_No_Wind DOUBLE(20, 10),
 							 Expected_Speed_Through_Water DOUBLE(10, 5),
 							 Displacement DOUBLE(20, 10),
 							 Speed_Loss DOUBLE(10, 5),
