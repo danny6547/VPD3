@@ -252,3 +252,7 @@ cV.InsertRaw: MATLAB raw data insert function (a function with inputs for IMO,
  check units etc
 ISOProcess.sql: SQL procedure to extract relevant raw data, run iso with 
  default filters, insert results into PerformanceData.
+DB: make engine_model of SFOCCoefficients unique
+DB: Document unknowns with ship model data (e.g. the Man Engine data, is SFOC curve dependent on num cylinders?)
+# DB: recreate table windcoefficientdirection, now with only columns modelID, Direction, Coefficient
+updateWindResistance: find nearest to measured direction
