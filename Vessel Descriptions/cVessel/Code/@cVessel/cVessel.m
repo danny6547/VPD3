@@ -1,4 +1,4 @@
-classdef cVessel < cMySQL & cVesselWindCoefficient
+classdef cVessel < cMySQL
     %CVESSEL Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -775,7 +775,6 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
             tabName = 'WindCoefficientDirection';
             obj.insertIntoTable(tabName, windCoeffs_v, ...
                 'IMO_Vessel_Number', imo_v);
-            
         end
 %        function obj = fitSpeedPower(obj, speed, power, varargin)
 %        % fitSpeedPower Fit speed, power data to model

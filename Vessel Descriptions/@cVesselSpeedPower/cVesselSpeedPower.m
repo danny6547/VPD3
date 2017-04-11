@@ -54,8 +54,9 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
                     obj(oi).Displacement, obj(oi).Trim});
                 out_c = cellfun(@(x) x(:), out_c, 'Uni', 0);
 %                 currOut_m = [currOut_m; cell2mat(out_c)];'
-                currMat = cell2mat(out_c);
-                currNumRows = size(currMat);
+%                 currMat = cell2mat(out_c);
+                currMat = [out_c{:}];
+                currNumRows = size(currMat, 1);
                 currOut_m(currRow : currRow + currNumRows - 1, :) = currMat;
                 currRow = currRow + currNumRows;
             end

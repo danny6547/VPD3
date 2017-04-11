@@ -257,3 +257,5 @@ DB: Document unknowns with ship model data (e.g. the Man Engine data, is SFOC cu
 # DB: recreate table windcoefficientdirection, now with only columns modelID, Direction, Coefficient
 # updateWindResistance: find nearest to measured direction
 cVWC.extend360: rotate angular vectors by 180 degrees to cover full circle
+cV.insertIntoSPC: method to write coefficient data into table
+cVSP.fit: method to fit data to regression

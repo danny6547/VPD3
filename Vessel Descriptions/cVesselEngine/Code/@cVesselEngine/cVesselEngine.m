@@ -75,7 +75,7 @@ classdef cVesselEngine < handle
                if ~isempty(obj(oi).SFOC)
                    currFOC = obj(oi).FOCFromSFOC(obj(oi).SFOC, currPower);
                    LowestFOCph(oi) = min(currFOC);
-                   obj(oi).MinimumFOC_ph = min(currFOC);
+                   obj(oi).Minimum_FOC_ph = min(currFOC);
                end
            end
        end
