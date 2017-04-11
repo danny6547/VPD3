@@ -109,7 +109,7 @@ classdef cVesselWindCoefficient
        
        function [obj, plotHandles] = plot(obj)
           
-           plotHandles = plot(deg2rad(obj.Direction), obj.Coefficient);
+           plotHandles = plot(obj.Direction, obj.Coefficient);
            
        end
     end
