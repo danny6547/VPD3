@@ -4,9 +4,15 @@ classdef cVesselWindCoefficient
     
     properties
         
-        Start_Direction double = [];
-        End_Direction double = [];
+        Direction double = [];
         Coefficient double = [];
+        ModelID = [];
+        Name char = '';
+        
+    end
+    
+    properties(Hidden)
+        
         
     end
     
@@ -15,7 +21,159 @@ classdef cVesselWindCoefficient
        function obj = cVesselWindCoefficient()
     
        end
+%        
+%        function obj = binCentres(directions, coeffs, binWidths)
+%        % binCentres Accept bin centres from bin edges
+%        
+%         validateattributes(directions, {'numeric'}, {'vector'},...
+%            'binCentres', 'directions', 1);
+%         validateattributes(coeffs, {'numeric'}, {'vector'},...
+%            'binCentres', 'coeffs', 2);
+%        validateattributes(binWidths, {'numeric'}, {'vector'},...
+%            'binCentres', 'binWidths', 3);
+%        
+%        % Expand scalar binwidths to vector
+%        if isscalar(binWidths
+%         binWidths = repmat(binWidths, size(directions));
+% 
+%         % Sort Directions
+%         [directions, di] = sort(directions, 'asc');
+%         coeffs = coeffs(di);
+% 
+%         % Shift to between 0 and 360
+%         shift360_f = @(x) x - 360;
+%         shift0_f = @(x) 360 + x;
+% 
+%         directions(directions>360) = shift360_f(directions(directions>360));
+%         directions(directions<0) = shift0_f(directions(directions<0));
+% 
+%         % Get binwidths
+% %         binWidths = [diff(directions(1:end)), ...
+% %            360 - directions(end) + directions(1)];
+% 
+%        % Error if vector and number of widths not number of centres
+% 
+%        % Error if overlapping bins
+%        
+%         
+%         % Get start and finish directions
+%         startDirections = directions - binWidths/2;
+%         endDirections = directions + binWidths/2;
+%         
+%         % Shift to between 0 and 360
+%         startDirections(startDirections>360) = shift360_f(startDirections(startDirections>360));
+%         startDirections(startDirections<0) = shift0_f(startDirections(startDirections<0));
+%         endDirections(endDirections>360) = shift360_f(endDirections(endDirections>360));
+%         endDirections(endDirections<0) = shift0_f(endDirections(endDirections<0));
+%         
+%         % Split any bin crossing 360
+%         
+%         % Assign
+%         
+%         
+%        end
+%         
+%     
+%        end
+%     
+       function obj = mirrorAlong180(obj)
+
+
+           % Error if empty
+           dir1 = obj.Direction;
+
+           % Ensure that data lies between 0 and 180
+           dir1 = cVesselWindCoefficient.shiftBetween0And360(dir1);
+           
+           % Extend to other side of the symmetry plane by taking from 360
+           dir2 = 360 - dir1;
+           includes180 = ismember(180, dir1);
+           includes0 = ismember(0, dir1);
+           coeffs = obj.Coefficient;
+           coeffs2 = coeffs;
+           
+           startIndex = length(dir2);
+           if includes180
+               startIndex = length(dir2) - 1;
+           end
+           
+           finalIndex = 1;
+           if includes0
+               finalIndex = 2;
+           end
+           
+           obj.Direction = [dir1, dir2(startIndex:-1:finalIndex)];
+           obj.Coefficient = [coeffs, coeffs2(startIndex:-1:finalIndex)];
+           
+       end
+       
+       function [obj, plotHandles] = plot(obj)
+          
+           plotHandles = plot(deg2rad(obj.Direction), obj.Coefficient);
+           
+       end
+    end
+
+    methods(Static)
+        
+        function angle = shiftBelow360(angle)
+            
+            angle = angle - 360;
+        end
+        
+        function angle = shiftAbove0(angle)
+            
+            angle = 360 + angle;
+        end
+        
+        function angle = shiftBetween0And360(angle)
+            
+            angle = cVesselWindCoefficient.shiftBelow360(angle);
+            angle = cVesselWindCoefficient.shiftAbove0(angle);
+        end
+    end
     
+    methods
+        
+        function obj = set.ModelID(obj, modelID)
+        % set.ModelID Update values with those from DB
+        
+        % Check integer scalar
+        validateattributes(modelID, {'numeric'}, ...
+            {'scalar', 'integer', 'real'}, ...
+            'cVesselWindCoefficient.set.ModelID', 'modelID', 1);
+        
+        % Read from database all Dirs, Coefficients for model
+%         if isempty(obj.Direction) && isempty(obj.Coefficient)
+            msql = cMySQL();
+            where_ch = ['ModelID = ' num2str(modelID)];
+            tab = 'windcoefficientdirection';
+            cols = {'Direction', 'Coefficient', 'Name'};
+            [~, tabl] = msql.select(tab, cols, where_ch);
+            
+            % Error if model ID not found
+            if isempty(tabl) && ~isempty(obj.Direction) && ...
+                    ~isempty(obj.Coefficient)
+                
+                obj.Direction = [];
+                obj.Coefficient = [];
+                obj.Name = '';
+%                errid = 'setWindCoeffModel:ModelMissing';
+%                errmsg = ['Wind model identifier ', num2str(modelID)...
+%                    ' not found in database'];
+%                error(errid, errmsg);
+            else
+                obj.Direction = tabl.direction;
+                obj.Coefficient = tabl.coefficient;
+                obj.Name = tabl.name(1);
+            end
+
+%         end
+        
+        obj.ModelID = modelID;
+            
+        end
+        
     end
     
 end

@@ -35,7 +35,6 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
         DryDockingPerformance
         AnnualSavingsDD
         InServicePerformance
-        
     end
     
     properties(Hidden)
@@ -1007,5 +1006,6 @@ classdef cVessel < cMySQL & cVesselWindCoefficient
        trim = spdt(:, 4);
            
        end
+
     end
 end
