@@ -790,8 +790,8 @@ classdef cVessel < cMySQL
         function obj = insertIntoWindCoefficients(obj)
         % insertIntoWindCoefficient Insert data into wind coefficient table
             
-            windCoeffs_v = [obj.WindResistance];
-            imo_v = [obj.IMO_Vessel_Number];
+            windCoeffs_v = [obj.WindCoefficient];
+%             imo_v = [obj.IMO_Vessel_Number];
             tabName = 'WindCoefficientDirection';
             obj.insertIntoTable(tabName, windCoeffs_v, ...
                 'IMO_Vessel_Number', imo_v);
@@ -885,7 +885,7 @@ classdef cVessel < cMySQL
         
         end
         
-        [ out ] = performanceData(imo, varargin)
+%         [ out ] = performanceData(imo, varargin)
         
     end
     
