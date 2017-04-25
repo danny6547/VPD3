@@ -1,6 +1,6 @@
 /* Update Wind Resistance Relative based on equation G2. */
 
-USE hull_performance;
+
 
 DROP PROCEDURE IF EXISTS updateWindResistanceRelative;
 
@@ -9,7 +9,7 @@ delimiter //
 CREATE PROCEDURE updateWindResistanceRelative(imo INT)
 BEGIN
     
-    SET @currModel := (SELECT WindModelID FROM Vessels WHERE IMO_Vessel_Number = imo);
+    SET @currModel := (SELECT Wind_Model_ID FROM Vessels WHERE IMO_Vessel_Number = imo);
     
 	UPDATE tempRawISO t
 		JOIN (
