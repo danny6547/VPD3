@@ -774,6 +774,9 @@ classdef cVessel < cMySQL
             % Vector all SP objects
             allSP = [obj.SpeedPower];
             
+            % Fit data
+            allSP = allSP.fit;
+            
             % Insert into table, giving IMO
             tabName = 'speedpowercoefficients';
             
