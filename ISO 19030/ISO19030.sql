@@ -1,8 +1,7 @@
 /* Process data for vessel performance analysis as described in ISO 19030-2 */
 
-USE hull_performance;
 
-DROP PROCEDURE ISO19030;
+DROP PROCEDURE IF EXISTS ISO19030;
 
 delimiter //
 
