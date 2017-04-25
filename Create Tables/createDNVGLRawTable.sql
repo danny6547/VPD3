@@ -1,12 +1,19 @@
 /* Creates RawData table, a table containing the "raw" ship data obtained from DNVGL EcoInsight "Manage Data" facility. */ 
 
-USE hull_performance;
 
-use test2;
+
+DROP PROCEDURE IF EXISTS createDNVGLRaw;
+
+delimiter //
+
+CREATE PROCEDURE createDNVGLRaw()
+
+BEGIN
+
 CREATE TABLE DNVGLRaw (
 id INTEGER AUTO_INCREMENT PRIMARY KEY,
-IMO_Vessel_Number	INT,
-DateTime_UTC 		DATETIME,
+IMO_Vessel_Number	INT(7) NOT NULL,
+DateTime_UTC 		DATETIME NOT NULL,
 CONSTRAINT UniqueIMODates UNIQUE(IMO_Vessel_Number, DateTime_UTC),
 AE_1_Running_Hours	DOUBLE(20, 5),
 AE_2_Running_Hours	DOUBLE(20, 5), 
@@ -228,6 +235,8 @@ Remarks	DOUBLE(20, 5),
 Entry_Made_By_1	DOUBLE(20, 5), 
 Entry_Made_By_2	DOUBLE(20, 5)
 );
+
+END;
 
 /* 
 ALTER TABLE DNVGLRaw ADD DateTime_UTC DATETIME AFTER Date_UTC;

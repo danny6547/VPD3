@@ -1,11 +1,18 @@
 /* Create table for data required by ISO 19030 analysis */
 
-USE hull_performance;
 
+
+DROP PROCEDURE IF EXISTS createrawdata;
+
+delimiter //
+
+CREATE PROCEDURE createrawdata()
+
+BEGIN
 
 CREATE TABLE rawdata (id INT PRIMARY KEY AUTO_INCREMENT,
-						 DateTime_UTC DATETIME(3),
-                         IMO_Vessel_Number INT(7),
+						 DateTime_UTC DATETIME(3) NOT NULL,
+                         IMO_Vessel_Number INT(7) NOT NULL,
                          CONSTRAINT UniqueDateIMO UNIQUE(IMO_Vessel_Number, DateTime_UTC),
 						 Relative_Wind_Speed DOUBLE(10, 5),
 						 Relative_Wind_Direction DOUBLE(10, 5),
@@ -59,3 +66,5 @@ CREATE TABLE rawdata (id INT PRIMARY KEY AUTO_INCREMENT,
                          Filter_Reference_Water_Depth BOOLEAN DEFAULT FALSE,
                          Filter_Reference_Rudder_Angle BOOLEAN DEFAULT FALSE */
 						 ) ENGINE = MYISAM;
+						 
+END;

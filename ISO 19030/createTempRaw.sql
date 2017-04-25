@@ -1,6 +1,6 @@
 /* Create tempRaw table, a temporary table used to insert data from DNVGLRaw to RawData */
 
-USE hull_performance;
+
 
 DROP PROCEDURE IF EXISTS createTempRaw;
 

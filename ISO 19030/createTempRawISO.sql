@@ -1,6 +1,6 @@
 /* Select data for ISO 19030 analysis from RawData table for a given IMO and store in temporary table for analysis, TempRawIso. */
 
-USE hull_performance;
+
 
 DROP PROCEDURE IF EXISTS createTempRawISO;
 

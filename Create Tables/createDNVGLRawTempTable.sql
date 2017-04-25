@@ -1,6 +1,6 @@
 /* Creates temporary table like the RawData table, a table containing the "raw" ship data obtained from DNVGL EcoInsight "Manage Data" facility. */ 
 
-USE hull_performance;
+
 
 DROP PROCEDURE IF EXISTS createDNVGLRawTempTable;
 
@@ -34,7 +34,7 @@ Sea_state_Force_Douglas	DOUBLE(20, 5),
 Draft_Actual_Aft	DOUBLE(20, 5), 
 Draft_Actual_Fore	DOUBLE(20, 5), 
 Draft_Displacement_Actual	DOUBLE(20, 5), 
-IMO_Vessel_Number	INT, 
+IMO_Vessel_Number	INT(7) NOT NULL, 
 Temperature_Ambient	DOUBLE(20, 5), 
 Latitude_Degree	INT, 
 Latitude_Minutes	INT, 
