@@ -1,1 +1,3 @@
 For vessel CMA CGM Almaviva 9450648, no wind resistance data available, data given is for 6800TEU vessel in ISO15016.
+In class cVesselWindCoefficient, it is possible to create multiple similar modelID because the databases's modelID is not updated based on the object's modelID. It is therefore required that the time between assigning this property and writing to the database is minimised.
+When displacement table not found for current vessel, ISO19030 will use block coefficient, which is non-compliant.
