@@ -419,6 +419,8 @@ classdef cVessel < cMySQL
        % insertIntoDryDocking Insert data into table "DryDockDates"
 
            dataObj = [obj.DryDockDates];
+           imo = [obj.IMO_Vessel_Number];
+           [dataObj.IMO_Vessel_Number] = deal(imo(:));
            tab = 'DryDockDates';
            obj.insertIntoTable(tab, dataObj);
        end
@@ -603,7 +605,7 @@ classdef cVessel < cMySQL
 
         function [obj, IMO] = loadDNVGLRaw(obj, filename)
         % loadDNVGLRaw Load raw data sourced from DNVGL
-
+        
         % Drop if exists
         tempTab = 'tempDNVGLRaw';
         obj = obj.drop('TABLE', tempTab, true);
@@ -644,29 +646,36 @@ classdef cVessel < cMySQL
         cols2 = finalCols;
         obj = obj.insertSelectDuplicate(tab1, cols1, tab2, cols2);
         
-        % Drop temp
-        obj = obj.drop('TABLE', tempTab);
+        % Get IMO numbers added to DB
+%         [obj, tbl] = obj.select(tempTab, 'DISTINCT(IMO_Vessel_Number)');
         
-        if nargout > 1
+%         if nargout > 1
            
            % Get IMO contained in file
-           filename = cellstr(filename);
-           IMO = [];
-           for fi = 1:numel(filename)
-               
-               filei = filename{fi};
-               fid = fopen(filei);
-               w = {};
-               while fgetl(fid) ~= -1
-                   
-                   q = textscan(fid, '%[0123456789]', 'Headerlines', 1,...
-                       'TreatAsEmpty', '');
-                   w = [w, q{1}];
-               end
-               
-               IMO = [IMO, str2double(unique(w))];
+        filename = cellstr(filename);
+        IMO = [];
+        for fi = 1:numel(filename)
+
+           filei = filename{fi};
+           fid = fopen(filei);
+           w = {};
+           while fgetl(fid) ~= -1
+
+               q = textscan(fid, '%[0123456789]', 'Headerlines', 1,...
+                   'TreatAsEmpty', '');
+               w = [w, q{1}];
            end
+
+           IMO = [IMO, str2double(unique(w))];
         end
+%         end
+    
+        % Insert into RawData table
+        arrayfun(@(x) obj.call('insertFromDNVGLRawIntoRaw', num2str(x)), ...
+            IMO, 'Uni', 0);
+        
+        % Drop temp
+        obj = obj.drop('TABLE', tempTab);
         
         end
 
