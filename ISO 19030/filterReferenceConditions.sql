@@ -1,7 +1,7 @@
 /* Update filter columns for rows which do not meet the reference 
 conditions given in standard ISO 19030-2. */
 
-USE hull_performance;
+
 
 
 DROP PROCEDURE IF EXISTS filterReferenceConditions;
