@@ -65,8 +65,8 @@ classdef cVesselEngine < handle
        
        for oi = 1:numObj
            
-           if ~isempty(obj(oi).Power) && ~isempty(obj(oi).MCR)
-               currPower = obj(oi).powerFromMCRPCT(obj(oi).Power, obj(oi).MCR);
+           if ~isempty(obj(oi).Power) % && ~isempty(obj(oi).MCR)
+               currPower = obj(oi).Power; %obj(oi).powerFromMCRPCT(obj(oi).Power, obj(oi).MCR);
                LowestPower(oi) = min(currPower);
                HighestPower(oi) = max(currPower);
                obj(oi).Lowest_Given_Brake_Power = min(currPower);
@@ -75,12 +75,11 @@ classdef cVesselEngine < handle
                if ~isempty(obj(oi).SFOC)
                    currFOC = obj(oi).FOCFromSFOC(obj(oi).SFOC, currPower);
                    LowestFOCph(oi) = min(currFOC);
-                   obj(oi).Minimum_FOC_ph = min(currFOC);
+                   obj(oi).Minimum_FOC_ph = min(currFOC) / 1000;
                end
            end
        end
        end
-       
     end
     
     methods(Static)
