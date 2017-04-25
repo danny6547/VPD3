@@ -194,7 +194,11 @@ classdef cVessel < cMySQL
                 end
            else
                 name = vesselName(imo);
-                name = validateCellStr(name);
+                if isempty(name)
+                    name = repmat({''}, size(imo));
+                else
+                    name = validateCellStr(name);
+                end
            end
 
             szIn = size(shipData);
