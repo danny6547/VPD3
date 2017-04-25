@@ -793,9 +793,64 @@ classdef cVessel < cMySQL
             windCoeffs_v = [obj.WindCoefficient];
 %             imo_v = [obj.IMO_Vessel_Number];
             tabName = 'WindCoefficientDirection';
-            obj.insertIntoTable(tabName, windCoeffs_v, ...
-                'IMO_Vessel_Number', imo_v);
+            obj.insertIntoTable(tabName, windCoeffs_v);
         end
+        
+        function obj = ISO19030(obj, varargin)
+        % Process raw data for this vessel according to ISO19030 procedure 
+        
+        % Input
+        all_l = true;
+        if nargin > 1
+            all_l = varargin{1};
+            validateattributes(all_l, {'logical'}, {'scalar'}, ...
+                'cVessel.ISO19030', 'all', 1);
+        end
+        
+        sp_l = true;
+        if nargin > 2
+            sp_l = varargin{2};
+            validateattributes(sp_l, {'logical'}, {'scalar'}, ...
+                'cVessel.ISO19030', 'speedPower', 2);
+        end
+        
+        sfoc_l = true;
+        if nargin > 2
+            sfoc_l = varargin{3};
+            validateattributes(sfoc_l, {'logical'}, {'scalar'}, ...
+                'cVessel.ISO19030', 'SFOC', 3);
+        end
+        
+        % Call SQL procedure, with filter inputs
+        for oi = 1:numel(obj)
+            
+            imo = obj(oi).IMO_Vessel_Number;
+            inputArg_c = arrayfun(@num2str, [imo, all_l, sp_l, sfoc_l],...
+                'Uni', 0);
+            proc_sql = 'ProcessISO19030';
+            obj = obj(oi).call(proc_sql, inputArg_c);
+            
+            % Refresh performance data
+            
+            [~, tempTbl] = obj(oi).select('PerformanceData', ...
+                {'DateTime_UTC', 'Speed_Index'}, ...
+                ['IMO_Vessel_Number = ', num2str(obj(oi).IMO_Vessel_Number)]);
+            obj(oi).Speed_Index = tempTbl.speed_index;
+            obj(oi).DateTime_UTC = tempTbl.datetime_utc;
+        end
+        
+        end
+        
+        function obj = plotSpeedIndex(obj)
+        % 
+            
+            figure();
+            for oi = 1:numel(obj)
+                
+                scatter(obj(oi).DateTime_UTC, obj(oi).Speed_Index, '*');
+            end
+        end
+        
 %        function obj = fitSpeedPower(obj, speed, power, varargin)
 %        % fitSpeedPower Fit speed, power data to model
 %        
