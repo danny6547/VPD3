@@ -1,6 +1,6 @@
 /* Calculate speed loss as a percentage */
 
-USE hull_performance;
+
 
 
 delimiter //

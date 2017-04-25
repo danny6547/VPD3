@@ -2,7 +2,7 @@
 /* Returns TRUE in output isAvailable when there is at least one row containing both non-NULL values for 
 Shaft_Torque and Shaft_Revolutions. */
 
-USE hull_performance;
+
 
 
 delimiter //

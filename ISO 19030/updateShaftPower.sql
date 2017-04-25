@@ -1,6 +1,6 @@
 /* Calculate shaft power from torque and revolutions */
 
-USE hull_performance;
+
 
 
 delimiter //

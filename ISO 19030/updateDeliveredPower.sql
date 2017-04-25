@@ -5,7 +5,7 @@ calculated and, if so, it will call updateShaftPower. If not, it will check
 whether brake power can be calculated and if so, it will call 
 updateBrakePower. If not, an error will be returned. */
 
-USE hull_performance;
+
 
 
 DROP PROCEDURE IF EXISTS updateDeliveredPower;

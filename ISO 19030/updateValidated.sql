@@ -1,6 +1,6 @@
 /* Determine whether data is validated based on the criteria in Annex J */
 
-USE hull_performance;
+
 
 
 DROP PROCEDURE IF EXISTS updateValidated;

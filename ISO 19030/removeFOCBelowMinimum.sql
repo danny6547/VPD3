@@ -1,6 +1,6 @@
 /* Remove values of Mass of fuel consumed corresponding to those below the minimum rate of consumption for which SFOC data is available */
 
-USE hull_performance;
+
 
 DROP PROCEDURE IF EXISTS removeFOCBelowMinimum;
 

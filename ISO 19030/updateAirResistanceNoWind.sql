@@ -1,7 +1,5 @@
 /* Update Air Resistance in no-wind condition */
 
-USE test2;
-
 DROP PROCEDURE IF EXISTS updateAirResistanceNoWind;
 
 delimiter //
@@ -9,7 +7,7 @@ delimiter //
 CREATE PROCEDURE updateAirResistanceNoWind(imo INT)
 BEGIN
 
-	SET @currModel = (SELECT WindModelID FROM Vessels WHERE IMO_Vessel_Number = imo);
+	SET @currModel = (SELECT Wind_Model_ID FROM Vessels WHERE IMO_Vessel_Number = imo);
 
 	UPDATE tempRawISO
 	SET Air_Resistance_No_Wind = 

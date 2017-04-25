@@ -1,6 +1,6 @@
 /* Calculate brake power based on SFOC curve and mass of consumed fuel */
 
-USE hull_performance;
+
 
 
 delimiter //

@@ -257,5 +257,25 @@ DB: Document unknowns with ship model data (e.g. the Man Engine data, is SFOC cu
 # DB: recreate table windcoefficientdirection, now with only columns modelID, Direction, Coefficient
 # updateWindResistance: find nearest to measured direction
 cVWC.extend360: rotate angular vectors by 180 degrees to cover full circle
-cV.insertIntoSPC: method to write coefficient data into table
-cVSP.fit: method to fit data to regression
+# cV.insertIntoSPC: method to write coefficient data into table
+# cVSP.fit: method to fit data to regression
+# cVWC.nextModelID: get next highest unique index
+# cVWC: hide inherited properties
+DB.insertIntoWind: autoincrement the modelID field when input value is empty
+cV.insertIntoWindCoeff: call DB.insertIntoWind in loop
+DB: replace IMO_Vessel_Number in speedPowerCoefficients table with ModelID
+cVWC.incrementModelID: check if exact values found in DB and assign values accordingly
+# DB: make the following table: columns non-null
+#	SpeedPower: IMO
+#	Vessels: IMO
+# DB.createTable_: write procedure from each create table script
+DB.createTables: create all tables by calling all create table procedures
+cDB.create(dbname): static method which calls createTables.sql, loads all raw and processed data into tables.
+cDB.createTest: calls cDB.create(test)
+cDB.createHullPer: calls cDB.create(hull_performance)
+cConnectMySQLDB.test: change name of test DB from 'test2' to 'test'
+DB: rebuild (some of the) DDDates and VesselCoating tables
+cVessel: intended to be arrays of cV, but inherited class cMySQL intended to work on scalars. Should cMySQL methods call only the first object in array?
+cV.assignPerformanceData: hidden method
+cV.performanceData: error when vessel (cassiopiea) has no dry-dock data
+cV.DryDockings: property dependent on DryDockDates'

@@ -1,6 +1,6 @@
 /* Correct delivered power values for environmental factors. */
 
-USE hull_performance;
+
 
 DROP PROCEDURE IF EXISTS updateCorrectedPower;
 

@@ -4,7 +4,7 @@
 /* 2. The series of durations over which the parameters will be averaged begins at the first row. */
 /* 3. The highest precision in DateTime_UTC is 1 second (procedure may work as intended if additional precision given for this value). */
 
-USE hull_performance;
+
 
 
 DROP PROCEDURE IF EXISTS normaliseHigherFreq;

@@ -1,6 +1,6 @@
 /* Remove rows containing any invalid data (don't worry, I'm gonna rewrite this later.) */
 
-USE hull_performance;
+
 
 
 delimiter //

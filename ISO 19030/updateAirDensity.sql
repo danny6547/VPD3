@@ -1,6 +1,6 @@
 /* Update air density */
 
-USE hull_performance;
+
 
 
 delimiter //
