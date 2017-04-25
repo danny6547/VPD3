@@ -1090,5 +1090,24 @@ classdef cVessel < cMySQL
            end
        end
 
+       function model = get.Engine_Model(obj)
+       % Get method for dependent property Engine_Model
+          
+          model = '';
+          if ~isempty(obj.Engine)
+              
+              model = obj.Engine.Name;
+          end
+       end
+       
+       function modelId = get.Wind_Model_ID(obj)
+       % Get method for dependent variable Wind_Model_ID
+       
+       modelId = [];
+       if ~isempty(obj.WindCoefficient)
+            modelId = obj.WindCoefficient.ModelID;
+       end
+       
+       end
     end
 end
