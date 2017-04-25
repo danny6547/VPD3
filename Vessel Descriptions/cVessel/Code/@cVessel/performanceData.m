@@ -1,4 +1,4 @@
-function [ out ] = performanceData(imo, varargin)
+function [ out ] = performanceData(obj, imo, varargin)
 %performanceData Read ship performance data from database, over time range
 %   [out] = performanceData(imo) will read all data for the ship
 %   identified by numeric vector IMO from the database into output 
@@ -19,7 +19,7 @@ validateattributes(imo, {'numeric'}, {'vector', 'integer', 'positive'},...
     'performanceData', 'IMO', 1);
 ddi_l = false;
 
-if nargin > 1
+if nargin > 2
     ddi_l = true;
     ddi = varargin{1};
     validateattributes(ddi, {'numeric'}, {'vector', 'integer', '>=', 0},...
@@ -27,6 +27,7 @@ if nargin > 1
 end
 
 % Build SQL commands from basic statements
+% sqlPerformanceDataBase = {'SELECT ', ' FROM hull_performance.DNVGLPerformanceData'};
 sqlPerformanceDataBase = {'SELECT ', ' FROM hull_performance.DNVGLPerformanceData'};
 
 % SQL command for Column Names
@@ -48,11 +49,13 @@ sqlSingle(end) = [];
 sqlMulti_c = strsplit(sqlSingle, '\n');
 
 % Connect to Database
-conn = adodb_connect(['driver=MySQL ODBC 5.3 ANSI Driver;',...
-    'Server=localhost;',...
-    'Database=hull_performance;',...
-    'Uid=root;',...
-    'Pwd=HullPerf2016;']);
+conn = obj.Connection;
+% 
+% conn = adodb_connect(['driver=MySQL ODBC 5.3 ANSI Driver;',...
+%     'Server=localhost;',...
+%     'Database=hull_performance;',...
+%     'Uid=root;',...
+%     'Pwd=HullPerf2016;']);
 
 if ddi_l
 

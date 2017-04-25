@@ -48,7 +48,7 @@ classdef cVessel < cMySQL
         
         Speed;
         Power;
-        Displacement;
+        Displacement
         Trim;
         Engine_Model;
         Wind_Model_ID;
@@ -152,7 +152,7 @@ classdef cVessel < cMySQL
                end
                
                readInputs_c = [{imo}, DDi];
-               shipData = cVessel.performanceData(readInputs_c{:});
+               shipData = obj.performanceData(readInputs_c{:});
            end
            
            if imo_l
@@ -161,7 +161,7 @@ classdef cVessel < cMySQL
                 validateattributes(imo, {'numeric'},...
                   {'positive', 'real', 'integer'}, 'cVessel constructor',...
                   'IMO', 1);
-                shipData = cVessel.performanceData(readInputs_c{:});
+                shipData = obj.performanceData(readInputs_c{:});
            end
            
            if shipData_l && file_l
