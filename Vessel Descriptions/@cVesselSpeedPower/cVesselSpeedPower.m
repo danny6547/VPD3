@@ -9,7 +9,7 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
         Trim double;
         Displacement double;
         Speed_Power_Source char = '';
-        SpeedPowerCoefficients double = [];
+%         SpeedPowerCoefficients double = [];
         Exponent_A double = [];
         Exponent_B double = [];
         R_Squared double = [];
@@ -34,6 +34,58 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
 %            end
        end
        
+       function [obj, coeffs, R2] = fit(obj, varargin)
+       % fit Fit data to exponential curve
+       
+       % Iterate over objects
+       numObj = numel(obj);
+       coeffs = nan(numObj, 2);
+       R2 = nan(numObj, 1);
+       for oi = 1:numObj
+
+            % Inputs
+            speed = obj(oi).Speed;
+            if nargin > 1
+
+               speed = varargin{1};
+               validateattributes(speed, {'numeric'}, {'vector'}, ...
+                   'cVesselSpeedPower.fit', 'speed', 2);
+            end
+
+            power = obj(oi).Power;
+            if nargin > 2
+
+               power = varargin{2};
+               validateattributes(power, {'numeric'}, {'vector'}, ...
+                   'cVesselSpeedPower.fit', 'power', 3);
+            end
+
+            if isempty(speed) || isempty(power)
+
+                errid = 'cVSP:SpeedPowerRequired';
+                errmsg = ['Speed and Power must both be given, either through'...
+                  ' inputs or in object properties'];
+                error(errid, errmsg);
+            end
+            
+            % Fit
+            fo = polyfit(log(power), speed, 1);
+            
+            % Get statistics of fit
+            residuals = speed - (fo(2) + fo(1).*log(power));
+            r2 = 1 - (sum(residuals.^2) / sum((speed - mean(speed)).^2));
+            
+            % Assign into obj, outputs
+            obj(oi).Speed = speed;
+            obj(oi).Power = power;
+            obj(oi).Exponent_A = fo(1);
+            obj(oi).Exponent_B = fo(2);
+            obj(oi).R_Squared = r2;
+            
+            coeffs(oi, :) = fo;
+            R2(oi) = r2;
+       end
+       end
        
     end
     
@@ -87,7 +139,7 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
         
         power = obj.Power;
         if ~isempty(power) && (~isempty(speed) && ~isempty(power))...
-                && ~isequal(size(power), speed)
+                && ~isequal(size(power), size(speed))
             
             errID = 'cSP:SPSizeMismatch';
             errMsg = 'Speed vector length must match that of Power';
