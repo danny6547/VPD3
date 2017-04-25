@@ -19,7 +19,7 @@ classdef cVessel < cMySQL
         DryDockInterval double = [];
         SpeedPower cVesselSpeedPower = cVesselSpeedPower();
         DryDockDates = cVesselDryDockDates();
-        WindResistance = cVesselWindCoefficient();
+        WindCoefficient = cVesselWindCoefficient();
         
         Variable = 'Speed_Index';
         Performance_Index
@@ -50,7 +50,11 @@ classdef cVessel < cMySQL
         Power;
         Displacement;
         Trim;
+        Engine_Model;
+        Wind_Model_ID;
     end
+    
+    
     
     methods
     
@@ -1004,6 +1008,15 @@ classdef cVessel < cMySQL
        % Index appropriately
        trim = spdt(:, 4);
            
+       end
+       
+       function id = get.WindModelID(obj)
+           
+           id = [];
+           if ~isempty(obj.WindCoefficient)
+               
+               id = obj.WindCoefficient.ModelID;
+           end
        end
 
     end
