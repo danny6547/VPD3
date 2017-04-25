@@ -1,5 +1,5 @@
 %% Get file paths
-homeDir = 'C:\Users\damcl\Documents\Ship Data';
+homeDir = 'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data';
 amcl = 'AMCL';
 aesm = 'Anglo-Eastern Ship management';
 euronav = 'Euronav';
@@ -17,10 +17,10 @@ for si = 1:numel(allSubs_c)
 end
 
 % CMA CGM
-cmaSiDir_ch = 'C:\Users\damcl\Documents\Ship Data\CMA CGM\CMA CGM 090217';
+cmaSiDir_ch = fullfile(homeDir, 'CMA CGM\CMA CGM 090217'); %'C:\Users\damcl\Documents\Ship Data\CMA CGM\CMA CGM 090217';
 cmaSiDir = rdir([cmaSiDir_ch, '\**\*Single vessel timeline*.xlsx']);
 cmaSi_c = {cmaSiDir.name}';
-cmaPiDir_ch = 'C:\Users\damcl\Documents\Ship Data\CMA CGM\CMA CGM 290816';
+cmaPiDir_ch = fullfile(homeDir, 'CMA CGM\CMA CGM 290816'); %'C:\Users\damcl\Documents\Ship Data\CMA CGM\CMA CGM 290816';
 cmaPiDir = rdir([cmaPiDir_ch, '\**\*Single vessel timeline*.xlsx']);
 cmaPi_c = {cmaPiDir.name}';
 cmaFile_c = cell(length(cmaPi_c) + length(cmaSi_c), 1);
@@ -268,11 +268,17 @@ IMO_v = [...
 ];
 
 %% Load into database
-obj = cHullPerDB();
+obj_ves = cVessel();
+
+% Allow script to be called with cDB object, when creating database
+if exist('obj', 'var') && isa(obj, 'cDB')
+    obj_ves.Database = obj.Database;
+end
 % obj = obj.loadDNVGLPerformance(allFiles, IMO_v);
 piFile_ch = 'C:\Users\damcl\Documents\Ship Data\AMCL\tempEI2113 Hull and propeller performance - Single vessel timeline (2)_performance.tab';
 siFile_ch = 'C:\Users\damcl\Documents\Ship Data\AMCL\tempEI2113 Hull and propeller performance - Single vessel timeline (2)_speed.tab';
 tabFiles = {piFile_ch, siFile_ch};
-obj = obj.loadDNVGLPerformance(tabFiles, IMO_v);
+% obj.Da
+obj_ves = obj_ves.loadDNVGLPerformance(allFiles, IMO_v);
 
 clear obj;
