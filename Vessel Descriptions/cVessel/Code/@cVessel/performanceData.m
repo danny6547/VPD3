@@ -24,6 +24,7 @@ if nargin > 2
     ddi = varargin{1};
     validateattributes(ddi, {'numeric'}, {'vector', 'integer', '>=', 0},...
         'performanceData', 'DDi', 2)
+%     [obj.DryDockInterval] = ddi;
 end
 
 % Build SQL commands from basic statements
@@ -57,6 +58,9 @@ conn = obj.Connection;
 %     'Uid=root;',...
 %     'Pwd=HullPerf2016;']);
 
+numShips = numel(imo);
+ddIntervalIndex_c = cell(1, numShips);
+
 if ddi_l
 
     % Refine by Dry Dock interval
@@ -81,23 +85,23 @@ if ddi_l
         b, dddates, 'Uni', 0);
 
     % Remove unwanted Dry-Docking intervals
-    if ~isequal(ddi, 0)
+%     intervalsI_c = cell(1, numShips);
 
-        numIntervals_c = cellfun(@(x) size(x, 1), intervalDates_c, 'Uni', 0);
+    numIntervals_c = cellfun(@(x) size(x, 1), intervalDates_c, 'Uni', 0);
 %         if any(numIntervals > max(ddi))
 %             numIntervals(numIntervals > max(ddi)) = numIntervals;
 %         end
 %         numIntervals_c = num2cell(numIntervals);
-        intervalsI_c = repmat({ddi}, size(intervalDates_c));
-        intervalsI_c = cellfun(@(x, y) x(x<=y), intervalsI_c, numIntervals_c, 'Uni', 0);
+    intervalsI_c = repmat({ddi}, size(intervalDates_c));
+    intervalsI_c = cellfun(@(x, y) x(x<=y), intervalsI_c, numIntervals_c, 'Uni', 0);
 
+    if ~isequal(ddi, 0)
 %         intervalDates_c = cellfun(@(x, y) x(y, :), intervalDates_c,...
 %             numIntervals_c, 'Uni', 0);
         intervalDates_c = cellfun(@(x, y) x(y, :), intervalDates_c,...
             intervalsI_c, 'Uni', 0);
     end
 
-    numShips = numel(imo);
     numDocks = cellfun(@(x) size(x, 1), intervalDates_c, 'Uni', 0);
     maxNumDocks = max([numDocks{:}]);
     e = cellfun(@(x, y) repmat({x}, y, 1), sqlMulti_c, numDocks, 'Uni', 0);
@@ -114,6 +118,28 @@ if ddi_l
     o = cellfun(@(x, y) [x ' AND DateTime_UTC > ' y{1} ' AND DateTime_UTC < ' y{2}], r, u,...
         'Uni', 0, 'ErrorHandler', @(strct, a, b) (''));
     sqlMulti_c = o;
+    
+    % Find dry docking indices of each element of output array
+    ddIntervalIndex_c = cell(maxNumDocks, numShips);
+    if isequal(ddi, 0)
+        
+        intervalsI_c = arrayfun(@(x) 1:x, sum(~cellfun(@isempty, u)), 'Uni', 0);
+    end
+    if isvector(intervalsI_c)
+
+        emptyVessels_l = cellfun(@isempty, intervalsI_c);
+        intervalsI_c(emptyVessels_l) = [];
+        ddIntervalIndex_c(:, emptyVessels_l) = [];
+    end
+%     ddIntervalIndex_c(:, all(cellfun(@isempty, intervalsI_c))) = [];
+%     intervalsI_c(:, all(cellfun(@isempty, intervalsI_c))) = [];
+    rowI = cellfun(@(x) 1:numel(x), intervalsI_c, 'Uni', 0);
+    colI = cellfun(@(x, y) repmat(x, [y, 1]), num2cell(1:size(intervalsI_c, 2)), rowI,...
+        'Uni', 0);
+    indI = cellfun(@(x, y) sub2ind(size(ddIntervalIndex_c), x, y), rowI,...
+        colI, 'Uni', 0);
+    ddIntervalIndex_c([indI{:}]) = num2cell([intervalsI_c{:}]);
+    
 end
 
 % Execute SQL
@@ -129,21 +155,30 @@ if any(s)
     starts = first(col_l);
     x = arrayfun(@(x) circshift((1:size(s, 1))', [-x + 1, 0]), starts, 'Uni', 0);
     c = [x{:}]';
-    if isscalar(find(col_l))
-        repr = sub2ind(size(s), c, repmat(find(col_l), size(c, 1), size(c, 2)));
-        orig = sub2ind(size(s), repmat(1:size(s, 1), size(c, 1), 1), ...
-            repmat(find(col_l), size(c, 1), size(c, 2)));
-    else
-        repr = sub2ind(size(s), c, repmat(find(col_l), 1, size(c, 2)));
-        orig = sub2ind(size(s), repmat(1:size(s, 1), size(c, 1), 1), ...
-            repmat(find(col_l), 1, size(c, 2)));
+    if ~isempty(find(col_l, 1))
+        if isscalar(find(col_l))
+            repr = sub2ind(size(s), c, repmat(find(col_l), size(c, 1), size(c, 2)));
+            orig = sub2ind(size(s), repmat(1:size(s, 1), size(c, 1), 1), ...
+                repmat(find(col_l), size(c, 1), size(c, 2)));
+        else
+            repr = sub2ind(size(s), c, repmat(find(col_l), 1, size(c, 2)));
+            orig = sub2ind(size(s), repmat(1:size(s, 1), size(c, 1), 1), ...
+                repmat(find(col_l), 1, size(c, 2)));
+        end
+        w(orig) = w(repr);
     end
-    w(orig) = w(repr);
 end
 
 % Remove any indices of DD dimension which are empty
 emptyDD_l = all(cellfun(@isempty, w)');
 w(emptyDD_l, :) = [];
+
+% Remove any indices of Vessel dimension which are all empty
+emptyVessels_l = cellfun(@isempty, w);
+if ~isvector(emptyVessels_l) && ~isscalar(emptyVessels_l)
+    emptyVessels_l = all(emptyVessels_l);
+end
+w(:, emptyVessels_l) = [];
 
 % Assemble outputs into struct
 fieldnames_c = strrep(PerformanceDataColumnsNames_c, ' ', '_');
@@ -160,5 +195,11 @@ d = cellfun(@(x, y, z) [x, y, z], t, u, e, 'Uni', 0);
 % IMO can be reduced to scalar
 out = cellfun(@(x) cell2struct(x, fieldnames_c, 2), d);
 out = arrayfun(@(x, y) setfield(y, 'IMO_Vessel_Number', double(unique(x.IMO_Vessel_Number))), out, out);
+
+% Assign Dry Dock Index into structure array
+[out.DryDockInterval] = deal(ddIntervalIndex_c{:});
+
+% Assign into obj
+% obj = obj.assignPerformanceData(out);
 
 end

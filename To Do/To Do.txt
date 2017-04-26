@@ -276,6 +276,9 @@ cDB.createHullPer: calls cDB.create(hull_performance)
 cConnectMySQLDB.test: change name of test DB from 'test2' to 'test'
 DB: rebuild (some of the) DDDates and VesselCoating tables
 cVessel: intended to be arrays of cV, but inherited class cMySQL intended to work on scalars. Should cMySQL methods call only the first object in array?
-cV.assignPerformanceData: hidden method
 cV.performanceData: error when vessel (cassiopiea) has no dry-dock data
-cV.DryDockings: property dependent on DryDockDates'
+cV.DryDockings: property dependent on DryDockDates
+cV.expandArray: hidden, private method to repeat array to size of struct sized by dry dock intervals, vessels
+# cV.fitToData(struct): hidden, private method to repeat existing rows of obj so that struct data can now fit into it
+cV.assignPerformanceData: hidden private method taking object array of appropriate size
+cV.set.PerformanceTable: get performance struct with same parameters as before, call fitToData, assign data.

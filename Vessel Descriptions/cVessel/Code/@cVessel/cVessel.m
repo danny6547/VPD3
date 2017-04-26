@@ -21,6 +21,7 @@ classdef cVessel < cMySQL
         DryDockDates = cVesselDryDockDates();
         WindCoefficient = cVesselWindCoefficient();
         
+        PerformanceTable = 'DNVGLPerformanceData';
         Variable = 'Speed_Index';
         Performance_Index
         Speed_Index
@@ -42,6 +43,7 @@ classdef cVessel < cMySQL
         DateFormStr char = 'dd-mm-yyyy';
         CurrIter = 1;
         IterFinished = false;
+        DryDockIndexDB = [];
     end
     
     properties(Dependent)
@@ -53,8 +55,6 @@ classdef cVessel < cMySQL
         Engine_Model;
         Wind_Model_ID;
     end
-    
-    
     
     methods
     
@@ -209,7 +209,8 @@ classdef cVessel < cMySQL
             validFields = {'DateTime_UTC', ...
                             'Performance_Index',...
                             'Speed_Index',...
-                            'IMO_Vessel_Number'};
+                            'IMO_Vessel_Number'...
+                            'DryDockInterval'};
             inputFields = fieldnames(shipData);
             fields2read = intersect(validFields, inputFields);
             
@@ -230,7 +231,6 @@ classdef cVessel < cMySQL
             prop_c = {'Performance_Index'...
                     'Speed_Index'};
             obj = obj.filterOnUniqueIndex(index_c, prop_c);
-            
             
             % Error when inputs not recognised
             
@@ -831,12 +831,13 @@ classdef cVessel < cMySQL
             obj = obj(oi).call(proc_sql, inputArg_c);
             
             % Refresh performance data
-            
+            cols = {'DateTime_UTC', 'Speed_Index'};
             [~, tempTbl] = obj(oi).select('PerformanceData', ...
-                {'DateTime_UTC', 'Speed_Index'}, ...
+                cols, ...
                 ['IMO_Vessel_Number = ', num2str(obj(oi).IMO_Vessel_Number)]);
-            obj(oi).Speed_Index = tempTbl.speed_index;
-            obj(oi).DateTime_UTC = tempTbl.datetime_utc;
+            obj(oi) = assignPerformanceData(obj(oi), tempTbl, cols);
+%             obj(oi).Speed_Index = tempTbl.speed_index;
+%             obj(oi).DateTime_UTC = tempTbl.datetime_utc;
         end
         
         end
@@ -966,6 +967,79 @@ classdef cVessel < cMySQL
             end
         end
         
+        function obj = dummy(obj, varargin)
+           
+            obj = obj.fitToData(varargin{:});
+            
+        end
+        
+    end
+    
+    methods(Access = private, Hidden)
+        
+        function obj = assignPerformanceData(obj, dataStruct, varargin)
+        % assignPerformanceData Assign from struct or table to obj
+        
+        % Input
+        propName = {'DateTime_UTC',...
+            'Speed_Index',...
+            'Performance_Index'};
+        if nargin > 1
+            
+            propName = varargin{1};
+            propName = validateCellStr(propName, ...
+                'cVessel.assignPerformanceData', 'propName', 3);
+        end
+        
+        % Iterate objects and assign to properties
+        for oi = 1:numel(obj)
+            for pi = 1:numel(propName)
+
+                obj(oi).(propName{pi}) = dataStruct(oi).(propName{pi});
+            end
+        end
+        end
+        
+        function obj = fitToData(obj, struc)
+        % fitToData Expand OBJ to fit structure based on dates in structure
+        
+        % Inputs
+        validateattributes(struc, {'struct'}, {'2d'}, ...
+            'cVessel.fitToData', 'struc', 2);
+        
+        % Number of new vessels / columns
+%         newCols = size(struc, 2) - size(obj, 2);
+        oldColsI = 1:size(obj, 2);
+        
+        % Number of new rows / ddi before and after
+        oldRows_c = arrayfun(@(x) x.DryDockInterval, obj, 'Uni', 0);
+%         oldRows_cc = mat2cell(oldRows_c, size(oldRows_c, 1), ...
+%             ones(1, size(oldRows_c, 2)));
+        allIntervalRow_l = all(cellfun(@(x) ~(isempty(x)), oldRows_c));
+%         allIntervalRow_l = cellfun(@(x) ~any(isempty(x)), oldRows_cc);
+        oldIntervals = [oldRows_c{:, find(allIntervalRow_l, 1)}];
+        
+        newRows_c = arrayfun(@(x) x.DryDockInterval, struc, 'Uni', 0);
+        newRows_cc = mat2cell(newRows_c, size(newRows_c, 1), ...
+            ones(1, size(newRows_c, 2)));
+        allIntervalRow_l = cellfun(@(x) ~any(isempty(x)), newRows_cc);
+        newIntervals = [newRows_c{:, find(allIntervalRow_l, 1)}];
+        
+        [~, ~, oldRowsI] = intersect(oldIntervals, newIntervals);
+        
+        % Assign old objects to keep into new array
+        newObj(size(struc, 1), size(struc, 2)) = cVessel();
+        
+        % Assign existing objects into new array if they should exist in
+        % new array
+        if ~isempty(oldIntervals) && ~isempty(oldRowsI) && ~isempty(oldColsI)
+            
+            newObj(oldRowsI, oldColsI) = obj;
+        end
+        
+        obj = newObj;
+        
+        end
     end
     
     methods
@@ -1081,7 +1155,7 @@ classdef cVessel < cMySQL
            
        end
        
-       function id = get.WindModelID(obj)
+       function id = get.Wind_Model_ID(obj)
            
            id = [];
            if ~isempty(obj.WindCoefficient)
@@ -1100,12 +1174,30 @@ classdef cVessel < cMySQL
           end
        end
        
-       function modelId = get.Wind_Model_ID(obj)
-       % Get method for dependent variable Wind_Model_ID
+       function obj = set.PerformanceTable(obj, tabl)
+       % Set method for PerformanceTable
        
-       modelId = [];
-       if ~isempty(obj.WindCoefficient)
-            modelId = obj.WindCoefficient.ModelID;
+       % Error if not member of accepted table names
+       dataTables_c = {'DNVGLPerformanceData', 'PerformanceData', ...
+           'ForcePerformanceData'};
+       if ~ismember(tabl, dataTables_c)
+          
+          errid = 'cV:IncorrectPerformanceTable';
+          errmsg = 'Performance table name must match one of those in DB';
+          error(errid, errmsg);
+       end
+       
+       % If name has changed, load performance data from new table
+       oldTabl = obj.PerformanceTable;
+       obj.PerformanceTable = tabl;
+       if ~isequal(oldTabl, tabl);
+           
+           % Get same inputs to performance Data as before: IMO, DDi
+           ddi = obj.DryDockIndexDB;
+           imo = obj.IMO_Vessel_Number;
+           
+           newData = obj.performanceData(imo, ddi);
+           obj = obj.assignPerformanceData(newData);
        end
        
        end
