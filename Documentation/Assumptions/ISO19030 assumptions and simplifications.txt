@@ -1,3 +1,7 @@
 For vessel CMA CGM Almaviva 9450648, no wind resistance data available, data given is for 6800TEU vessel in ISO15016.
 In class cVesselWindCoefficient, it is possible to create multiple similar modelID because the databases's modelID is not updated based on the object's modelID. It is therefore required that the time between assigning this property and writing to the database is minimised.
 When displacement table not found for current vessel, ISO19030 will use block coefficient, which is non-compliant.
+All raw data table names match those of their corresponding performance table except for the characters "raw" replacing the characters "performanceData" (used by cMySQL.colNames).
+Assume all raw data tables have a column named "DateTime_UTC" (used by cVessel.rawData).
+Wind resistance coefficient direction convention is that used in ISO190303 (Fig. E.1).
+Quantity Ades is mis-defined in Appendices E and G. It is taken as transverse proj. area in design loading condition, not current condition.
