@@ -99,9 +99,9 @@ while ~obj.iterFinished
     
     % Skip if empty
     currObj = obj(ii);
-    if all(isnan(currObj.Performance_Index))
-        continue
-    end
+%     if all(isnan(currObj.Performance_Index))
+%         continue
+%     end
     
     % Index into input and get dates
 %     currDate = datenum(char(currObj.DateTime_UTC), 'dd-mm-yyyy');
