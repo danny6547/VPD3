@@ -1105,14 +1105,21 @@ classdef cVessel < cMySQL
             inputArg_c = arrayfun(@num2str, [imo, all_l, sp_l, sfoc_l],...
                 'Uni', 0);
             proc_sql = 'ProcessISO19030';
-            obj = obj(oi).call(proc_sql, inputArg_c);
+            obj(oi) = obj(oi).call(proc_sql, inputArg_c);
             
             % Refresh performance data
             cols = {'DateTime_UTC', 'Speed_Index'};
             [~, tempTbl] = obj(oi).select('PerformanceData', ...
                 cols, ...
                 ['IMO_Vessel_Number = ', num2str(obj(oi).IMO_Vessel_Number)]);
-            obj(oi) = assignPerformanceData(obj(oi), tempTbl, cols);
+%             tempTbl = struct(tempTbl);
+            if isempty(tempTbl)
+                obj(oi).DateTime_UTC = [];
+                obj(oi).Performance_Index = [];
+                obj(oi).Speed_Index = [];
+            else
+                obj(oi) = assignPerformanceData(obj(oi), tempTbl, cols);
+            end
 %             obj(oi).Speed_Index = tempTbl.speed_index;
 %             obj(oi).DateTime_UTC = tempTbl.datetime_utc;
         end
@@ -1129,6 +1136,87 @@ classdef cVessel < cMySQL
             end
         end
         
+        function obj = updatePerformanceTable(obj, newTable)
+        % updatePerformanceTable Change value of PerformanceTable property
+            
+            % Error if input not member of accepted table names
+            dataTables_c = {'DNVGLPerformanceData', 'PerformanceData', ...
+               'ForcePerformanceData'};
+            if ~ismember(newTable, dataTables_c)
+
+              errid = 'cV:IncorrectPerformanceTable';
+              errmsg = 'Performance table name must match one of those in DB';
+              error(errid, errmsg);
+            end
+
+            % If name has changed, load performance data from new table
+            oldTabl = obj.PerformanceTable;
+            if ~isequal(oldTabl, newTable);
+                
+                % Assign table name
+                [obj.PerformanceTable] = deal(newTable);
+                
+                % Get new dd, vessel data
+                [imo, ddi] = currentIMODryDockIndex(obj);
+                ddi_c = {ddi};
+                newData = obj.performanceData(imo, ddi_c{:});
+
+                % Resize array to fit new data
+                obj = obj.fitToData(newData);
+
+                % Assign data
+                obj = obj.assignPerformanceData(newData);
+            end
+        end
+        
+        function [rawStruc, rawTable] = rawData(obj)
+        % rawData Get raw data for this vessel at this dry-docking interval
+        
+            % Get raw table name, performanceData inputs
+            rawTable = strrep(obj(1).PerformanceTable, 'PerformanceData',...
+                'raw');
+            [imo, ddi] = obj.currentIMODryDockIndex;
+            [~, rawColumns] = obj(1).colNames(rawTable);
+            excludedCols = {'id'};
+            rawColumns = setdiff(rawColumns, excludedCols);
+            inputs_c = {imo, ddi, rawColumns};
+            
+            % Get DDi, Vessel data from raw table using PerformanceTable
+            % property
+            perTable = obj(1).PerformanceTable;
+            [obj.PerformanceTable] = deal(rawTable);
+            rawStruc = obj(1).performanceData(inputs_c{:});
+            [obj.PerformanceTable] = deal(perTable);
+            
+            % Convert raw datetime to datenum
+            tempObj = obj;
+            tempObj = tempObj.assignPerformanceData(rawStruc, 'DateTime_UTC');
+            [rawStruc.DateTime_UTC] = deal(tempObj.DateTime_UTC);
+            
+            % Modify or Remove data affected not read directly from DB
+            rawStruc = rmfield(rawStruc, 'DryDockInterval');
+            dataField_c = setdiff(fieldnames(rawStruc), 'IMO_Vessel_Number');
+            dataField1 = dataField_c{1};
+            for ri = 1:numel(rawStruc)
+                
+                rawStruc(ri).IMO_Vessel_Number = ...
+                    repmat(rawStruc(ri).IMO_Vessel_Number, 1, ...
+                    length(rawStruc(ri).(dataField1)));
+            end
+            
+            rawStruc = arrayfun(@(x) structfun(@(y) y(:), x, 'Uni', 0),...
+                rawStruc);
+            
+            % Table output: create vector cell of tables, vertically
+            % concatenate them, return as vector of tables
+            rawTable = struct2table(rawStruc);
+        end
+        
+        function obj = loadFile(obj)
+            
+            
+            
+        end
 %        function obj = fitSpeedPower(obj, speed, power, varargin)
 %        % fitSpeedPower Fit speed, power data to model
 %        
@@ -1258,10 +1346,16 @@ classdef cVessel < cMySQL
         % assignPerformanceData Assign from struct or table to obj
         
         % Input
-        propName = {'DateTime_UTC',...
-            'Speed_Index',...
-            'Performance_Index'};
-        if nargin > 1
+%         validateattributes(dataStruct, {'struct'}, {}, ...
+%             'cVessel.assignPerformanceData', 'dataStruct', 2);
+        
+        propName = lower({'DateTime_UTC',...
+                    'Speed_Index',...
+                    'Performance_Index',...
+                    'DryDockInterval'
+                    });
+%         fieldName = lower(propName);
+        if nargin > 2
             
             propName = varargin{1};
             propName = validateCellStr(propName, ...
@@ -1272,7 +1366,7 @@ classdef cVessel < cMySQL
         for oi = 1:numel(obj)
             for pi = 1:numel(propName)
 
-                obj(oi).(propName{pi}) = dataStruct(oi).(propName{pi});
+                obj(oi).(propName{pi}) = dataStruct.(lower(propName{pi}));
             end
         end
         end
@@ -1378,6 +1472,16 @@ classdef cVessel < cMySQL
             end
             obj.DateTime_UTC = date_v;
         
+       end
+       
+       function obj = set.Performance_Index(obj, per)
+           
+           obj.Performance_Index = per(:)';
+       end
+       
+       function obj = set.Speed_Index(obj, spe)
+           
+           obj.Speed_Index = spe(:)';
        end
        
        function obj = set.Variable(obj, variable)
