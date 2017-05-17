@@ -26,12 +26,13 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
     
        function obj = cVesselSpeedPower(varargin)
            
-%            if nargin > 0
-%               
+           if nargin > 0
+              
 %                size_c = num2cell(size(varargin{1}));
 %                obj(size_c{:}) = cVesselSpeedPower();
-%                
-%            end
+%                propValue_c = 
+               set(obj, varargin{:});
+           end
        end
        
        function [obj, coeffs, R2] = fit(obj, varargin)
