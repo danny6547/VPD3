@@ -268,6 +268,32 @@ classdef cVessel < cMySQL
        
        end
        
+       function obj = insert(obj)
+       % insert Insert all available vessel data into database
+           
+           % Vessels
+           obj = obj.insertIntoVessels();
+           
+           % SpeedPower
+           obj = insertIntoSpeedPower(obj);
+           
+           % SpeedPower Coefficients
+           obj = insertIntoSpeedPowerCoefficients(obj);
+           
+           % Wind
+           obj = insertIntoWindCoefficients(obj);
+           
+           % Dry Dock Dates
+           obj = insertIntoDryDockDates(obj);
+           
+           % SFOC
+           obj = insertIntoSFOCCoefficients(obj);
+           
+           % Bunker delivery notes
+           obj = insertBunkerDeliveryNote(obj);
+           
+       end
+       
        function obj = insertIntoVessels(obj)
        % insertIntoVessels Insert vessel data into table 'Vessels'.
        
@@ -340,8 +366,10 @@ classdef cVessel < cMySQL
 %            end
            
            dataObj = [obj.Engine];
-           tab = 'SFOCCoefficients';
-           obj.insertIntoTable(tab, dataObj, 'Engine_Model', {dataObj.Name});
+           if ~isempty(dataObj)
+               tab = 'SFOCCoefficients';
+               obj.insertIntoTable(tab, dataObj, 'Engine_Model', {dataObj.Name});
+           end
 %        end
        
        % Iterate over engines, build matrix
@@ -428,10 +456,13 @@ classdef cVessel < cMySQL
        % insertIntoDryDocking Insert data into table "DryDockDates"
 
            dataObj = [obj.DryDockDates];
-           imo = [obj.IMO_Vessel_Number];
-           [dataObj.IMO_Vessel_Number] = deal(imo(:));
-           tab = 'DryDockDates';
-           obj.insertIntoTable(tab, dataObj);
+           dataObj(isempty(dataObj)) = [];
+           if ~isempty(dataObj)
+               imo = [obj.IMO_Vessel_Number];
+               [dataObj.IMO_Vessel_Number] = deal(imo(:));
+               tab = 'DryDockDates';
+               obj.insertIntoTable(tab, dataObj);
+           end
        end
        
        function skip = isPerDataEmpty(obj)
