@@ -6,6 +6,7 @@ classdef cVesselWindCoefficient < cMySQL
         
         Direction double = [];
         Coefficient double = [];
+        Wind_Reference_Height_Design = [];
         ModelID = [];
         Name char = '';
         
