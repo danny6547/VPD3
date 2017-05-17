@@ -23,6 +23,8 @@ BEGIN
 							 Speed_Power_Source TEXT,
 							 LBP DOUBLE(10, 5),
 							 Wind_Model_ID INT,
+                             Wind_Reference_Height_Design DOUBLE(5, 3),
+                             Anemometer_Height DOUBLE(5, 3),
 							 CONSTRAINT UNIQUE(IMO_Vessel_Number)
 							 );
 						 
