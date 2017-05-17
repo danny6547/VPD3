@@ -82,6 +82,26 @@ classdef cVesselEngine < handle
        end
     end
     
+    methods(Hidden)
+        
+        function empty = isempty(obj) 
+            
+            if any(size(obj) == 0)
+                empty = true;
+                return
+            end
+            
+            props = properties(obj);
+            empty = false(size(props));
+            for pi = 1:numel(props)
+                prop = props{pi};
+                empty(pi) = isempty(obj.(prop));
+            end
+            empty = all(empty);
+        end
+        
+    end
+    
     methods(Static)
        
        function powerPCT = powerPercentageMCR(power, MCR)
