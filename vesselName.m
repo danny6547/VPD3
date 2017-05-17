@@ -14,6 +14,10 @@ validIMO_l = ~isnan(IMOin) & (IMOin ~= 0);
 IMOOut = IMOin;
 nameOut = repmat({''}, size(IMOOut));
 IMOin = IMOin(validIMO_l);
+if isempty(IMOin)
+    name = '';
+    return
+end
 name = repmat({''}, size(IMOin));
 
 % Inputs
