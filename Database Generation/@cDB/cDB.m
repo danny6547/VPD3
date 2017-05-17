@@ -195,6 +195,7 @@ classdef cDB < cMySQL
                     'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data\CMA CGM\Almaviva, Cassiopeia, Gemini\1 Operational reporting 2017-01-03 12_41.csv'
                     'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data\Anglo-Eastern Ship management\1 Operational reporting 2017-02-08 11-11.csv'
                     'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data\AMCL\1 Operational reporting 2017-02-08 11-15.csv'
+                    'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data\Berge Kibo\DNVGL\Raw\1 Operational reporting 2017-03-10 13_58.csv'
                     };
        bunkerFiles_c = {...
            'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data\Yang Ming\DNVGL Raw\2 Bunker reporting 2017-04-24 08_09.csv'...
