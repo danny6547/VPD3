@@ -232,10 +232,12 @@ BEGIN
 					 JOIN
 						(SELECT
 								id,
+								IMO_Vessel_Number,
 							   Trim,
 							  (Trim - 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AS 'Lower Trim',
 							  (Trim + 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AS 'Upper Trim'
-						FROM tempRawISO) AS b) AS c
+						FROM tempRawISO) AS b
+							ON a.IMO_Vessel_Number = b.IMO_Vessel_Number) AS c
 					 INNER JOIN
 						(
 						SELECT f.id, 'SPTrim', 'Actual Trim', `Lower Trim`, `Upper Trim`, ValidTrim, MIN(DiffTrim) AS MinDiff
@@ -251,10 +253,12 @@ BEGIN
 								 JOIN
 									(SELECT
 											id,
+											IMO_Vessel_Number,
 										   Trim,
 										  (Trim - 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AS 'Lower Trim',
 										  (Trim + 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AS 'Upper Trim'
-									FROM tempRawISO) AS d) AS f
+									FROM tempRawISO) AS d
+							ON a.IMO_Vessel_Number = d.IMO_Vessel_Number) AS f
 							GROUP BY id) AS e /* 'SPTrim', 'Actual Trim', `Lower Trim`, `Upper Trim`,  */ 
 					  ON
 						c.id= e.id AND
