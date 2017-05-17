@@ -17,7 +17,7 @@ end
 properties(Hidden)
     
     Server = 'localhost';
-    Database = 'test2';
+    Database = 'test';
     Uid = 'root';
     Pwd = 'HullPerf2016';
     
@@ -93,6 +93,46 @@ methods(TestClassSetup)
     
     end
     
+    function insertTestVessel(testcase)
+    % insertTestVessel Insert data for test vessel into table "Vessels"
+    
+    obj = cVessel();
+    obj.Database = 'test';
+    obj.IMO_Vessel_Number = 9450648;
+    obj.Breadth_Moulded = 42.8;
+    obj.Length_Overall = 334;
+    obj.Block_Coefficient = 0.643;
+    obj.Transverse_Projected_Area_Design = 1330;
+    obj.Draft_Design = 15;
+    obj.LBP = 319;
+    
+    coeffs_v = [-0.67766500
+                    -0.74222815
+                    -0.77252740
+                    -0.73429870
+                    -0.66942290
+                    -0.40641463
+                    -0.25761423
+                    -0.22303768
+                    -0.27221212
+                    -0.06631846
+                    0.34516430
+                    0.67289070
+                    0.88259417
+                    0.83342505
+                    0.64720550];
+    dirs_v = linspace(0, 180, length(coeffs_v));
+    wind_cvw = cVesselWindCoefficient();
+    wind_cvw.Direction = dirs_v;
+    wind_cvw.Coefficient = coeffs_v;
+    wind_cvw.Wind_Reference_Height_Design = 15;
+    wind_cvw = wind_cvw.mirrorAlong180();
+    obj.WindCoefficient = wind_cvw;
+    obj.insertIntoVessels();
+    obj.insertIntoWindCoefficients();
+    
+    end
+    
 end
 
 methods(TestClassTeardown)
@@ -125,6 +165,61 @@ methods(TestClassTeardown)
 end
 
 methods(Static)
+    
+    function R = randInThreshold(sz, varargin)
+    % randInThreshold Random values within thresholds
+    
+    % Input
+    R = [];
+    validateattributes(sz, {'numeric'}, {'integer', 'positive', 'vector'}, ...
+        'testISO19030.randInThreshold', 'sz', 1);
+    if nargin == 1
+       R = rand(sz);
+       return;
+    end
+    
+    % Check that conditions have accompanying values
+    conditionValue_c = varargin;
+    validateattributes(numel(conditionValue_c)/2, {'numeric'}, {'integer'},...
+        'randOutThreshold', 'condition,value', 2);
+    cellfun(@(x) validateattributes(x, {'function_handle'}, {'scalar'},...
+        'randOutThreshold', 'condition', 2), conditionValue_c(1:2:end));
+    cellfun(@(x) validateattributes(x, {'numeric'}, {'scalar'},...
+        'randOutThreshold', 'value', 3), conditionValue_c(2:2:end));
+    
+    funcNames_c = cellfun(@func2str, conditionValue_c(1:2:end), 'Uni', 0);
+    if any(~ismember(funcNames_c, {'gt', 'ge', 'lt', 'le'}))
+       
+       errid = 'db:randThresh:UnknownOperator';
+       errmsg = 'Input operator must be from the set gt, ne, lt, le.';
+       error(errid, errmsg);
+    end
+    
+    % Assign Defaults
+    maximum = 1;
+    minimum = 0;
+    
+    % Create vector
+    squareInputs = [conditionValue_c(1:2:end)', conditionValue_c(2:2:end)'];
+    [gt_l, gt_i] = ismember('gt', funcNames_c);
+    [ge_l, ge_i] = ismember('ge', funcNames_c);
+    [lt_l, lt_i] = ismember('lt', funcNames_c);
+    [le_l, le_i] = ismember('le', funcNames_c);
+    if gt_l
+        maximum = squareInputs{gt_i, 2};
+    end
+    if ge_l
+        maximum = squareInputs{ge_i, 2};
+    end
+    if lt_l
+        minimum = squareInputs{lt_i, 2};
+    end
+    if le_l
+        minimum = squareInputs{le_i, 2};
+    end
+    R = minimum + (maximum - minimum).*rand(sz);
+    
+    end
     
     function [R, in, out] = randOutThreshold(sz, varargin)
     % Random data with some, but not all, values within thresholds
@@ -235,6 +330,29 @@ methods(Static)
     
     end
     
+    function [inDisp_v, inTrim_v] = randDispTrim(testSz, spDisp, spTrim)
+    % randDispTrim Random vector of displacements, trim around threshold
+    
+    bothValid_l = false;
+    while ~any(bothValid_l) || all(bothValid_l)
+        
+        lowerDisp = (1/1.05)*spDisp;
+        upperDisp = (1/0.95)*spDisp;
+        inDisp_v = testISO19030.randOutThreshold(testSz, @lt, upperDisp, ...
+            @gt, lowerDisp);
+        lbp = testISO19030.LBP;
+        
+        lowerTrim = spTrim - 0.002*lbp;
+        upperTrim = spTrim + 0.002*lbp;
+        inTrim_v = testISO19030.randOutThreshold(testSz, @lt, upperTrim, ...
+            @gt, lowerTrim);
+        
+        bothValid_l = spDisp >= inDisp_v.*0.95 & spDisp <= inDisp_v.*1.05 & ...
+                      spTrim <= inTrim_v + 0.002*lbp & spTrim >= inTrim_v - 0.002*lbp;
+        
+    end
+        
+    end
 end
 
 methods(Test)
@@ -1263,25 +1381,27 @@ methods(Test)
     
     spDisp = 114050;
     spTrim = testcase.SPTrim;
-    bothValid_l = false;
-    while ~any(bothValid_l) || all(bothValid_l)
-        
-        lowerDisp = (1/1.05)*spDisp;
-        upperDisp = (1/0.95)*spDisp;
-        inDelPower_v = testcase.randOutThreshold(testSz, @gt, 0);
-        inDisp_v = testcase.randOutThreshold(testSz, @lt, upperDisp, ...
-            @gt, lowerDisp);
-        lbp = testcase.LBP;
-        
-        lowerTrim = spTrim - 0.002*lbp;
-        upperTrim = spTrim + 0.002*lbp;
-        inTrim_v = testcase.randOutThreshold(testSz, @lt, upperTrim, ...
-            @gt, lowerTrim);
-        
-        bothValid_l = spDisp >= inDisp_v.*0.95 & spDisp <= inDisp_v.*1.05 & ...
-                      spTrim <= inTrim_v + 0.002*lbp & spTrim >= inTrim_v - 0.002*lbp;
-        
-    end
+    [inDisp_v, inTrim_v] = testcase.randDispTrim(testSz, spDisp, spTrim);
+    inDelPower_v = testcase.randOutThreshold(testSz, @gt, 0);
+    
+%     bothValid_l = false;
+%     while ~any(bothValid_l) || all(bothValid_l)
+%         
+%         lowerDisp = (1/1.05)*spDisp;
+%         upperDisp = (1/0.95)*spDisp;
+%         inDisp_v = testcase.randOutThreshold(testSz, @lt, upperDisp, ...
+%             @gt, lowerDisp);
+%         lbp = testcase.LBP;
+%         
+%         lowerTrim = spTrim - 0.002*lbp;
+%         upperTrim = spTrim + 0.002*lbp;
+%         inTrim_v = testcase.randOutThreshold(testSz, @lt, upperTrim, ...
+%             @gt, lowerTrim);
+%         
+%         bothValid_l = spDisp >= inDisp_v.*0.95 & spDisp <= inDisp_v.*1.05 & ...
+%                       spTrim <= inTrim_v + 0.002*lbp & spTrim >= inTrim_v - 0.002*lbp;
+%         
+%     end
     inStatic_Draught_Aft = randi([0, 2], testSz);
     inStatic_Draught_Fore = inTrim_v + inStatic_Draught_Aft;
     imo = repmat(str2double(testcase.AlmavivaIMO), testSz);
@@ -1786,6 +1906,78 @@ methods(Test)
     msg_Trim = ['Trim expected to be the difference between fore and '...
         'aft draft.'];
     testcase.verifyEqual(act_Trim, exp_Trim', 'RelTol', 9e-3, msg_Trim);
+    
+    end
+    
+    function testupdatewindRef(testcase)
+    % Test calculation of relative wind speed and direction, refernce height
+    % 1. Test that procedure will return in columns 
+    % Relative_Wind_Direction_Reference and Relative_Wind_Speed_Reference
+    % the results of formulae specified in equations E.4 and E.5 of the
+    % standard.
+    
+    % 1
+    % Input
+    testSz = [1, 3];
+    
+    T = abs(randn(testSz)); % testcase.randOutThreshold(testSz, @gt, 0);
+    vr = abs(randn(testSz));
+    vg = abs(randn(testSz));
+    psir = abs(randn(testSz));
+    psi0 = abs(randn(testSz));
+    input_DraftFore = abs(randn(testSz));
+    input_DraftAft = 2*T - input_DraftFore;
+    input_SOG = abs(randn(testSz));
+    za = 15;
+    
+    Ades = testcase.AlmavivaTransProjArea;
+    Zrefdes = 10;
+    Tdes = testcase.AlmavivaDesignDraft;
+    delT = Tdes - T;
+    B = testcase.AlmavivaBreadth;
+    A = Ades + delT.* B;
+    zref = (Ades.*(Zrefdes + delT) + 0.5.* B.* delT.^2) ./ A;
+    
+    vt = sqrt(vr.^2 + vg.^2 - 2.* vr.* vg.* cos(psir) );
+    vtref = vt.* (zref/za).^(1/7);
+    condition = vr.* cos(psir + psi0) - vg.* cos(psi0) >= 0;
+    psit = atan( (vr.* sin(psir + psi0) - vg.*sin(psi0)) ./...
+        (vr.* cos(psir + psi0) - vg.* cos(psi0)) );
+    psit(~condition) = psit(~condition) + 180;
+    exp_Speed = sqrt(vtref.^2 + vg.^2 + 2.* vtref.* vg.*cos(psit + psi0));
+    
+    condition1 = vg + vtref.* cos(psit - psi0) >= 0;
+    exp_Dir = atan( (vtref.* sin(psit - psi0))./ ...
+        (vg + vtref.* cos(psit - psi0)) );
+    exp_Dir(~condition1) = exp_Dir(~condition1) + 180;
+    
+    in_DateTimeUTC = testISO19030.datetime_utc(testSz);
+    input_NumericCols = [vr; psir; input_DraftFore;...
+        input_DraftAft; input_SOG; psi0];
+    in_Data = [in_DateTimeUTC, num2cell(input_NumericCols)'];
+    in_Names = {'DateTime_UTC', 'Relative_Wind_Speed', ...
+        'Relative_Wind_Direction', 'Static_Draught_Fore', ...
+        'Static_Draught_Aft', 'Speed_Over_Ground', 'Ship_Heading'};
+    [startrow, count] = testcase.insert(in_Data, in_Names);
+    testcase.call('updateTransProjArea', testcase.AlmavivaIMO);
+    
+    % Execute
+    testcase.call('updateWindReference');
+    
+    % Verify
+    act_Speedc = testcase.read({'Relative_Wind_Speed_Reference'},...
+        startrow, count);
+    act_Speed = [act_Speedc{:}];
+    msg_Speed = ['Relative wind speed at reference height should be '...
+        'calculated according to Annex E.'];
+    testcase.verifyEqual(act_Speed, exp_Speed', 'RelTol', 9e-3, msg_Speed);
+    
+    act_Dirc = testcase.read({'Relative_Wind_Direction_Reference'},...
+        startrow, count);
+    act_Dir = [act_Dirc{:}];
+    msg_Dir = ['Relative wind direction at reference height should be '...
+        'calculated according to Annex E.'];
+    testcase.verifyEqual(act_Dir, exp_Dir', 'RelTol', 9e-3, msg_Dir);
     
     end
 end
