@@ -1379,16 +1379,9 @@ classdef cVessel < cMySQL
             'cVessel.fitToData', 'struc', 2);
         
         % Number of new vessels / columns
-%         newCols = size(struc, 2) - size(obj, 2);
-        oldColsI = 1:size(obj, 2);
-        
-        % Number of new rows / ddi before and after
-        oldRows_c = arrayfun(@(x) x.DryDockInterval, obj, 'Uni', 0);
-%         oldRows_cc = mat2cell(oldRows_c, size(oldRows_c, 1), ...
-%             ones(1, size(oldRows_c, 2)));
-        allIntervalRow_l = all(cellfun(@(x) ~(isempty(x)), oldRows_c));
-%         allIntervalRow_l = cellfun(@(x) ~any(isempty(x)), oldRows_cc);
-        oldIntervals = [oldRows_c{:, find(allIntervalRow_l, 1)}];
+        [oldIMO, oldIntervals] = currentIMODryDockIndex(obj);
+        newIMO = [struc(1, :).IMO_Vessel_Number];
+        [~, ~, oldColsI] = intersect(oldIMO, newIMO);
         
         newRows_c = arrayfun(@(x) x.DryDockInterval, struc, 'Uni', 0);
         newRows_cc = mat2cell(newRows_c, size(newRows_c, 1), ...
@@ -1405,7 +1398,7 @@ classdef cVessel < cMySQL
         % new array
         if ~isempty(oldIntervals) && ~isempty(oldRowsI) && ~isempty(oldColsI)
             
-            newObj(oldRowsI, oldColsI) = obj;
+            newObj(oldRowsI, oldColsI) = obj(oldRowsI, oldColsI);
         end
         
         obj = newObj;
