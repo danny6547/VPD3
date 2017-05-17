@@ -9,7 +9,7 @@ classdef cVessel < cMySQL
         Owner char = '';
         Class = [];
         LBP = [];
-        Engine = [];
+        Engine = cVesselEngine();
         Transverse_Projected_Area_Design = [];
         Block_Coefficient = [];
         Length_Overall = [];
@@ -21,7 +21,6 @@ classdef cVessel < cMySQL
         DryDockDates = cVesselDryDockDates();
         WindCoefficient = cVesselWindCoefficient();
         
-        PerformanceTable = 'DNVGLPerformanceData';
         Variable = 'Speed_Index';
         Performance_Index
         Speed_Index
@@ -54,6 +53,16 @@ classdef cVessel < cMySQL
         Trim;
         Engine_Model;
         Wind_Model_ID;
+    end
+    
+    properties(Hidden, Dependent)
+        
+        Wind_Reference_Height_Design; 
+    end
+    
+    properties(Access = private)
+        
+        PerformanceTable = 'DNVGLPerformanceData';
     end
     
     methods
@@ -1174,32 +1183,13 @@ classdef cVessel < cMySQL
           end
        end
        
-       function obj = set.PerformanceTable(obj, tabl)
-       % Set method for PerformanceTable
-       
-       % Error if not member of accepted table names
-       dataTables_c = {'DNVGLPerformanceData', 'PerformanceData', ...
-           'ForcePerformanceData'};
-       if ~ismember(tabl, dataTables_c)
-          
-          errid = 'cV:IncorrectPerformanceTable';
-          errmsg = 'Performance table name must match one of those in DB';
-          error(errid, errmsg);
-       end
-       
-       % If name has changed, load performance data from new table
-       oldTabl = obj.PerformanceTable;
-       obj.PerformanceTable = tabl;
-       if ~isequal(oldTabl, tabl);
+       function windRefHeight = get.Wind_Reference_Height_Design(obj)
            
-           % Get same inputs to performance Data as before: IMO, DDi
-           ddi = obj.DryDockIndexDB;
-           imo = obj.IMO_Vessel_Number;
-           
-           newData = obj.performanceData(imo, ddi);
-           obj = obj.assignPerformanceData(newData);
-       end
-       
+           windRefHeight = [];
+           if ~isempty(obj.WindCoefficient)
+               
+               windRefHeight = obj.Wind_Reference_Height_Design;
+           end
        end
     end
 end
