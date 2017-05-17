@@ -13,7 +13,7 @@ DROP PROCEDURE IF EXISTS updateDeliveredPower;
 delimiter //
 
 CREATE PROCEDURE updateDeliveredPower(imo INT)
-BEGIN
+proc_label:BEGIN
 	
     /* DECLARATIONS */
     /* DECLARE isAvail BOOLEAN; */
@@ -21,11 +21,20 @@ BEGIN
     /* Check if torsio-metre data available 
     CALL log_msg(concat('isShaftAvail = ', @isShaftAvail));
 		CALL log_msg(concat('UPDATE shaft power called')); */
+        
+	DECLARE powerGiven BOOLEAN Default FALSE;
 	DECLARE powerIncalculable CONDITION FOR SQLSTATE '45000';
     
     DECLARE isShaftRequired BOOLEAN Default TRUE;
+    
+    SET powerGiven := (SELECT COUNT(*) FROM tempRawISO WHERE Delivered_Power IS NOT NULL) > 0;
     SET isShaftRequired := (SELECT COUNT(*) FROM tempRawISO WHERE Shaft_Power IS NOT NULL) = 0;
 	
+    /* IF power already given, no need to continue updating */
+    IF powerGiven THEN
+		LEAVE proc_label;
+    END IF;
+    
     CALL isShaftPowerAvailable(imo, @isShaftAvail);
     CALL isBrakePowerAvailable(imo, @isBrakeAvail, @isMassNeeded);
     
