@@ -1404,6 +1404,20 @@ classdef cVessel < cMySQL
         obj = newObj;
         
         end
+        
+        function [imo, ddi] = currentIMODryDockIndex(obj)
+        % currentIMODryDockIndex IMO and dry-dock index vector
+        
+        % IMO vector is in first row of object array
+        imo = [obj(1, :).IMO_Vessel_Number];
+            
+        % DDi is found in vessel with no empty Dry Dock intervals
+        oldRows_c = arrayfun(@(x) x.DryDockInterval, obj, 'Uni', 0);
+        allIntervalRow_l = all(cellfun(@(x) ~(isempty(x)), oldRows_c));
+        ddi = [oldRows_c{:, find(allIntervalRow_l, 1)}];
+        
+        end
+        
     end
     
     methods
@@ -1459,7 +1473,7 @@ classdef cVessel < cMySQL
             if ischar(dates)
                 date_v = datenum(char(dates), dateFormStr);
             elseif isnumeric(dates)
-                date_v = dates;
+                date_v = dates(:)';
             else
                 error(errid, errmsg);
             end
