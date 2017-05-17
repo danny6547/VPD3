@@ -16,24 +16,35 @@ out = struct();
 
 % Inputs
 validateattributes(imo, {'numeric'}, {'vector', 'integer', 'positive'},...
-    'performanceData', 'IMO', 1);
+    'performanceData', 'IMO', 2);
 ddi_l = false;
 
 if nargin > 2
-    ddi_l = true;
     ddi = varargin{1};
-    validateattributes(ddi, {'numeric'}, {'vector', 'integer', '>=', 0},...
-        'performanceData', 'DDi', 2)
+    validateattributes(ddi, {'numeric'}, {'integer', '>=', 0},...
+        'performanceData', 'DDi', 3);
+    ddi_l = ~isempty(ddi);
 %     [obj.DryDockInterval] = ddi;
+end
+
+columnHeaders_c = {'IMO_Vessel_Number', 'DateTime_UTC',...
+    'Performance_Index', 'Speed_Index'};
+if nargin > 3
+    
+    columnHeaders_c = varargin{2};
+    columnHeaders_c = validateCellStr(columnHeaders_c, ...
+        'cVessel.performanceData', 'columnHeaders', 4);
 end
 
 % Build SQL commands from basic statements
 % sqlPerformanceDataBase = {'SELECT ', ' FROM hull_performance.DNVGLPerformanceData'};
-sqlPerformanceDataBase = {'SELECT ', ' FROM hull_performance.DNVGLPerformanceData'};
+sqlPerformanceDataBase = {'SELECT ', ...
+    [' FROM hull_performance.', obj(1).PerformanceTable]};
 
 % SQL command for Column Names
-PerformanceDataColumnsNames_c = {'IMO_Vessel_Number', 'DateTime_UTC',...
-    'Performance_Index', 'Speed_Index'};
+PerformanceDataColumnsNames_c = columnHeaders_c;
+% PerformanceDataColumnsNames_c = {'IMO_Vessel_Number', 'DateTime_UTC',...
+%     'Performance_Index', 'Speed_Index'};
 sqlPerformanceDataColumnsNames = sprintf('`%s`, ', ...
     PerformanceDataColumnsNames_c{:});
 sqlPerformanceDataColumnsNames(end-1:end) = [];
@@ -134,8 +145,10 @@ if ddi_l
 %     ddIntervalIndex_c(:, all(cellfun(@isempty, intervalsI_c))) = [];
 %     intervalsI_c(:, all(cellfun(@isempty, intervalsI_c))) = [];
     rowI = cellfun(@(x) 1:numel(x), intervalsI_c, 'Uni', 0);
-    colI = cellfun(@(x, y) repmat(x, [y, 1]), num2cell(1:size(intervalsI_c, 2)), rowI,...
-        'Uni', 0);
+%     colI = cellfun(@(x, y) squeeze(repmat(x, [y, 1])), num2cell(1:size(intervalsI_c, 2)), rowI,...
+%         'Uni', 0);
+    colI = cellfun(@(x, y) repmat(x, [1, y]), num2cell(1:numel(rowI)), ...
+        cellfun(@numel, rowI, 'Uni', 0), 'Uni', 0);
     indI = cellfun(@(x, y) sub2ind(size(ddIntervalIndex_c), x, y), rowI,...
         colI, 'Uni', 0);
     ddIntervalIndex_c([indI{:}]) = num2cell([intervalsI_c{:}]);
@@ -172,6 +185,7 @@ end
 % Remove any indices of DD dimension which are empty
 emptyDD_l = all(cellfun(@isempty, w)');
 w(emptyDD_l, :) = [];
+ddIntervalIndex_c(emptyDD_l, :) = [];
 
 % Remove any indices of Vessel dimension which are all empty
 emptyVessels_l = cellfun(@isempty, w);
@@ -179,11 +193,12 @@ if ~isvector(emptyVessels_l) && ~isscalar(emptyVessels_l)
     emptyVessels_l = all(emptyVessels_l);
 end
 w(:, emptyVessels_l) = [];
+ddIntervalIndex_c(:, emptyVessels_l) = [];
 
 % Assemble outputs into struct
 fieldnames_c = strrep(PerformanceDataColumnsNames_c, ' ', '_');
 
-w(cellfun(@isempty, w)) = { num2cell(nan(1, 4)) };
+w(cellfun(@isempty, w)) = { num2cell(nan(1, numel(fieldnames_c))) };
 
 t = cellfun(@(x) num2cell(cell2mat(x(:, 1)), 1), w, 'Uni', 0);
 u = cellfun(@(x) { x(:, 2) }, w, 'Uni', 0);
@@ -191,9 +206,23 @@ e = cellfun(@(x) num2cell(cell2mat(x(:, 3:4)), 1), w, 'Uni', 0);
 
 d = cellfun(@(x, y, z) [x, y, z], t, u, e, 'Uni', 0);
 
+processedData_c = cell(size(w));
+for ii = 1:numel(w)
+    
+    currDDi = w{ii};
+    vect_c = mat2cell(currDDi, size(currDDi, 1), ones(1, size(currDDi, 2)));
+    numericVects_l = cellfun(@(x) all(isnumeric([x{:}])), vect_c);
+    vect_c(numericVects_l) = cellfun(@(x) [x{:}], vect_c(numericVects_l),...
+        'Uni', 0);
+    vect_c(~numericVects_l) = cellfun(@(x) x(:)', vect_c(~numericVects_l),...
+        'Uni', 0);
+%     vect_c = cellfun(@(x) x(:), vect_c,'Uni', 0);
+    processedData_c(ii) = { vect_c };
+end
+
 % SQL syntax ensures each column corresponds to different IMO, so vector of
 % IMO can be reduced to scalar
-out = cellfun(@(x) cell2struct(x, fieldnames_c, 2), d);
+out = cellfun(@(x) cell2struct(x, fieldnames_c, 2), processedData_c);
 out = arrayfun(@(x, y) setfield(y, 'IMO_Vessel_Number', double(unique(x.IMO_Vessel_Number))), out, out);
 
 % Assign Dry Dock Index into structure array
