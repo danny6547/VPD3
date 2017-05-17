@@ -43,6 +43,7 @@ while ~obj.iterFinished
    
    currFig = figure;
    currAx = axes('Parent', currFig);
+   currVessel = obj(vesselI(1));
    
    % Find indices into input struct
 %    [idx_c{:}] = ind2sub(sz, ii);
@@ -93,7 +94,7 @@ while ~obj.iterFinished
        hold off
        pi_line.MarkerFaceColor = pi_line.Color;
        
-       vesselNum = unique(currData.IMO_Vessel_Number);
+       vesselNum = unique(currVessel.IMO_Vessel_Number);
        
        % Plot averages
        if avg_l
@@ -179,6 +180,9 @@ while ~obj.iterFinished
    
    titleFontsz = 13;
    vesselName_ch = vesselName(vesselNum);
+   if isempty(vesselName_ch)
+       vesselName_ch = num2str(vesselNum);
+   end
    titleStr = [strrep(varname, '_', ' '), ' against Time for Vessel ' vesselName_ch];
    title(titleStr, 'fontsize', titleFontsz);
    
