@@ -5,22 +5,23 @@ classdef cVesselDryDockDates
     properties
         
         IMO_Vessel_Number = [];
-        DateStrFormat char = 'yyyy-mm-dd';
-        
     end
     
     properties(Dependent)
         
         StartDate char = '';
         EndDate char = '';
+    end
+    
+    properties
         
+        DateStrFormat char = 'yyyy-mm-dd';
     end
     
     properties(Hidden)
         
         StartDateNum = [];
         EndDateNum = [];
-        
     end
     
     methods
@@ -29,7 +30,7 @@ classdef cVesselDryDockDates
     
        end
        
-        function obj = assignDates(obj, startdate, enddate, varargin)
+       function obj = assignDates(obj, startdate, enddate, varargin)
            
             dateform = obj.DateStrFormat;
             if nargin > 3
@@ -38,6 +39,69 @@ classdef cVesselDryDockDates
             
             obj.StartDateNum = obj.setDate(startdate, dateform);
             obj.EndDateNum = obj.setDate(enddate, dateform);
+        end
+        
+       function obj = readFile(obj, filename, dateform)
+        % readFile Assign dry dock dates from file to obj
+        
+        % Inputs
+        validateattributes(filename, {'char'}, {'vector'}, 'readFile',...
+            'filename', 2);
+        validateattributes(dateform, {'char'}, {'vector'}, 'readFile',...
+            'dateform', 3);
+        
+        % Verify file contents, headings
+        
+        
+        % Read table from file
+        file_t = readtable(filename);
+        
+        % Expand obj array if required
+        numRows = size(file_t, 1);
+        if ~isscalar(obj) && ~isequal(numRows, numel(obj))
+            
+            errid = 'cDDD:ObjFileSizeMismatch';
+            errmsg = ['File contains more rows than there are objects in '...
+                'the array. OBJ can be scalar, and will be expanded to the'...
+                'number of rows in the file, or it can be an array with the'...
+                'same number of elements as rows in the file.'];
+            error(errid, errmsg);
+        end
+        
+        expand_l = isscalar(obj) && numRows > 1;
+        if expand_l
+            
+            newEmptyObj_v = repmat(cVesselDryDockDates(), [1, numRows - 1]);
+            obj = [obj, newEmptyObj_v];
+        end
+        
+        % Assing into obj
+        for oi = 1:numel(obj)
+            
+            obj(oi).IMO_Vessel_Number = file_t.IMO_Vessel_Number(oi);
+            obj(oi).StartDateNum = datenum(file_t.StartDate(oi), dateform);
+            obj(oi).EndDateNum = datenum(file_t.EndDate(oi), dateform);
+        end
+        
+        end
+    end
+    
+    methods(Hidden)
+        
+        function empty = isempty(obj) 
+            
+            if any(size(obj) == 0)
+                empty = true;
+                return
+            end
+            
+            props = setdiff(properties(obj), 'DateStrFormat');
+            empty = false(size(props));
+            for pi = 1:numel(props)
+                prop = props{pi};
+                empty(pi) = isempty(obj.(prop));
+            end
+            empty = all(empty);
         end
     end
     
