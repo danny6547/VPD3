@@ -105,6 +105,11 @@ ym_st = rdir([ymDir_ch, '\**\*Single vessel timeline.xlsx']);
 ym_c = {ym_st.name};
 allFiles = [allFiles; ym_c(:)];
 
+% Berge Bulk
+bergeFiles_c = {'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data\Berge Kibo\DNVGL\Processed\EI2113 Hull and propeller performance - Single vessel timeline.xlsx',...
+    'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data\Berge Kibo\DNVGL\Processed\EI2123 Speed deviation - Single vessel timeline.xlsx'};
+allFiles = [allFiles; bergeFiles_c(:)];
+
 %%
 
 % allFiles = ...
@@ -265,6 +270,8 @@ IMO_v = [...
   9455870, ...
   9198276, ... Orchid
   9198276 ...
+  9036442, ... Berge Kibo
+  9036442 ...
 ];
 
 %% Load into database
