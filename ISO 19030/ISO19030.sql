@@ -26,6 +26,7 @@ BEGIN
     
     CALL updateAirDensity();
     CALL updateTransProjArea(imo);
+    CALL updateWindReference();
     CALL updateWindResistanceRelative(imo);
 	CALL updateAirResistanceNoWind(imo);
 	CALL updateWindResistanceCorrection(imo);

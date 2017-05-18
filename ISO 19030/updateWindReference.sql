@@ -14,12 +14,12 @@ BEGIN
     /* Get true wind */
     UPDATE tempRawISO SET True_Wind_Speed = SQRT(POWER(Relative_Wind_Speed, 2) + POWER(Speed_Over_Ground, 2) - 2*Relative_Wind_Speed*Speed_Over_Ground*COS(RADIANS(Relative_Wind_Direction)));
     
-    UPDATE tempRawISO SET True_Wind_Direction = ATAN( (Relative_Wind_Speed*SIN(RADIANS(Relative_Wind_Direction) + RADIANS(Ship_Heading)) - Speed_Over_Ground*SIN(RADIANS(Ship_Heading))) /
-		(Relative_Wind_Speed*COS(RADIANS(Relative_Wind_Direction) + RADIANS(Ship_Heading)) - Speed_Over_Ground*SIN(RADIANS(Ship_Heading))) )
+    UPDATE tempRawISO SET True_Wind_Direction = DEGREES(ATAN( (Relative_Wind_Speed*SIN(RADIANS(Relative_Wind_Direction) + RADIANS(Ship_Heading)) - Speed_Over_Ground*SIN(RADIANS(Ship_Heading))) /
+		(Relative_Wind_Speed*COS(RADIANS(Relative_Wind_Direction) + RADIANS(Ship_Heading)) - Speed_Over_Ground*COS(RADIANS(Ship_Heading))) ))
 		WHERE Relative_Wind_Speed*COS(RADIANS(Relative_Wind_Direction) + RADIANS(Ship_Heading)) - Speed_Over_Ground*COS(RADIANS(Ship_Heading)) >= 0;
     
-    UPDATE tempRawISO SET True_Wind_Direction = ATAN( (Relative_Wind_Speed*SIN(RADIANS(Relative_Wind_Direction) + RADIANS(Ship_Heading)) - Speed_Over_Ground*SIN(RADIANS(Ship_Heading))) /
-		(Relative_Wind_Speed*COS(RADIANS(Relative_Wind_Direction) + RADIANS(Ship_Heading)) - Speed_Over_Ground*SIN(RADIANS(Ship_Heading))) ) + 180
+    UPDATE tempRawISO SET True_Wind_Direction = DEGREES(ATAN( (Relative_Wind_Speed*SIN(RADIANS(Relative_Wind_Direction) + RADIANS(Ship_Heading)) - Speed_Over_Ground*SIN(RADIANS(Ship_Heading))) /
+		(Relative_Wind_Speed*COS(RADIANS(Relative_Wind_Direction) + RADIANS(Ship_Heading)) - Speed_Over_Ground*COS(RADIANS(Ship_Heading))) )) + 180
 		WHERE Relative_Wind_Speed*COS(RADIANS(Relative_Wind_Direction) + RADIANS(Ship_Heading)) - Speed_Over_Ground*COS(RADIANS(Ship_Heading)) < 0;
 	
     /* Calculate reference height in current loading condition */
@@ -29,8 +29,8 @@ BEGIN
     SET @B = ( SELECT Breadth_Moulded FROM Vessels WHERE IMO_Vessel_Number = @imo );
     SET @A = ( SELECT Transverse_Projected_Area_Design FROM Vessels WHERE IMO_Vessel_Number = @imo );
     
-    UPDATE tempRawISO SET Wind_Reference_Height = (Transverse_Projected_Area_Current*(@Zrefref + (@Tref - (Static_Draught_Fore + Static_Draught_Aft)/2 )
-		+ 0.5*@B*POWER(@Tref - (Static_Draught_Fore + Static_Draught_Aft)/2, 2))) / @A;
+    UPDATE tempRawISO SET Wind_Reference_Height = (@A*(@Zrefref + (@Tref - (Static_Draught_Fore + Static_Draught_Aft)/2 ))
+		+ 0.5*@B*POWER(@Tref - ((Static_Draught_Fore + Static_Draught_Aft)/2), 2)) / Transverse_Projected_Area_Current;
     
 	/* True wind at reference height */
     SET @Za = ( SELECT Anemometer_Height FROM Vessels WHERE IMO_Vessel_Number = @imo );
@@ -40,11 +40,11 @@ BEGIN
     UPDATE tempRawISO SET Relative_Wind_Speed_Reference = SQRT(POWER(True_Wind_Speed_Reference, 2) + POWER(Speed_Over_Ground, 2) +
 		2*True_Wind_Speed_Reference*Speed_Over_Ground*COS(RADIANS(True_Wind_Direction) + RADIANS(Ship_Heading)) );
 	
-    UPDATE tempRawISO SET Relative_Wind_Direction_Reference = ATAN( (True_Wind_Speed_Reference*SIN(RADIANS(True_Wind_Direction) - RADIANS(Ship_Heading))) / 
-		(Speed_Over_Ground + True_Wind_Speed_Reference*COS(RADIANS(True_Wind_Direction) - RADIANS(Ship_Heading))) )
+    UPDATE tempRawISO SET Relative_Wind_Direction_Reference = DEGREES(ATAN( (True_Wind_Speed_Reference*SIN(RADIANS(True_Wind_Direction) - RADIANS(Ship_Heading))) / 
+		(Speed_Over_Ground + True_Wind_Speed_Reference*COS(RADIANS(True_Wind_Direction) - RADIANS(Ship_Heading))) ))
         WHERE (Speed_Over_Ground + True_Wind_Speed_Reference*COS(RADIANS(True_Wind_Direction) - RADIANS(Ship_Heading))) >= 0;
     
-    UPDATE tempRawISO SET Relative_Wind_Direction_Reference = ATAN( (True_Wind_Speed_Reference*SIN(RADIANS(True_Wind_Direction) - RADIANS(Ship_Heading))) / 
-		(Speed_Over_Ground + True_Wind_Speed_Reference*COS(RADIANS(True_Wind_Direction) - RADIANS(Ship_Heading))) ) + 180
+    UPDATE tempRawISO SET Relative_Wind_Direction_Reference = DEGREES(ATAN( (True_Wind_Speed_Reference*SIN(RADIANS(True_Wind_Direction) - RADIANS(Ship_Heading))) / 
+		(Speed_Over_Ground + True_Wind_Speed_Reference*COS(RADIANS(True_Wind_Direction) - RADIANS(Ship_Heading))) )) + 180
         WHERE (Speed_Over_Ground + True_Wind_Speed_Reference*COS(RADIANS(True_Wind_Direction) - RADIANS(Ship_Heading))) < 0;
 END;
