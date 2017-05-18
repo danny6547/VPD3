@@ -44,24 +44,24 @@ while ~obj.iterFinished
            continue
        end
        
-       % Compare with previous dry docking
+       % If there are at least one years worth of data either side of DD
        if ~isempty(annualAvgBef(beforeDDi).Duration(1).Average) && ...
                ~isempty(annualAvgAft(afterDDi).Duration(1).Average)
            
-           avgBefore = annualAvgBef(beforeDDi).Duration(1)...
-               .Average(end);
+           % Compare with previous dry docking
+           avgBefore = annualAvgBef(beforeDDi).Duration(1).Average(end);
            avgAfter = annualAvgAft(afterDDi).Duration(1).Average(1);
            ddPerAbs = (avgAfter - avgBefore) * 100;
            ddPerRel = - ((avgBefore - avgAfter) / avgBefore) * 100;
-       end
        
-       % Assign
-       ddPeri = DDi;
-       ddPer(ddPeri).AvgPerPrior = avgBefore;
-       ddPer(ddPeri).AvgPerAfter = avgAfter;
-       ddPer(ddPeri).AbsDDPerformance = ddPerAbs;
-       ddPer(ddPeri).RelDDPerformance = ddPerRel;
-       obj(ii).DryDockingPerformance = ddPer(ddPeri);
+           % Assign
+           ddPeri = DDi;
+           ddPer(ddPeri).AvgPerPrior = avgBefore;
+           ddPer(ddPeri).AvgPerAfter = avgAfter;
+           ddPer(ddPeri).AbsDDPerformance = ddPerAbs;
+           ddPer(ddPeri).RelDDPerformance = ddPerRel;
+           obj(ii).DryDockingPerformance = ddPer(ddPeri);
+       end
 %    end
 end
 obj = obj.iterReset;
