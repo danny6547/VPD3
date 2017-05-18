@@ -7,23 +7,6 @@ servStruct = struct('Duration', []);
 sizeStruct = size(obj);
 
 % Inputs
-if nargin > 1
-    
-    varname = varargin{1};
-    validateattributes(varname, {'char'}, {'vector'}, ...
-        'inServicePerformance', 'varname', 2);
-    
-    if ~ismember(varname, fieldnames(obj))
-
-        errid = 'DB:NameUnknown';
-        errmsg = 'Input VARNAME must be a field name of input struct PERSTRUCT';
-        error(errid, errmsg);
-    end
-
-else
-    
-    varname = 'Performance_Index';
-end
 
 % Convert dates
 % obj = convertDate(obj); redundant function replaced with set method
@@ -42,7 +25,8 @@ while ~obj.iterFinished
     % Index into input and get dates
 %     currDate = datenum(char(currStruct.DateTime_UTC), 'dd-mm-yyyy');
     currDate = obj(ii).DateTime_UTC;
-    currPerf = obj(ii).(varname);
+    currVar = obj(ii).Variable;
+    currPerf = obj(ii).(currVar);
 %     [ri, ci] = ind2sub(sizeStruct, si);
     
     % Remove duplicate date data (redundant when no duplicates in db)
