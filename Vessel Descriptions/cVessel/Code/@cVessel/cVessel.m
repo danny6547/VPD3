@@ -15,6 +15,7 @@ classdef cVessel < cMySQL
         Length_Overall = [];
         Breadth_Moulded = [];
         Draft_Design = [];
+        Anemometer_Height = [];
         
         DryDockInterval double = [];
         SpeedPower cVesselSpeedPower = cVesselSpeedPower();
@@ -53,11 +54,7 @@ classdef cVessel < cMySQL
         Trim;
         Engine_Model;
         Wind_Model_ID;
-    end
-    
-    properties(Hidden, Dependent)
-        
-        Wind_Reference_Height_Design; 
+        Wind_Reference_Height_Design;
     end
     
     properties(Access = private)
@@ -1092,7 +1089,7 @@ classdef cVessel < cMySQL
         end
         
         sfoc_l = true;
-        if nargin > 2
+        if nargin > 3
             sfoc_l = varargin{3};
             validateattributes(sfoc_l, {'logical'}, {'scalar'}, ...
                 'cVessel.ISO19030', 'SFOC', 3);
@@ -1567,7 +1564,7 @@ classdef cVessel < cMySQL
            windRefHeight = [];
            if ~isempty(obj.WindCoefficient)
                
-               windRefHeight = obj.Wind_Reference_Height_Design;
+               windRefHeight = obj.WindCoefficient.Wind_Reference_Height_Design;
            end
        end
     end
