@@ -45,11 +45,15 @@ while ~obj.iterFinished
        end
        
        % Compare with previous dry docking
-       avgBefore = annualAvgBef(beforeDDi).Duration(1)...
-           .Average(end);
-       avgAfter = annualAvgAft(afterDDi).Duration(1).Average(1);
-       ddPerAbs = (avgAfter - avgBefore) * 100;
-       ddPerRel = - ((avgBefore - avgAfter) / avgBefore) * 100;
+       if ~isempty(annualAvgBef(beforeDDi).Duration(1).Average) && ...
+               ~isempty(annualAvgAft(afterDDi).Duration(1).Average)
+           
+           avgBefore = annualAvgBef(beforeDDi).Duration(1)...
+               .Average(end);
+           avgAfter = annualAvgAft(afterDDi).Duration(1).Average(1);
+           ddPerAbs = (avgAfter - avgBefore) * 100;
+           ddPerRel = - ((avgBefore - avgAfter) / avgBefore) * 100;
+       end
        
        % Assign
        ddPeri = DDi;
