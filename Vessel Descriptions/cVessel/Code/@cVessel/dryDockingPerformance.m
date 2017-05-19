@@ -53,7 +53,7 @@ while ~obj.iterFinished
            avgAfter = annualAvgAft(afterDDi).Duration(1).Average(1);
            ddPerAbs = (avgAfter - avgBefore) * 100;
            ddPerRel = - ((avgBefore - avgAfter) / avgBefore) * 100;
-       
+        
            % Assign
            ddPeri = DDi;
            ddPer(ddPeri).AvgPerPrior = avgBefore;

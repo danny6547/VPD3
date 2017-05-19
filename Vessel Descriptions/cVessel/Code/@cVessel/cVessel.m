@@ -240,6 +240,10 @@ classdef cVessel < cMySQL
             
             % Error when inputs not recognised
             
+            
+            % Read Vessel static data from DB
+            emptyObj_l = arrayfun(@(x) isempty(x.IMO_Vessel_Number), obj);
+            obj(~emptyObj_l) = obj(~emptyObj_l).readFromTable('Vessels', 'IMO_Vessel_Number');
        end
        end
        
@@ -1023,8 +1027,15 @@ classdef cVessel < cMySQL
         % Get indices to OBJ identified in table
         lowerId_ch = lower(identifier);
         tableID_c = table_st.(lowerId_ch);
-        [obj_l, obj_i] = ismember([tableID_c{:}], [objID_c{:}]);
-        nID = sum(obj_l);
+        if iscell(tableID_c)
+%             [obj_l, obj_i] = ismember([tableID_c{:}], [objID_c{:}]);
+            [~, obj_i] = ismember([objID_c{:}], [tableID_c{:}]);
+%             nID = sum(obj_l);
+        else
+%             nID = 1;
+            obj_i = 1;
+%             obj_l = true;
+        end
         
         % Iterate over properties of matching obj and assign values
         for ii = 1:length(matchField_c)
@@ -1032,11 +1043,24 @@ classdef cVessel < cMySQL
             currField = matchField_c{ii};
             lowerField = lower(currField);
             currData = table_st.(lowerField);
+            if ~iscell(currData)
+                currData = {currData};
+            end
             
-            for oi = 1:nID
+            for oi = 1:numel(obj)
                 
-                currObji = obj_i(oi);
-                obj(currObji).(currField) = currData{oi};
+                if obj_i(oi) == 0
+                    continue
+                end
+%                 currObji = obj_i(oi);
+                currTablei = obj_i(oi);
+                
+                try 
+                    obj(oi).(currField) = currData{currTablei};
+                catch e
+                    % Write some code here later...
+                    % Error is attempt to write to dependent property
+                end
             end
         end
         
