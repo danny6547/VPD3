@@ -91,12 +91,16 @@ classdef cVesselEngine < handle
                 return
             end
             
+            numObj = numel(obj);
             props = properties(obj);
-            empty = false(size(props));
-            for pi = 1:numel(props)
-                prop = props{pi};
-                empty(pi) = isempty(obj.(prop));
+            empty = false(numel(props), numObj);
+            for oi = 1:numObj
+                for pi = 1:numel(props)
+                    prop = props{pi};
+                    empty(pi, oi) = isempty(obj(oi).(prop));
+                end
             end
+            empty = empty(:);
             empty = all(empty);
         end
         
