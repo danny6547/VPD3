@@ -23,24 +23,21 @@ BEGIN
     
     /* Correct for environmental factors 5.3.5 */
     CALL updateDeliveredPower(imo);
-    
     CALL updateAirDensity();
     CALL updateTransProjArea(imo);
     CALL updateWindReference();
     CALL updateWindResistanceRelative(imo);
 	CALL updateAirResistanceNoWind(imo);
 	CALL updateWindResistanceCorrection(imo);
+    CALL updateCorrectedPower();
     
+    /* Calculate Performance Values, Expected Speed 5.3.6.2 */
     CALL updateDisplacement(imo);
     CALL updateTrim();
     CALL filterSpeedPowerLookup(imo);
-    
-    CALL updateCorrectedPower();
-    
-    /* Calculate Performance Values 5.3.6.2 */
     CALL updateExpectedSpeed(imo);
     
-    /* Calculate Performance Values 5.3.6.1 */
+    /* Calculate Performance Values, Percentage speed loss 5.3.6.1 */
     CALL updateSpeedLoss();
     
     /* Calculate filter */

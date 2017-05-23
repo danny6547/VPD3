@@ -39,7 +39,7 @@ BEGIN
 			   i.NearestDisplacement = s.Displacement AND
 			   i.NearestTrim = s.Trim) si
 	ON ii.id = si.id
-	SET Expected_Speed_Through_Water = Exponent_A*LOG(ABS(Delivered_Power)) + Exponent_B
+	SET Expected_Speed_Through_Water = Exponent_A*LOG(ABS(Corrected_Power)) + Exponent_B
     WHERE Displacement_Correction_Needed IS FALSE;
     
     /* Get coefficients of speed, power curve for nearest diplacement, trim */ 
@@ -50,6 +50,6 @@ BEGIN
 			   i.NearestDisplacement = s.Displacement AND
 			   i.NearestTrim = s.Trim) si
 	ON ii.id = si.id
-	SET Expected_Speed_Through_Water = (Exponent_A*LOG(ABS(Delivered_Power)) + Exponent_B) * POWER( POWER(ii.Displacement, (2/3)) / POWER(ii.NearestDisplacement, (2/3)), (1/3))
+	SET Expected_Speed_Through_Water = (Exponent_A*LOG(ABS(Corrected_Power)) + Exponent_B) * POWER( POWER(ii.Displacement, (2/3)) / POWER(ii.NearestDisplacement, (2/3)), (1/3))
     WHERE Displacement_Correction_Needed IS TRUE;
 END
