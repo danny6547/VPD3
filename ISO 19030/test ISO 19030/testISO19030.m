@@ -367,6 +367,7 @@ methods(Test)
     % returned by the SORT function, with the second output used to index
     % the non-DateTime data.
     
+    % 1.
     % Inputs
     today = floor(now) + 0.1;
     date = today+1:-1:today-1;

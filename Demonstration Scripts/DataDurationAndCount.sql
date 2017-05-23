@@ -6,7 +6,7 @@ SELECT
     date_format((DateTime_UTC), '%M/%Y') As 'Start of data',
     date_format(MAX(DateTime_UTC), '%M/%Y') As 'End of data',
     ROUND(datediff(MAX(DateTime_UTC), MIN(DateTime_UTC))/(365.25/12)) AS 'Months of Data'
-    FROM test2.rawdata
+    FROM rawdata
     /* WHERE  IS NOT NULL */
     GROUP BY IMO_Vessel_Number;
     

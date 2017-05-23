@@ -270,10 +270,10 @@ cVWC.incrementModelID: check if exact values found in DB and assign values accor
 #	Vessels: IMO
 # DB.createTable_: write procedure from each create table script
 DB.createTables: create all tables by calling all create table procedures
-cDB.create(dbname): static method which calls createTables.sql, loads all raw and processed data into tables.
-cDB.createTest: calls cDB.create(test)
-cDB.createHullPer: calls cDB.create(hull_performance)
-cConnectMySQLDB.test: change name of test DB from 'test2' to 'test'
+# cDB.create(dbname): static method which calls createTables.sql, loads all raw and processed data into tables.
+# cDB.createTest: calls cDB.create(test)
+# cDB.createHullPer: calls cDB.create(hull_performance)
+# cConnectMySQLDB.test: change name of test DB from 'test2' to 'test'
 DB: rebuild (some of the) DDDates and VesselCoating tables
 cVessel: intended to be arrays of cV, but inherited class cMySQL intended to work on scalars. Should cMySQL methods call only the first object in array?
 cV.performanceData: error when vessel (cassiopiea) has no dry-dock data
@@ -281,7 +281,7 @@ cV.DryDockings: property dependent on DryDockDates
 # cV.fitToData(struct): hidden, private method to repeat existing rows of obj so that struct data can now fit into it
 cV.assignPerformanceData: hidden private method taking object array of appropriate size
 cV.set.PerformanceTable: get performance struct with same parameters as before, call fitToData, assign data.
-DB: write procedure updateWindReference
+# DB: write procedure updateWindReference
 DB: include Relative_Wind_Direction_Reference column in tempRawISO
 DB: include Relative_Wind_Speed_Reference column in tempRawISO
 DB: Where are speed, power coefficients being used?
@@ -289,3 +289,6 @@ cV.assignPerformanceData: sort out problem where field names have to be lower ca
 DB: "NearestDisplacement" and "NearestTrim" can be misleading, as they can come from different speed, power curves.
 cDB: implement table vesselcoatings in cDB, creating and writing CMA data
 cDB: add 4 standard wind coefficient sets
+DB: calculate wind resistance correction on relative wind at reference
+DB: correct for environmental conditions prior to speed, power lookup?
+vesselName: remove hadr-coded connection details (make cV method?)
