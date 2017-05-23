@@ -30,9 +30,6 @@ function [obj, avgStruct] = movingAverages(obj, durations, varargin)
 %   data, or an array, in which case it must be the same size as PERSTRUCT.
 %   The default value is FALSE.
 
-% Assign
-% obj = obj.(obj.Variable);
-
 % Initialise Outpus
 avgStruct = struct('Duration', []);
 sizeStruct = size(obj);
@@ -94,8 +91,7 @@ end
 % Iterate over elements of data array
 while ~obj.iterFinished
     
-   [obj, ii] = obj.iter;
-% for si = 1:numel(obj)
+    [obj, ii] = obj.iter;
     
     % Skip if empty
     currObj = obj(ii);
@@ -104,10 +100,8 @@ while ~obj.iterFinished
     end
     
     % Index into input and get dates
-%     currDate = datenum(char(currObj.DateTime_UTC), 'dd-mm-yyyy');
     currDate = currObj.DateTime_UTC;
     currPerf = currObj.(currObj.Variable);
-%     [ri, ci] = ind2sub(sizeStruct, si);
     
     % Remove duplicate date data (redundant when no duplicates in db)
     [currDate, udi] = unique(currDate);
@@ -118,28 +112,16 @@ while ~obj.iterFinished
     
     % NB. TAKE THE DRY-DOCK DATE FROM SERIES
     
-    % If first DDi, calculate from end backwards
-%     dd = currDate(end);
-    
     % Initialise output struct
     Duration_st = struct('Average', [], 'StartDate', [], 'EndDate', []);
     
     for di = 1:length(durations)
         
         % Get dates for start and end of durations
-%         if trim_l(si) && ~remove_l(si)
-%             filtCurrDate_l = ~isnan(currPerf);
-%             currDate = currDate(filtCurrDate_l);
-%             currPerf = currPerf(filtCurrDate_l);
-%         end
-        
         currDur = durations(di);
-%         rangeDates = max(currDate) - min(currDate);
-%         numDurations = ceil(rangeDates / currDur);
         
         % Create timestep vector for current dates
-        tstep = 1; % Replace with proper timestep value in DB later % unique(diff(currDate));
-%         tstep(tstep==0) = [];
+        tstep = 1; % Replace with proper timestep value in DB later
         tstep_v = repmat(tstep, size(currDate));
         
         preDates = currDate - 0.5*tstep_v;
@@ -148,33 +130,14 @@ while ~obj.iterFinished
         
         if reverse_l(ii)
             
-%             delimDates = postDates(1):currDur:preDates(1);
             delimDates = linspace(postDates(end) - (currDur*numDur), ...
                 postDates(end), numDur + 1);
-%             delimDates = unique([postDates(end):-currDur:preDates(1),...
-%                 preDates(1)]);
-%             delimDates = max(currDate):-currDur:...
-%                 max(currDate)-(numDurations*currDur);
-%             delimDates(delimDates < min(currDate)) = min(currDate);
         else
             
             delimDates = linspace(preDates(1), preDates(1)+(currDur*numDur),...
                 numDur + 1);
-            
-%             delimDates = unique([preDates(1):currDur:postDates(end),...
-%                 postDates(end)]);
-%             delimDates = unique([preDates(1:currDur:end); postDates(end)]);
-            
-%             delimDates = unique([preDates(1:currDur:end); postDates(end)]);
-%             startDates = delimDates(1:end-1); 
-%             endDates = delimDates(2:end);
-%             delimDates = currDate - 0.5*tstep_v;
-%             delimDates = min(currDate):currDur:...
-%                 min(currDate)+(numDurations*currDur);
-%             delimDates(delimDates > max(currDate)) = max(currDate);
         end
         
-%         delimDates = unique(delimDates);
         startDates = delimDates(1:end-1); 
         endDates  = delimDates(2:end);
         startDates_c = num2cell(startDates);
@@ -192,27 +155,19 @@ while ~obj.iterFinished
         
         % Remove outputs not within range
         if remove_l(ii)
+            
             startFilt = startDates + 0.5*tstep < min(currDate);
             startDates(startFilt) = [];
             endDates(startFilt) = [];
-%             startDates(startDates > max(currDate)) = [];
-%             endDates(endDates < min(currDate)) = [];
             endFilt = endDates - 0.5*tstep > max(currDate);
             startDates(endFilt) = [];
             endDates(endFilt) = [];
-        else
-%             if reverse_l
-%                 startDates(startDates < min(currDate)) = min(currDate);
-%             else
-%                 endDates(endDates > max(currDate)) = max(currDate);
-%             end
         end
         
         % Trim start, end dates
         if trim_l(ii)
+            
             startDates(startDates < min(filtDate)) = min(filtDate);
-%             startDates(startDates > max(currDate)) = max(currDate);
-%             endDates(endDates < min(currDate)) = min(currDate);
             endDates(endDates > max(filtDate)) = max(filtDate);
         end
         
@@ -229,11 +184,11 @@ while ~obj.iterFinished
         Duration_st(di).Average = output(1:outLength);
         Duration_st(di).StartDate = startDates(1:outLength);
         Duration_st(di).EndDate = endDates(1:outLength);
-        
     end
     
     % Re-assign into Outputs
     avgStruct(ii).Duration = Duration_st;
     obj(ii).MovingAverages = avgStruct(ii);
 end
+
 obj = obj.iterReset;

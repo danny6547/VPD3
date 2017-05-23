@@ -38,9 +38,13 @@ while ~obj.iterFinished
 %    % Plot each DDi separately
 %    for ddi = 2:nDDi
        
+       % Skip to end if fewer avg than vessels
+       if afterDDi > numel(annualAvgBef)
+           break
+       end
+
        % Skip DDi if empty
-%        currData = obj(ii);
-       if isPerDataEmpty(obj(ii)); % all(isnan(currData.(currData.Variable)))
+       if isPerDataEmpty(obj(ii));
            continue
        end
        
