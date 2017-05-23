@@ -367,6 +367,7 @@ classdef cVessel < cMySQL
 %            end
            
            dataObj = [obj.Engine];
+           dataObj(isempty(dataObj)) = [];
            if ~isempty(dataObj)
                tab = 'SFOCCoefficients';
                obj.insertIntoTable(tab, dataObj, 'Engine_Model', {dataObj.Name});
@@ -702,13 +703,13 @@ classdef cVessel < cMySQL
                     'Draft_Ballast_Optimum'
                     'Draft_Displacement_Actual'
                     'ME_Fuel_BDN'
-                    'ME_Fuel_BDN2'
-                    'ME_Fuel_BDN3'
-                    'ME_Fuel_BDN4'
+%                     'ME_Fuel_BDN2'
+%                     'ME_Fuel_BDN3'
+%                     'ME_Fuel_BDN4'
                     'AE_Fuel_BDN'
-                    'AE_Fuel_BDN2'
-                    'AE_Fuel_BDN3'
-                    'AE_Fuel_BDN4'
+%                     'AE_Fuel_BDN2'
+%                     'AE_Fuel_BDN3'
+%                     'AE_Fuel_BDN4'
                     'Event'
                     'Time_Since_Previous_Report'
                     'Time_Elapsed_Sailing'
@@ -728,9 +729,9 @@ classdef cVessel < cMySQL
                     'People'
                     'ME_Projected_Consumption'
                     'ME_Consumption'
-                    'ME_Consumption2'
-                    'ME_Consumption3'
-                    'ME_Consumption4'
+%                     'ME_Consumption2'
+%                     'ME_Consumption3'
+%                     'ME_Consumption4'
                     'ME_Cylinder_Oil_Consumption'
                     'ME_System_Oil_Consumption'
                     'ME_1_Running_Hours'
@@ -738,20 +739,20 @@ classdef cVessel < cMySQL
                     'ME_1_Cylinder_Oil_Consumption'
                     'ME_1_System_Oil_Consumption'
                     'ME_1_Work'
-                    'ME_1_Shaft_Gen_Work'
-                    'ME_1_Shaft_Gen_Running_Hours'
+%                     'ME_1_Shaft_Gen_Work'
+%                     'ME_1_Shaft_Gen_Running_Hours'
                     'ME_2_Running_Hours'
                     'ME_2_Consumption'
                     'ME_2_Cylinder_Oil_Consumption'
                     'ME_2_System_Oil_Consumption'
                     'ME_2_Work'
-                    'ME_2_Shaft_Gen_Work'
-                    'ME_2_Shaft_Gen_Running_Hours'
+%                     'ME_2_Shaft_Gen_Work'
+%                     'ME_2_Shaft_Gen_Running_Hours'
                     'AE_Projected_Consumption'
                     'AE_Consumption'
-                    'AE_Consumption2'
-                    'AE_Consumption3'
-                    'AE_Consumption4'
+%                     'AE_Consumption2'
+%                     'AE_Consumption3'
+%                     'AE_Consumption4'
                     'AE_1_Running_Hours'
                     'AE_1_Consumption'
                     'AE_1_Work'
@@ -771,9 +772,9 @@ classdef cVessel < cMySQL
                     'AE_6_Consumption'
                     'AE_6_Work'
                     'Boiler_Consumption'
-                    'Boiler_Consumption2'
-                    'Boiler_Consumption3'
-                    'Boiler_Consumption4'
+%                     'Boiler_Consumption2'
+%                     'Boiler_Consumption3'
+%                     'Boiler_Consumption4'
                     'Boiler_1_Running_Hours'
                     'Boiler_1_Consumption'
                     'Boiler_2_Running_Hours'
@@ -918,7 +919,7 @@ classdef cVessel < cMySQL
             cols = cols{1}(:)';
         end
         tab1 = tempTab;
-        finalCols = [cols, {col}];
+        finalCols = [cols; {col}];
         cols1 = finalCols;
         tab2 = permTab;
         cols2 = finalCols;
