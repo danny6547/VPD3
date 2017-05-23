@@ -12,6 +12,19 @@ classdef testISO19030Validate < matlab.unittest.TestCase % & testISO19030
 %   describing the vessels speed, power relationship and wind coefficients, 
 %   used by the software, exist in the test directory where they can be
 %   accessed by the test suite.
+%   The procedure for running the tests in this suite is as follows. First,
+%   a set of input files will be created to be loaded into the software and
+%   this is done by calling method createTestFiles:
+%   obj = testISO19030Validate();
+%   obj = obj.createTestFiles();
+%   Note that the XML file containing the static data for the test vessel
+%   already exists, so the user now needs to open the software, load this
+%   XML file, and then load the raw data file created by createTestFiles.
+%   This method also inserts equivalent data into the test database and
+%   runs the ISO19030 procedure on that data. Now one can expect that, for
+%   the test vessel, performance values in the database will match those in
+%   the output files. Therefore, the user can now call the test methods:
+%   res = run(obj, 'testMethod');
 
 properties(Constant)
     
@@ -19,12 +32,14 @@ properties(Constant)
     SPFile cell = {}; %testISO19030Validate.spFiles;
     WindFile char = testISO19030Validate.windFile;
     RawFile char = testISO19030Validate.rawFile;
+    DiagnosticFile char = testISO19030Validate.diagnosticFile;
     OutFilePrefix char = 'validateISOOut_';
     TestVessel = testISO19030Validate.testVessel;
     VarNames = testISO19030Validate.varNames();
     Anemometre_Height = 40;
     Reference_Height = 10;
     g = 9.80665;
+    DataLengthPerCriteria = 10;
 end
 
 properties(Constant, Hidden)
@@ -39,6 +54,7 @@ properties
     OutWindTable = table();
     DBPVTable = table();
     DBISOTable = table();
+    DiagnosticTable = table();
 end
 
 methods(Static)
@@ -67,6 +83,7 @@ methods(Static)
     wind = cVesselWindCoefficient();
     wind.Direction = [0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180];
     wind.Coefficient = [1.2640,1.3450,1.4090,1.3890,1.3150,1.1430,0.9230,0.6840,0.5100,0.3200,0.0780,-0.2070,-0.5560,-0.9420,-1.2350,-1.4660,-1.5740,-1.4630,-1.2570];
+    wind.Wind_Reference_Height_Design = 10;
     wind = wind.mirrorAlong180();
     
     % Create vessel
@@ -81,6 +98,7 @@ methods(Static)
     testvessel.WindCoefficient = wind;
     testvessel.Database = 'test';
     testvessel.DryDockDates = cVesselDryDockDates;
+    testvessel.Anemometer_Height = 30;
     
     end
     
@@ -124,6 +142,37 @@ methods(Static)
     if residual ~= 0
         durations = [durations, residual];
     end
+    end
+    
+    function diagFile = diagnosticFile()
+        
+        diagFile = fullfile(testISO19030Validate.TestDir, ...
+            'validateISO19030Diagnostic.csv');
+    end
+    
+    function diag = appendDiagnostic(diag, log, msgtrue, msgfalse)
+    % appendDiagnostic Append to diagnostic based on criteria
+    
+    % Inputs
+    if ~isempty(diag)
+        validateattributes(diag, {'cell'}, {'vector', 'row'}, ...
+            'testISO19030Validate.appendDiagnostic', 'diag', 1);
+    end
+    validateattributes(log, {'logical'}, {'vector'}, ...
+        'testISO19030Validate.appendDiagnostic', 'log', 2);
+    validateattributes(msgtrue, {'char'}, {'vector'}, ...
+        'testISO19030Validate.appendDiagnostic', 'msgtrue', 3);
+    validateattributes(msgfalse, {'char'}, {'vector'}, ...
+        'testISO19030Validate.appendDiagnostic', 'msgfalse', 4);
+    
+    % Assign messages to corresponding values
+    cm_c = cell(size(log));
+    cm_c(~log) = {msgfalse};
+    cm_c(log) = {msgtrue};
+    
+    % Append to existing diagnostic
+    diag = [diag, cm_c];
+    
     end
 end
 
@@ -331,7 +380,7 @@ methods
     % software.
     
     % Global test values
-    len = 2;
+    len = obj.DataLengthPerCriteria;
     testSize = [1, len];
     vessel = obj.TestVessel;
     
@@ -339,37 +388,50 @@ methods
     varNames_c = [obj.VarNames, {'Trim'}];
     empty_c = cell(1, numel(varNames_c));
     rawTbl = table(empty_c{:}, 'VariableNames', varNames_c);
+    diag_c = {};
     
     % Create speed, power data around extents of reference data
     for si = 1:numel(vessel.SpeedPower)
         
         minSpeed = min(vessel.SpeedPower(si).Speed);
-        stw = testISO19030.randOutThreshold(testSize, @lt, minSpeed);
+        [stw, stwi] = testISO19030.randOutThreshold(testSize, @lt, minSpeed);
+        diag_c = obj.appendDiagnostic(diag_c, stwi, 'Speed below minimum',...
+            'Speed within range');
         rawTbl = obj.appendRaw(rawTbl, len, vessel, 'STW', stw);
         maxSpeed = max(vessel.SpeedPower(si).Speed);
-        stw = testISO19030.randOutThreshold(testSize, @gt, maxSpeed);
+        [stw, stwi] = testISO19030.randOutThreshold(testSize, @gt, maxSpeed);
+        diag_c = obj.appendDiagnostic(diag_c, stwi, 'Speed above maximum',...
+            'Speed within range');
         rawTbl = obj.appendRaw(rawTbl, len, vessel, 'STW', stw);
         
         minPower = min(vessel.SpeedPower(si).Power);
-        pwr = testISO19030.randOutThreshold(testSize, @lt, minPower);
+        [pwr, pwri] = testISO19030.randOutThreshold(testSize, @lt, minPower);
+        diag_c = obj.appendDiagnostic(diag_c, pwri, 'Power below minimum',...
+            'Power within range');
         rawTbl = obj.appendRaw(rawTbl, len, vessel, 'Delivered_Power', pwr);
         maxPower = max(vessel.SpeedPower(si).Power);
-        pwr = testISO19030.randOutThreshold(testSize, @gt, maxPower);
+        [pwr, pwri] = testISO19030.randOutThreshold(testSize, @gt, maxPower);
+        diag_c = obj.appendDiagnostic(diag_c, pwri, 'Power above maximum',...
+            'Power within range');
         rawTbl = obj.appendRaw(rawTbl, len, vessel, 'Delivered_Power', pwr);
         
         % Create displacement, trim around threshold for exclusion
         minDisp = 1/1.05 * vessel.SpeedPower(si).Displacement;
-        disp = testISO19030.randOutThreshold(testSize, @lt, minDisp);
+        [disp, dispi] = testISO19030.randOutThreshold(testSize, @lt, minDisp);
 %         rawTbl = obj.appendRaw(rawTbl, len, vessel, 'Displacement', disp);
         minTrim = (1 - 0.002) * vessel.LBP; %vessel.SpeedPower(si).Trim;
-        trim = testISO19030.randOutThreshold(testSize, @lt, minTrim);
+        [trim, trimi] = testISO19030.randOutThreshold(testSize, @lt, minTrim);
+        diag_c = obj.appendDiagnostic(diag_c, dispi, 'Displacement, Trim below minimum',...
+            'Displacement, Trim within range');
         rawTbl = obj.appendRaw(rawTbl, len, vessel, 'Trim', trim, 'Displacement', disp);
         
         maxDisp = 1/0.95 * vessel.SpeedPower(si).Displacement;
-        disp = testISO19030.randOutThreshold(testSize, @gt, maxDisp);
+        [disp, dispi] = testISO19030.randOutThreshold(testSize, @gt, maxDisp);
 %         rawTbl = obj.appendRaw(rawTbl, len, vessel, 'Displacement', disp);
         maxTrim = (1 + 0.002) * vessel.LBP; % vessel.SpeedPower(si).Trim;
-        trim = testISO19030.randOutThreshold(testSize, @gt, maxTrim);
+        [trim, trimi] = testISO19030.randOutThreshold(testSize, @gt, maxTrim);
+        diag_c = obj.appendDiagnostic(diag_c, dispi, 'Displacement, Trim above maximum',...
+            'Displacement, Trim within range');
         rawTbl = obj.appendRaw(rawTbl, len, vessel, 'Trim', trim, 'Displacement', disp);
     end
     
@@ -382,7 +444,9 @@ methods
     minDepth1 = 3 .* sqrt(obj.TestVessel.Breadth_Moulded .* mean_Draft);
     minDepth2 = 2.75.* (stw_v.^2 / obj.g) ;
     minDepth = max([minDepth1, minDepth2]);
-    depth_v = testISO19030.randOutThreshold(testSize, @gt, minDepth);
+    [depth_v, depth_l] = testISO19030.randOutThreshold(testSize, @gt, minDepth);
+    diag_c = obj.appendDiagnostic(diag_c, depth_l, 'Depth below minimum',...
+        'Depth within range');
     rawTbl = obj.appendRaw(rawTbl, len, vessel,...
                                             'Draft_Fore', draft_Fore,...
                                             'Draft_Aft', draft_Aft,...
@@ -390,18 +454,29 @@ methods
                                             'Water_Depth', depth_v);
     
     % Create wind, water temp, rudder angle around thresholds for exclusion
-    temp_v = testISO19030.randOutThreshold(testSize, @gt, 2);
+    [temp_v, temp_l] = testISO19030.randOutThreshold(testSize, @gt, 2);
+    diag_c = obj.appendDiagnostic(diag_c, temp_l, 'Temp below minimum',...
+        'Temp within range');
     rawTbl = obj.appendRaw(rawTbl, len, vessel, 'Water_Temperature', temp_v);
     
-    wind_v = testISO19030.randOutThreshold(testSize, @gt, 7.9);
+    [wind_v, wind_l] = testISO19030.randOutThreshold(testSize, @gt, 7.9);
+    diag_c = obj.appendDiagnostic(diag_c, wind_l, 'Wind above maximum',...
+        'Wind within range');
     rawTbl = obj.appendRaw(rawTbl, len, vessel, 'Relative_Wind_Speed', wind_v);
     
-    rudder_v = testISO19030.randOutThreshold(testSize, @lt, 5);
+    [rudder_v, rudder_l] = testISO19030.randOutThreshold(testSize, @lt, 5);
+    diag_c = obj.appendDiagnostic(diag_c, rudder_l, 'Rudder above maximum',...
+        'Rudder within range');
     rawTbl = obj.appendRaw(rawTbl, len, vessel, 'Rudder_Angle', rudder_v);
     
     % Create time strings from dates, remove trim
     rawTbl.Time = datestr(rawTbl.Time, 'yyyy-mm-dd HH:MM:SS');
     rawTbl.Trim = [];
+    
+%     % Concat comment table to raw table
+%     numRowsDiff = size(rawTbl, 1) - size(cm_tbl, 1);
+%     cm_tbl = [cm_tbl; repmat({''}, [numRowsDiff, 1])];
+%     rawTbl = [rawTbl, cm_tbl];
     
     % Insert data into test database, writing raw data file for software
     vessel.insert;
@@ -434,6 +509,9 @@ methods
     vessel.execute(delete_sql);
     vessel = vessel.loadInFile(rawFile, tab, cols_c, delim_ch, ignore_ch, set);
     
+    % Write diagnostic file
+    obj = obj.writeDiagnosticFile(diag_c);
+    
     % Write other input files for software, reading paths from properties
     spfile = obj.SPFile;
     windfile = obj.WindFile;
@@ -459,6 +537,59 @@ methods
     % Convert time to MATLAB datenum
     outTable.Time = datenum(outTable.Time, 'yyyy-mm-dd HH:MM:SS');
     
+    
+    end
+    
+    function obj = writeDiagnosticFile(obj, diagnostic)
+    % writeDiagnosticFile Write file giving information on each row's data
+    
+    % Input
+    validateCellStr(diagnostic, 'writeDiagnosticFile', 'diagnostic', 2);
+    
+    % Write file
+    filename = obj.DiagnosticFile;
+    tbl = cell2table(diagnostic(:), 'VariableNames', {'Diagnostic'});
+    writetable(tbl, filename, 'WriteVariableNames', true);
+        
+    end
+    
+    function [obj, outTable, dbTable] = compareOutputs(obj)
+    % compareOutputs Compare results of DB and software calculations
+    
+    % Read from DB all
+    obj = obj.readDBISOTable;
+    db_tbl = obj.DBISOTable;
+    
+    % Get Diagnostic and append
+    obj = readDiagnosticTable(obj);
+    diag_tbl = obj.DiagnosticTable;
+    if isequal(size(db_tbl, 1), size(diag_tbl, 1))
+        db_tbl = [db_tbl, diag_tbl];
+    end
+    
+    % Read from Output file all
+    obj = readPVTable(obj);
+    out_tbl = obj.OutPVTable;
+    
+    % Find significantly different columns
+    
+    % Plot with diagnostic
+    figure;
+    plot(db_tbl.datetime_utc, db_tbl.speed_loss, 'b*');
+    hold on;
+    plot(out_tbl.Time, out_tbl.PV, 'ro');
+    text(db_tbl.datetime_utc, db_tbl.speed_loss, db_tbl.Diagnostic);
+    hold off;
+    
+    title(['Comparison of Speed Index calculated by Hempel DB and ISO '...
+        'Verification Tool'], 'fontsize', 12);
+    xlabel('Time')
+    ylabel('Speed Index')
+    legend({'Hempel DB', 'ISO Verification'});
+    
+    % Assign
+    outTable = out_tbl;
+    dbTable = db_tbl;
     
     end
 end
@@ -570,11 +701,28 @@ methods(TestClassSetup)
                     'Filter_Reference_Seawater_Temp'
                     'Filter_Reference_Wind_Speed'
                     'Filter_Reference_Water_Depth'
-                    'Filter_Reference_Rudder_Angle'};
+                    'Filter_Reference_Rudder_Angle'
+                    'True_Wind_Direction'
+                    'True_Wind_Direction_Reference'
+                    'True_Wind_Speed'
+                    'True_Wind_Speed_Reference'    
+                    'Relative_Wind_Speed_Reference'
+                    };
         [~, dataDB] = obj.TestVessel.select(dbTab, dbVars);
         dataDB.datetime_utc = datenum(dataDB.datetime_utc, 'dd-mm-yyyy');
         obj.DBISOTable = dataDB;
     end
+    
+    function obj = readDiagnosticTable(obj)
+    % readDiagnosticTable Read diagnostic from file
+    
+    filename = obj.DiagnosticFile;
+    tbl = readtable(filename, 'FileType', 'text', 'ReadVariableNames', true,...
+        'Delimiter', ',');
+    obj.DiagnosticTable = tbl;
+    
+    end
+    
 end
 
 methods(Test)
@@ -621,10 +769,11 @@ methods(Test)
     % Test the results for wind resistance correction against the software
         
     outVars = {'Time', 'TrueWindSpeed'};
-    dbVars = lower({'DateTime_UTC', 'True_Wind_Speed'});
+    dbVars = lower({'DateTime_UTC', 'True_Wind_Speed', ...
+        'True_Wind_Speed_Reference', 'Relative_Wind_Speed_Reference'});
     
     % Read vars from DB
-    dataDB = testcase.DBISOTable;
+    dataDB = testcase.DBISOTable(:, dbVars);
     
     % Read vars from software
     dataOut = testcase.OutWindTable(:, outVars);
@@ -638,15 +787,15 @@ methods(Test)
     % Compare
     dataMsg = ['Values for the Speed Loss are expected to match those '...
         'output by the software'];
-    actPV = dataDB.speed_index;
-    exp_PV = dataOut.PV;
-    testcase.verifyEqual(actPV, exp_PV, dataMsg);
-        
+    actPV = dataDB.true_wind_speed;
+    exp_PV = dataOut.TrueWindSpeed;
+    testcase.verifyEqual(actPV, exp_PV, 'RelTol', 5e-6, dataMsg);
+    
     end
     
     function testPV(testcase)
     % Compare performance values between software and DB
-        
+    
     outVars = {'Time', 'PV'};
     dbVars = lower({'DateTime_UTC', 'Speed_Loss'});
     
@@ -667,7 +816,7 @@ methods(Test)
         'output by the software'];
     actPV = dataDB.speed_index;
     exp_PV = dataOut.PV;
-    testcase.verifyEqual(actPV, exp_PV, dataMsg);
+    testcase.verifyEqual(actPV, exp_PV, 'RelTol', 5e-6, dataMsg);
     
     end
 end

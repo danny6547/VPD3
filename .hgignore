@@ -3,6 +3,7 @@ scriptTest2.sql
 BuildFromTab.sql
 scriptTest1.sql
 
+ISO 19030/test ISO 19030/External Validation/validateISO19030Diagnostic.csv
 syntax: regexp
 (?i)\.asv
 convertEcoInsightXLS2tab.asv
