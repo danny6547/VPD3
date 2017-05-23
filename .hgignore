@@ -4,6 +4,14 @@ BuildFromTab.sql
 scriptTest1.sql
 
 ISO 19030/test ISO 19030/External Validation/validateISO19030Diagnostic.csv
+ISO 19030/test ISO 19030/External Validation/validateISOOut_08_PI.csv
+ISO 19030/test ISO 19030/External Validation/validateISO19030Test.csv
+ISO 19030/test ISO 19030/External Validation/validateISOOut_01_Input.csv
+ISO 19030/test ISO 19030/External Validation/validateISOOut_02_Filtered.csv
+ISO 19030/test ISO 19030/External Validation/validateISOOut_03_Validated.csv
+ISO 19030/test ISO 19030/External Validation/validateISOOut_04_Corrected.csv
+ISO 19030/test ISO 19030/External Validation/validateISOOut_05_PV.csv
+ISO 19030/test ISO 19030/External Validation/validateISOOut_07_Evaluation.csv
 syntax: regexp
 (?i)\.asv
 convertEcoInsightXLS2tab.asv
