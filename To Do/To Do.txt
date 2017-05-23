@@ -289,6 +289,7 @@ cV.assignPerformanceData: sort out problem where field names have to be lower ca
 DB: "NearestDisplacement" and "NearestTrim" can be misleading, as they can come from different speed, power curves.
 cDB: implement table vesselcoatings in cDB, creating and writing CMA data
 cDB: add 4 standard wind coefficient sets
-DB: calculate wind resistance correction on relative wind at reference
+# DB: calculate wind resistance correction on relative wind at reference
 DB: correct for environmental conditions prior to speed, power lookup?
 vesselName: remove hadr-coded connection details (make cV method?)
+updateAirResistanceNoWind.sql: take coefficient where direction covers 0.
