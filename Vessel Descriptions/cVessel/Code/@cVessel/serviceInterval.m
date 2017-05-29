@@ -3,7 +3,7 @@ function [obj, servStruct] = serviceInterval(obj, varargin)
 %   Detailed explanation goes here
 
 % Output
-servStruct = struct('ServiceInterval', [], 'Units', '');
+servStruct = struct('Duration', [], 'Units', [], 'StartDate', [], 'EndDate', []);
 sz = size(obj);
 servStruct = repmat(servStruct, sz);
 
@@ -43,29 +43,35 @@ while ~obj.iterFinished
    % Convert to units
    switch units
        case 'days'
-           interval = numdays;
+           duration = numdays;
        case 'weeks'
-           interval = numdays / 7;
+           duration = numdays / 7;
        case 'months'
            if calendar_l
-               interval = dvec(1) * 12 + dvec(2);
+               duration = dvec(1) * 12 + dvec(2);
            else
                avgMonth = 30.4375;
-               interval = numdays / avgMonth;
+               duration = numdays / avgMonth;
            end
        case 'years'
            if calendar_l
-               interval = dvec(1);
+               duration = dvec(1);
            else
                avgYear = 365.25;
-               interval = avgYear / numdays;
+               duration = avgYear / numdays;
            end
    end
    
-   % Assign into output
-   servStruct(ii).ServiceInterval = interval;
-   servStruct(ii).Units = units;
-   obj(ii).ServiceInterval = interval;
+   % Start and End dates
+   interval = struct('Duration', [], 'Units', [], 'StartDate', [], 'EndDate', []);
+   interval.Duration = duration;
+   interval.Units = units;
+   interval.StartDate = datestr(min(dates), obj(ii).DateFormStr);
+   interval.EndDate = datestr(max(dates), obj(ii).DateFormStr);
    
+   % Assign into output
+   servStruct(ii) = interval;
+   obj(ii).ServiceInterval = interval;
 end
+
 obj = obj.iterReset;

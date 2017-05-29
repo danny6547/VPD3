@@ -246,15 +246,9 @@ classdef cVessel < cMySQL
             emptyObj_l = arrayfun(@(x) isempty(x.IMO_Vessel_Number), obj);
             obj(~emptyObj_l) = obj(~emptyObj_l).readFromTable('Vessels', 'IMO_Vessel_Number');
             
-%             tempDD = [obj(~emptyObj_l).DryDockDates];
-%             [tempDD.DateStrFormat] = deal( 'dd-mm-yyyy' );
-%             tempDD = tempDD.readFromTable('DryDockDates', 'IMO_Vessel_Number');
             nDocks = size(obj, 1) - 1;
             tempDD_c = num2cell(ddd);
             [obj(1:nDocks, :).DryDockDates] = tempDD_c{:};
-            
-%             [obj.DryDockDates] = obj.DryDockDates.readFromTable;
-%             obj(~emptyObj_l) = obj(~emptyObj_l).readFromTable('DryDockDates', 'IMO_Vessel_Number');
        end
        end
        
@@ -994,7 +988,6 @@ classdef cVessel < cMySQL
         obj = obj.iterReset;
         
         end
-
 
         function obj = insertIntoSpeedPowerCoefficients(obj)
         % insertIntoSpeedPowerCoefficients Insert into table SPCoefficients
