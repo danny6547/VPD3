@@ -468,10 +468,10 @@ classdef cVessel < cMySQL
        end
        
        function skip = isPerDataEmpty(obj)
-       % isPerDataEmpty True if performance data variable empty.
+       % isPerDataEmpty True if performance data variable empty or NAN.
        
        vars = {obj.Variable};
-       skip = arrayfun(@(x, y) all(isnan(isempty(x.(y{:})))), obj, vars);
+       skip = arrayfun(@(x, y) isempty(x.(y{:})) || all(isnan(x.(y{:}))), obj, vars);
            
        end
        
