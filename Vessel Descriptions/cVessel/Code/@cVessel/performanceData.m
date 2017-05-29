@@ -1,4 +1,4 @@
-function [ out ] = performanceData(obj, imo, varargin)
+function [ out, ddd] = performanceData(obj, imo, varargin)
 %performanceData Read ship performance data from database, over time range
 %   [out] = performanceData(imo) will read all data for the ship
 %   identified by numeric vector IMO from the database into output 
@@ -13,6 +13,7 @@ function [ out ] = performanceData(obj, imo, varargin)
 
 % Initialise Outputs
 out = struct();
+ddd = cVesselDryDockDates();
 
 % Inputs
 validateattributes(imo, {'numeric'}, {'vector', 'integer', 'positive'},...
@@ -105,16 +106,32 @@ if ddi_l
 %         numIntervals_c = num2cell(numIntervals);
     intervalsI_c = repmat({ddi}, size(intervalDates_c));
     intervalsI_c = cellfun(@(x, y) x(x<=y), intervalsI_c, numIntervals_c, 'Uni', 0);
+    numDocks = cellfun(@(x) size(x, 1), intervalDates_c, 'Uni', 0);
+    maxNumDocks = max([numDocks{:}]);
 
+    % Assign dry dock date strings to objects
+    ddd.DateStrFormat = 'dd-mm-yyyy';
+    ddd = repmat(ddd, maxNumDocks-1, size(dddates, 2));
+    
+    for vi = 1:numShips
+
+        for di = 1:numIntervals_c{vi} - 1
+        
+            ddd(di, vi).StartDate = dddates{vi}{di, 1};
+            ddd(di, vi).EndDate = dddates{vi}{di, 2};
+        end
+    end
+    
     if ~isequal(ddi, 0)
 %         intervalDates_c = cellfun(@(x, y) x(y, :), intervalDates_c,...
 %             numIntervals_c, 'Uni', 0);
         intervalDates_c = cellfun(@(x, y) x(y, :), intervalDates_c,...
             intervalsI_c, 'Uni', 0);
+        
+        % Index into DryDockDates here also
+        
     end
 
-    numDocks = cellfun(@(x) size(x, 1), intervalDates_c, 'Uni', 0);
-    maxNumDocks = max([numDocks{:}]);
     e = cellfun(@(x, y) repmat({x}, y, 1), sqlMulti_c, numDocks, 'Uni', 0);
     eprime = cellfun(@(x) [x; cell(maxNumDocks - length(x), 1)], e, 'Uni', 0);
 %     r = cat(2, e{:});
