@@ -82,9 +82,9 @@ while ~obj.iterFinished
         Duration_st(2).Average = output(2);
         Duration_st(2).StartDate = startDate(2);
         Duration_st(2).EndDate = endDate(2);
-    end
     
-    % Re-assign into Outputs
-    obj(ii).InServicePerformance = Duration_st;
+        % Re-assign into Outputs
+        obj(ii).InServicePerformance = Duration_st;
+    end
 end
 obj = obj.iterReset;
