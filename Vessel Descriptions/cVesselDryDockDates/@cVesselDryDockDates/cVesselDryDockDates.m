@@ -1,4 +1,4 @@
-classdef cVesselDryDockDates
+classdef cVesselDryDockDates < cMySQL
     %CVESSELDRYDOCKDATES Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -32,13 +32,16 @@ classdef cVesselDryDockDates
        
        function obj = assignDates(obj, startdate, enddate, varargin)
            
-            dateform = obj.DateStrFormat;
-            if nargin > 3
-                dateform = varargin{1};
-            end
-            
-            obj.StartDateNum = obj.setDate(startdate, dateform);
-            obj.EndDateNum = obj.setDate(enddate, dateform);
+           for oi = 1:numel(obj)
+                
+                dateform = obj(oi).DateStrFormat;
+                if nargin > 3
+                    dateform = varargin{1};
+                end
+
+                obj(oi).StartDateNum = obj(oi).setDate(startdate, dateform);
+                obj(oi).EndDateNum = obj(oi).setDate(enddate, dateform);
+           end
         end
         
        function obj = readFile(obj, filename, dateform)
@@ -95,7 +98,8 @@ classdef cVesselDryDockDates
                 return
             end
             
-            props = setdiff(properties(obj), 'DateStrFormat');
+            props2skip_c = union(properties(cMySQL), 'DateStrFormat');
+            props = setdiff(properties(obj), props2skip_c);
             empty = false(size(props));
             for pi = 1:numel(props)
                 prop = props{pi};
@@ -130,6 +134,20 @@ classdef cVesselDryDockDates
         function date = get.EndDate(obj)
             
             date = datestr(obj.EndDateNum, obj.DateStrFormat);
+        end
+        
+        function obj = set.StartDate(obj, date)
+        % Set method for start date, converting date string to number
+            
+            daten = datenum(date, obj.DateStrFormat);
+            obj.StartDateNum = daten;
+        end
+        
+        function obj = set.EndDate(obj, date)
+        % Set method for end date, converting date string to number
+            
+            daten = datenum(date, obj.DateStrFormat);
+            obj.EndDateNum = daten;
         end
     end
 end

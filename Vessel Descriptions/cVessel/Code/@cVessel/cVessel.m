@@ -52,6 +52,7 @@ classdef cVessel < cMySQL
         Power;
         Displacement
         Trim;
+        Propulsive_Efficiency;
         Engine_Model;
         Wind_Model_ID;
         Wind_Reference_Height_Design;
@@ -158,7 +159,7 @@ classdef cVessel < cMySQL
                end
                
                readInputs_c = [{imo}, DDi];
-               shipData = obj.performanceData(readInputs_c{:});
+               [shipData, ddd] = obj.performanceData(readInputs_c{:});
            end
            
            if imo_l
@@ -167,7 +168,7 @@ classdef cVessel < cMySQL
                 validateattributes(imo, {'numeric'},...
                   {'positive', 'real', 'integer'}, 'cVessel constructor',...
                   'IMO', 1);
-                shipData = obj.performanceData(readInputs_c{:});
+               [shipData, ddd] = obj.performanceData(readInputs_c{:});
            end
            
            if shipData_l && file_l
@@ -244,6 +245,16 @@ classdef cVessel < cMySQL
             % Read Vessel static data from DB
             emptyObj_l = arrayfun(@(x) isempty(x.IMO_Vessel_Number), obj);
             obj(~emptyObj_l) = obj(~emptyObj_l).readFromTable('Vessels', 'IMO_Vessel_Number');
+            
+%             tempDD = [obj(~emptyObj_l).DryDockDates];
+%             [tempDD.DateStrFormat] = deal( 'dd-mm-yyyy' );
+%             tempDD = tempDD.readFromTable('DryDockDates', 'IMO_Vessel_Number');
+            nDocks = size(obj, 1) - 1;
+            tempDD_c = num2cell(ddd);
+            [obj(1:nDocks, :).DryDockDates] = tempDD_c{:};
+            
+%             [obj.DryDockDates] = obj.DryDockDates.readFromTable;
+%             obj(~emptyObj_l) = obj(~emptyObj_l).readFromTable('DryDockDates', 'IMO_Vessel_Number');
        end
        end
        
@@ -983,89 +994,7 @@ classdef cVessel < cMySQL
         obj = obj.iterReset;
         
         end
-        
-        function obj = readFromTable(obj, table, identifier)
-        % readFromTable Assign object properties from table column values
-        
-        % Input
-        validateattributes(table, {'char'}, {'vector'}, ...
-            'cVessel.readFromTable', 'table', 2);
-        validateattributes(identifier, {'char'}, {'vector'}, ...
-            'cVessel.readFromTable', 'identifier', 3);
-        
-        % Get matching field names and object properties
-        temp_st = obj(1).execute(['DESCRIBE ', table]);
-        fields_c = temp_st.field;
-        prop_c = properties(obj);
-        matchField_c = intersect(fields_c, prop_c);
-        
-        % Error if identifier is not in both fields and properties
-        if ~ismember(identifier, matchField_c)
-            
-            errid = 'readTable:IdentifierMissing';
-            errmsg = ['Input IDENTIFIER must be both a property of OBJ '...
-                'and a field of table TABLE.'];
-            error(errid, errmsg);
-        end
-        
-        % Select table where rows match identifier values in object
-        objID_c = {obj.(identifier)};
-        objID_cs = cellfun(@num2str, objID_c, 'Uni', 0);
-        objIDvals_ch = obj(1).colList(objID_cs);
-        [obj(1), sqlWhereIn_ch] = obj(1).combineSQL('WHERE', identifier, 'IN',...
-            objIDvals_ch);
-        [obj(1), ~, sqlSelect] = obj(1).select(table, '*');
-        [obj(1), sqlSelect] = obj(1).determinateSQL(sqlSelect);
-        [obj(1), sqlSelectWhereIn_ch] = obj(1).combineSQL(sqlSelect, sqlWhereIn_ch);
-        table_st = obj(1).execute(sqlSelectWhereIn_ch);
-        if isempty(table_st)
-            
-            errid = 'readTable:IdentifierDataMissing';
-            errmsg = 'No data could be read for the values of IDENTIFIER.';
-            error(errid, errmsg);
-        end
-        
-        % Get indices to OBJ identified in table
-        lowerId_ch = lower(identifier);
-        tableID_c = table_st.(lowerId_ch);
-        if iscell(tableID_c)
-%             [obj_l, obj_i] = ismember([tableID_c{:}], [objID_c{:}]);
-            [~, obj_i] = ismember([objID_c{:}], [tableID_c{:}]);
-%             nID = sum(obj_l);
-        else
-%             nID = 1;
-            obj_i = 1;
-%             obj_l = true;
-        end
-        
-        % Iterate over properties of matching obj and assign values
-        for ii = 1:length(matchField_c)
-            
-            currField = matchField_c{ii};
-            lowerField = lower(currField);
-            currData = table_st.(lowerField);
-            if ~iscell(currData)
-                currData = {currData};
-            end
-            
-            for oi = 1:numel(obj)
-                
-                if obj_i(oi) == 0
-                    continue
-                end
-%                 currObji = obj_i(oi);
-                currTablei = obj_i(oi);
-                
-                try 
-                    obj(oi).(currField) = currData{currTablei};
-                catch e
-                    % Write some code here later...
-                    % Error is attempt to write to dependent property
-                end
-            end
-        end
-        
-        end
+
 
         function obj = insertIntoSpeedPowerCoefficients(obj)
         % insertIntoSpeedPowerCoefficients Insert into table SPCoefficients
@@ -1456,10 +1385,10 @@ classdef cVessel < cMySQL
            end
            obj.IMO_Vessel_Number = IMO;
            
-           if ~isempty(obj.DryDockDates)
-               
-               [obj.DryDockDates(:).IMO_Vessel_Number] = deal(IMO);
-           end
+%            if ~isempty(obj.DryDockDates)
+%                
+%                [obj.DryDockDates(:).IMO_Vessel_Number] = deal(IMO);
+%            end
        end
        
        function obj = set.DateTime_UTC(obj, dates)
@@ -1565,6 +1494,26 @@ classdef cVessel < cMySQL
            
        end
        
+       function etaD = get.Propulsive_Efficiency(obj)
+           
+       % Get matrix of speed, power, draft, trim
+       spdt = obj.SpeedPower.speedPowerDraftTrim;
+       
+       % Index appropriately
+       etaD = spdt(:, 5);
+       
+%            sp = obj.SpeedPower;
+%            if isempty(sp)
+%                
+%                etaD = [];
+%            else
+%                
+%                etaD_c = {sp.Propulsive_Efficiency};
+%                etaD_c(cellfun(@isempty, etaD_c)) = { nan };
+%                etaD = [etaD_c{:}];
+%            end
+       end
+       
        function id = get.Wind_Model_ID(obj)
            
            id = [];
@@ -1591,6 +1540,23 @@ classdef cVessel < cMySQL
                
                windRefHeight = obj.WindCoefficient.Wind_Reference_Height_Design;
            end
+       end
+       
+       function obj = set.DryDockDates(obj, ddd)
+       % 
+       
+       % Input
+       validateattributes(ddd, {'cVesselDryDockDates'}, {'scalar'});
+       
+       % Assign IMO
+       imo = obj.IMO_Vessel_Number;
+       if ~isempty(imo)
+           ddd.IMO_Vessel_Number = imo;
+       end
+       
+       % Assign object
+       obj.DryDockDates = ddd;
+       
        end
     end
 end
