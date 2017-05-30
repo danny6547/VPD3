@@ -40,6 +40,7 @@ while ~obj.iterFinished
        
        % Skip to end if fewer avg than vessels
        if afterDDi > numel(annualAvgBef)
+           [obj.IterFinished] = deal(true);
            break
        end
 
