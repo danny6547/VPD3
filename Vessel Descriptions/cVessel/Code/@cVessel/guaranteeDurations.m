@@ -1,6 +1,17 @@
 function [ obj, guarStruct ] = guaranteeDurations(obj, varargin)
 %guaranteeDurations Calculate values relevant to performance guarantees
-%   Detailed explanation goes here
+%   obj = guaranteeDurations(obj) will return in property
+%   'GuaranteeDurations' a struct giving average performance values over
+%   durations defined by start and end months, the difference between these
+%   averages and that of the reference period and the corresponding 
+%   relative differences. These data are contained in appropriately named
+%   fields.
+%   obj = guaranteeDurations(obj, remove) will not calculate values for
+%   durations for which there is insufficient data when REMOVE is TRUE. The
+%   default is FALSE.
+%   [obj, guarStruct] = guaranteeDurations(obj, ...) will, in addition to
+%   the above, also return in GUARSTRUCT the same struct as was assigned to
+%   property 'GuaranteeDurations'.
 
 % Output
 guarStruct = struct('StartMonth', [1, 13, 13, 13, 13], ...
