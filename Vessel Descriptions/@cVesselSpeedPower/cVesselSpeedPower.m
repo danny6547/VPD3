@@ -1,17 +1,17 @@
-classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
+classdef cVesselSpeedPower < cMySQL
     %CVESSELSPEEDPOWER Vessel speed and power data
     %   Detailed explanation goes here
     
     properties
         
+        IMO_Vessel_Number double;
         Speed double;
         Power double;
         Trim double;
         Displacement double;
         Speed_Power_Source char = '';
-%         SpeedPowerCoefficients double = [];
-        Exponent_A double = [];
-        Exponent_B double = [];
+        Propulsive_Efficiency double = [];
+        Coefficients double = [];
         R_Squared double = [];
         
     end
@@ -20,6 +20,11 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
         
        SpeedPowerDraftTrim double = []; 
         
+    end
+    
+    properties(Hidden)
+       
+       Model = 'polynomial2';
     end
     
     methods
@@ -31,7 +36,7 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
 %                size_c = num2cell(size(varargin{1}));
 %                obj(size_c{:}) = cVesselSpeedPower();
 %                propValue_c = 
-               set(obj, varargin{:});
+%                set(obj, varargin{:});
            end
        end
        
@@ -40,7 +45,6 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
        
        % Iterate over objects
        numObj = numel(obj);
-       coeffs = nan(numObj, 2);
        R2 = nan(numObj, 1);
        for oi = 1:numObj
 
@@ -70,24 +74,100 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
             end
             
             % Fit
-            fo = polyfit(log(power), speed, 1);
+            switch obj(oi).Model
+                
+                case 'exponential'
+                    
+                    fo = polyfit(log(power), speed, 1);
+                    residuals = speed - (fo(2) + fo(1).*log(power));
+                case 'polynomial2'
+                    
+                    fo = polyfit(power, speed, 2);
+                    residuals = speed - (fo(1)*power.^2 + fo(2)*power + fo(3));  % polyval(fo, power);
+            end
             
             % Get statistics of fit
-            residuals = speed - (fo(2) + fo(1).*log(power));
             r2 = 1 - (sum(residuals.^2) / sum((speed - mean(speed)).^2));
             
             % Assign into obj, outputs
             obj(oi).Speed = speed;
             obj(oi).Power = power;
-            obj(oi).Exponent_A = fo(1);
-            obj(oi).Exponent_B = fo(2);
+            obj(oi).Coefficients = fo;
+%             obj(oi).Exponent_B = fo(2);
+%             
+%             if numel(fo) > 2
+%                 
+%                 obj(oi).Exponent_C = fo(3);
+%             end
             obj(oi).R_Squared = r2;
             
-            coeffs(oi, :) = fo;
+%             coeffs = nan(numObj, numel(fo));
+            coeffs(oi, 1:numel(fo)) = fo;
             R2(oi) = r2;
        end
        end
        
+       function insertIntoTable(obj)
+       % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs
+       
+       % Fit
+       obj = obj.fit;
+       
+       % Generate struct containing coefficients in same structure as table
+       coeffNames_c = {'Coefficient_A', 'Coefficient_B', 'Coefficient_C'};
+       coeff_c = nan(1, 3);
+       for oi = 1:numel(obj)
+           
+           if numel(obj(oi).Coefficients) > 0
+            coeff_c(oi, 1) = obj(oi).Coefficients(1);
+           end
+           if numel(obj(oi).Coefficients) > 1
+            coeff_c(oi, 2) = obj(oi).Coefficients(2);
+           end
+           if numel(obj(oi).Coefficients) > 2
+            coeff_c(oi, 3) = obj(oi).Coefficients(3);
+           end
+       end
+       coeff_c = mat2cell(coeff_c, numel(obj), [1, 1, 1]);
+       coeffInput_c = cell(1, 6);
+       coeffInput_c(1:2:5) = coeffNames_c;
+       coeffInput_c(2:2:6) = coeff_c;
+       
+       % Insert
+       insertIntoTable@cMySQL(obj, 'SpeedPower');
+       insertIntoTable@cMySQL(obj, 'SpeedPowerCoefficients', [], ...
+           coeffInput_c{:});
+       
+       end
+       
+       function [obj, h] = plot(obj)
+       % plot
+       
+       for oi = 1:numel(obj)
+           if ~isempty(obj(oi).Speed) && ~isempty(obj(oi).Power)
+
+                figure;
+                axes;
+
+                h(1) = plot(obj(oi).Speed, obj(oi).Power, 'b*');
+                xlabel('Speed (knots)')
+                ylabel('Power (kW)');
+                title('Speed against Power data and fit');
+                
+                if ~isempty(obj(oi).Coefficients)
+                    
+                    y = linspace(min(obj(oi).Power), max(obj(oi).Power), 1e3);
+                    x = polyval(obj(oi).Coefficients, y);
+                    hold on;
+                    plot(x, y, 'r--');
+                    legend({'Speed, power data', 'Second-order polynomial fit'});
+                    text(0.1, 0.9, ['Displacement = ', ...
+                        num2str(obj(oi).Displacement), ', Trim = ', ...
+                        num2str(obj(oi).Trim)], 'Units', 'Normalized');
+                end
+           end
+       end
+       end
     end
     
     methods(Hidden)
@@ -98,13 +178,13 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
            allLengths_c = arrayfun(@(x) length(x.Speed), obj, 'Uni', 0);
            numRows = sum([allLengths_c{:}]);
            
-           out_c = cell(1, 4);
-           currOut_m = nan(numRows, 4);
+           out_c = cell(1, 5);
+           currOut_m = nan(numRows, 5);
            currRow = 1;
             
             for oi = 1:numel(obj)
                 [out_c{:}] = cVessel.repeatInputs({obj(oi).Speed, obj(oi).Power,...
-                    obj(oi).Displacement, obj(oi).Trim});
+                    obj(oi).Displacement, obj(oi).Trim, obj(oi).Propulsive_Efficiency});
                 out_c = cellfun(@(x) x(:), out_c, 'Uni', 0);
 %                 currOut_m = [currOut_m; cell2mat(out_c)];'
 %                 currMat = cell2mat(out_c);
@@ -130,7 +210,7 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
             
         end
         
-        function set.Speed(obj, speed)
+        function obj = set.Speed(obj, speed)
         % 
         
         if ~isempty(speed)
@@ -150,7 +230,7 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
         obj.Speed = speed;
         end
         
-        function set.Power(obj, power)
+        function obj = set.Power(obj, power)
         % 
         
         if ~isempty(power)
@@ -171,7 +251,7 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
             
         end
         
-        function set.Trim(obj, trim)
+        function obj = set.Trim(obj, trim)
         % 
         
         if ~isempty(trim)
@@ -182,7 +262,7 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
             
         end
         
-        function set.Displacement(obj, displacement)
+        function obj = set.Displacement(obj, displacement)
         % 
         
         if ~isempty(displacement)
@@ -193,5 +273,19 @@ classdef cVesselSpeedPower < handle & matlab.mixin.SetGet
             
         end
         
+        function obj = set.Model(obj, model)
+        %  
+            
+            validateattributes(model, {'char'}, {'vector'})
+            model = lower(model);
+            validModels = {'polynomial2', 'exponential'};
+            if ~ismember(model, validModels)
+                errid = 'cVSP:InvalidModel';
+                errmsg = ['Model ', model, ' is invalid.'];
+                error(errid, errmsg);
+            end
+            
+            obj.Model = model;
+        end
     end
 end
