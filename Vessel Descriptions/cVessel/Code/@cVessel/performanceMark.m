@@ -1,6 +1,8 @@
 function [ obj, markStruct ] = performanceMark(obj, varargin)
 %performanceMark Assign performance mark to performance data
-%   Detailed explanation goes here
+%   obj = performanceMark(obj) will generate a structure with field
+%   'PerformanceMark' in the PerformanceMark property of OBJ, where the
+%   value will be green when the corresponding
 
 % Output
 markStruct = struct('PerformanceMark', '');

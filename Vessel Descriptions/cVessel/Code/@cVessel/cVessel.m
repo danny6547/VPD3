@@ -247,7 +247,7 @@ classdef cVessel < cMySQL
             obj(~emptyObj_l) = obj(~emptyObj_l).readFromTable('Vessels', 'IMO_Vessel_Number');
             
             nDocks = size(obj, 1);
-            tempDD_c = num2cell(ddd);
+            tempDD_c = num2cell(ddd(1:end-1, :));
             [obj(2:nDocks, :).DryDockDates] = tempDD_c{:};
        end
        end

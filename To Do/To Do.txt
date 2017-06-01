@@ -295,3 +295,5 @@ vesselName: remove hadr-coded connection details (make cV method?)
 updateAirResistanceNoWind.sql: take coefficient where direction covers 0.
 speedPowerCoefficients: include CoefficientC column, replace ExponentA, B with Coeff_
 speedPower, speedPowerCoefficients: replace IMO_Vessel_Number columns, properties with spModel
+DB: rebuild with externally validated scripts
+cDB: include dry dock dates file
