@@ -1,8 +1,16 @@
 function [ obj, markStruct ] = performanceMark(obj, varargin)
 %performanceMark Assign performance mark to performance data
 %   obj = performanceMark(obj) will generate a structure with field
-%   'PerformanceMark' in the PerformanceMark property of OBJ, where the
-%   value will be green when the corresponding
+%   'PerformanceMark' in the PerformanceMark property of OBJ, containing a
+%   string which corresponds to a range of values for the difference in
+%   performance between the first year of the dry-docking interval and the
+%   remaining years. This method requires 'guaranteeDurations' to have been
+%   run first. The strings are 'green' for below 5, 'yellow' for
+%   between 5 and 10, and 'red' for above 10.
+%   obj = performanceMark(obj, grade) will return in property 
+%   'PerformanceMark' the strings contained in the third column of cell
+%   array GRADE, where the first column contains the corresponding minimum
+%   performance difference and the second the corresponding maximum.
 
 % Output
 markStruct = struct('PerformanceMark', '');
@@ -14,6 +22,7 @@ markStruct = repmat(markStruct, sz);
 %     1);
 grade = {-inf, 5, 'green'; 5, 10, 'yellow'; 10, inf, 'red'};
 if nargin > 1
+    
     grade = varargin{1};
     validateattributes(obj, {'cell'}, {'matrix'}, 'performanceMark',...
         'grade', 2);
