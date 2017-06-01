@@ -2,11 +2,11 @@ function [ obj, markStruct ] = performanceMark(obj, varargin)
 %performanceMark Assign performance mark to performance data
 %   obj = performanceMark(obj) will generate a structure with field
 %   'PerformanceMark' in the PerformanceMark property of OBJ, containing a
-%   string which corresponds to a range of values for the difference in
-%   performance between the first year of the dry-docking interval and the
-%   remaining years. This method requires 'guaranteeDurations' to have been
-%   run first. The strings are 'green' for below 5, 'yellow' for
-%   between 5 and 10, and 'red' for above 10.
+%   string which corresponds to a range of values for the relative 
+%   difference in performance between the first year of the dry-docking 
+%   interval and the remaining years. This method requires 
+%   'guaranteeDurations' to have been run first. The strings are 'green' 
+%   for below 5, 'yellow' for between 5 and 10, and 'red' for above 10.
 %   obj = performanceMark(obj, grade) will return in property 
 %   'PerformanceMark' the strings contained in the third column of cell
 %   array GRADE, where the first column contains the corresponding minimum
