@@ -33,23 +33,23 @@ BEGIN
     
     /* Get coefficients of speed, power curve for nearest diplacement, trim */ 
     UPDATE IGNORE tempRawISO ii JOIN
-	(SELECT i.id, i.IMO_Vessel_Number, NearestDisplacement, NearestTrim, i.Displacement, i.Trim, s.Exponent_A, s.Exponent_B FROM tempRawISO i
+	(SELECT i.id, i.IMO_Vessel_Number, NearestDisplacement, NearestTrim, i.Displacement, i.Trim, s.Coefficient_A, s.Coefficient_B, s.Coefficient_C FROM tempRawISO i
 		JOIN speedpowercoefficients s
 			ON i.IMO_Vessel_Number = s.IMO_Vessel_Number AND
 			   i.NearestDisplacement = s.Displacement AND
 			   i.NearestTrim = s.Trim) si
 	ON ii.id = si.id
-	SET Expected_Speed_Through_Water = Exponent_A*LOG(ABS(Corrected_Power)) + Exponent_B
+	SET Expected_Speed_Through_Water = (Coefficient_A*POWER(Corrected_Power, 2) + Coefficient_B*Corrected_Power + Coefficient_C) * POWER( POWER(ii.Displacement, (2/3)) / POWER(ii.NearestDisplacement, (2/3)), (1/3)) /* Exponent_A*LOG(ABS(Corrected_Power)) + Exponent_B */
     WHERE Displacement_Correction_Needed IS FALSE;
     
     /* Get coefficients of speed, power curve for nearest diplacement, trim */ 
     UPDATE IGNORE tempRawISO ii JOIN
-	(SELECT i.id, i.IMO_Vessel_Number, NearestDisplacement, NearestTrim, i.Displacement, i.Trim, s.Exponent_A, s.Exponent_B FROM tempRawISO i
+	(SELECT i.id, i.IMO_Vessel_Number, NearestDisplacement, NearestTrim, i.Displacement, i.Trim, s.Coefficient_A, s.Coefficient_B, s.Coefficient_C FROM tempRawISO i
 		JOIN speedpowercoefficients s
 			ON i.IMO_Vessel_Number = s.IMO_Vessel_Number AND
 			   i.NearestDisplacement = s.Displacement AND
 			   i.NearestTrim = s.Trim) si
 	ON ii.id = si.id
-	SET Expected_Speed_Through_Water = (Exponent_A*LOG(ABS(Corrected_Power)) + Exponent_B) * POWER( POWER(ii.Displacement, (2/3)) / POWER(ii.NearestDisplacement, (2/3)), (1/3))
+	SET Expected_Speed_Through_Water = (Coefficient_A*POWER(Corrected_Power, 2) + Coefficient_B*Corrected_Power + Coefficient_C) * POWER( POWER(ii.Displacement, (2/3)) / POWER(ii.NearestDisplacement, (2/3)), (1/3))
     WHERE Displacement_Correction_Needed IS TRUE;
 END
