@@ -1,0 +1,232 @@
+<?xml version="1.0"?>
+<Data xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <breadth>50</breadth>
+  <length>400</length>
+  <anenometerHeight>40</anenometerHeight>
+  <referenceHeight>10</referenceHeight>
+  <etaD0>0.7</etaD0>
+  <etaDM>0.7</etaDM>
+  <referenceDraught>10</referenceDraught>
+  <referenceA>2000</referenceA>
+  <speedPowerCurves>
+    <SpeedPowerCurve>
+      <name>Test SP1</name>
+      <displacement>500000</displacement>
+      <trim>0</trim>
+      <speed>
+        <double>5</double>
+        <double>10</double>
+        <double>15</double>
+        <double>20</double>
+        <double>25</double>
+      </speed>
+      <power>
+        <double>10000</double>
+        <double>20000</double>
+        <double>30000</double>
+        <double>40000</double>
+        <double>50000</double>
+      </power>
+    </SpeedPowerCurve>
+    <SpeedPowerCurve>
+      <name>Test SP2</name>
+      <displacement>1000000</displacement>
+      <trim>-5</trim>
+      <speed>
+        <double>5</double>
+        <double>8.75</double>
+        <double>12.5</double>
+        <double>16.25</double>
+        <double>20</double>
+      </speed>
+      <power>
+        <double>10000</double>
+        <double>30000</double>
+        <double>50000</double>
+        <double>70000</double>
+        <double>90000</double>
+      </power>
+    </SpeedPowerCurve>
+  </speedPowerCurves>
+  <performanceIndicators>Inservice</performanceIndicators>
+  <referenceFrom>1999-01-01T09:33:05</referenceFrom>
+  <referenceTo>2000-01-01T09:33:05</referenceTo>
+  <evaluationFrom>2000-01-01T09:33:05</evaluationFrom>
+  <evaluationTo>2001-01-01T09:33:05</evaluationTo>
+  <outputFile>C:\Users\damcl\OneDrive - Hempel Group\Documents\SQL\tests\EcoInsight Test Scripts\ISO 19030\test ISO 19030\External Validation\validateISOOut.csv</outputFile>
+  <nRecords>0</nRecords>
+  <etaMethod>SingleValue</etaMethod>
+  <dtWindCoefficients>
+    <xs:schema id="NewDataSet" xmlns="" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+      <xs:element name="NewDataSet" msdata:IsDataSet="true" msdata:MainDataTable="Wind_x0020_Coefficients" msdata:UseCurrentLocale="true">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="Wind_x0020_Coefficients">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Angle" msdata:Caption="Angel (°)" type="xs:double" />
+                  <xs:element name="WindCoeff" msdata:Caption="Wind coefficients" type="xs:double" minOccurs="0" />
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:choice>
+        </xs:complexType>
+        <xs:unique name="Constraint1" msdata:PrimaryKey="true">
+          <xs:selector xpath=".//Wind_x0020_Coefficients" />
+          <xs:field xpath="Angle" />
+        </xs:unique>
+      </xs:element>
+    </xs:schema>
+    <diffgr:diffgram xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:diffgr="urn:schemas-microsoft-com:xml-diffgram-v1">
+      <DocumentElement>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients1" msdata:rowOrder="0" diffgr:hasChanges="inserted">
+          <Angle>0</Angle>
+          <WindCoeff>1.264</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients2" msdata:rowOrder="1" diffgr:hasChanges="inserted">
+          <Angle>10</Angle>
+          <WindCoeff>1.345</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients3" msdata:rowOrder="2" diffgr:hasChanges="inserted">
+          <Angle>20</Angle>
+          <WindCoeff>1.409</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients4" msdata:rowOrder="3" diffgr:hasChanges="inserted">
+          <Angle>30</Angle>
+          <WindCoeff>1.389</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients5" msdata:rowOrder="4" diffgr:hasChanges="inserted">
+          <Angle>40</Angle>
+          <WindCoeff>1.315</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients6" msdata:rowOrder="5" diffgr:hasChanges="inserted">
+          <Angle>50</Angle>
+          <WindCoeff>1.143</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients7" msdata:rowOrder="6" diffgr:hasChanges="inserted">
+          <Angle>60</Angle>
+          <WindCoeff>0.923</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients8" msdata:rowOrder="7" diffgr:hasChanges="inserted">
+          <Angle>70</Angle>
+          <WindCoeff>0.684</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients9" msdata:rowOrder="8" diffgr:hasChanges="inserted">
+          <Angle>80</Angle>
+          <WindCoeff>0.51</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients10" msdata:rowOrder="9" diffgr:hasChanges="inserted">
+          <Angle>90</Angle>
+          <WindCoeff>0.32</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients11" msdata:rowOrder="10" diffgr:hasChanges="inserted">
+          <Angle>100</Angle>
+          <WindCoeff>0.078</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients12" msdata:rowOrder="11" diffgr:hasChanges="inserted">
+          <Angle>110</Angle>
+          <WindCoeff>-0.207</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients13" msdata:rowOrder="12" diffgr:hasChanges="inserted">
+          <Angle>120</Angle>
+          <WindCoeff>-0.556</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients14" msdata:rowOrder="13" diffgr:hasChanges="inserted">
+          <Angle>130</Angle>
+          <WindCoeff>-0.942</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients15" msdata:rowOrder="14" diffgr:hasChanges="inserted">
+          <Angle>140</Angle>
+          <WindCoeff>-1.235</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients16" msdata:rowOrder="15" diffgr:hasChanges="inserted">
+          <Angle>150</Angle>
+          <WindCoeff>-1.466</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients17" msdata:rowOrder="16" diffgr:hasChanges="inserted">
+          <Angle>160</Angle>
+          <WindCoeff>-1.574</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients18" msdata:rowOrder="17" diffgr:hasChanges="inserted">
+          <Angle>170</Angle>
+          <WindCoeff>-1.463</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients19" msdata:rowOrder="18" diffgr:hasChanges="inserted">
+          <Angle>180</Angle>
+          <WindCoeff>-1.257</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients20" msdata:rowOrder="19" diffgr:hasChanges="inserted">
+          <Angle>190</Angle>
+          <WindCoeff>-1.463</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients21" msdata:rowOrder="20" diffgr:hasChanges="inserted">
+          <Angle>200</Angle>
+          <WindCoeff>-1.574</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients22" msdata:rowOrder="21" diffgr:hasChanges="inserted">
+          <Angle>210</Angle>
+          <WindCoeff>-1.466</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients23" msdata:rowOrder="22" diffgr:hasChanges="inserted">
+          <Angle>220</Angle>
+          <WindCoeff>-1.235</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients24" msdata:rowOrder="23" diffgr:hasChanges="inserted">
+          <Angle>230</Angle>
+          <WindCoeff>-0.942</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients25" msdata:rowOrder="24" diffgr:hasChanges="inserted">
+          <Angle>240</Angle>
+          <WindCoeff>-0.556</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients26" msdata:rowOrder="25" diffgr:hasChanges="inserted">
+          <Angle>250</Angle>
+          <WindCoeff>-0.207</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients27" msdata:rowOrder="26" diffgr:hasChanges="inserted">
+          <Angle>260</Angle>
+          <WindCoeff>0.078</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients28" msdata:rowOrder="27" diffgr:hasChanges="inserted">
+          <Angle>270</Angle>
+          <WindCoeff>0.32</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients29" msdata:rowOrder="28" diffgr:hasChanges="inserted">
+          <Angle>280</Angle>
+          <WindCoeff>0.51</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients30" msdata:rowOrder="29" diffgr:hasChanges="inserted">
+          <Angle>290</Angle>
+          <WindCoeff>0.684</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients31" msdata:rowOrder="30" diffgr:hasChanges="inserted">
+          <Angle>300</Angle>
+          <WindCoeff>0.923</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients32" msdata:rowOrder="31" diffgr:hasChanges="inserted">
+          <Angle>310</Angle>
+          <WindCoeff>1.143</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients33" msdata:rowOrder="32" diffgr:hasChanges="inserted">
+          <Angle>320</Angle>
+          <WindCoeff>1.315</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients34" msdata:rowOrder="33" diffgr:hasChanges="inserted">
+          <Angle>330</Angle>
+          <WindCoeff>1.389</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients35" msdata:rowOrder="34" diffgr:hasChanges="inserted">
+          <Angle>340</Angle>
+          <WindCoeff>1.409</WindCoeff>
+        </Wind_x0020_Coefficients>
+        <Wind_x0020_Coefficients diffgr:id="Wind Coefficients36" msdata:rowOrder="35" diffgr:hasChanges="inserted">
+          <Angle>350</Angle>
+          <WindCoeff>1.345</WindCoeff>
+        </Wind_x0020_Coefficients>
+      </DocumentElement>
+    </diffgr:diffgram>
+  </dtWindCoefficients>
+  <referencePV>NaN</referencePV>
+  <evaluationPV>66.806493328187045</evaluationPV>
+  <PI>NaN</PI>
+</Data>

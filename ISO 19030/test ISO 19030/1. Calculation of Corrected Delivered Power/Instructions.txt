@@ -1,0 +1,15 @@
+Open MATLAB.
+Change the current directory to this directory.
+Execute the following MATLAB commands:
+obj = testISO19030Validate;
+obj = obj.createTestFiles;
+
+Open Software.
+Under "Measured Data", click "Load" and load validateISO19030Test.csv.
+Under "Output File", click "Load" and load testISO.xml.
+Uncheck the check-boxes marked "Filter" and "Validate".
+Click "Calculat" button.
+
+Go back to MATLAB.
+res = run(obj, 'testCorrectedDeliveredPower');
+res is a struct telling the user whether the test has passed or failed.
