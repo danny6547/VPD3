@@ -281,10 +281,11 @@ classdef cVessel < cMySQL
            obj = obj.insertIntoVessels();
            
            % SpeedPower
-           obj = insertIntoSpeedPower(obj);
+           obj.SpeedPower.insertIntoTable();
+%            obj = insertIntoSpeedPower(obj);
            
            % SpeedPower Coefficients
-           obj = insertIntoSpeedPowerCoefficients(obj);
+%            obj = insertIntoSpeedPowerCoefficients(obj);
            
            % Wind
            obj = insertIntoWindCoefficients(obj);
@@ -1361,7 +1362,7 @@ classdef cVessel < cMySQL
         ddi = [oldRows_c{:, find(allIntervalRow_l, 1)}];
         
         end
-        
+
     end
     
     methods
@@ -1550,6 +1551,24 @@ classdef cVessel < cMySQL
        % Assign object
        obj.DryDockDates = ddd;
        
+       end
+       
+       function obj = set.SpeedPower(obj, sp)
+           
+           % Input
+           validateattributes(sp, {'cVesselSpeedPower'}, {'vector'});
+
+           % Assign IMO
+           imo = obj.IMO_Vessel_Number;
+           if ~isempty(imo)
+               [sp.IMO_Vessel_Number] = deal(imo);
+           end
+           
+           % Copy connection details to object
+           sp = sp.copyConnection(obj);
+           
+           % Assign object
+           obj.SpeedPower = sp;
        end
     end
 end
