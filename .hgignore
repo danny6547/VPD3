@@ -61,6 +61,7 @@ ISO 19030/test ISO 19030/3. Filtering/validateISOOut_02_Filtered.csv
 ISO 19030/test ISO 19030/3. Filtering/validateISOOut_03_Validated.csv
 ISO 19030/test ISO 19030/3. Filtering/validateISOOut_04_Corrected.csv
 ISO 19030/test ISO 19030/3. Filtering/validateISOOut_05_PV.csv
+ISO 19030/test ISO 19030/External Validation/validateISOOut_09_Research.csv
 syntax: regexp
 (?i)\.asv
 convertEcoInsightXLS2tab.asv
