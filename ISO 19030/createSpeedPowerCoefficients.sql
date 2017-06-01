@@ -16,8 +16,9 @@ BEGIN
 											 IMO_Vessel_Number INT(7) NOT NULL,
 											 Displacement DOUBLE(20, 3),
 											 Trim DOUBLE(10, 8),
-											 Exponent_A DOUBLE(10, 5),
-											 Exponent_B DOUBLE(10, 5),
+											 Coefficient_A DOUBLE(10, 5),
+											 Coefficient_B DOUBLE(10, 5),
+											 Coefficient_C DOUBLE(10, 5),
 											 R_Squared DOUBLE(10, 9),
 											 constraint UniqueSpeedPowerCurves UNIQUE(IMO_Vessel_Number, Displacement, Trim)
 											 );
