@@ -297,3 +297,7 @@ speedPowerCoefficients: include CoefficientC column, replace ExponentA, B with C
 speedPower, speedPowerCoefficients: replace IMO_Vessel_Number columns, properties with spModel
 DB: rebuild with externally validated scripts
 cDB: include dry dock dates file
+cV.inServicePerformance: return in-service performance value by subtacting averages
+cV.dryDockingPerformance: rename to DryDockingImprovement (or something)
+cV.dryDockingPerformance: calculate as described in ISO
+cV.DryDockingImprovement: return struct same size as cV?

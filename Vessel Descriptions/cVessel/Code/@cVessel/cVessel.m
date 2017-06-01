@@ -36,6 +36,7 @@ classdef cVessel < cMySQL
         DryDockingPerformance
         AnnualSavingsDD
         InServicePerformance
+        Activity
     end
     
     properties(Hidden)
@@ -247,7 +248,12 @@ classdef cVessel < cMySQL
             obj(~emptyObj_l) = obj(~emptyObj_l).readFromTable('Vessels', 'IMO_Vessel_Number');
             
             nDocks = size(obj, 1);
-            tempDD_c = num2cell(ddd(1:end-1, :));
+            if size(ddd, 1) > size(obj, 1)
+                
+                ddd(end, :) = [];
+            end
+            
+            tempDD_c = num2cell(ddd);
             [obj(2:nDocks, :).DryDockDates] = tempDD_c{:};
        end
        end
@@ -507,27 +513,6 @@ classdef cVessel < cMySQL
        
        % Write table 1
        
-       
-       end
-       
-       function [obj, activity] = activityFromSeaWeb(obj, filename)
-       % activityFromSeaWeb Parse activity data from SeaWeb download
-       
-       % Input
-       [validFile, errMsg] = obj.validateFileExists(filename);
-       if ~validFile
-           errid = 'ShipAnalysis:SeawebFileMissing';
-           error(errid, errMsg);
-       end
-       
-       % Parse File
-       
-       
-       % Calculate Idle time as difference of arrival and departures
-       
-       % Activity defined as ratio between total idle time and total time
-       
-       % 
        
        end
 
