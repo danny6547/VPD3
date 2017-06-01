@@ -28,8 +28,8 @@ classdef testISO19030Validate < matlab.unittest.TestCase % & testISO19030
 
 properties(Constant)
     
-    TestDir char = fullfile(testISO19030Validate.HomeDirectory, '\ISO 19030\test ISO 19030\External Validation');
-    SPFile cell = {}; %testISO19030Validate.spFiles;
+    TestDir char = mfilename('fullpath'); % fullfile(testISO19030Validate.HomeDirectory, '\ISO 19030\test ISO 19030\External Validation');
+    SPFile cell = {};
     WindFile char = testISO19030Validate.windFile;
     RawFile char = testISO19030Validate.rawFile;
     DiagnosticFile char = testISO19030Validate.diagnosticFile;
@@ -39,12 +39,13 @@ properties(Constant)
     Anemometre_Height = 40;
     Reference_Height = 10;
     g = 9.80665;
-    DataLengthPerCriteria = 10;
+    DataLengthPerCriteria = 30;
+    TimeStep = 1 / (24*60*4); % 0.25;
 end
 
 properties(Constant, Hidden)
     
-    HomeDirectory char = 'C:\Users\damcl\OneDrive - Hempel Group\Documents\SQL\tests\EcoInsight Test Scripts';
+%     HomeDirectory char = 'C:\Users\damcl\OneDrive - Hempel Group\Documents\SQL\tests\EcoInsight Test Scripts';
     VesselName = 'testVessel';
 end
 
@@ -52,9 +53,18 @@ properties
     
     OutPVTable = table();
     OutWindTable = table();
+    OutValidTable = table();
+    OutFilteredTable = table();
+    OutInputTable = table();
     DBPVTable = table();
     DBISOTable = table();
     DiagnosticTable = table();
+    InputTable = table();
+end
+
+properties(Hidden)
+    
+    WindTable = table();
 end
 
 methods(Static)
@@ -73,11 +83,13 @@ methods(Static)
     objSP.Trim = 0;
     objSP.Speed = 5:5:25;
     objSP.Power = 1e4:1e4:5e4;
+    objSP.Propulsive_Efficiency = 0.7;
     
     objSP(2).Displacement = 1e6;
     objSP(2).Trim = -5;
     objSP(2).Speed = linspace(5, 20, 5);
     objSP(2).Power = linspace(1e4, 9e4, 5);
+    objSP(2).Propulsive_Efficiency = 0.7;
     
     % Create wind coefficients (model ID 1 in database)
     wind = cVesselWindCoefficient();
@@ -88,6 +100,7 @@ methods(Static)
     
     % Create vessel
     testvessel = cVessel();
+    testvessel.Database = 'test';
     testvessel.IMO_Vessel_Number = 1234567;
     testvessel.Name = 'Test Vessel';
     testvessel.Draft_Design = 10;
@@ -96,7 +109,6 @@ methods(Static)
     testvessel.LBP = 400;
     testvessel.SpeedPower = objSP;
     testvessel.WindCoefficient = wind;
-    testvessel.Database = 'test';
     testvessel.DryDockDates = cVesselDryDockDates;
     testvessel.Anemometer_Height = 30;
     
@@ -332,7 +344,9 @@ methods
         else
             prevTime = rawtbl.Time(end);
         end
-        dateTime_v = prevTime + 1:prevTime+len;
+        tStep = obj.TimeStep;
+%         dateTime_v = prevTime + 1 :prevTime+len;
+        dateTime_v = prevTime + tStep: tStep: prevTime+len*tStep;
         varData(ismember(allVars, currVar), 2) = {dateTime_v};
     end
     
@@ -389,6 +403,9 @@ methods
     empty_c = cell(1, numel(varNames_c));
     rawTbl = table(empty_c{:}, 'VariableNames', varNames_c);
     diag_c = {};
+    
+    % Get corrected, delivered power as bounds of speed, power relationship
+    obj = obj.updateCorrectedDeliveredPower;
     
     % Create speed, power data around extents of reference data
     for si = 1:numel(vessel.SpeedPower)
@@ -517,6 +534,10 @@ methods
     windfile = obj.WindFile;
     vessel.validateISO19030({}, spfile, windfile, [], obj.TestDir);
     
+    % Delete test vessel data already in database
+    vessel.execute(['SELECT * FROM PerformanceData WHERE IMO_Vessel_Number = ',...
+        num2str(vessel.IMO_Vessel_Number), ';']);
+    
     % Run in database
     vessel.ISO19030(false, false, false);
     
@@ -530,6 +551,13 @@ methods
     
     % Read table from file
     stringTable = readtable(filename, 'ReadVariableNames', false, 'HeaderLines', 1);
+    if isempty(stringTable)
+       
+        errid = 'testISO:OutputEmpty';
+        errmsg = 'Output table cannot be created because output file is empty';
+        warning(errid, errmsg);
+    end
+    
     numTable = varfun(@str2double, stringTable(:, 2:end));
     outTable = [stringTable(:, 1), numTable];
     outTable.Properties.VariableNames = vars;
@@ -590,6 +618,281 @@ methods
     % Assign
     outTable = out_tbl;
     dbTable = db_tbl;
+    
+    end
+
+    function [obj, data, outi] = outlierDetection(obj, outlier, varargin)
+    % outlierDetection Random data within thresholds, including outliers
+    
+    % While size of data requested has not been met
+    
+    % Pass additional inputs to randInThreshold
+    
+    % Run SQL procedure
+    
+    % Assign any outliers / non-outliers to outputs
+    
+    
+    end
+    
+    function [obj, data, validi] = validData(obj, dateutc, varargin)
+    % validData Generate random data within thresholds which are valid
+    % Assumptions: 
+    % tempRawISO is empty prior
+    % 
+    
+    % Input
+    narginchk(4, inf);
+    
+    valid_l = varargin{1};
+    validateattributes(valid_l, {'logical'}, {'scalar'}, ...
+        'testISO19030Validate.validData', 'valid', 2);
+%     col_ch = varargin{2};
+%     validateattributes(col_ch, {'char'}, {'vector'}, ...
+%         'testISO19030Validate.validData', 'column', 3);
+    
+    % Remaining inputs are those to randInThreshold / randOutThreshold
+    randInputs_c = varargin(2:end);
+    cols = {'Shaft_Revolutions', 'Speed_Through_Water', 'Speed_Over_Ground',...
+        'Rudder_Angle'};
+    threholds_v = [3, 0.5, 0.5, 1];
+    thresh = threholds_v(ismember(cols, col_ch));
+    timecols = {'DateTime_UTC', [cols{:}]};
+    if valid_l
+        
+        data = testISO19030.randInThreshold(randInputs_c{:});
+        timedata = [dateutc(:), data(:)];
+        
+        vessel = obj.testVessel;
+        vessel = vessel.insert('tempRawISO', timecols, timedata);
+        vessel.call('updateValidated');
+        [~, valid_tbl] = vessel.select('tempRawISO', 'validated');
+        vessel.execute('DELETE FROM tempRawISO');
+        
+        % Check whether data is all valid
+        valid_l = valid_tbl.validated;
+        finished = all(valid_l);
+        
+        while ~finished
+            
+            % Take indices to invalid data
+            invalid_i = find(~valid_l);
+            
+            % Repeat call to random data function
+            
+            % Assign any new valid data to output
+            data(valid_l)
+            
+        end
+    else
+        
+        [data, validi] = testISO19030.randOutThreshold(randInputs_c{:});
+    end
+    
+    % Drop tempRawISO
+    
+    
+    end
+    
+    function [obj, expSpeed] = expectedSpeed(obj, model, corr, ndisp, ntrim)
+    % expectedSpeed Calculate expected speed for model from corrected power
+    
+    % Input
+    validateattributes(model, {'char'}, {'vector'}, ...
+        'testISO19030Validate.expectedSpeed', 'model', 2);
+    validateattributes(corr, {'numeric'}, {'vector', 'positive'}, ...
+        'testISO19030Validate.expectedSpeed', 'corr', 3);
+    validateattributes(ndisp, {'numeric'}, {'vector', 'positive'}, ...
+        'testISO19030Validate.expectedSpeed', 'ndisp', 4);
+    validateattributes(ntrim, {'numeric'}, {'vector'}, ...
+        'testISO19030Validate.expectedSpeed', 'ntrim', 5);
+    
+    vess = obj.TestVessel;
+    sp = vess.SpeedPower;
+    sp = sp.fit;
+    
+    nearCoeffs = arrayfun(@(d, t) ...
+        sp([sp.Displacement]==d & [sp.Trim]==t).Coefficients, ndisp, ntrim, 'Uni', 0);
+    nearCoeffs = cell2mat(nearCoeffs);
+    
+    switch model
+        
+        case 'exp'
+
+            % Exponential model
+            expSpeed = arrayfun(@(x, a, b) a*log(x) + b, corr, nearCoeffs(:, 1), nearCoeffs(:, 2));
+
+        case 'poly'
+
+            % Polynomial
+            expSpeed = arrayfun(@(x, a, b, c) polyval([a, b, c], x), ...
+                corr, nearCoeffs(:, 1), nearCoeffs(:, 2), nearCoeffs(:, 3));
+    end
+    end
+
+    function [obj, pv] = performanceValues(obj, eSpeed, mSpeed)
+    % performanceValues Calculate speed loss as described in 5.3.6.1
+        
+        pv = 100.* (mSpeed - eSpeed) ./ eSpeed;
+        
+    end
+    
+    function obj = rewriteForValidation(obj)
+    % rewriteForValidation Rewrite input data file for validation test
+    
+    
+    % Load file into table
+    obj = obj.readInputTable();
+    input_tbl = obj.InputTable;
+    
+    % Generate table of four parameters with ~50% passing validation
+    valid_m = nan(size(input_tbl, 1), 4);
+    
+    % Create vector of failing conditions, with ~50% not failing
+    time = input_tbl.Time;
+    mins10 = 10 / (24*60);
+    tStep = time(2) - time(1);
+    num10Mins = floor((max(time) - min(time) + tStep) / mins10);
+    blockSize = repmat(round(mins10 / tStep), [1, num10Mins]);
+%     blockSize(end+1) = round((((max(time) - min(time)) / mins10) - ...
+%         num10Mins)*blockSize(1));
+%     blockSize(blockSize == 0) = [];
+    num10Mins = numel(blockSize);
+    
+    % Iterate over each 10-minute block of data
+    muRPM = 1;
+    muSTW = 10;
+    muSOG = 9;
+    muRUD = 2;
+    
+    failingVar = cell(1, num10Mins);
+    failingVar(1:2:end) = {'none'};
+    fourParamsNames_c = {'rpm', 'stw', 'sog', 'rud'};
+    fourParams_c = repmat(fourParamsNames_c', [1, floor( numel(failingVar)/2 )]);
+    fourParams_c = fourParams_c(:);
+    failingVar(2:2:end) = fourParams_c(1:floor( numel(failingVar)/2 ));
+    
+    % Error if any of the four parameters has not had one failing block
+    allFailOnce_l = all(ismember(fourParamsNames_c, failingVar ));
+    if ~allFailOnce_l
+        
+        errid = 'testVal:NeedMoreTime';
+        errmsg = ['Insufficient 10-minute intervals in data to test each '...
+            'validation criterion'];
+        error(errid, errmsg);
+    end
+    
+    for di = 1:num10Mins
+        
+        currFailingVar = failingVar{di};
+        
+        switch currFailingVar
+            
+            case 'rpm'
+                
+                rpmSEM = 6;
+                stwSEM = 0.25;
+                sogSEM = 0.25;
+                rudSEM = 0.5;
+                
+            case 'stw'
+                
+                rpmSEM = 1.5;
+                stwSEM = 1;
+                sogSEM = 0.25;
+                rudSEM = 0.5;
+                
+            case 'sog'
+                
+                rpmSEM = 1.5;
+                stwSEM = 0.25;
+                sogSEM = 1;
+                rudSEM = 0.5;
+                
+            case 'rud'
+                
+                rpmSEM = 1.5;
+                stwSEM = 0.25;
+                sogSEM = 0.25;
+                rudSEM = 2;
+                
+            case 'none'
+                
+                rpmSEM = 1.5;
+                stwSEM = 0.25;
+                sogSEM = 0.25;
+                rudSEM = 0.5;
+        end
+        
+        nRows = blockSize(di);
+        currSize = [nRows, 1];
+        rpm_v = randn(currSize)*rpmSEM + muRPM;
+        stw_v = randn(currSize)*stwSEM + muSTW;
+        sog_v = randn(currSize)*sogSEM + muSOG;
+        rud_v = randn(currSize)*rudSEM + muRUD;
+        
+        startRowI = sum([1, blockSize(1:di - 1)]);
+        endRowI = startRowI + nRows - 1;
+        
+        valid_m(startRowI:endRowI, :) = [rpm_v, stw_v, sog_v, rud_v];
+    end
+    
+    % Rewrite file with new values
+    input_tbl.Shaft_Revolutions = valid_m(:, 1);
+    input_tbl.STW = valid_m(:, 2);
+    input_tbl.Speed_Over_Ground = valid_m(:, 3);
+    input_tbl.Rudder_Angle = valid_m(:, 4);
+    obj.writeInputTable(input_tbl);
+    
+    % Load in data, overwriting existing data
+    tab = 'RawData';
+    cols_c = {'DateTime_UTC',...
+                'IMO_Vessel_Number',...
+                'Shaft_Revolutions',... Shaft Revs
+                'Speed_Through_Water',...
+                'Speed_Over_Ground',... SOG
+                'Rudder_Angle',... Rudder Angle
+                };
+    vess = obj.TestVessel;
+    vals_c = [cellstr(datestr(input_tbl.Time, 'yyyy-mm-dd HH:MM:SS')), ...
+        num2cell(repmat(vess.IMO_Vessel_Number, size(valid_m, 1), 1)), ...
+        num2cell(valid_m)];
+    vess = vess.insertValuesDuplicate(tab, cols_c, vals_c);
+    
+    % Call ISO
+    vess.ISO19030(false, false, false);
+    
+    end    
+    
+    function obj = writeInputTable(obj, tbl)
+    % writeInputTable Write table of input raw data
+    
+        tbl.Time = datestr(tbl.Time, 'yyyy-mm-dd HH:MM:SS');
+        writetable(tbl, obj.RawFile, 'FileType', 'text', ...
+            'WriteVariableNames', false);
+    end
+end
+
+methods(Access = protected)
+        
+    function obj = updateCorrectedDeliveredPower(obj)
+    % updateCorrectedDeliveredPower 
+    
+    % Create tempRawISO, sortOnDateTime
+    
+    % Get Area
+    
+    % Get Trim
+    
+    % Get Wind Reference
+    
+    % Get Wind Resistance Relative
+        
+    % Get Air Resistance
+    
+    % Get Wind Resistance Correction
+    
+    % Assign to table
     
     end
 end
@@ -723,46 +1026,144 @@ methods(TestClassSetup)
     
     end
     
+    function obj = readValidTable(obj)
+    % readValidTable Read table of validated results
+    
+        pvVars = {
+                'Time'
+                'SpeedWater'
+                'DeliveredPower'
+                'ShaftRevolution'
+                'RelativeWindSpeed'
+                'RelativeWindDirection'
+                'AirTemp'
+                'SpeedGround'
+                'Heading'
+                'RudderAngle'
+                'WaterDepth'
+                'DraughtFore'
+                'DraughtAft'
+                'Disp'
+                'WaterTemp'};
+        outFileSuffix = '03_Validated.csv';
+        [obj, outTable] = readOutputTable(obj, pvVars, outFileSuffix);
+        
+        % Assign
+        obj.OutValidTable = outTable;
+        
+    end
+    
+    function obj = readFilteredTable(obj)
+    % readValidTable Read table of validated results
+    
+        pvVars = {
+                    'Time'
+                    'SpeedWater'
+                    'DeliveredPower'
+                    'ShaftRevolution'
+                    'RelativeWindSpeed'
+                    'RelativeWindDirection'
+                    'AirTemp'
+                    'SpeedGround'
+                    'Heading'
+                    'RudderAngle'
+                    'WaterDepth'
+                    'DraughtFore'
+                    'DraughtAft'
+                    'Disp'
+                    'WaterTemp'};
+        outFileSuffix = '02_Filtered.csv';
+        [obj, outTable] = readOutputTable(obj, pvVars, outFileSuffix);
+        
+        % Assign
+        obj.OutFilteredTable = outTable;
+        
+    end
+    
+    function obj = readOutInputTable(obj)
+        
+        pvVars = {
+                    'Time'
+                    'SpeedWater'
+                    'DeliveredPower'
+                    'ShaftRevolution'
+                    'RelativeWindSpeed'
+                    'RelativeWindDirection'
+                    'AirTemp'
+                    'SpeedGround'
+                    'Heading'
+                    'RudderAngle'
+                    'WaterDepth'
+                    'DraughtFore'
+                    'DraughtAft'
+                    'Displacements'
+                    'WaterTemp'};
+        outFileSuffix = '01_Input.csv';
+        [obj, outTable] = readOutputTable(obj, pvVars, outFileSuffix);
+        
+        % Assign
+        obj.OutInputTable = outTable;
+        
+    end
+    
+    function obj = readInputTable(obj)
+    % readInputTable Read table of input raw data
+    
+        varnames_c = obj.varNames;
+        tbl = readtable(obj.RawFile, 'ReadVariableNames', false);
+        tbl.Properties.VariableNames = varnames_c;
+        tbl.Time = datenum(tbl.Time, 'yyyy-mm-dd HH:MM:SS');
+        obj.InputTable = tbl;
+    end
 end
 
 methods(Test)
     
-    function testFiltering(testcase)
-    % testFiltering Test that filtering is carried out according to Annex I
-    % 1:
+    function testValidated(testcase)
+    % testValidated Test that validation matches that described in Annex J
+    % 1. Test that the validation procedure has been carried out according
+    % to Annex J by comparing the column 'Validated' in the test table with
+    % the rows of the table in the output file with suffix "_Validated".
+    % This test assumes that validation is being executed and that
+    % filtering is not.
     
     % 1
-    % Call DB procedure: insert values, call proc, read data to MATLAB
-    testcase.dropTable
-    testcase.createTable
-    N = 5E2;
-    nBlock = 5;
-    k = 20;
+    % Input
+    db_tbl = testcase.DBISOTable;
+    db_filt = logical(db_tbl.validated);
     
-    in_SpeedOverGround = abs(randn([1, N])*10);
-    in_RelWindSpeed = abs(randn([1, N])*10);
-    in_RudderAngle = abs(randn([1, N])*k);
-    tstep = 1 / (24*(60/2));
-    in_DateTimeUTC = linspace(now, now+(tstep*(N-1)), N);
+    inputDates_v = testcase.OutInputTable.Time;
+    validDates_v = testcase.OutValidTable.Time;
     
-    [startrow, count] = testcase.insert([cellstr(datestr(...
-        in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')), ...
-        num2cell(in_SpeedOverGround)',...
-        num2cell(in_RelWindSpeed)', ...
-        num2cell(in_RudderAngle)'], ...
-        {'DateTime_UTC', 'Speed_Over_Ground', 'Relative_Wind_Speed',...
-        'Rudder_Angle'});
+    file_filt = ismember(inputDates_v, validDates_v);
     
-    testcase.call('updateChauvenetCriteria');
+    % Verify
+    filt_msg = ['Validation procedure expected to be calculated based on '...
+        'formula I7.'];
+    testcase.verifyEqual(db_filt, file_filt, filt_msg);
     
-    % Read external files
+    end
     
+    function testFiltering(testcase)
+    % testFiltering Test that filtering is carried out according to Annex I
+    % 1: Test that rows in the output file with suffix "_Validated" match 
+    % only FALSE values in column 'Chauvenet_Criteria' of the test table.
+    
+    % 1
+    % Input
+    db_tbl = testcase.DBISOTable;
+    db_filt = logical(db_tbl.chauvenet_criteria);
+    
+    inputDates_v = testcase.OutInputTable.Time;
+    validDates_v = testcase.OutFilteredTable.Time;
+    
+    file_filt = ~ismember(inputDates_v, validDates_v);
     
     % Verify
     chauv_msg = ['Chauvenet criterion expected to be calculated based on '...
         'formula I7.'];
-    testcase.verifyEqual(int_Chauv, ext_Chauv, 'RelTol', 1.5E-7, chauv_msg);
-        
+    testcase.verifyEqual(db_filt, file_filt, chauv_msg);
+    
     end
 
     function testWindCorrection(testcase)
@@ -817,6 +1218,56 @@ methods(Test)
     actPV = dataDB.speed_index;
     exp_PV = dataOut.PV;
     testcase.verifyEqual(actPV, exp_PV, 'RelTol', 5e-6, dataMsg);
+    
+    end
+    
+    function testCalculationOfPerformanceValues(testcase)
+    % testCalculationOfPerformanceValues PV from CorrectedPower
+    
+    % Inputs
+    coeffA = [];
+    coeffB = [];
+    pv_tbl = testcase.OutPVTable;
+    corr = pv_tbl.CorrectedPower;
+    datetime_c = cellstr(datestr(pv_tbl.Time, 'yyyy-mm-dd HH:MM:SS'));
+    vess = testcase.TestVessel;
+    vess.insertValuesDuplicate('tempRawISO', ...
+        {'DateTime_UTC', 'IMO_Vessel_Number', 'Corrected_Power'},...
+        [datetime_c, num2cell(repmat(vess.IMO_Vessel_Number, size(corr))) ,num2cell(corr)]);
+    expDates = pv_tbl.Time;
+    
+    % Execute Relevant Procedures
+    vess.call('updateExpectedSpeed', num2str(vess.IMO_Vessel_Number));
+    vess.call('updateSpeedLoss');
+    
+    % Verify
+    [~, act_tbl] = vess.select('tempRawISO', {'DateTime_UTC', 'Speed_Loss',...
+        'Corrected_Power', 'NearestTrim', 'NearestDisplacement', ...
+        'Speed_Through_Water'});
+    actDates = datenum(act_tbl.datetime_utc, 'dd-mm-yyyy');
+    exp_sl = pv_tbl.PV;
+    
+    % Take only the intersection in Time
+    [~, commonFromDB, commonFromOut] = intersect(actDates, expDates);
+    act_tbl = act_tbl(commonFromDB, :);
+    act_sl = act_tbl.speed_loss;
+    exp_sl = exp_sl(commonFromOut, :);
+    msg_sl = ['Performance Values calculated by Hempel are expected to '...
+        'match those of the software.'];
+    testcase.verifyEqual(act_sl, exp_sl, 'AbsTol', 1e-2, msg_sl);
+    
+%     % Plot
+%     act_date = datenum(act_tbl.datetime_utc, 'dd-mm-yyyy');
+%     figure;
+%     scatter(act_date, act_sl, 'b*');
+%     exp_date = pv_tbl.Time;
+%     hold on;
+%     scatter(exp_date, exp_sl, 'ro');
+%     hold off;
+%     legend({'Hempel Speed Loss', 'Software Speed Loss'});
+%     
+%     diag = testcase.DiagnosticTable.Diagnostic;
+%     text(act_date, act_sl, diag(commonFromDB), 'HorizontalAlignment', 'Right')
     
     end
 end
