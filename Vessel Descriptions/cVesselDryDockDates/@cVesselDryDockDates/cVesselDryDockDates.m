@@ -98,7 +98,8 @@ classdef cVesselDryDockDates < cMySQL
                 return
             end
             
-            props2skip_c = union(properties(cMySQL), 'DateStrFormat');
+            props2skipDD_c = {'IMO_Vessel_Number', 'DateStrFormat'};
+            props2skip_c = union(properties(cMySQL), props2skipDD_c);
             props = setdiff(properties(obj), props2skip_c);
             empty = false(size(props));
             for pi = 1:numel(props)
