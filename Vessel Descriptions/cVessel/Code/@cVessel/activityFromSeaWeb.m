@@ -19,18 +19,20 @@ end
 
 % Iterate over files and append to table
 empty_c = cell(1, 12);
-ihs_tbl = table(empty_c{:}, 'VariableNames', {'Ship', 'IMO_LR_IHS_No_',...
+fileVars_c = {'Ship', 'IMO_LR_IHS_No_',...
     'Port_of_Call', 'PortOfCall_URL', 'Country_of_Call', 'Arrival_Date',...
     'Sailed_Date', 'Hours_in_Port', 'Arrival_Date_1', 'Ship_Name',...
-    'Vessel_Type', 'Operator'});
+    'Vessel_Type', 'Operator'};
+ihs_tbl = table(empty_c{:}, 'VariableNames', fileVars_c);
 
 for fi = 1:numel(filename)
 
     % Parse File
     currFile = filename{fi};
-    t = readtable(currFile);
+    t = readtable(currFile, 'ReadVariableNames', false, 'HeaderLines', 1);
 
     % Filter missing times from table
+    t.Properties.VariableNames = fileVars_c;
     t(cellfun(@isempty, t.Arrival_Date) | cellfun(@isempty, t.Sailed_Date), :)= [];
 
     % Append to existing table
