@@ -86,7 +86,29 @@ classdef cVesselDryDockDates < cMySQL
             obj(oi).EndDateNum = datenum(file_t.EndDate(oi), dateform);
         end
         
-        end
+       end
+        
+       function obj = readDatesFromIndex(obj, intervalI)
+       % readDatesFromIndex Read from DB dry-docking dates from interval
+       % obj = readDatesFromIndex(obj, intervalI) will return in the
+       % properties 'StartDate' and 'EndDate' of OBJ the corresponding
+       % dates of the dry-docking at the start of the interval whose index 
+       % is given by numeric scalar INTERVALI for the vessel given by 
+       % property 'IMO_Vessel_Number'. 
+       %
+       % Example: obj = readDatesFromIndex(obj, 2)
+       %        Returns in OBJ the start and end dates of the first
+       %        dry-docking for the vessel given by obj.IMO_Vessel_Number,
+       %        i.e. the dates of the dry-docking at the start of the
+       %        second dry-docking interval.
+       
+       % Inputs
+       validateattributes(intervalI, {'numeric'}, {'scalar'}, ...
+           'cVesselDryDockDates.readDatesFromIndex', 'intervalI', 2);
+       
+       % 
+           
+       end
     end
     
     methods(Hidden)

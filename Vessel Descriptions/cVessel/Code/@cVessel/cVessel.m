@@ -253,8 +253,13 @@ classdef cVessel < cMySQL
                 ddd(end, :) = [];
             end
             
+            emptyVessels_l = arrayfun(@(x) numel(find(~isnan(x.(x.Variable)))), obj) == 0;
+            emptyDD_l = arrayfun(@isempty, ddd);
+            rows2remove_l = all((emptyVessels_l | emptyDD_l)');
+            ddd(rows2remove_l, :) = [];
+            
             tempDD_c = num2cell(ddd);
-            [obj(2:nDocks, :).DryDockDates] = tempDD_c{:};
+            [obj(2:end, :).DryDockDates] = tempDD_c{:};
        end
        end
        
