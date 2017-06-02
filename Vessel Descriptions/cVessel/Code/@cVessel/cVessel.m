@@ -36,7 +36,7 @@ classdef cVessel < cMySQL
         DryDockingPerformance
         AnnualSavingsDD
         InServicePerformance
-        Activity
+        Activity double = nan;
     end
     
     properties(Hidden)

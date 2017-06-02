@@ -291,9 +291,9 @@ cDB: implement table vesselcoatings in cDB, creating and writing CMA data
 cDB: add 4 standard wind coefficient sets
 # DB: calculate wind resistance correction on relative wind at reference
 # DB: correct for environmental conditions prior to speed, power lookup
-vesselName: remove hadr-coded connection details (make cV method?)
+vesselName: remove hard-coded connection details (make cV method?)
 updateAirResistanceNoWind.sql: take coefficient where direction covers 0.
-speedPowerCoefficients: include CoefficientC column, replace ExponentA, B with Coeff_
+# speedPowerCoefficients: include CoefficientC column, replace ExponentA, B with Coeff_
 speedPower, speedPowerCoefficients: replace IMO_Vessel_Number columns, properties with spModel
 DB: rebuild with externally validated scripts
 cDB: include dry dock dates file

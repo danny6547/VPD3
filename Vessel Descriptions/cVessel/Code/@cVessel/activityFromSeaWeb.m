@@ -5,6 +5,7 @@ function [obj, activity] = activityFromSeaWeb(obj, filename)
 activity = nan(size(obj));
 
 % Input
+filename = validateCellStr(filename, 'activityFromSeaWeb', 'filename', 2);
 [validFile, errMsg] = cellfun(@(x) obj.validateFileExists(x), filename,...
     'Uni', 0);
 validFile = [validFile{:}];
@@ -59,9 +60,17 @@ while ~obj.iterFinished
         ((ihs_tbl.Arrival_Datenum > intStart & ihs_tbl.Arrival_Datenum < intEnd) | ...
         (ihs_tbl.Sailed_Datenum > intStart & ihs_tbl.Sailed_Datenum < intEnd)), :);
     
-    % Calculate activity from subset
-    activity(ii) = 1 - (sum(int_tbl.Idle_Time) / (max(int_tbl.Sailed_Datenum) - min(int_tbl.Arrival_Datenum)));
-    obj(ii).Activity = activity(ii);
-    
+    % Skip if no activity data found for this dry-docking interval
+    if isempty(int_tbl)
+        
+        activity(ii) = nan;
+        obj(ii).Activity = activity(ii);
+    else
+        
+        % Calculate activity from subset
+        activity(ii) = 1 - (sum(int_tbl.Idle_Time) / ...
+            (max(int_tbl.Sailed_Datenum) - min(int_tbl.Arrival_Datenum)));
+        obj(ii).Activity = activity(ii);
+    end
 end
 obj = obj.iterReset;
