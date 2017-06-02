@@ -282,8 +282,8 @@ cV.DryDockings: property dependent on DryDockDates
 cV.assignPerformanceData: hidden private method taking object array of appropriate size
 cV.set.PerformanceTable: get performance struct with same parameters as before, call fitToData, assign data.
 # DB: write procedure updateWindReference
-DB: include Relative_Wind_Direction_Reference column in tempRawISO
-DB: include Relative_Wind_Speed_Reference column in tempRawISO
+# DB: include Relative_Wind_Direction_Reference column in tempRawISO
+# DB: include Relative_Wind_Speed_Reference column in tempRawISO
 DB: Where are speed, power coefficients being used?
 cV.assignPerformanceData: sort out problem where field names have to be lower case
 DB: "NearestDisplacement" and "NearestTrim" can be misleading, as they can come from different speed, power curves.
