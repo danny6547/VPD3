@@ -217,7 +217,6 @@ classdef cVessel < cMySQL
             validFields = {'DateTime_UTC', ...
                             'Performance_Index',...
                             'Speed_Index',...
-                            'IMO_Vessel_Number'...
                             'DryDockInterval'};
             inputFields = fieldnames(shipData);
             fields2read = intersect(validFields, inputFields);
@@ -244,22 +243,32 @@ classdef cVessel < cMySQL
             
             
             % Read Vessel static data from DB
-            emptyObj_l = arrayfun(@(x) isempty(x.IMO_Vessel_Number), obj);
-            obj(~emptyObj_l) = obj(~emptyObj_l).readFromTable('Vessels', 'IMO_Vessel_Number');
+%             emptyObj_l = arrayfun(@(x) isempty(x.IMO_Vessel_Number), obj);
+%             obj(~emptyObj_l) = obj(~emptyObj_l).readFromTable('Vessels', 'IMO_Vessel_Number');
+%             
+%             nDocks = size(obj, 1);
+%             if size(ddd, 1) > size(obj, 1)
+%                 
+%                 ddd(end, :) = [];
+%             end
+%             
+%             emptyVessels_l = arrayfun(@(x) numel(find(~isnan(x.(x.Variable)))), obj) == 0;
+%             emptyDD_l = arrayfun(@isempty, ddd);
+%             rows2remove_l = all((emptyVessels_l | emptyDD_l)');
+%             ddd(rows2remove_l, :) = [];
+%             
+%             tempDD_c = num2cell(ddd);
+%             [obj(2:end, :).DryDockDates] = tempDD_c{:};
+            ddIntIdx_c = {obj.DryDockInterval};
+            ddIdx_c = cellfun(@(x) x - 1, ddIntIdx_c, 'Uni', 0);
+            w = ~cellfun(@(x) isempty(x) || isnan(x) || x == 0, ddIdx_c);
             
-            nDocks = size(obj, 1);
-            if size(ddd, 1) > size(obj, 1)
-                
-                ddd(end, :) = [];
-            end
-            
-            emptyVessels_l = arrayfun(@(x) numel(find(~isnan(x.(x.Variable)))), obj) == 0;
-            emptyDD_l = arrayfun(@isempty, ddd);
-            rows2remove_l = all((emptyVessels_l | emptyDD_l)');
-            ddd(rows2remove_l, :) = [];
-            
-            tempDD_c = num2cell(ddd);
-            [obj(2:end, :).DryDockDates] = tempDD_c{:};
+            objddd = cVesselDryDockDates();
+            objddd = repmat(objddd, 1, numel(find(w)));
+            [objddd.IMO_Vessel_Number] = deal(obj(w).IMO_Vessel_Number);
+            objddd = objddd.readDatesFromIndex( [ddIdx_c{w}] );
+            objddd_c = num2cell(objddd);
+            [obj(w).DryDockDates] = deal(objddd_c{:});
        end
        end
        

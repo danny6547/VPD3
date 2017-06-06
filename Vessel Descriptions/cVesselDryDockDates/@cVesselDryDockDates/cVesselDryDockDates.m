@@ -102,12 +102,47 @@ classdef cVesselDryDockDates < cMySQL
        %        i.e. the dates of the dry-docking at the start of the
        %        second dry-docking interval.
        
+       % Errors
+       if (~isscalar(obj) && ~isscalar(intervalI)) &&...
+               ~isequal(numel(obj), numel(intervalI))
+           
+           errid = 'cVDD:DryDockVesselMismatch';
+           errmsg = ['If neither OBJ nor INTERVALI are scalar, both must '...
+               'have the same number of elements.'];
+           error(errid, errmsg);
+       end
+       
+       if isscalar(obj) && ~isscalar(intervalI)
+           
+           obj = repmat(obj, size(intervalI));
+       end
+       
+       if ~isscalar(obj) && isscalar(intervalI)
+           
+           intervalI = repmat(intervalI, size(obj));
+       end
+       
        % Inputs
-       validateattributes(intervalI, {'numeric'}, {'scalar'}, ...
+       validateattributes(intervalI, {'numeric'}, {}, ...
            'cVesselDryDockDates.readDatesFromIndex', 'intervalI', 2);
        
-       % 
-           
+       for oi = 1:numel(obj)
+       
+           % Genreate SQL
+           ddi_sql = ['SELECT StartDate, EndDate from DRYDOCKDATES WHERE '...
+               'IMO_Vessel_Number = ', num2str(obj(oi).IMO_Vessel_Number), ...
+               ' LIMIT ', num2str(intervalI(oi)) - 1, ', 1'];
+
+           % Execute
+           [~, cl] = obj(1).executeIfOneOutput(1, ddi_sql);
+
+           % Assign
+           currDateForm = obj(oi).DateStrFormat;
+           obj(oi).DateStrFormat = 'dd-mm-yyyy';
+           obj(oi).StartDate = cl{1};
+           obj(oi).EndDate = cl{2};
+           obj(oi).DateStrFormat = currDateForm;
+       end
        end
     end
     
