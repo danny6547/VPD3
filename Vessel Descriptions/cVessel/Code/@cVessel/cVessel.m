@@ -269,6 +269,18 @@ classdef cVessel < cMySQL
             objddd = objddd.readDatesFromIndex( [ddIdx_c{w}] );
             objddd_c = num2cell(objddd);
             [obj(w).DryDockDates] = deal(objddd_c{:});
+            
+            % Reshape so that each vessel has it's first data first
+            e = reshape({obj.DateTime_UTC}, size(obj));
+            u = mat2cell(~cellfun(@(x) isempty(x) || all(isnan(x)), e), ...
+                size(e, 1), ones(1, size(e, 2)));
+            i = cellfun(@(x) find(x, 1, 'first') - 1, u);
+            o = cellfun(@(x, y) circshift(obj(:, x), y, 1), num2cell(1:size(e, 2)),...
+                num2cell(-i), 'Uni', 0);
+            obj = [o{:}];
+            empty_l = arrayfun(@(x) isempty(x.DateTime_UTC) || all(isnan(x.DateTime_UTC)), obj)';
+            emptyDDInt_l = all(empty_l');
+            obj(emptyDDInt_l, :) = [];
        end
        end
        
