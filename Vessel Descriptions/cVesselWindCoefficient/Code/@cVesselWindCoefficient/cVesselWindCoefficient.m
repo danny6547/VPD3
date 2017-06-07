@@ -9,7 +9,11 @@ classdef cVesselWindCoefficient < cMySQL
         Wind_Reference_Height_Design = [];
         ModelID = [];
         Name char = '';
+    end
+    
+    properties(Hidden)
         
+        DBTable = '';
     end
     
     methods
@@ -57,61 +61,7 @@ classdef cVesselWindCoefficient < cMySQL
            
            disp(out);
        end
-%        
-%        function obj = binCentres(directions, coeffs, binWidths)
-%        % binCentres Accept bin centres from bin edges
-%        
-%         validateattributes(directions, {'numeric'}, {'vector'},...
-%            'binCentres', 'directions', 1);
-%         validateattributes(coeffs, {'numeric'}, {'vector'},...
-%            'binCentres', 'coeffs', 2);
-%        validateattributes(binWidths, {'numeric'}, {'vector'},...
-%            'binCentres', 'binWidths', 3);
-%        
-%        % Expand scalar binwidths to vector
-%        if isscalar(binWidths
-%         binWidths = repmat(binWidths, size(directions));
-% 
-%         % Sort Directions
-%         [directions, di] = sort(directions, 'asc');
-%         coeffs = coeffs(di);
-% 
-%         % Shift to between 0 and 360
-%         shift360_f = @(x) x - 360;
-%         shift0_f = @(x) 360 + x;
-% 
-%         directions(directions>360) = shift360_f(directions(directions>360));
-%         directions(directions<0) = shift0_f(directions(directions<0));
-% 
-%         % Get binwidths
-% %         binWidths = [diff(directions(1:end)), ...
-% %            360 - directions(end) + directions(1)];
-% 
-%        % Error if vector and number of widths not number of centres
-% 
-%        % Error if overlapping bins
-%        
-%         
-%         % Get start and finish directions
-%         startDirections = directions - binWidths/2;
-%         endDirections = directions + binWidths/2;
-%         
-%         % Shift to between 0 and 360
-%         startDirections(startDirections>360) = shift360_f(startDirections(startDirections>360));
-%         startDirections(startDirections<0) = shift0_f(startDirections(startDirections<0));
-%         endDirections(endDirections>360) = shift360_f(endDirections(endDirections>360));
-%         endDirections(endDirections<0) = shift0_f(endDirections(endDirections<0));
-%         
-%         % Split any bin crossing 360
-%         
-%         % Assign
-%         
-%         
-%        end
-%         
-%     
-%        end
-%     
+       
        function obj = mirrorAlong180(obj)
 
 
@@ -213,42 +163,21 @@ classdef cVesselWindCoefficient < cMySQL
             {'scalar', 'integer', 'real'}, ...
             'cVesselWindCoefficient.set.ModelID', 'modelID', 1);
         
-        % Read from database all Dirs, Coefficients for model
-%         if isempty(obj.Direction) && isempty(obj.Coefficient)
-%             msql = cMySQL();
-            where_ch = ['ModelID = ' num2str(modelID)];
-            tab = 'windcoefficientdirection';
-            cols = {'Direction', 'Coefficient', 'Name'};
-            [~, tabl] = obj.select(tab, cols, where_ch);
-            
-            % Error if model ID not found
-            if isempty(tabl)
-%                 && ~isempty(obj.Direction) && ...
-%                     ~isempty(obj.Coefficient)
-                if ~isempty(obj.Direction)
-                    obj.Direction = [];
-                end
-                if ~isempty(obj.Coefficient)
-                    obj.Coefficient = [];
-                end
-                if ~isempty(obj.Name)
-                    obj.Name = '';
-                end
-%                errid = 'setWindCoeffModel:ModelMissing';
-%                errmsg = ['Wind model identifier ', num2str(modelID)...
-%                    ' not found in database'];
-%                error(errid, errmsg);
-                
-            else
-                obj.Direction = tabl.direction;
-                obj.Coefficient = tabl.coefficient;
-                obj.Name = tabl.name(1);
-            end
-
-%         end
+        % If ModelID already in DB, read data out
+        tab = 'windcoefficientdirection';
+        cols = {'Direction', 'Coefficient', 'Name'};
+        [~, temp] = obj.execute(['SELECT MAX(ModelID) AS `A` FROM ' tab]);
+        highestExistingModel = temp{1};
         
+        % Assign
         obj.ModelID = modelID;
+        
+        if modelID < highestExistingModel
             
+            obj = obj.readFromTable(tab, 'ModelID', cols);
+        end
+        
+        
         end
         
         function obj = set.Direction(obj, dir)
