@@ -172,9 +172,14 @@ classdef cVesselWindCoefficient < cMySQL
         % Assign
         obj.ModelID = modelID;
         
-        if modelID < highestExistingModel
+        if modelID <= highestExistingModel
             
             obj = obj.readFromTable(tab, 'ModelID', cols);
+        else
+            
+            obj.Direction = [];
+            obj.Coefficient = [];
+            obj.Name = [];
         end
         
         
@@ -201,7 +206,7 @@ classdef cVesselWindCoefficient < cMySQL
         % Set method for property 'Name'
         
         % Input
-        validateattributes(name, {'char'}, {'vector'});
+        validateattributes(name, {'char'}, {''});
         
         % If string is white space, let's make it empty
         if ~any(name)
