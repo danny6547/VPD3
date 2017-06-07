@@ -268,6 +268,19 @@ classdef cVesselWindCoefficient < cMySQL
             obj.Coefficient = coeff(:)';
         end
         
+        function obj = set.Name(obj, name)
+        % Set method for property 'Name'
+        
+        % Input
+        validateattributes(name, {'char'}, {'vector'});
+        
+        % If string is white space, let's make it empty
+        if ~any(name)
+            name = '';
+        end
+        
+        obj.Name = name;
+            
+        end
     end
-    
 end
