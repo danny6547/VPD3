@@ -44,17 +44,28 @@ tblRows_l = ismember([coat_tbl.IMO_Vessel_Number, datenum(coat_tbl.StartDate, 'd
 
 % Index into coating file with rows that match input table
 cols2append_c = {'Verticals', 'FlatBottom'};
-table2append = coat_tbl(tblRows_l, cols2append_c);
+table2append = coat_tbl(tblRows_l, [{'VesselName', 'IMO_Vessel_Number', 'StartDate', 'EndDate'}, cols2append_c]);
 
 % Get indices to input table of the table2append
 tbl2AppendRows_l = ismember([tbl.(imoTableCol), datenum(tbl.(startTableCol), 'dd-mm-yyyy'), datenum(tbl.(endTableCol), 'dd-mm-yyyy')],...
     [coat_tbl.IMO_Vessel_Number, datenum(coat_tbl.StartDate, 'dd-mm-yyyy'), datenum(coat_tbl.EndDate, 'dd-mm-yyyy')], 'rows');
 
+[w, q] = ismember([tbl.(imoTableCol), datenum(tbl.(startTableCol), 'dd-mm-yyyy'), datenum(tbl.(endTableCol), 'dd-mm-yyyy')], ...
+     [table2append.IMO_Vessel_Number, datenum(table2append.StartDate, 'dd-mm-yyyy'), datenum(table2append.EndDate, 'dd-mm-yyyy')], 'rows');
+table2append = table2append(q(w), :);
+table2append(:, 1:4) = [];
+
 % Append columns to input table, indexed by row
 if any(~tbl2AppendRows_l)
     
-    table2append(~tbl2AppendRows_l, :) = cell2table(repmat({'', ''}, numel(find(~tbl2AppendRows_l, 1))), 'VariableNames', {'Verticals', 'FlatBottom'});
+%     emptyTab_tbl = table([], [], [], [], [], [], 'VariableNames', {'VesselName', 'IMO_Vessel_Number', 'StartDate', 'EndDate', 'Verticals', 'FlatBottom'});
+    table2append(~tbl2AppendRows_l, :) = cell2table(repmat({'', ''}, numel(find(~tbl2AppendRows_l)), 1), 'VariableNames', {'Verticals', 'FlatBottom'});
 end
+
+% q = ismember([coat_tbl.IMO_Vessel_Number, datenum(coat_tbl.StartDate, 'dd-mm-yyyy'), datenum(coat_tbl.EndDate, 'dd-mm-yyyy')],...
+%     [tbl.(imoTableCol), datenum(tbl.(startTableCol), 'dd-mm-yyyy'), datenum(tbl.(endTableCol), 'dd-mm-yyyy')], 'rows');
+% [~, q] = ismember([table2append.IMO_Vessel_Number, datenum(table2append.StartDate, 'dd-mm-yyyy'), datenum(table2append.EndDate, 'dd-mm-yyyy')], ...
+%      [tbl.(imoTableCol), datenum(tbl.(startTableCol), 'dd-mm-yyyy'), datenum(tbl.(endTableCol), 'dd-mm-yyyy')], 'rows');
 
 % Assign into original table
 if any(~nonEmpty_l)
@@ -65,5 +76,5 @@ if any(~nonEmpty_l)
     q(~nonEmpty_l, :) = empty2append;
     table2append = q;
 end
-tbl = [originalTbl, table2append];
+    tbl = [originalTbl, table2append];
 end
