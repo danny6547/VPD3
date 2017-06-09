@@ -11,7 +11,7 @@ CREATE PROCEDURE createSpeedPower()
 BEGIN
 
 	CREATE TABLE SpeedPower (id INT PRIMARY KEY AUTO_INCREMENT, 
-								IMO_Vessel_Number INT(7) NOT NULL,
+								ModelID INT NOT NULL,
 								Draft_Fore DOUBLE(10, 5),
 								Draft_Aft DOUBLE(10, 5),
 								Trim DOUBLE(10, 5),
@@ -19,5 +19,5 @@ BEGIN
 								Propulsive_Efficiency DOUBLE(10, 5),
 								Speed DOUBLE(10, 5), /* Knots */
 								Power DOUBLE(10, 5), /* kW */
-								CONSTRAINT UniqueDispTrimSpeed UNIQUE(IMO_Vessel_Number, Displacement, Trim, Speed));
+								CONSTRAINT UniqueDispTrimSpeed UNIQUE(ModelID, Displacement, Trim, Speed));
 END;

@@ -89,12 +89,14 @@ for vi = 1:numel(imo)
         
         [obj(1), tbl] = obj(1).call('performanceData', [{imo_ch, ddi_ch},...
             additionalInputs_c]);
+        tbl.Properties.VariableNames = {'DateTime_UTC', 'Performance_Index',...
+                                    'Speed_Index'};
         
         % Append to output
         currOut = table2struct(tbl, 'ToScalar', 1);
         currOut.DryDockInterval = 1;
         currOut.IMO_Vessel_Number = currImo;
-        out(currImo) = currOut;
+        out(vi) = currOut;
     end
     
     [~, currIntDates] = obj(1).executeIfOneOutput(1, ...

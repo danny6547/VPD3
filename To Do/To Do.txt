@@ -136,7 +136,7 @@ removeInvalidRecords: check for entirely NULL rows ?
 # Write iteration methods for cV
 # Replace existing iteration calls with new ones
 # Write constructor sub call to detect file inputs or IMO inputs
-Write cV.loadFilePerformance
+# Write cV.loadFilePerformance (ended up as loadDNVGLPerformance)
 
 updateFromBunkerNote: Include warnings if some BDN numbers not found in BunkerDeliveryNote table?
 Extract "timestep" into high-level metadata table
@@ -163,18 +163,18 @@ Extract "timestep" into high-level metadata table
 			# Rewrite insertFromDNVGLRawIntoRaw to call ON DUPLICATE KEY UPDATE
 			# Rewrite insertIntoPerformanceData to call ON DUPLICATE KEY UPDATE
 	Performance comparison with alternatives
-Access database:
+# Access database:
 	# from external machince
-	via internet
+	# via internet
 
-Finalise processing of data from various sources:
-	Write remainder of MATLAB code: insertIntoSFOCCoefficients, insertIntoOthers
-	Write single-call procedure for ISO on raw, insert into performance
+# Finalise processing of data from various sources:
+	# Write remainder of MATLAB code: insertIntoSFOCCoefficients, insertIntoOthers
+	# Write single-call procedure for ISO on raw, insert into performance
 	
-Implement Annex E to go from annemometre-height wind to reference-height wind
+# Implement Annex E to go from annemometre-height wind to reference-height wind
 # Rename "Database" to "Vessel Performance Database"
 
-Convert insertIntoTable into cMySQL method
+# Convert insertIntoTable into cMySQL method
 removeNullRows: set filter for rows where any primary or secondary parameter is NULL
 Write ON DUPLICATE KEY UPDATE calls into tables:
 	BunkerDeliveryNote
@@ -191,14 +191,14 @@ insertBunkerDeliveryNoteDNVGL: convert from function to method of cVesselDB, use
 create high-level table for "meta-data" of performance data
 # remove table "ships", replace relevant data into "vessels"
 # Write "use hull_performance" at start of all files
-Procedure to call ISO19030 with input filters, add data to performance.
-Allow MATLAB table output from SQL queries
-Write code for (re-)building DB from downloaded files
+# Procedure to call ISO19030 with input filters, add data to performance.
+# Allow MATLAB table output from SQL queries
+# Write code for (re-)building DB from downloaded files
 Write timestep into metadata table for each vessel, parameter
 
-Apply appropriate iteration to methods:
-  regressions
-  movingAverages
+# Apply appropriate iteration to methods:
+#  regressions
+#  movingAverages
 
 # cVA.filterOnUniqueIndex: allow only unique values, remove corresponding 
 # non-unique values in other variables
@@ -206,7 +206,7 @@ Store variable names defined for files
 isFileDNVGLRaw: detect if file contains data from DNVGL "Manage Data"
 isFileDNVGLProcessed: detect if file contains data from EI widgets
 fileTypes: function to determine type of each element of cellstr FILENAME
-loadDNVGLRaw: return IMO of contained vessels as additional output
+# loadDNVGLRaw: return IMO of contained vessels as additional output
 cMySQL.executeIfOneOutput: modify to (include) zero output, if class 
 	remains handle.
 # cVessel.readFromVessels: populate data from table "vessels"
@@ -222,21 +222,21 @@ performanceData: bug where multiplie structs returned when duplicate IMO input
 
 Should vessel speed, power data be nested in property SpeedPower?
 cV.iterDD: error when only one DD interval
-cV.ServiceInterval: make same as struct output by method
+# cV.ServiceInterval: make same as struct output by method
 cV.annualSavingsDD: method should iterate over dry dockings and vessels.
 cV.cV: error when DNVGL speed and per index files input together
 # cV.cV: fix bug where different number of DDIs leads to error
 annualSavingsDD: error when activity vector doesn't match size of object
 annualSavingsDD: calculate differently if variable speed index
-insertIntoSFOCCoefficients: call insertIntoTable
+# insertIntoSFOCCoefficients: call insertIntoTable
 # make cSpeedPower a handle.
 # make cV.SP only accept handles.
 # Write properties Speed, Power, Draft, Trim etc for cV (dependent, maybe hidden)
 # Write get methods for Speed, Power etc to obtain (equal-length) vectors
 # cV.insertIntoSpeedPower: now needs only work on cV
 # cSP.Speed, Power ... : make vectors
-cSP.Speed, Power: make vectors of the same length
-cSP.Draft, Trim: make scalars
+# cSP.Speed, Power: make vectors of the same length
+# cSP.Draft, Trim: make scalars
 cV.Speed_Power_Source: make dependent
 cV.get.Speed_Power_Source: return cellstr vector with values for all SP, all OBJ
 # cV.insertIntoSpeedPower: make cV method work on arrays of cV and of cSP
@@ -244,19 +244,19 @@ cV.get.Speed_Power_Source: return cellstr vector with values for all SP, all OBJ
 cMySQL.readTable: output table from input name, columns, order, limit (ie SELECT inputs)
 # cV.insertIntoWindCoefficient: 
 DB: document units of manually-added table data
-cV.PerformanceTable: string restricted to names of DB tables.
+# cV.PerformanceTable: string restricted to names of DB tables.
 cV.performanceData: read data for PerformanceTable table
 cV.PerformanceIndex: refresh when PerformanceTable changes value
 cV.InsertRaw: MATLAB raw data insert function (a function with inputs for IMO,
  STW, SOG, Torque etc which writes into table RawData, warning user to 
  check units etc
-ISOProcess.sql: SQL procedure to extract relevant raw data, run iso with 
- default filters, insert results into PerformanceData.
-DB: make engine_model of SFOCCoefficients unique
+# ISOProcess.sql: SQL procedure to extract relevant raw data, run iso with 
+#  default filters, insert results into PerformanceData.
+# DB: make engine_model of SFOCCoefficients unique
 DB: Document unknowns with ship model data (e.g. the Man Engine data, is SFOC curve dependent on num cylinders?)
 # DB: recreate table windcoefficientdirection, now with only columns modelID, Direction, Coefficient
 # updateWindResistance: find nearest to measured direction
-cVWC.extend360: rotate angular vectors by 180 degrees to cover full circle
+# cVWC.extend360: rotate angular vectors by 180 degrees to cover full circle
 # cV.insertIntoSPC: method to write coefficient data into table
 # cVSP.fit: method to fit data to regression
 # cVWC.nextModelID: get next highest unique index
@@ -264,7 +264,7 @@ cVWC.extend360: rotate angular vectors by 180 degrees to cover full circle
 DB.insertIntoWind: autoincrement the modelID field when input value is empty
 cV.insertIntoWindCoeff: call DB.insertIntoWind in loop
 DB: replace IMO_Vessel_Number in speedPowerCoefficients table with ModelID
-cVWC.incrementModelID: check if exact values found in DB and assign values accordingly
+# cVWC.incrementModelID: check if exact values found in DB and assign values accordingly
 # DB: make the following table: columns non-null
 #	SpeedPower: IMO
 #	Vessels: IMO
@@ -279,7 +279,7 @@ cVessel: intended to be arrays of cV, but inherited class cMySQL intended to wor
 cV.performanceData: error when vessel (cassiopiea) has no dry-dock data
 cV.DryDockings: property dependent on DryDockDates
 # cV.fitToData(struct): hidden, private method to repeat existing rows of obj so that struct data can now fit into it
-cV.assignPerformanceData: hidden private method taking object array of appropriate size
+# cV.assignPerformanceData: hidden private method taking object array of appropriate size
 cV.set.PerformanceTable: get performance struct with same parameters as before, call fitToData, assign data.
 # DB: write procedure updateWindReference
 # DB: include Relative_Wind_Direction_Reference column in tempRawISO
@@ -294,10 +294,15 @@ cDB: add 4 standard wind coefficient sets
 vesselName: remove hard-coded connection details (make cV method?)
 updateAirResistanceNoWind.sql: take coefficient where direction covers 0.
 # speedPowerCoefficients: include CoefficientC column, replace ExponentA, B with Coeff_
-speedPower, speedPowerCoefficients: replace IMO_Vessel_Number columns, properties with spModel
+# speedPower, speedPowerCoefficients: replace IMO_Vessel_Number columns, properties with spModel
 DB: rebuild with externally validated scripts
 cDB: include dry dock dates file
 cV.inServicePerformance: return in-service performance value by subtacting averages
 cV.dryDockingPerformance: rename to DryDockingImprovement (or something)
 cV.dryDockingPerformance: calculate as described in ISO
 cV.DryDockingImprovement: return struct same size as cV?
+DB: download all raw from DNVGL again (for the final time), rewrite loadDNVGLRaw to parse new format
+cV: the following code deletes connections of all but first vessel vess(n).SpeedPower(m) = vessSP;
+cVSP, cVWC: multiple objects can have the same ModelID when both instantiated without writing to DB.
+	cMID: when any data assigned to properties (other than ModelID), get next modelID, assign, write modelID into DB.
+	cMID: on deletion, if properties matching those of table are empty in OBJ and DB, remove modelID from DB

@@ -4,6 +4,8 @@ classdef cVesselSpeedPower < cMySQL
     
     properties
         
+        ModelID double = []; % ModelID of SpeedPower table %
+        
         IMO_Vessel_Number double;
         Speed double;
         Power double;
@@ -13,13 +15,11 @@ classdef cVesselSpeedPower < cMySQL
         Propulsive_Efficiency double = [];
         Coefficients double = [];
         R_Squared double = [];
-        
     end
     
     properties(Dependent, Hidden)
         
-       SpeedPowerDraftTrim double = []; 
-        
+       SpeedPowerDraftTrim double = [];
     end
     
     properties(Hidden)
@@ -110,14 +110,17 @@ classdef cVesselSpeedPower < cMySQL
        function insertIntoTable(obj)
        % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs
        
-       % Fit
-       obj = obj.fit;
-       
        % Generate struct containing coefficients in same structure as table
        coeffNames_c = {'Coefficient_A', 'Coefficient_B', 'Coefficient_C'};
        coeff_c = nan(1, 3);
        for oi = 1:numel(obj)
            
+           % Fit
+           if isempty(obj(oi).Coefficients)
+               obj(oi) = obj(oi).fit;
+           end
+       
+           % Create matrix of coefficients
            if numel(obj(oi).Coefficients) > 0
             coeff_c(oi, 1) = obj(oi).Coefficients(1);
            end
@@ -168,6 +171,34 @@ classdef cVesselSpeedPower < cMySQL
            end
        end
        end
+       
+       function obj = incrementModelID(obj)
+       % Lowest value of ModelID not yet in DB table.
+       
+       % Build SQL
+       maxPlusOne_sql = ['SELECT MAX(ModelID) + 1 FROM '...
+           'speedpowercoefficients'];
+       
+       % Get empty ModelIDs of object array
+       emptyModels_l = arrayfun(@(x) isempty(x.ModelID), obj);
+       
+       % Get new highest value
+       [~, out_c] = obj(1).execute(maxPlusOne_sql);
+       firstModelID = str2double([out_c{:}]);
+       
+       % Account for case where table was empty or column was all null
+       if isnan(firstModelID)
+           firstModelID = 1;
+       end
+       
+       % Increment all empty ModelIDs
+       newModelID_c = num2cell( firstModelID:firstModelID + ...
+           numel(find(emptyModels_l)) - 1 );
+       
+       % Assign
+       [obj(emptyModels_l).ModelID] = deal( newModelID_c{:} );
+       
+       end
     end
     
     methods(Hidden)
@@ -195,7 +226,6 @@ classdef cVesselSpeedPower < cMySQL
             end
             spdt = currOut_m;
        end
-       
     end
     
     methods
@@ -227,6 +257,10 @@ classdef cVesselSpeedPower < cMySQL
             error(errID, errMsg);
         end
         
+        if ~isempty(speed)
+            obj = obj.incrementModelID;
+        end
+        
         obj.Speed = speed;
         end
         
@@ -247,6 +281,9 @@ classdef cVesselSpeedPower < cMySQL
             error(errID, errMsg);
         end
         
+        if ~isempty(power)
+            obj = obj.incrementModelID;
+        end
         obj.Power = power;
             
         end
@@ -258,8 +295,13 @@ classdef cVesselSpeedPower < cMySQL
             validateattributes(trim, {'numeric'}, {'real', 'scalar',...
                 'nonnan'});
         end
-        obj.Trim = trim;
+%         obj.Trim = trim;
             
+        if ~isempty(trim)
+            obj = obj.incrementModelID;
+        end
+        obj.Trim = trim;
+        
         end
         
         function obj = set.Displacement(obj, displacement)
@@ -269,8 +311,12 @@ classdef cVesselSpeedPower < cMySQL
             validateattributes(displacement, {'numeric'}, {'real', 'scalar',...
                 'nonnan'});
         end
+        
+        if ~isempty(displacement)
+            obj = obj.incrementModelID;
+        end
         obj.Displacement = displacement;
-            
+        
         end
         
         function obj = set.Model(obj, model)
@@ -286,6 +332,93 @@ classdef cVesselSpeedPower < cMySQL
             end
             
             obj.Model = model;
+        end
+        
+        function obj = set.ModelID(obj, modelID)
+        % set.ModelID Update values with those from DB
+        
+        % Check integer scalar
+        validateattributes(modelID, {'numeric'}, ...
+            {'scalar', 'integer', 'real'}, ...
+            'cVesselSpeedPower.set.ModelID', 'modelID', 1);
+        
+        % If ModelID already in DB, read data out
+        tab1 = 'speedpowercoefficients';
+        cols1 = {'Coefficient_A', 'Coefficient_B', 'Coefficient_C', ...
+            'Dispalcement', 'Trim', 'R_Sqaured'};
+        
+        tab2 = 'speedpower';
+        cols2 = {'Speed', 'Power', 'Propulsive_Efficiency'};
+        [~, temp] = obj.execute(['SELECT MAX(ModelID) FROM ' tab1]);
+        highestExistingModel = temp{1};
+        
+        % Assign
+        obj.ModelID = modelID;
+        
+        if modelID <= highestExistingModel
+            
+            obj = obj.readFromTable(tab1, 'ModelID', cols1);
+            obj = obj.readFromTable(tab2, 'ModelID', cols2);
+        else
+            
+            obj.Speed = [];
+            obj.Power = [];
+            obj.Trim = [];
+            obj.Displacement = [];
+            obj.Speed_Power_Source = '';
+            obj.Propulsive_Efficiency = [];
+            obj.Coefficients = [];
+            obj.R_Squared = [];
+        end
+        end
+        
+        function obj = set.Speed_Power_Source(obj, sps)
+            
+            if ~isempty(sps)
+                obj = obj.incrementModelID;
+            end
+            
+            obj.Speed_Power_Source = sps;
+
+        end
+        
+        function obj = set.Propulsive_Efficiency(obj, propEff)
+            
+            if ~isempty(propEff)
+                obj = obj.incrementModelID;
+            end
+            
+            obj.Propulsive_Efficiency = propEff;
+        end
+        
+        function obj = set.Coefficients(obj, coeff)
+            
+            
+            if strcmp(obj.Model, 'polynomial2')
+                
+                nVals = 3;
+                
+            elseif strcmp(obj.Model, 'exponential')
+                
+                nVals = 2;
+            end
+            
+            if ~isempty(coeff)
+                validateattributes(coeff, {'numeric'}, ...
+                    {'vector', 'real', 'numel', nVals});
+                obj = obj.incrementModelID;
+            end
+            
+            obj.Coefficients = coeff;
+        end
+        
+        function obj = set.R_Squared(obj, r2)
+            
+            if ~isempty(r2)
+                obj = obj.incrementModelID;
+            end
+
+            obj.R_Squared = r2;
         end
     end
 end

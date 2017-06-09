@@ -181,8 +181,6 @@ classdef cVesselWindCoefficient < cMySQL
             obj.Coefficient = [];
             obj.Name = [];
         end
-        
-        
         end
         
         function obj = set.Direction(obj, dir)
@@ -206,7 +204,7 @@ classdef cVesselWindCoefficient < cMySQL
         % Set method for property 'Name'
         
         % Input
-        validateattributes(name, {'char'}, {''});
+        validateattributes(name, {'char'}, {});
         
         % If string is white space, let's make it empty
         if ~any(name)

@@ -288,4 +288,4 @@ tabFiles = {piFile_ch, siFile_ch};
 % obj.Da
 obj_ves = obj_ves.loadDNVGLPerformance(allFiles, IMO_v);
 
-clear obj;
+clear obj_ves;
