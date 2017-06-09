@@ -17,6 +17,11 @@ classdef cDB < cMySQL
     %    vessel sensor and performance data.
     
     properties
+        
+        AdditionalScripts = {...
+            ['C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data'...
+            '\CMA CGM\Scripts\Insert_data.m']...
+            };
     end
     
     methods
@@ -37,6 +42,8 @@ classdef cDB < cMySQL
        % create(obj, name, topleveldir) will, in addition to the above, 
        % take string TOPLEVELDIR as the path to the top-level directory of
        % the Vessel Performance Database repository working directory.
+       
+       scripts_c = obj.AdditionalScripts;
        
        % Input
        validateattributes(name, {'char'}, {'vector'}, 'create', 'name', 2);
@@ -143,7 +150,12 @@ classdef cDB < cMySQL
        createFiles3_c = cellfun(@(x) fullfile(topleveldir, dnvglrawDir_ch, x), ...
            createFiles3_c, 'Uni', 0);
        
-       createFiles_c = [createFiles1_c; createFiles2_c; createFiles3_c];
+       createFiles4_c = {['C:\Users\damcl\OneDrive - Hempel Group\'...
+           'Documents\SQL\tests\EcoInsight Test Scripts\Accessing Database'...
+           '\performanceData.sql']};
+       
+       createFiles_c = [createFiles1_c; createFiles2_c; createFiles3_c;...
+           createFiles4_c];
        
        % Create procedures for creating tables
        obj.source(createFiles_c);
@@ -195,7 +207,7 @@ classdef cDB < cMySQL
                     'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data\CMA CGM\Almaviva, Cassiopeia, Gemini\1 Operational reporting 2017-01-03 12_41.csv'
                     'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data\Anglo-Eastern Ship management\1 Operational reporting 2017-02-08 11-11.csv'
                     'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data\AMCL\1 Operational reporting 2017-02-08 11-15.csv'
-                    'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data\Berge Kibo\DNVGL\Raw\1 Operational reporting 2017-03-10 13_58.csv'
+%                     'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data\Berge Kibo\DNVGL\Raw\1 Operational reporting 2017-03-10 13_58.csv'
                     };
        bunkerFiles_c = {...
            'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data\Yang Ming\DNVGL Raw\2 Bunker reporting 2017-04-24 08_09.csv'...
@@ -210,6 +222,46 @@ classdef cDB < cMySQL
        obj_ves.Database = name;
        obj_ves = obj_ves.insertBunkerDeliveryNoteDNVGL(bunkerFiles_c);
        obj_ves.loadDNVGLRaw(rawFiles_c);
+       
+%        % Load Dry Docking Dates from Files
+%        ddFiles = {['L:\Project\MWB-Fuel efficiency\Hull and propeller '...
+%            'performance\Vessels\CMA CGM\Cart reports 2\Cart reports '...
+%            'CMA CGM.xlsx']};
+%        objddd = cVesselDryDockDates();
+%        objddd = objddd.readFile(ddFiles);
+       
+       % Run Additional Scripts
+       for si = 1:numel(scripts_c)
+           
+           % Run script, temporarily adding directory to path if necessary
+           currScript = scripts_c{si};
+           try run(currScript);
+               
+           catch ee
+               
+               if strcmp(ee.identifier, 'MATLAB:UndefinedFunction');
+                   
+                   scriptDir = fileparts(currScript);
+                   addpath(scriptDir);
+                   
+                   try run(currScript);
+                       
+                   catch ee
+                        
+                        rmpath(scriptDir);
+                        throw(ee);
+                   end
+                   
+               else
+                   
+                    throw(ee);
+               end
+           end
+           
+           % Change database of vessel returned by script and insert data
+%            [vess.Database] = deal(name);
+%            vess = vess.insert;
+       end
        
        end
        
