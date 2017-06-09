@@ -25,7 +25,7 @@ classdef cVesselDryDockDates < cMySQL
     end
     
     methods
-    
+        
        function obj = cVesselDryDockDates()
     
        end
@@ -158,17 +158,20 @@ classdef cVesselDryDockDates < cMySQL
             props2skipDD_c = {'IMO_Vessel_Number', 'DateStrFormat'};
             props2skip_c = union(properties(cMySQL), props2skipDD_c);
             props = setdiff(properties(obj), props2skip_c);
-            empty = false(size(props));
-            for pi = 1:numel(props)
-                prop = props{pi};
-                empty(pi) = isempty(obj.(prop));
+            empty = false(numel(props), numel(obj));
+            for oi = 1:numel(obj)
+                for pi = 1:numel(props)
+                    
+                    prop = props{pi};
+                    empty(pi, oi) = isempty(obj(oi).(prop));
+                end
             end
-            empty = all(empty);
+            empty = all(all(empty));
         end
     end
     
     methods(Hidden, Static)
-    
+        
         function datenumeric = setDate(date, stringformat)
             
             if isnumeric(date)
