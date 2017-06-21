@@ -64,6 +64,10 @@ while ~obj.iterFinished
         
         output(1) = nanmean(currPerf(firstYear_l));
         output(2) = nanmean(currPerf(remainingYears_l));
+        outnansem(1) = nansem(currPerf(firstYear_l));
+        outnansem(2) = nansem(currPerf(remainingYears_l));
+        counts(1) = numel(currPerf(firstYear_l));
+        counts(2) = numel(currPerf(remainingYears_l));
         
         startDate(1) = min(currDate(firstYear_l));
         startDate(2) = min(currDate(remainingYears_l));
@@ -74,12 +78,18 @@ while ~obj.iterFinished
         output = output(:)';
         startDate = startDate(:)';
         endDate = endDate(:)';
+        outnansem = outnansem(:)';
+        counts = counts(:)';
         
         % Assign into outputs
         Duration_st(1).Average = output(1);
+        Duration_st(1).StdOfMean = outnansem(1);
+        Duration_st(1).Count = counts(1);
         Duration_st(1).StartDate = startDate(1);
         Duration_st(1).EndDate = endDate(1);
         Duration_st(2).Average = output(2);
+        Duration_st(2).StdOfMean = outnansem(2);
+        Duration_st(2).Count = counts(2);
         Duration_st(2).StartDate = startDate(2);
         Duration_st(2).EndDate = endDate(2);
     

@@ -180,10 +180,20 @@ while ~obj.iterFinished
         startDates = startDates(:)';
         endDates = endDates(:)';
         
+        % Calculate additional values
+        outnansem = cellfun(@(start, endd) ...
+            nansem(currPerf(currDate >= start & currDate < endd)),...
+            startDates_c, endDates_c);
+        counts = cellfun(@(start, endd) ...
+            numel(currPerf(currDate >= start & currDate < endd)),...
+            startDates_c, endDates_c);
+        
         % Assign into outputs
         Duration_st(di).Average = output(1:outLength);
         Duration_st(di).StartDate = startDates(1:outLength);
         Duration_st(di).EndDate = endDates(1:outLength);
+        Duration_st(di).StdOfMean = outnansem(1:outLength);
+        Duration_st(di).Count = counts(1:outLength);
     end
     
     % Re-assign into Outputs

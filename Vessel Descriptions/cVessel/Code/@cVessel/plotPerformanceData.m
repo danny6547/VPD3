@@ -1,4 +1,4 @@
-function [obj, figHandles, dataLines, avgLines, regrLines ] = plotPerformanceData(obj, varargin)
+function [obj, figHandles, dataLines, avgLines, regrLines, semLines ] = plotPerformanceData(obj, varargin)
 %plotPerformanceData Plot performance against time, with statistics.
 %   figHandles = plotPerformanceData(obj) will return in FIGHANDLES an
 %   array of figure handles to graphs containing the data in the
@@ -10,6 +10,7 @@ function [obj, figHandles, dataLines, avgLines, regrLines ] = plotPerformanceDat
 dataLines = [];
 avgLines = [];
 regrLines = [];
+semLines = [];
 % if nargin > 3
 %     
 %     varname = varargin{3};
@@ -125,6 +126,22 @@ while ~obj.iterFinished
                    'Marker', 'o',...
                    'MarkerFaceColor', avgColours(di, :),...
                    'MarkerSize', 10);
+               
+               % Plot standard errors of mean
+               if isfield(currDur, 'StdOfMean')
+                   
+                   currSem = currDur.StdOfMean * 100;
+                   currTop = currAvg + currSem;
+                   currBot = currAvg - currSem;
+                   semLines(end+1:end+numel(currAvg)) = ...
+                       line([currStart; currEnd], [currBot; currBot],...
+                       'Color', avgColours(di, :),...
+                       'LineWidth', 2);
+                   semLines(end+1:end+numel(currAvg)) = ...
+                       line([currStart; currEnd], [currTop; currTop],...
+                       'Color', avgColours(di, :),...
+                       'LineWidth', 2);
+               end
                hold off
            end
        end
