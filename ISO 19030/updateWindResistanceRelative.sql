@@ -10,7 +10,7 @@ CREATE PROCEDURE updateWindResistanceRelative(imo INT)
 BEGIN
     
     SET @currModel := (SELECT Wind_Model_ID FROM Vessels WHERE IMO_Vessel_Number = imo);
-    
+    /*
 	UPDATE tempRawISO t
 		JOIN (
 			SELECT s1.id, s1.Coefficient
@@ -32,4 +32,29 @@ BEGIN
 				w.Coefficient;
 		/*( SELECT Coefficient FROM WindCoefficientDirection WHERE IMO_Vessel_Number = imo AND Relative_Wind_Direction >= Start_Direction AND Relative_Wind_Direction < End_Direction);*/
 	
+    UPDATE tempRawISO t
+		JOIN (
+				SELECT b.Coefficient, b.tid AS 'id' FROM 
+				(
+					SELECT t.id AS 'tid', MIN(ABS(Direction - Relative_Wind_Direction_Reference)) AS 'MinDiff', Coefficient, Direction FROM tempRawISO t
+						JOIN WindCoefficientDirection w
+							 WHERE ModelID = @currModel
+								GROUP BY tid 
+						 ) a
+				JOIN 
+				(
+					SELECT t.id AS 'tid', ABS(Direction - Relative_Wind_Direction_Reference) AS 'Diff', Coefficient, Direction FROM tempRawISO t
+						JOIN WindCoefficientDirection w
+							 WHERE ModelID = @currModel
+						 ) b
+				ON a.MinDiff = b.Diff
+				GROUP BY b.tid 
+			) w
+		ON t.id = w.id
+		SET t.Wind_Resistance_Relative =
+				0.5 *
+				Air_Density *
+				POWER(Relative_Wind_Speed_Reference, 2) *
+				Transverse_Projected_Area_Current * 
+				w.Coefficient;
 END;
