@@ -306,3 +306,11 @@ cV: the following code deletes connections of all but first vessel vess(n).Speed
 cVSP, cVWC: multiple objects can have the same ModelID when both instantiated without writing to DB.
 	cMID: when any data assigned to properties (other than ModelID), get next modelID, assign, write modelID into DB.
 	cMID: on deletion, if properties matching those of table are empty in OBJ and DB, remove modelID from DB
+cDB: add updateDefaultValues to list of procedures.
+cDB: add createVesselSpeedPowerModel to list of procedures.
+cVSP: write to VesselSpeedPowerModel when insert called.
+cDB: add updateWindReference to list of procedures.
+updateWindReference: test and update to match results from DIGU script
+cModelID: adds duplicate rows to table 
+cVSP: insert value into speedpowermodel table
+updateExpectedSpeed.sql: why do negative coefficients lead to invalid results?

@@ -16,5 +16,6 @@ BEGIN
 		POWER(Speed_Over_Ground, 2) *
         Transverse_Projected_Area_Current * 
 		( SELECT Coefficient FROM WindCoefficientDirection WHERE ModelID = @currModel AND Direction = 0 );
+
         
 END;

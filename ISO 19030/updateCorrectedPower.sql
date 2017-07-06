@@ -13,7 +13,7 @@ BEGIN
     SET WindResValid := (SELECT COUNT(Wind_Resistance_Correction) FROM tempRawISO) != 0;
     
     IF WindResValid THEN
-		UPDATE tempRawISO SET Corrected_Power = Delivered_Power - Wind_Resistance_Correction;
+		UPDATE tempRawISO SET Corrected_Power = Delivered_Power - (Wind_Resistance_Correction);
     ELSE
 		UPDATE tempRawISO SET Corrected_Power = Delivered_Power;
 	END IF;
