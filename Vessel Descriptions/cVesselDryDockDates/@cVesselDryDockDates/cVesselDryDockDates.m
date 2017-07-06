@@ -74,7 +74,7 @@ classdef cVesselDryDockDates < cMySQL
         expand_l = isscalar(obj) && numRows > 1;
         if expand_l
             
-            newEmptyObj_v = repmat(cVesselDryDockDates(), [1, numRows - 1]);
+            newEmptyObj_v(1, numRows - 1) = cVesselDryDockDates();
             obj = [obj, newEmptyObj_v];
         end
         
