@@ -243,33 +243,17 @@ classdef cVessel < cMySQL
             
             
             % Read Vessel static data from DB
-%             emptyObj_l = arrayfun(@(x) isempty(x.IMO_Vessel_Number), obj);
-%             obj(~emptyObj_l) = obj(~emptyObj_l).readFromTable('Vessels', 'IMO_Vessel_Number');
-%             
-%             nDocks = size(obj, 1);
-%             if size(ddd, 1) > size(obj, 1)
-%                 
-%                 ddd(end, :) = [];
-%             end
-%             
-%             emptyVessels_l = arrayfun(@(x) numel(find(~isnan(x.(x.Variable)))), obj) == 0;
-%             emptyDD_l = arrayfun(@isempty, ddd);
-%             rows2remove_l = all((emptyVessels_l | emptyDD_l)');
-%             ddd(rows2remove_l, :) = [];
-%             
-%             tempDD_c = num2cell(ddd);
-%             [obj(2:end, :).DryDockDates] = tempDD_c{:};
-            ddIntIdx_c = {obj.DryDockInterval};
-            ddIdx_c = cellfun(@(x) x - 1, ddIntIdx_c, 'Uni', 0);
-            w = ~cellfun(@(x) isempty(x) || isnan(x) || x == 0, ddIdx_c);
-            
-            objddd = cVesselDryDockDates();
-            objddd = repmat(objddd, 1, numel(find(w)));
-            [objddd.IMO_Vessel_Number] = deal(obj(w).IMO_Vessel_Number);
-            objddd = objddd.readDatesFromIndex( [ddIdx_c{w}] );
-            objddd_c = num2cell(objddd);
-            [obj(w).DryDockDates] = deal(objddd_c{:});
-            
+            if ddi_l
+                ddIntIdx_c = {obj.DryDockInterval};
+                ddIdx_c = cellfun(@(x) x - 1, ddIntIdx_c, 'Uni', 0);
+                w = ~cellfun(@(x) isempty(x) || isnan(x) || x == 0, ddIdx_c);
+
+                objddd(1, numel(find(w))) = cVesselDryDockDates();
+                [objddd.IMO_Vessel_Number] = deal(obj(w).IMO_Vessel_Number);
+                objddd = objddd.readDatesFromIndex( [ddIdx_c{w}] );
+                objddd_c = num2cell(objddd);
+                [obj(w).DryDockDates] = deal(objddd_c{:});
+            end
             % Reshape so that each vessel has it's first data first
             e = reshape({obj.DateTime_UTC}, size(obj));
             u = mat2cell(~cellfun(@(x) isempty(x) || all(isnan(x)), e), ...
@@ -281,6 +265,8 @@ classdef cVessel < cMySQL
             empty_l = arrayfun(@(x) isempty(x.DateTime_UTC) || all(isnan(x.DateTime_UTC)), obj)';
             emptyDDInt_l = all(empty_l');
             obj(emptyDDInt_l, :) = [];
+            
+            % Read SpeedPower
        end
        end
        
