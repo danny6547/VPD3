@@ -1928,11 +1928,10 @@ methods(Test)
     T = abs(randn(testSz)); % testcase.randOutThreshold(testSz, @gt, 0);
     vr = abs(randn(testSz));
     vg = abs(randn(testSz));
-    psir = abs(randn(testSz))*50;
-    psi0 = abs(randn(testSz))*50;
+    psir = abs(randn(testSz))*90;
+    psi0 = testcase.randOutThreshold(testSz, @lt, 180); % abs(randn(testSz))*50; 
     input_DraftFore = abs(randn(testSz));
     input_DraftAft = 2*T - input_DraftFore;
-    za = testcase.AlmavivaAnemometerHeight;
     
     Ades = testcase.AlmavivaTransProjArea;
     Zrefdes = testcase.Wind_Reference_Height_Design;
@@ -1943,6 +1942,7 @@ methods(Test)
     zref = (Ades.*(Zrefdes + delT) + 0.5.* B.* delT.^2) ./ A;
     
     vt = sqrt(vr.^2 + vg.^2 - 2.* vr.* vg.* cosd(psir) );
+    za = testcase.AlmavivaAnemometerHeight + delT;
     vtref = vt.* (zref/za).^(1/7);
     condition = vr.* cosd(psir + psi0) - vg.* cosd(psi0) >= 0;
     psit = atand( (vr.* sind(psir + psi0) - vg.*sind(psi0)) ./...
