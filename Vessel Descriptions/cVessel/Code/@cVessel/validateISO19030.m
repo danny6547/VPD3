@@ -7,7 +7,7 @@ function [obj] = validateISO19030(obj, measfile, spfile, windfile, varargin)
 %     'cVessel.validateISO19030', 'measfile', 2);
 validateCellStr(measfile, 'cVessel.validateISO19030', 'measfile', 2);
 validateCellStr(spfile, 'cVessel.validateISO19030', 'spfile', 3);
-validateCellStr(windfile, 'cVessel.validateISO19030', 'windfile', 42);
+validateCellStr(windfile, 'cVessel.validateISO19030', 'windfile', 4);
 
 createSpFile_l = isempty(spfile);
 
@@ -121,12 +121,14 @@ while ~obj.iterFinished
             'WriteVariableNames', false);
     end
     
-    % Create wind file
-    windCoeff = currVessel.WindCoefficient;
-    windTbl = table(windCoeff.Direction(:), windCoeff.Coefficient(:));
-    writetable(windTbl, windfile, 'FileType', 'text', ...
-            'WriteVariableNames', false);
-    
+    if ~isempty(windfile)
+        
+        % Create wind file
+        windCoeff = currVessel.WindCoefficient;
+        windTbl = table(windCoeff.Direction(:), windCoeff.Coefficient(:));
+        writetable(windTbl, windfile, 'FileType', 'text', ...
+                'WriteVariableNames', false);
+    end
     % Replace radix to match local
 %     files = [spfile, windfile];
 %     oldradix = {',', '.'};
