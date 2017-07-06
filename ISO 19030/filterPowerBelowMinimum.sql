@@ -27,18 +27,21 @@ BEGIN
 			(SELECT r.id, r.Delivered_Power, p.Power, r.Delivered_Power < p.Power AS 'BelowMin' FROM tempRawISO r
 				JOIN SpeedPower p
 					ON
-					r.IMO_Vessel_Number = p.IMO_Vessel_Number AND
+					 /* r.IMO_Vessel_Number = p.IMO_Vessel_Number AND */
 					r.NearestTrim = p.Trim AND
-					r.NearestDisplacement = p.Displacement) AS q
+					r.NearestDisplacement = p.Displacement
+                    WHERE p.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)
+                    ) AS q
 		INNER JOIN
 			(SELECT id, Delivered_Power, Power, MIN(Power) AS MinPower
 			FROM
 				(SELECT t.id, t.Delivered_Power, p.Power, t.Delivered_Power < p.Power AS 'BelowMin' FROM tempRawISO t
 					JOIN SpeedPower p
 						ON
-						t.IMO_Vessel_Number = p.IMO_Vessel_Number AND
+						/* t.IMO_Vessel_Number = p.IMO_Vessel_Number AND */
 						t.NearestTrim = p.Trim AND
-						t.NearestDisplacement = p.Displacement) AS w
+						t.NearestDisplacement = p.Displacement
+						WHERE p.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)) AS w
 			GROUP BY id) AS e
 		ON
 			q.id = e.id AND
