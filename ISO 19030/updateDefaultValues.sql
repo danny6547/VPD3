@@ -15,7 +15,7 @@ BEGIN
     
     IF (SELECT COUNT(Air_Pressure) FROM tempRawISO) = 0 THEN
     
-		UPDATE tempRawISO SET Air_Pressure = 101.325;
+		UPDATE tempRawISO SET Air_Pressure = 101325;
     END IF;
     
 END;
