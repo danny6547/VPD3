@@ -1,0 +1,18 @@
+,Time,Speed through Water,Delivered Power,Shaft Revolution,Relative Wind Speed,Relative Wind Direction,Air Temperature,Speed over Ground,Heading,Rudder Angle,Water Depth,Draught Fore,Draught Aft,Displacements,Water Temperature
+No. of Records Filtered,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+Total no. of Records before Filtering,32
+Total no. of Records being Filtered,0
+Total no. of Records after Filtering,32
+
+,sdRPM,sdSpeedWater,sdSpeedGround,sdRudderAngle
+No. of Invalid Records,0,0,0,0
+Total no. of Records before Validation,32
+Total no. of Invalid Records,0
+Total no. of Records after Validation,32
+
+,Ice,Wind,Depth,Power Out of Range,Speed Difference,Displacements,Rudder Angle
+No. of Records out of Reference Condition,1,0,1,1,10,0,1
+Total no. of Records before Reference Condition,14
+Total no. of Records Out of Reference Condition,12
+Total no. of Records after Reference Condition,2
+

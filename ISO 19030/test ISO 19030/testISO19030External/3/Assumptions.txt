@@ -1,0 +1,3 @@
+Setting Relative wind speed at reference position to DAMCL values.
+Set air density to DAMCL values.
+Find coefficients nearest to relative wind direction at reference.
