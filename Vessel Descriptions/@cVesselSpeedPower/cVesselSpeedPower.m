@@ -24,7 +24,7 @@ classdef cVesselSpeedPower < cMySQL
     
     properties(Hidden)
        
-       Model = 'polynomial2';
+       Model = 'exponential';
     end
     
     methods
@@ -78,7 +78,8 @@ classdef cVesselSpeedPower < cMySQL
                 
                 case 'exponential'
                     
-                    fo = polyfit(log(power), speed, 1);
+                    fo = polyfit(log(speed), log(power), 1);
+%                     fo = abs(fo);
                     residuals = speed - (fo(2) + fo(1).*log(power));
                 case 'polynomial2'
                     
@@ -99,7 +100,7 @@ classdef cVesselSpeedPower < cMySQL
 %                 
 %                 obj(oi).Exponent_C = fo(3);
 %             end
-            obj(oi).R_Squared = r2;
+            obj(oi).R_Squared = 0; %r2;
             
 %             coeffs = nan(numObj, numel(fo));
             coeffs(oi, 1:numel(fo)) = fo;
@@ -110,37 +111,58 @@ classdef cVesselSpeedPower < cMySQL
        function insertIntoTable(obj)
        % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs
        
+       % Check that at least one OBJ has data, which can then be fitted,
+       % so that the matrix of coefficients can be initialised before loop
+       
+       % Fit
+       if isempty(obj(1).Coefficients)
+           
+           obj(1) = obj(1).fit;
+       end
+       
        % Generate struct containing coefficients in same structure as table
-       coeffNames_c = {'Coefficient_A', 'Coefficient_B', 'Coefficient_C'};
-       coeff_c = nan(1, 3);
+       numCoeffs = numel(obj(1).Coefficients);
+       firstLetters_c = cellstr(char(97:97+numCoeffs-1)');
+       coeffNames_c = strcat('Coefficient_', firstLetters_c);
+       
+%        coeffNames_c = {'Coefficient_A', 'Coefficient_B', 'Coefficient_C'};
+       coeff_c = nan(1, numCoeffs);
        for oi = 1:numel(obj)
            
            % Fit
            if isempty(obj(oi).Coefficients)
+               
                obj(oi) = obj(oi).fit;
            end
        
            % Create matrix of coefficients
-           if numel(obj(oi).Coefficients) > 0
-            coeff_c(oi, 1) = obj(oi).Coefficients(1);
+           for ci = 1:numCoeffs
+               
+               coeff_c(oi, ci) = obj(oi).Coefficients(ci);
            end
-           if numel(obj(oi).Coefficients) > 1
-            coeff_c(oi, 2) = obj(oi).Coefficients(2);
-           end
-           if numel(obj(oi).Coefficients) > 2
-            coeff_c(oi, 3) = obj(oi).Coefficients(3);
-           end
+%            if numel(obj(oi).Coefficients) > 0
+%                nCols = 2;
+%                coeff_c(oi, 1) = obj(oi).Coefficients(1);
+%            end
+%            if numel(obj(oi).Coefficients) > 1
+%                nCols = 4;
+%                coeff_c(oi, 2) = obj(oi).Coefficients(2);
+%            end
+%            if numel(obj(oi).Coefficients) > 2
+%                nCols = 6;
+%                coeff_c(oi, 3) = obj(oi).Coefficients(3);
+%            end
        end
-       coeff_c = mat2cell(coeff_c, numel(obj), [1, 1, 1]);
-       coeffInput_c = cell(1, 6);
-       coeffInput_c(1:2:5) = coeffNames_c;
-       coeffInput_c(2:2:6) = coeff_c;
+       coeff_c = mat2cell(coeff_c, numel(obj), ones(1, numCoeffs));
+       nCols = numCoeffs*2;
+       coeffInput_c = cell(1, nCols);
+       coeffInput_c(1:2:nCols-1) = coeffNames_c;
+       coeffInput_c(2:2:nCols) = coeff_c;
        
        % Insert
        insertIntoTable@cMySQL(obj, 'SpeedPower');
        insertIntoTable@cMySQL(obj, 'SpeedPowerCoefficients', [], ...
            coeffInput_c{:});
-       
        end
        
        function [obj, h] = plot(obj)

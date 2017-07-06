@@ -33,23 +33,25 @@ BEGIN
     
     /* Get coefficients of speed, power curve for nearest diplacement, trim */ 
     UPDATE IGNORE tempRawISO ii JOIN
-	(SELECT i.id, i.IMO_Vessel_Number, NearestDisplacement, NearestTrim, i.Displacement, i.Trim, s.Coefficient_A, s.Coefficient_B, s.Coefficient_C FROM tempRawISO i
+	(SELECT i.id, i.IMO_Vessel_Number, NearestDisplacement, NearestTrim, i.Displacement, i.Trim, s.Coefficient_A, s.Coefficient_B FROM tempRawISO i
 		JOIN speedpowercoefficients s
-			ON i.IMO_Vessel_Number = s.IMO_Vessel_Number AND
+			ON /* i.IMO_Vessel_Number = s.IMO_Vessel_Number AND */
 			   i.NearestDisplacement = s.Displacement AND
-			   i.NearestTrim = s.Trim) si
+			   i.NearestTrim = s.Trim
+               WHERE s.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)
+               ) si
 	ON ii.id = si.id
-	SET Expected_Speed_Through_Water = (Coefficient_A*POWER(Corrected_Power, 2) + Coefficient_B*Corrected_Power + Coefficient_C) * POWER( POWER(ii.Displacement, (2/3)) / POWER(ii.NearestDisplacement, (2/3)), (1/3)) /* Exponent_A*LOG(ABS(Corrected_Power)) + Exponent_B */
-    WHERE Displacement_Correction_Needed IS FALSE;
+	SET Expected_Speed_Through_Water =  POWER(Corrected_Power / EXP(Coefficient_B), (1 / Coefficient_A)) * POWER(ii.Displacement / ii.NearestDisplacement, 2/9);   /* (Coefficient_A*POWER(Corrected_Power, 2) + Coefficient_B*Corrected_Power + Coefficient_C) * POWER( POWER(ii.Displacement, (2/3)) / POWER(ii.NearestDisplacement, (2/3)), (1/3)) /* Exponent_A*LOG(ABS(Corrected_Power)) + Exponent_B */ 
     
     /* Get coefficients of speed, power curve for nearest diplacement, trim */ 
-    UPDATE IGNORE tempRawISO ii JOIN
+/*    UPDATE IGNORE tempRawISO ii JOIN
 	(SELECT i.id, i.IMO_Vessel_Number, NearestDisplacement, NearestTrim, i.Displacement, i.Trim, s.Coefficient_A, s.Coefficient_B, s.Coefficient_C FROM tempRawISO i
 		JOIN speedpowercoefficients s
-			ON i.IMO_Vessel_Number = s.IMO_Vessel_Number AND
-			   i.NearestDisplacement = s.Displacement AND
-			   i.NearestTrim = s.Trim) si
+			ON /* i.IMO_Vessel_Number = s.IMO_Vessel_Number AND */
+/*			   i.NearestDisplacement = s.Displacement AND
+			   i.NearestTrim = s.Trim
+               WHERE s.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)) si
 	ON ii.id = si.id
 	SET Expected_Speed_Through_Water = (Coefficient_A*POWER(Corrected_Power, 2) + Coefficient_B*Corrected_Power + Coefficient_C) * POWER( POWER(ii.Displacement, (2/3)) / POWER(ii.NearestDisplacement, (2/3)), (1/3))
-    WHERE Displacement_Correction_Needed IS TRUE;
+    WHERE Displacement_Correction_Needed IS TRUE; */
 END
