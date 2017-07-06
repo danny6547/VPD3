@@ -223,12 +223,12 @@ classdef cDB < cMySQL
        obj_ves = obj_ves.insertBunkerDeliveryNoteDNVGL(bunkerFiles_c);
        obj_ves.loadDNVGLRaw(rawFiles_c);
        
-%        % Load Dry Docking Dates from Files
-%        ddFiles = {['L:\Project\MWB-Fuel efficiency\Hull and propeller '...
-%            'performance\Vessels\CMA CGM\Cart reports 2\Cart reports '...
-%            'CMA CGM.xlsx']};
-%        objddd = cVesselDryDockDates();
-%        objddd = objddd.readFile(ddFiles);
+       % Load Dry Docking Dates from Files
+       ddFiles = {['L:\Project\MWB-Fuel efficiency\Hull and propeller '...
+           'performance\Vessels\CMA CGM\Cart reports 2\Cart reports '...
+           'CMA CGM.xlsx']};
+       objddd = cVesselDryDockDates();
+       objddd = objddd.readFile(ddFiles);
        
        % Run Additional Scripts
        for si = 1:numel(scripts_c)
