@@ -217,6 +217,7 @@ BEGIN
         ;*/
 	
     /* Get valid trim and nearest trim */
+    /*
     UPDATE tempRawISO t
 		JOIN (
 			SELECT c.id, c.SPTrim, c.ValidTrim
@@ -237,7 +238,7 @@ BEGIN
 							  (Trim - 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AS 'Lower Trim',
 							  (Trim + 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AS 'Upper Trim'
 						FROM tempRawISO) AS b
-							ON a.IMO_Vessel_Number = b.IMO_Vessel_Number) AS c
+							WHERE a.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)) AS c
 					 INNER JOIN
 						(
 						SELECT f.id, 'SPTrim', 'Actual Trim', `Lower Trim`, `Upper Trim`, ValidTrim, MIN(DiffTrim) AS MinDiff
@@ -258,16 +259,16 @@ BEGIN
 										  (Trim - 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AS 'Lower Trim',
 										  (Trim + 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AS 'Upper Trim'
 									FROM tempRawISO) AS d
-							ON a.IMO_Vessel_Number = d.IMO_Vessel_Number) AS f
+							WHERE a.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)) AS f
 							GROUP BY id) AS e /* 'SPTrim', 'Actual Trim', `Lower Trim`, `Upper Trim`,  */ 
-					  ON
+/*					  ON
 						c.id= e.id AND
 						c.DiffTrim = e.MinDiff
 					  GROUP BY c.id) w
                     ON t.id = w.id
 		SET t.Filter_SpeedPower_Trim = NOT(w.ValidTrim),
 			t.NearestTrim = w.SPTrim
-				;
+				;*/
 	
     /* Get valid displacement and nearest displacement */
     UPDATE tempRawISO t
@@ -276,7 +277,7 @@ BEGIN
 				FROM
 					(SELECT
 						 b.id,
-                         a.IMO_Vessel_Number,
+                         /* a.IMO_Vessel_Number, */
 						 a.Displacement AS 'SPDisplacement',
 						 b.Displacement AS 'Actual Displacement',
 						 `Lower Displacement`,
@@ -292,13 +293,13 @@ BEGIN
 								  (Displacement*0.95) AS 'Lower Displacement',
 								  (Displacement*1.05) AS 'Upper Displacement'
 							FROM tempRawISO) AS b
-						ON a.IMO_Vessel_Number = b.IMO_Vessel_Number) AS z
+						WHERE a.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)) AS z
 				INNER JOIN
 					(
 					SELECT d.id, SPDisplacement, `Actual Displacement`, `Lower Displacement`, `Upper Displacement`, ValidDisplacement, MIN(DiffDisp) AS MinDiff
 					FROM (SELECT
 						 b.id,
-                         a.IMO_Vessel_Number,
+                         /* a.IMO_Vessel_Number, */
 						 a.Displacement AS 'SPDisplacement',
 						 b.Displacement AS 'Actual Displacement',
 						 `Lower Displacement`,
@@ -314,7 +315,7 @@ BEGIN
 								  (Displacement*0.95) AS 'Lower Displacement',
 								  (Displacement*1.05) AS 'Upper Displacement'
 							FROM tempRawISO) AS b
-						ON a.IMO_Vessel_Number = b.IMO_Vessel_Number) AS d
+						WHERE a.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)) AS d
 					 GROUP BY id) AS x /* 'SPTrim', 'Actual Trim', `Lower Trim`, `Upper Trim`,  */ 
 				  ON
 					z.id= x.id AND
@@ -323,6 +324,20 @@ BEGIN
                     ON t.id = w.id
 			 SET t.NearestDisplacement = w.NearestDisplacement,
 				 t.Filter_SpeedPower_Disp = NOT(w.ValidDisplacement);
+    
+    /* Get valid trim and nearest trim */
+    UPDATE tempRawISO a
+	JOIN (
+			SELECT t.id, s.Trim, s.Displacement FROM speedpowercoefficients s
+				JOIN tempRawISO t
+					ON s.Displacement = t.NearestDisplacement
+						WHERE s.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)
+		  ) b
+	ON a.id = b.id
+		SET a.NearestTrim = b.Trim,
+			a.Filter_SpeedPower_Trim = NOT( a.NearestTrim >= (a.Trim - 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AND
+											a.NearestTrim <= (a.Trim + 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) );
+    
     
 	/* Get boolean column indicating which values of trim and displacement are outside the ranges for nearest-neighbour interpolation */
 	UPDATE tempRawISO SET Filter_SpeedPower_Disp_Trim = (Filter_SpeedPower_Disp OR Filter_SpeedPower_Trim);
