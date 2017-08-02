@@ -314,3 +314,38 @@ updateWindReference: test and update to match results from DIGU script
 cModelID: adds duplicate rows to table 
 cVSP: insert value into speedpowermodel table
 updateExpectedSpeed.sql: why do negative coefficients lead to invalid results?
+MATLAB: how to instantiate the calling class as an array?
+cVSP: bug where Coefficients may not match those of the S, P data if the data is changed after fitting
+cVSP: allow user to select units of input
+cMySQL: allow for alias inputs between object properties and column names
+cVSP.copy: copy data and modelID, leave IMO_Vessel_Number blank
+Chauvenet_Criteria: set false when timestep less than 5 mins?
+Create filters: Filter_Speed_Below_Min, Filter_Speed_Above_Max, Filter_Power_Below_Min, Filter_Power_Above_Max
+updateWindResistance: IFNULL on propulsiveEfficiency 
+updateReferenceConditions: depth and wind inaccurate?
+check results for Filter_Speed_Above_Max, below (seem to be different)
+DB: createFilterTable to store numbers of data removed per filter for each analysis 
+cV.loadDNVGLReportingFormat: load from xlsx
+cV.loadXLSX(file, fileColID, tabColNames): load from csv by associating file column names or indices with table column names
+DB: ensure vessel input scripts in sync with ModelID values. Allow models to be assigned by Name?
+cV.ISO19030: write GUI filter selector
+cDB: add UASC, AMCL analyses to create?
+cV.insertDataDuplicate: call either insertValuesDuplicate or loadInFileDuplicate on a new text file depending on data size.
+Are noon-report drafts measured off draft-markings or corrected to perpendiculars?
+# Specify units of displacement in displacement table (m3 or tn)? m3!
+cVSP.Rho: water density used in calculation of displacement in model data.
+cVSP.Displacement: change values depending on that of Rho.
+DB: sp, spc: change units of Displacement column to m3
+DB: rewrite insert_data scripts to account for fluid density.
+updateDisplacement: remove conversion from volume to mass
+New Vanguard: Many Displacement not being read from file after DB rebuilt home 280717.
+Return data identifying which data was inserted after any insert statement into time-series tables
+DB: Include sister ships information
+DB: Change Compliance table name to Analysis, include Comment TEXT column
+DB: Create table Filters, with column for IMO, DateTime and all filters cols in tempRawISO
+DB: Create table KPI: IMO, StartDate, EndDate, KPI (in-service, DD, trigger, effect), Value
+cV.ISO19030: implement all filters in inputs
+
+
+DB: Sort out ModelID 
+Insert_data: allow scripts to be "called" within function while allowing database selection.

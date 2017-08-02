@@ -100,7 +100,7 @@ classdef cVesselEngine < handle
                     empty(pi, oi) = isempty(obj(oi).(prop));
                 end
             end
-            empty = empty(:);
+%             empty = empty(:);
             empty = all(empty);
         end
         

@@ -10,9 +10,6 @@ SFOCFilt: A value of TRUE will filter data out of range of the engine SFOC
 data.
 */
 
-
-
-
 DROP PROCEDURE IF EXISTS insertIntoPerformanceData;
 
 delimiter //
