@@ -94,8 +94,7 @@ while ~obj.iterFinished
            currData.(varname) * 100, 'o', 'Color', currColour);
        hold off
        pi_line.MarkerFaceColor = pi_line.Color;
-       
-       vesselNum = unique(currVessel.IMO_Vessel_Number);
+       dataLines(end+1) = pi_line;
        
        % Plot averages
        if avg_l
@@ -127,21 +126,21 @@ while ~obj.iterFinished
                    'MarkerFaceColor', avgColours(di, :),...
                    'MarkerSize', 10);
                
-               % Plot standard errors of mean
-               if isfield(currDur, 'StdOfMean')
-                   
-                   currSem = currDur.StdOfMean * 100;
-                   currTop = currAvg + currSem;
-                   currBot = currAvg - currSem;
-                   semLines(end+1:end+numel(currAvg)) = ...
-                       line([currStart; currEnd], [currBot; currBot],...
-                       'Color', avgColours(di, :),...
-                       'LineWidth', 2);
-                   semLines(end+1:end+numel(currAvg)) = ...
-                       line([currStart; currEnd], [currTop; currTop],...
-                       'Color', avgColours(di, :),...
-                       'LineWidth', 2);
-               end
+%                % Plot standard errors of mean
+%                if isfield(currDur, 'StdOfMean')
+%                    
+%                    currSem = currDur.StdOfMean * 100;
+%                    currTop = currAvg + currSem;
+%                    currBot = currAvg - currSem;
+%                    semLines(end+1:end+numel(currAvg)) = ...
+%                        line([currStart; currEnd], [currBot; currBot],...
+%                        'Color', avgColours(di, :),...
+%                        'LineWidth', 2);
+%                    semLines(end+1:end+numel(currAvg)) = ...
+%                        line([currStart; currEnd], [currTop; currTop],...
+%                        'Color', avgColours(di, :),...
+%                        'LineWidth', 2);
+%                end
                hold off
            end
        end
@@ -196,6 +195,7 @@ while ~obj.iterFinished
    ylabel([strrep(varname, '_', ' '), ' ( % )'], 'fontsize', labFontsz);
    
    titleFontsz = 13;
+   vesselNum = currVessel.IMO_Vessel_Number;
    vesselName_ch = vesselName(vesselNum);
    if isempty(vesselName_ch)
        vesselName_ch = num2str(vesselNum);
