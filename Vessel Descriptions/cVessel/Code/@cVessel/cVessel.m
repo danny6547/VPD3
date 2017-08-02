@@ -35,8 +35,10 @@ classdef cVessel < cMySQL
         PerformanceMark
         DryDockingPerformance
         AnnualSavingsDD
+        EstimatedFuelConsumption
         InServicePerformance
         Activity double = nan;
+        Wind_Model_ID;
     end
     
     properties(Hidden)
@@ -55,13 +57,12 @@ classdef cVessel < cMySQL
         Trim;
         Propulsive_Efficiency;
         Engine_Model;
-        Wind_Model_ID;
         Wind_Reference_Height_Design;
     end
     
     properties(Access = private)
         
-        PerformanceTable = 'DNVGLPerformanceData';
+        PerformanceTable = 'PerformanceData';
     end
     
     methods
@@ -169,7 +170,7 @@ classdef cVessel < cMySQL
                 validateattributes(imo, {'numeric'},...
                   {'positive', 'real', 'integer'}, 'cVessel constructor',...
                   'IMO', 1);
-               [shipData, ddd] = obj.performanceData(readInputs_c{:});
+               [shipData, ddd, ~, indb] = obj.performanceData(readInputs_c{:});
            end
            
            if shipData_l && file_l
@@ -208,8 +209,17 @@ classdef cVessel < cMySQL
                     name = validateCellStr(name);
                 end
            end
+           
+           if ~any(indb)
+               
+               size_c = num2cell(size(imo));
+               obj(size_c{:}) = cVessel();
+               imo_c = num2cell(imo);
+               [obj.IMO_Vessel_Number] = deal(imo_c{:});
+               return
+           end
 
-            szIn = size(shipData);
+            szIn = size(shipData(:, indb));
 
             numOuts = prod(szIn);
             obj(numOuts) = cVessel;
@@ -254,18 +264,21 @@ classdef cVessel < cMySQL
                 objddd_c = num2cell(objddd);
                 [obj(w).DryDockDates] = deal(objddd_c{:});
             end
-            % Reshape so that each vessel has it's first data first
-            e = reshape({obj.DateTime_UTC}, size(obj));
-            u = mat2cell(~cellfun(@(x) isempty(x) || all(isnan(x)), e), ...
-                size(e, 1), ones(1, size(e, 2)));
-            i = cellfun(@(x) find(x, 1, 'first') - 1, u);
-            o = cellfun(@(x, y) circshift(obj(:, x), y, 1), num2cell(1:size(e, 2)),...
-                num2cell(-i), 'Uni', 0);
-            obj = [o{:}];
-            empty_l = arrayfun(@(x) isempty(x.DateTime_UTC) || all(isnan(x.DateTime_UTC)), obj)';
-            emptyDDInt_l = all(empty_l');
-            obj(emptyDDInt_l, :) = [];
             
+            % Reshape so that each vessel has it's first data first
+            if size(obj, 1) > 1
+                e = reshape({obj.DateTime_UTC}, size(obj));
+                u = mat2cell(~cellfun(@(x) isempty(x) || all(isnan(x)), e), ...
+                    size(e, 1), ones(1, size(e, 2)));
+                i = cellfun(@(x) find(x, 1, 'first') - 1, u);
+                o = cellfun(@(x, y) circshift(obj(:, x), y, 1), num2cell(1:size(e, 2)),...
+                    num2cell(-i), 'Uni', 0);
+                obj = [o{:}];
+                empty_l = arrayfun(@(x) isempty(x.DateTime_UTC) || all(isnan(x.DateTime_UTC)), obj)';
+                emptyDDInt_l = all(empty_l');
+                obj(emptyDDInt_l, :) = [];
+            end
+           
             % Read SpeedPower
        end
        end
@@ -289,6 +302,7 @@ classdef cVessel < cMySQL
        [obj.Breadth_Moulded] = vesselclass(:).Breadth_Moulded;
        [obj.Draft_Design] = vesselclass(:).Draft_Design;
        [obj.Class] = vesselclass(:).WeightTEU;
+       [obj.Anemometer_Height] = vesselclass(:).Anemometer_Height;
        
        end
        
@@ -653,6 +667,10 @@ classdef cVessel < cMySQL
         function [obj, IMO] = loadDNVGLRaw(obj, filename)
         % loadDNVGLRaw Load raw data sourced from DNVGL
         
+        % Input
+        filename = validateCellStr(filename, 'cVessel.loadDNVGLRaw', ...
+            'filename', 2);
+        
         % Drop if exists
         tempTab = 'tempDNVGLRaw';
         obj = obj.drop('TABLE', tempTab, true);
@@ -896,6 +914,8 @@ classdef cVessel < cMySQL
                 'Entry_Made_By_1'
                 'Entry_Made_By_2'
             };
+        [~, setnull_ch] = obj.setNullIfEmpty(setdiff(cols_c, setnull_c), false);
+        set_s = [set_s, setnull_ch];
         [obj, cols] = obj.loadInFile(filename, tempTab, cols_c, ...
             delimiter_s, ignore_s, set_s, setnull_c);
         
@@ -997,9 +1017,12 @@ classdef cVessel < cMySQL
         % insertIntoWindCoefficient Insert data into wind coefficient table
             
             windCoeffs_v = [obj.WindCoefficient];
-%             imo_v = [obj.IMO_Vessel_Number];
-            tabName = 'WindCoefficientDirection';
-            obj.insertIntoTable(tabName, windCoeffs_v);
+            windCoeffs_v(isempty(windCoeffs_v)) = [];
+            if numel(windCoeffs_v) > 0
+                
+                tabName = 'WindCoefficientDirection';
+                obj.insertIntoTable(tabName, windCoeffs_v);
+            end
         end
         
         function obj = ISO19030(obj, varargin)
@@ -1047,7 +1070,7 @@ classdef cVessel < cMySQL
                 obj(oi).Performance_Index = [];
                 obj(oi).Speed_Index = [];
             else
-                obj(oi) = assignPerformanceData(obj(oi), tempTbl, cols);
+                obj(oi) = assignPerformanceData(obj(oi), tempTbl, props, cols);
             end
 %             obj(oi).Speed_Index = tempTbl.speed_index;
 %             obj(oi).DateTime_UTC = tempTbl.datetime_utc;
@@ -1291,11 +1314,20 @@ classdef cVessel < cMySQL
                 'cVessel.assignPerformanceData', 'propName', 3);
         end
         
+        dataName = propName;
+        if nargin > 3
+            
+            alias = varargin{2};
+            validateCellStr(alias, 'cVessel.assignPerformanceData', ...
+                'alias', 4);
+            dataName = alias;
+        end
+        
         % Iterate objects and assign to properties
         for oi = 1:numel(obj)
             for pi = 1:numel(propName)
 
-                obj(oi).(propName{pi}) = dataStruct.(lower(propName{pi}));
+                obj(oi).(propName{pi}) = dataStruct.(lower(dataName{pi}));
             end
         end
         end
@@ -1363,6 +1395,14 @@ classdef cVessel < cMySQL
            end
            obj.IMO_Vessel_Number = IMO;
            
+           % Apply to Speed, Power
+           if ~isempty(IMO)
+               
+               sp = obj.SpeedPower;
+               [sp.IMO_Vessel_Number] = deal(IMO);
+               obj.SpeedPower = sp;
+           end
+           
 %            if ~isempty(obj.DryDockDates)
 %                
 %                [obj.DryDockDates(:).IMO_Vessel_Number] = deal(IMO);
@@ -1402,11 +1442,11 @@ classdef cVessel < cMySQL
             if ischar(dates)
                 date_v = datenum(char(dates), dateFormStr);
             elseif isnumeric(dates)
-                date_v = dates(:)';
+                date_v = dates;
             else
                 error(errid, errmsg);
             end
-            obj.DateTime_UTC = date_v;
+            obj.DateTime_UTC = date_v(:)';
         
        end
        
@@ -1501,6 +1541,14 @@ classdef cVessel < cMySQL
            end
        end
 
+       function obj = set.WindCoefficient(obj, wc)
+           
+           validateattributes(wc, {'cVesselWindCoefficient'}, {'scalar'});
+           
+           obj.WindCoefficient = wc;
+           obj.Wind_Model_ID = wc.ModelID;
+       end
+       
        function model = get.Engine_Model(obj)
        % Get method for dependent property Engine_Model
           
@@ -1541,18 +1589,19 @@ classdef cVessel < cMySQL
            
            % Input
            validateattributes(sp, {'cVesselSpeedPower'}, {'vector'});
-
+           
            % Assign IMO
            imo = obj.IMO_Vessel_Number;
            if ~isempty(imo)
-               [sp.IMO_Vessel_Number] = deal(imo);
+               newSp = sp.copy;
+               [newSp.IMO_Vessel_Number] = deal(imo);
            end
            
            % Copy connection details to object
-           sp = sp.copyConnection(obj);
+%            newSp = newSp.copyConnection(obj);
            
            % Assign object
-           obj.SpeedPower = sp;
+           obj.SpeedPower = newSp;
        end
     end
 end
