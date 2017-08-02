@@ -13,13 +13,13 @@ CREATE PROCEDURE createspeedPowerCoefficients()
 BEGIN
 
 	CREATE TABLE speedPowerCoefficients (id INT PRIMARY KEY AUTO_INCREMENT,
-											 ModelID INT NOT NULL,
+											 ModelID INT NOT NULL UNIQUE,
 											 Displacement DOUBLE(20, 3),
 											 Trim DOUBLE(10, 8),
 											 Coefficient_A DOUBLE(10, 5),
 											 Coefficient_B DOUBLE(10, 5),
 											 R_Squared DOUBLE(10, 9),
-											 constraint UniqueSpeedPowerCurves UNIQUE(ModelID, Displacement, Trim, Coefficient_A, Coefficient_B, R_Squared)
+											 constraint UniqueSpeedPowerCurves UNIQUE(Displacement, Trim, Coefficient_A, Coefficient_B)
 											 );
 											 
 END;
