@@ -28,8 +28,11 @@ BEGIN
 	SET c.Expected_Speed_Through_Water = d.Exponent_A*LOG(ABS(c.Delivered_Power)) + d.Exponent_B; */ 
     
     /* Check whether Admiralty formula should be used to correct for displacement */
-    UPDATE tempRawISO SET Displacement_Correction_Needed = FALSE;
-    UPDATE tempRawISO SET Displacement_Correction_Needed = TRUE WHERE NearestDisplacement > Displacement*1.05 OR NearestDisplacement < Displacement*0.95;
+    /* UPDATE tempRawISO SET Displacement_Correction_Needed = FALSE;
+    UPDATE tempRawISO SET Displacement_Correction_Needed = TRUE WHERE NearestDisplacement > Displacement*1.05 OR NearestDisplacement < Displacement*0.95;*/
+    
+    /* This is a quick hack to prevent errors where the a high, negative value in the POWER function causes an out-of-range error*/
+    DELETE FROM tempRawISO WHERE Corrected_Power < 0;
     
     /* Get coefficients of speed, power curve for nearest diplacement, trim */ 
     UPDATE IGNORE tempRawISO ii JOIN
@@ -41,7 +44,8 @@ BEGIN
                WHERE s.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)
                ) si
 	ON ii.id = si.id
-	SET Expected_Speed_Through_Water =  POWER(Corrected_Power / EXP(Coefficient_B), (1 / Coefficient_A)) * POWER(ii.Displacement / ii.NearestDisplacement, 2/9);   /* (Coefficient_A*POWER(Corrected_Power, 2) + Coefficient_B*Corrected_Power + Coefficient_C) * POWER( POWER(ii.Displacement, (2/3)) / POWER(ii.NearestDisplacement, (2/3)), (1/3)) /* Exponent_A*LOG(ABS(Corrected_Power)) + Exponent_B */ 
+	SET Expected_Speed_Through_Water =  POWER(Corrected_Power / EXP(Coefficient_B), (1 / Coefficient_A)), /* * POWER(ii.Displacement / ii.NearestDisplacement, 2/9), */
+		Displacement_Correction = POWER(ii.Displacement / ii.NearestDisplacement, 2/9);   /* (Coefficient_A*POWER(Corrected_Power, 2) + Coefficient_B*Corrected_Power + Coefficient_C) * POWER( POWER(ii.Displacement, (2/3)) / POWER(ii.NearestDisplacement, (2/3)), (1/3)) /* Exponent_A*LOG(ABS(Corrected_Power)) + Exponent_B */ 
     
     /* Get coefficients of speed, power curve for nearest diplacement, trim */ 
 /*    UPDATE IGNORE tempRawISO ii JOIN
