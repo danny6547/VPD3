@@ -1,0 +1,2 @@
+Questions regarding Marorka data:
+Timezone of Timstamp column?
