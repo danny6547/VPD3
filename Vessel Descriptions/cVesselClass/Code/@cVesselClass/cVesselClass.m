@@ -6,12 +6,13 @@ classdef cVesselClass < handle
         
         WeightTEU = [];
         LBP = [];
-        Engine = [];
+        Engine = cVesselEngine();
         Transverse_Projected_Area_Design = [];
         Block_Coefficient = [];
         Length_Overall = [];
         Breadth_Moulded = [];
         Draft_Design = [];
+        Anemometer_Height = [];
         
     end
     
