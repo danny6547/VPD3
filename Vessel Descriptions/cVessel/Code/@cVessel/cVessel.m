@@ -1025,7 +1025,7 @@ classdef cVessel < cMySQL
             end
         end
         
-        function obj = ISO19030(obj, varargin)
+        function [obj, tempISOTbl] = ISO19030(obj, varargin)
         % Process raw data for this vessel according to ISO19030 procedure 
         
         % Input
@@ -1054,16 +1054,43 @@ classdef cVessel < cMySQL
         for oi = 1:numel(obj)
             
             imo = obj(oi).IMO_Vessel_Number;
-            inputArg_c = arrayfun(@num2str, [imo, all_l, sp_l, sfoc_l],...
-                'Uni', 0);
-            proc_sql = 'ProcessISO19030';
-            obj(oi) = obj(oi).call(proc_sql, inputArg_c);
+            imo_ch = num2str(imo);
+%             inputArg_c = arrayfun(@num2str, [imo, all_l, sp_l, sfoc_l],...
+%                 'Uni', 0);
+%             proc_sql = 'ProcessISO19030';
+%             obj(oi) = obj(oi).call(proc_sql, inputArg_c);
+            
+%         try
+            tic;
+            % Call ISO
+            obj(oi) = obj(oi).call('ISO19030A', imo_ch);
+            obj(oi) = obj(oi).updateDisplacement;
+            obj(oi) = obj(oi).call('ISO19030B', imo_ch);
+            obj(oi) = obj(oi).updateWindResistanceRelative;
+            obj(oi) = obj(oi).call('ISO19030C', imo_ch);
+            
+            % Assign output
+            [obj(oi), tempISOTbl] = obj(oi).select('tempRawISO', '*');
+            
+            % Copy ISO data into new temp table
+            currTab = ['tempRawISO_', imo_ch];
+            obj(oi) = obj(oi).drop('TABLE', currTab, true);
+            obj(oi) = obj(oi).createLike(currTab, 'tempRawISO');
+            obj(oi) = obj(oi).insertSelect('tempRawISO', '*', currTab, '*');
+            
+%             % Insert into performance data
+%             input_ch = obj(oi).colSepList(arrayfun(@num2str, [all_l, sp_l, sfoc_l], 'Uni', 0));
+%             obj(oi) = obj(oi).call('insertIntoPerformanceData', input_ch);
             
             % Refresh performance data
-            cols = {'DateTime_UTC', 'Speed_Index'};
-            [~, tempTbl] = obj(oi).select('PerformanceData', ...
-                cols, ...
-                ['IMO_Vessel_Number = ', num2str(obj(oi).IMO_Vessel_Number)]);
+            cols = {'DateTime_UTC', 'Speed_Loss'};
+            [~, tempTbl] = obj(oi).select(currTab, cols);
+            props = {'DateTime_UTC', 'Speed_Index'};
+%             % Refresh performance data
+%             cols = {'DateTime_UTC', 'Speed_Index'};
+%             [~, tempTbl] = obj(oi).select('PerformanceData', ...
+%                 cols, ...
+%                 ['IMO_Vessel_Number = ', num2str(obj(oi).IMO_Vessel_Number)]);
 %             tempTbl = struct(tempTbl);
             if isempty(tempTbl)
                 obj(oi).DateTime_UTC = [];
@@ -1072,6 +1099,13 @@ classdef cVessel < cMySQL
             else
                 obj(oi) = assignPerformanceData(obj(oi), tempTbl, props, cols);
             end
+            toc;
+%         catch ee
+%             
+%             disp(ee.message);
+%             msg = ['Error during analysis of vessel ', imo_ch];
+%             disp(msg);
+%         end
 %             obj(oi).Speed_Index = tempTbl.speed_index;
 %             obj(oi).DateTime_UTC = tempTbl.datetime_utc;
         end
