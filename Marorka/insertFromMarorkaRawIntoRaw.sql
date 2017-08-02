@@ -1,8 +1,6 @@
 /* Insert data from tempMarorkaRaw into RawData for a given vessel, after some 
 modification. */
 
-USE hull_performance;
-
 DROP PROCEDURE IF EXISTS insertFromMarorkaRawIntoRaw;
 
 delimiter //
@@ -28,16 +26,20 @@ INSERT INTO rawdata (IMO_Vessel_Number,
 							 /* Air_Temperature, */
 							 /* Air_Pressure, */
 							 Mass_Consumed_Fuel_Oil,
-                             Shaft_Power
+                             Shaft_Power,
+                             Ship_Heading,
+                             Shaft_Torque,
+                             Rudder_Angle,
+                             Seawater_Temperature
                              /* Displacement */
                              )
-SELECT IMONo, 
+SELECT IMONo,
 							 `Sea depth [m]`, 
 							 DateTime_UTC,
 							 `Relative wind speed [m/s]`,
 							 `Relative wind direction [Â°]`,
-							 `GPS speed [knots]`,
-                             `Log speed [knots]`,
+							 `GPS speed [knots]` * 0.514444444,
+                             `Log speed [knots]` * 0.514444444,
 							 `Shaft rpm [rpm]`,
 							 `Draft fore [m]`,
 							 `Draft aft [m]`,
@@ -45,7 +47,11 @@ SELECT IMONo,
 							 /* Air_Temperature, */
 							 /* Air_Pressure, */
 							 `ME consumed [MT]`,
-                             `Shaft power [kW]`
+                             `Shaft power [kW]`,
+                             `COG heading [Â°]`,
+                             `Shaft Torque [kNm]`,
+                             `Rudder Angle [Â°]`,
+                             `Seawater temperature [Â°C]`
                              /* Draft_Displacement_Actual */
 							 FROM tempMarorkaRaw
 								ON DUPLICATE KEY UPDATE 
@@ -63,7 +69,11 @@ SELECT IMONo,
                                     /* Air_Temperature = VALUES(Air_Temperature), */
                                     /* Air_Pressure = VALUES(Air_Pressure), */
                                     Mass_Consumed_Fuel_Oil = VALUES(Mass_Consumed_Fuel_Oil),
-                                    Shaft_Power = VALUES(Shaft_Power)
+                                    Shaft_Power = VALUES(Shaft_Power),
+									 Ship_Heading = VALUES(Ship_Heading),
+									 Shaft_Torque = VALUES(Shaft_Torque),
+									 Rudder_Angle = VALUES(Rudder_Angle),
+									 Seawater_Temperature = VALUES(Seawater_Temperature)
                                     /* Displacement = VALUES(Displacement) */
 									;
 END;
