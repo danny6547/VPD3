@@ -15,12 +15,12 @@ BEGIN
     CALL updateDefaultValues();
     
     /* Normalise frequency rates 5.3.3.1 */
-    CALL normaliseHigherFreq();
-    CALL normaliseLowerFreq();
+    /*CALL normaliseHigherFreq();
+    CALL normaliseLowerFreq();*/
     
     /* Get validated data set 5.3.4 */
-    CALL updateChauvenetCriteria();
-    CALL updateValidated();
+    /*CALL updateChauvenetCriteria();
+    CALL updateValidated();*/
     
     CALL updateDisplacement(imo);
     CALL updateTrim();
@@ -45,5 +45,5 @@ BEGIN
     /* Calculate filter */
     CALL filterSFOCOutOfRange(imo);
     CALL filterPowerBelowMinimum(imo);
-    
+    CALL filterReferenceConditions(imo);
 END;
