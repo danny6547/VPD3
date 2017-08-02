@@ -1,4 +1,4 @@
-function [ out, ddd, intd] = performanceData(obj, imo, varargin)
+function [ out, ddd, intd, indb] = performanceData(obj, imo, varargin)
 %performanceData Read ship performance data from database, over time range
 %   [out] = performanceData(imo) will read all data for the ship
 %   identified by numeric vector IMO from the database into output 
@@ -19,6 +19,7 @@ out = struct('DateTime_UTC', [],...
     'IMO_Vessel_Number', []);
 ddd = cVesselDryDockDates();
 intd = cell(0, 2);
+indb = false(size(imo));
 
 % Inputs
 validateattributes(imo, {'numeric'}, {'vector', 'integer', 'positive'},...
@@ -75,6 +76,9 @@ for vi = 1:numel(imo)
             
             [obj(1), tbl] = obj(1).call('performanceData', ...
                 [{imo_ch, currIter_ch}, additionalInputs_c]);
+            if ~isempty(tbl)
+                indb(vi) = true;
+            end
         end
         
     else
@@ -89,11 +93,23 @@ for vi = 1:numel(imo)
         
         [obj(1), tbl] = obj(1).call('performanceData', [{imo_ch, ddi_ch},...
             additionalInputs_c]);
-        tbl.Properties.VariableNames = {'DateTime_UTC', 'Performance_Index',...
+        if ~isempty(tbl)
+            
+            tbl.Properties.VariableNames = {'DateTime_UTC', 'Performance_Index',...
                                     'Speed_Index'};
+            currOut = table2struct(tbl, 'ToScalar', 1);
+            indb(vi) = true;
+        else
+            
+            currOut = struct('DateTime_UTC', [],...
+                'Performance_Index', [],...
+                'Speed_Index', [],...
+                'DryDockInterval', [],...
+                'IMO_Vessel_Number', []);
+            indb(vi) = false;
+        end
         
         % Append to output
-        currOut = table2struct(tbl, 'ToScalar', 1);
         currOut.DryDockInterval = 1;
         currOut.IMO_Vessel_Number = currImo;
         out(vi) = currOut;
