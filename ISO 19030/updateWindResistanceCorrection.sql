@@ -33,5 +33,5 @@ BEGIN
 			) / 1E3
 			;*/
             
-            (((e.Wind_Resistance_Relative - e.Air_Resistance_No_Wind) * e.Speed_Over_Ground / r.Propulsive_Efficiency) + (e.Delivered_Power * 1E3) * (1 - (0.7 / r.Propulsive_Efficiency))) /1e3;
+            (((e.Wind_Resistance_Relative - e.Air_Resistance_No_Wind) * e.Speed_Over_Ground / IFNULL(r.Propulsive_Efficiency, 0.7)) + (e.Delivered_Power * 1E3) * (1 - (0.7 / IFNULL(r.Propulsive_Efficiency, 0.7)))) /1e3;
 END;
