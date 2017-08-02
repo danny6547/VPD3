@@ -1,7 +1,5 @@
 /* Update Air Resistance in no-wind condition */
 
-USE hull_performance;
-
 DROP PROCEDURE IF EXISTS createTempMarorkaRaw;
 
 delimiter //
@@ -16,7 +14,7 @@ BEGIN
 		`ShipName` 	TEXT,
 		`IMONo` 	INT(7),
          DateTime_UTC 	DATETIME,
-		`Timestamp` 	DATETIME,
+		`Timestamp` 	TEXT,
 		`Latitude` 	DOUBLE(20, 5),
 		`Longitude` 	DOUBLE(20, 5),
 		`State` 	TEXT,
@@ -121,6 +119,12 @@ BEGIN
 		`OO Conversion Trim [m]`  	DOUBLE(20, 5),
         `WHR - HP EVA water-steam pressure []`        	DOUBLE(20, 5),     
 		`WHR - LP ST steam dump valve available power []`  	DOUBLE(20, 5),                          
-		`WHR - ST water-steam outlet temperature []`  	DOUBLE(20, 5)
+		`WHR - ST water-steam outlet temperature []`  	DOUBLE(20, 5),
+        `Voyage plan deviation [nm]`  	DOUBLE(20, 5),
+		`ME FO supply temperature [Â°C ]`                  	DOUBLE(20, 5),
+		`ME Fuel Temperature [Â°C]`                        	DOUBLE(20, 5),
+        `ME Fuel Temperature [Ã‚Â°C]'`                      DOUBLE(20, 5),
+		`Rudder Angle [Â°]`                                	DOUBLE(20, 5),
+		`Seawater temperature [Â°C]`                       	DOUBLE(20, 5)
 										);
 END;
