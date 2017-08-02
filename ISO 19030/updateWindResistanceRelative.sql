@@ -57,4 +57,11 @@ BEGIN
 				POWER(Relative_Wind_Speed_Reference, 2) *
 				Transverse_Projected_Area_Current * 
 				w.Coefficient;
+     /*           
+	UPDATE tempRawISO SET Wind_Resistance_Relative = 
+				0.5 *
+				Air_Density *
+				POWER(Relative_Wind_Speed_Reference, 2) *
+				Transverse_Projected_Area_Current * 
+				w.Coefficient;*/
 END;
