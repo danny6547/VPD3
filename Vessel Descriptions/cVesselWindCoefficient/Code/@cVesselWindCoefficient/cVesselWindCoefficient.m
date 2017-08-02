@@ -132,6 +132,26 @@ classdef cVesselWindCoefficient < cMySQL
        [obj(emptyModels_l).ModelID] = deal( newModelID_c{:} );
        
        end
+       
+       function empty = isempty(obj)
+       % isempty True for empty object data.
+       
+           empty = true(size(obj));
+           for oi = 1:numel(obj)
+               if ~isempty(obj(oi).Direction)
+                   empty(oi) = false;
+               end
+               if ~isempty(obj(oi).Coefficient)
+                   empty(oi) = false;
+               end
+               if ~isempty(obj(oi).Wind_Reference_Height_Design)
+                   empty(oi) = false;
+               end
+               if ~isempty(obj(oi).Name)
+                   empty(oi) = false;
+               end
+           end
+       end
     end
 
     methods(Static)
@@ -202,6 +222,10 @@ classdef cVesselWindCoefficient < cMySQL
         
         function obj = set.Name(obj, name)
         % Set method for property 'Name'
+        
+        if iscellstr(name) && numel(unique(name)) == 1
+            name = name{1};
+        end
         
         % Input
         validateattributes(name, {'char'}, {});
