@@ -18,14 +18,14 @@ end
 delimiter = ';';
 if nargin > 4
     
-    delimiter = varargin{3};
+    delimiter = varargin{2};
     validateattributes(delimiter, {'char'}, {'vector'}, 'plotForceTechXLS',...
         'delimiter', 5);
 end
 
 if nargin > 3
     
-    FileTable = varargin{2};
+    FileTable = varargin{3};
 else
     
     % Processing
@@ -211,20 +211,29 @@ if iscell(FileTable.ReportEndUtcTime)
         FileTable.ReportEndUtcTime = cellfun(@(x) [x{:}], FileTable.ReportEndUtcTime, 'Uni', 0);
     end
     
-    rawDate = cellfun(@(x) datenum(x, 'yyyy-mm-dd HH:MM'), ...
+    rawDate = cellfun(@(x) datenum(x, 'dd-mm-yyyy HH:MM'), ...
         FileTable.ReportEndUtcTime, 'Uni', 1, 'Err', @(x, y) nan(1));
 else
     rawDate = datenum(FileTable.ReportEndUtcTime, 'yyyy-mm-dd HH:MM'); %'dd-mm-yyyy HH:MM' ); %  );
 end
 
+changeNumericalFormat = true;
+
 rawSI = FileTable.SpeedIndexCombined;
 if iscell(rawSI)
     rawSI(cellfun(@(x) isequal(x, '-'), rawSI)) = {nan};
     rawSI(cellfun(@isempty, rawSI)) = {nan};
-    rawSI(~cellfun(@isscalar, rawSI)) = {nan};
-    if any(cellfun(@(x) isequal(class(x), 'char'), rawSI))
+    char_l = cellfun(@(x) isequal(class(x), 'char'), rawSI);
+    if any(char_l)
+        
+        if changeNumericalFormat
+            
+            rawSI(char_l) = strrep(rawSI(char_l), ',', '.');
+        end
+        
         rawSI = cellfun(@str2double, rawSI);
     else
+        rawSI(~cellfun(@isscalar, rawSI)) = {nan};
         rawSI = [rawSI{:}];
     end
 end
@@ -241,10 +250,19 @@ else
 end
 
 if iscell(FileTable.MinimumWaterDepth)
-    depth_c = FileTable.MinimumWaterDepth;
-    depth_c(cellfun(@isempty, depth_c)) = {nan};
-    depth_c(~cellfun(@isscalar, depth_c)) = {nan};
-    depth_v = [depth_c{:}];
+    
+    if iscellstr(FileTable.MinimumWaterDepth)
+        
+        depth_v = cellfun(@str2double, ...
+            FileTable.MinimumWaterDepth, 'Uni', 1, 'Err', @(x, y) nan(1));
+
+    else
+        depth_c = FileTable.MinimumWaterDepth;
+        depth_c(cellfun(@isempty, depth_c)) = {nan};
+        depth_c(~cellfun(@isscalar, depth_c)) = {nan};
+        depth_v = [depth_c{:}];
+    end
+    
 else
     depth_v = FileTable.MinimumWaterDepth;
 end
@@ -254,15 +272,25 @@ depth_v = depth_v(datefilt_l);
 dateDate = rawDate(datefilt_l);
 dateSI = rawSI(datefilt_l);
 
-waves_l = waves_v < 5;
-depth_l = depth_v > 54;
+waves_l = waves_v(:) <= 4;
+depth_l = depth_v(:) >= 85;
 filt_l = waves_l & depth_l;
 
-filtDate = dateDate(filt_l);
-filtSI = dateSI(filt_l);
-unFiltDate = dateDate(~filt_l);
-unFiltSI = dateSI(~filt_l);
+filterData_l = true;
+if filterData_l
 
+    filtDate = dateDate(filt_l);
+    filtSI = dateSI(filt_l);
+    unFiltDate = dateDate(~filt_l);
+    unFiltSI = dateSI(~filt_l);
+    
+else
+    
+    filtDate = dateDate;
+    filtSI = dateSI;
+    unFiltDate = dateDate;
+    unFiltSI = dateSI;
+end
 si = filtSI;
 dates = filtDate;
 
