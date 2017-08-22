@@ -41,32 +41,32 @@ proc_label:BEGIN
     SET dateMissing = (SELECT COUNT(intervalEndDate) FROM DryDockDates WHERE IMO_Vessel_Number = imo) = 0;
     IF ddi = 0 AND dateMissing THEN
 		
-		SET intervalEndDate := (SELECT MAX(DateTime_UTC) FROM DNVGLPerformanceData WHERE IMO_Vessel_Number = imo);
+		SET intervalEndDate := (SELECT MAX(DateTime_UTC) FROM PerformanceData WHERE IMO_Vessel_Number = imo);
     END IF;
     
     IF ddi = 0 THEN
 		
 		/* When first dry-dock interval requested, lookn for data after the earliest possible date */
 		SET intervalStartDate = '1000-01-01 00:00:00';
-		SET intervalStart := (SELECT MIN(DateTime_UTC) FROM DNVGLPerformanceData WHERE IMO_Vessel_Number = imo);
+		SET intervalStart := (SELECT MIN(DateTime_UTC) FROM PerformanceData WHERE IMO_Vessel_Number = imo);
         
     ELSEIF ddi >= numDD THEN
 		
         /* When last dry-dock interval requested, look for data until the latest possible date */
 		SET intervalEndDate = '9999-12-31 23:59:59';
-		SET intervalEnd := (SELECT MAX(DateTime_UTC) FROM DNVGLPerformanceData WHERE IMO_Vessel_Number = imo);
+		SET intervalEnd := (SELECT MAX(DateTime_UTC) FROM PerformanceData WHERE IMO_Vessel_Number = imo);
         
 	ELSEIF ddi IS NULL THEN
         
         /* When no dry-dock interval requested, look for data for all times */
 		SET intervalStartDate = '1000-01-01 00:00:00';
 		SET intervalEndDate = '9999-12-31 23:59:59';
-		SET intervalStart := (SELECT MIN(DateTime_UTC) FROM DNVGLPerformanceData WHERE IMO_Vessel_Number = imo);
-		SET intervalEnd := (SELECT MAX(DateTime_UTC) FROM DNVGLPerformanceData WHERE IMO_Vessel_Number = imo);
+		SET intervalStart := (SELECT MIN(DateTime_UTC) FROM PerformanceData WHERE IMO_Vessel_Number = imo);
+		SET intervalEnd := (SELECT MAX(DateTime_UTC) FROM PerformanceData WHERE IMO_Vessel_Number = imo);
     END IF;
     
     /* If no data found between two dry-dockings, return non-empty null table */
-    SET numData = (SELECT COUNT(*) FROM DNVGLPerformanceData WHERE IMO_Vessel_Number = imo
+    SET numData = (SELECT COUNT(*) FROM PerformanceData WHERE IMO_Vessel_Number = imo
 																					AND DateTime_UTC > intervalStartDate
 																					AND DateTime_UTC < intervalEndDate);
     IF numData = 0 AND intervalEndDate != maxDate THEN
@@ -76,7 +76,7 @@ proc_label:BEGIN
     END IF;
     
     /* Select output table */
-    SELECT DateTime_UTC, Performance_Index, Speed_Index FROM DNVGLPerformanceData WHERE IMO_Vessel_Number = imo
+    SELECT DateTime_UTC, Performance_Index, Speed_Index FROM PerformanceData WHERE IMO_Vessel_Number = imo
 																					AND DateTime_UTC > intervalStartDate
 																					AND DateTime_UTC < intervalEndDate;
                                                                                     
