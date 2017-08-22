@@ -6,7 +6,7 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable
         
 %         ModelID double = []; % ModelID of SpeedPower table %
         
-        IMO_Vessel_Number double;
+%         IMO_Vessel_Number double;
         Speed double;
         Power double;
         Trim double;
@@ -19,12 +19,19 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable
     
     properties(Dependent, Hidden)
         
-       SpeedPowerDraftTrim double = [];
+        SpeedPowerDraftTrim double = [];
     end
     
     properties(Hidden)
        
-       Model = 'exponential';
+        Model = 'exponential';
+    end
+    
+    properties(Hidden, Constant)
+       
+        DBTable = {'speedpowercoefficients', 'speedpower'};
+        FieldName = 'ModelID';
+        Type = 'Speed, Power';
     end
     
     methods
@@ -116,55 +123,55 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable
        % Check that at least one OBJ has data, which can then be fitted,
        % so that the matrix of coefficients can be initialised before loop
        
-       % Filter obj without IMO numbers
-       withIMO_l = ~cellfun(@isempty, {obj.IMO_Vessel_Number});
-       obj2insert = obj(withIMO_l);
-       if isempty(obj2insert)
-           
-           errid = 'cVSP:NoIMO';
-           errmsg = ['OBJ must have an associated IMO_Vessel_Number before '...
-               'inserting into the database.'];
-           error(errid, errmsg);
-       end
-       
-       % Filter obj already in DB
-       [obj2insert, indb] = isInDB(obj2insert);
-       obj2insert = obj2insert(~indb);
-       if isempty(obj2insert)
-           
-           warnid = 'cVSP:AlreadyInDB';
-           warnmsg = 'All speed, power data already in database.';
-           warning(warnid, warnmsg);
-           return
-       end
+%        % Filter obj without IMO numbers
+%        withIMO_l = ~cellfun(@isempty, {obj.IMO_Vessel_Number});
+%        obj2insert = obj(withIMO_l);
+%        if isempty(obj2insert)
+%            
+%            errid = 'cVSP:NoIMO';
+%            errmsg = ['OBJ must have an associated IMO_Vessel_Number before '...
+%                'inserting into the database.'];
+%            error(errid, errmsg);
+%        end
+%        
+%        % Filter obj already in DB
+%        [obj, indb] = isInDB(obj);
+%        obj = obj(~indb);
+%        if isempty(obj)
+%            
+%            warnid = 'cVSP:AlreadyInDB';
+%            warnmsg = 'All speed, power data already in database.';
+%            warning(warnid, warnmsg);
+%            return
+%        end
        
        % Fit
-       if isempty(obj2insert(1).Coefficients)
+       if isempty(obj(1).Coefficients)
            
-           obj2insert(1) = obj2insert(1).fit;
+           obj(1) = obj(1).fit;
        end
        
        % Generate struct containing coefficients in same structure as table
-       numCoeffs = numel(obj2insert(1).Coefficients);
+       numCoeffs = numel(obj(1).Coefficients);
        firstLetters_c = cellstr(char(97:97+numCoeffs-1)');
        coeffNames_c = strcat('Coefficient_', firstLetters_c);
        coeff_c = nan(1, numCoeffs);
-       for oi = 1:numel(obj2insert)
+       for oi = 1:numel(obj)
            
            % Fit
-           if isempty(obj2insert(oi).Coefficients)
+           if isempty(obj(oi).Coefficients)
                
-               obj2insert(oi) = obj2insert(oi).fit;
+               obj(oi) = obj(oi).fit;
            end
            
            % Create matrix of coefficients
            for ci = 1:numCoeffs
                
-               coeff_c(oi, ci) = obj2insert(oi).Coefficients(ci);
+               coeff_c(oi, ci) = obj(oi).Coefficients(ci);
            end
        end
        
-       coeff_c = mat2cell(coeff_c, numel(obj2insert), ones(1, numCoeffs));
+       coeff_c = mat2cell(coeff_c, numel(obj), ones(1, numCoeffs));
        nCols = numCoeffs*2;
        coeffInput_c = cell(1, nCols);
        coeffInput_c(1:2:nCols-1) = coeffNames_c;
@@ -175,12 +182,27 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable
        obj.releaseModelID;
        
        % Insert
-       insertIntoTable@cMySQL(obj2insert, 'SpeedPower');
-       insertIntoTable@cMySQL(obj2insert, 'SpeedPowerCoefficients', [], ...
+       insertIntoTable@cMySQL(obj, 'SpeedPower');
+       insertIntoTable@cMySQL(obj, 'SpeedPowerCoefficients', [], ...
            coeffInput_c{:});
-       insertIntoTable@cMySQL(obj2insert, ...
-           'vesselspeedpowermodel', [], ...
-           'Speed_Power_Model', [obj2insert.ModelID]);
+%        insertIntoTable@cMySQL(obj, ...
+%            'vesselspeedpowermodel', [], ...
+%            'Speed_Power_Model', [obj.ModelID]);
+       obj.insertIntoModels();
+       end
+       
+       function obj = readFromTable(obj, varargin)
+       % readFromTable 
+       
+           % Inputs
+           
+           % Read from speed, power
+           obj = readFromTable@cMySQL(obj, 'speedpower', 'ModelID',...
+               {'Speed', 'Power'}, varargin{:});
+           
+           % Read from coefficients
+           obj = readFromTable@cMySQL(obj, 'speedpowercoefficients', 'ModelID',...
+               {'Displacement', 'Trim'}, varargin{:});
        end
        
        function [obj, h] = plot(obj)
@@ -351,11 +373,20 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable
         % 
         
         if ~isempty(speed)
-            validateattributes(speed, {'numeric'}, {'real', 'vector',...
-                'nonnan'});
+            validateattributes(speed, {'numeric'}, {'real', 'vector'});
+        end
+        
+        speed(isnan(speed)) = [];
+        if isempty(speed)
+           
+            errid = 'cVSP:PropertyValueInvalid';
+            errmsg = 'Property Speed must have some non-nan values';
+            error(errid, errmsg);
         end
         
         power = obj.Power;
+        speed = speed(:)';
+        power = power(:)';
         if ~isempty(power) && (~isempty(speed) && ~isempty(power))...
                 && ~isequal(size(power), size(speed))
             
@@ -375,11 +406,20 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable
         % 
         
         if ~isempty(power)
-            validateattributes(power, {'numeric'}, {'real', 'vector',...
-                'nonnan'});
+            validateattributes(power, {'numeric'}, {'real', 'vector'});
+        end
+        
+        power(isnan(power)) = [];
+        if isempty(power)
+           
+            errid = 'cVSP:PropertyValueInvalid';
+            errmsg = 'Property Power must have some non-nan values';
+            error(errid, errmsg);
         end
         
         speed = obj.Speed;
+        speed = speed(:)';
+        power = power(:)';
         if ~isempty(power) && (~isempty(speed) && ~isempty(power))...
                 && ~isequal(size(power), size(speed))
             

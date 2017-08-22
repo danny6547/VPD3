@@ -1,4 +1,4 @@
-classdef cVesselWindCoefficient < cMySQL
+classdef cVesselWindCoefficient < cMySQL & cModelID
     %CVESSELWINDCOEFFICIENT Wind resistance coefficents for ships.
     %   Detailed explanation goes here
     
@@ -7,20 +7,27 @@ classdef cVesselWindCoefficient < cMySQL
         Direction double = [];
         Coefficient double = [];
         Wind_Reference_Height_Design = [];
-        ModelID = [];
-        Name char = '';
+%         ModelID = [];
+%         Name char = '';
     end
     
     properties(Hidden)
         
-        DBTable = '';
+%         DBTable = '';
+    end
+    
+    properties(Hidden, Constant)
+        
+        DBTable = {'windcoefficientdirection'};
+        FieldName = 'ModelID';
+        Type = 'Wind';
     end
     
     methods
     
-       function obj = cVesselWindCoefficient()
+       function obj = cVesselWindCoefficient(varargin)
            
-           
+           obj = obj@cModelID(varargin{:});
        end
        
        function prop = properties(obj)
@@ -175,33 +182,33 @@ classdef cVesselWindCoefficient < cMySQL
     
     methods
         
-        function obj = set.ModelID(obj, modelID)
-        % set.ModelID Update values with those from DB
-        
-        % Check integer scalar
-        validateattributes(modelID, {'numeric'}, ...
-            {'scalar', 'integer', 'real'}, ...
-            'cVesselWindCoefficient.set.ModelID', 'modelID', 1);
-        
-        % If ModelID already in DB, read data out
-        tab = 'windcoefficientdirection';
-        cols = {'Direction', 'Coefficient', 'Name'};
-        [~, temp] = obj.execute(['SELECT MAX(ModelID) AS `A` FROM ' tab]);
-        highestExistingModel = temp{1};
-        
-        % Assign
-        obj.ModelID = modelID;
-        
-        if modelID <= highestExistingModel
-            
-            obj = obj.readFromTable(tab, 'ModelID', cols);
-        else
-            
-            obj.Direction = [];
-            obj.Coefficient = [];
-            obj.Name = [];
-        end
-        end
+%         function obj = set.ModelID(obj, modelID)
+%         % set.ModelID Update values with those from DB
+%         
+%         % Check integer scalar
+%         validateattributes(modelID, {'numeric'}, ...
+%             {'scalar', 'integer', 'real'}, ...
+%             'cVesselWindCoefficient.set.ModelID', 'modelID', 1);
+%         
+%         % If ModelID already in DB, read data out
+%         tab = 'windcoefficientdirection';
+%         cols = {'Direction', 'Coefficient', 'Name'};
+%         [~, temp] = obj.execute(['SELECT MAX(ModelID) AS `A` FROM ' tab]);
+%         highestExistingModel = temp{1};
+%         
+%         % Assign
+%         obj.ModelID = modelID;
+%         
+%         if modelID <= highestExistingModel
+%             
+%             obj = obj.readFromTable(tab, 'ModelID', cols);
+%         else
+%             
+%             obj.Direction = [];
+%             obj.Coefficient = [];
+%             obj.Name = [];
+%         end
+%         end
         
         function obj = set.Direction(obj, dir)
             
@@ -220,23 +227,23 @@ classdef cVesselWindCoefficient < cMySQL
             obj.Coefficient = coeff(:)';
         end
         
-        function obj = set.Name(obj, name)
-        % Set method for property 'Name'
-        
-        if iscellstr(name) && numel(unique(name)) == 1
-            name = name{1};
-        end
-        
-        % Input
-        validateattributes(name, {'char'}, {});
-        
-        % If string is white space, let's make it empty
-        if ~any(name)
-            name = '';
-        end
-        
-        obj.Name = name;
-            
-        end
+%         function obj = set.Name(obj, name)
+%         % Set method for property 'Name'
+%         
+%         if iscellstr(name) && numel(unique(name)) == 1
+%             name = name{1};
+%         end
+%         
+%         % Input
+%         validateattributes(name, {'char'}, {});
+%         
+%         % If string is white space, let's make it empty
+%         if ~any(name)
+%             name = '';
+%         end
+%         
+%         obj.Name = name;
+%             
+%         end
     end
 end
