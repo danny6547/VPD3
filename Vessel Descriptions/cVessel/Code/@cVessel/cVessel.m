@@ -21,6 +21,7 @@ classdef cVessel < cMySQL
         SpeedPower cVesselSpeedPower = cVesselSpeedPower();
         DryDockDates = cVesselDryDockDates();
         WindCoefficient = cVesselWindCoefficient();
+        Displacement = cVesselDisplacement();
         
         Variable = 'Speed_Index';
         Performance_Index
@@ -51,10 +52,10 @@ classdef cVessel < cMySQL
     
     properties(Dependent)
         
-        Speed;
-        Power;
-        Displacement
-        Trim;
+%         Speed;
+%         Power;
+%         Displacement
+%         Trim;
         Propulsive_Efficiency;
         Engine_Model;
         Wind_Reference_Height_Design;
@@ -278,9 +279,12 @@ classdef cVessel < cMySQL
                 emptyDDInt_l = all(empty_l');
                 obj(emptyDDInt_l, :) = [];
             end
-           
             % Read SpeedPower
        end
+       
+       % Create SpeedPower
+%        obj.SpeedPower = cVesselSpeedPower();
+       
        end
        
        function obj = assignClass(obj, vesselclass)
@@ -313,11 +317,19 @@ classdef cVessel < cMySQL
            obj = obj.insertIntoVessels();
            
            % SpeedPower
-           sp = [obj.SpeedPower];
-           sp.insertIntoTable;
+           obj = obj.insertIntoSpeedPower();
+%            sp = [obj.SpeedPower];
+%            sp.insertIntoTable;
+%            nsp = arrayfun(@(x) numel(x.SpeedPower), obj);
+%            imo_c = arrayfun(@(x, y) repmat(x.IMO_Vessel_Number, 1, y), ...
+%                obj, nsp, 'Uni', 0);
+%            imo_v = [imo_c{:}];
+%            obj.insertIntoTable(...
+%                'vesselspeedpowermodel', sp, ...
+%                'IMO_Vessel_Number', imo_v,...
+%                'Speed_Power_Model', [sp.ModelID]);
 %            obj.SpeedPower.insertIntoTable();
 %            obj = insertIntoSpeedPower(obj);
-           
            % SpeedPower Coefficients
 %            obj = insertIntoSpeedPowerCoefficients(obj);
            
@@ -332,6 +344,9 @@ classdef cVessel < cMySQL
            
            % Bunker delivery notes
            obj = insertBunkerDeliveryNote(obj);
+           
+           % Displacement
+           obj.Displacement.insertIntoTable('Displacement');
            
        end
        
@@ -431,61 +446,24 @@ classdef cVessel < cMySQL
        function obj = insertIntoSpeedPower(obj) %, speed, power, displacement, trim)
        % insertIntoSpeedPower Insert speed, power, draft, trim data.
        
-%        % Repeat scalar inputs to match uniform size (call SPCoeffs)
-%        imo = repmat(obj.IMO_Vessel_Number, size(speed, 1));
-%        
-%        data_c = arrayfun(@(x) [repmat(x, size(speed, 1), 1), ...
-%            speed, displacement, trim, power]', [obj.IMO_Vessel_Number],...
-%            'Uni', 0);
-%        data = [data_c{:}]';
-%        
-%        % Insert
-% %        data = [imo, speed, displacement, trim, power];
-% %        toTable = 'speedPower';
-% %        key = 'id';
-% %        uniqueColumns = {'IMO_Vessel_Number', 'Speed', 'Displacement', 'Trim', };
-% %        otherColumns = {'Power'};
-% %        format_s = '%u, %f, %f, %f, %f';
-%        
-%        table = 'speedPower';
-%        columns_c = {'IMO_Vessel_Number', 'Speed', 'Displacement', 'Trim',...
-%            'Power'};
-%        obj = obj.insertValuesDuplicate(table, columns_c, data);
+       % Insert into speedPower, speedPowerCoefficients, Models
+       sp = [obj.SpeedPower];
+       sp.insertIntoTable;
        
-%        [speed, power, displacement, trim] = repeatInputs(speed, power, ...
-%            displacement, trim);
-%        obj.Speed = speed;
-%        obj.Power = power;
-%        obj.Displacement = displacement;
-%        obj.Trim = trim;
-%        obj = obj.insertIntoTable('speedPower');
-%        insertWithoutDuplicates(data, toTable, key, uniqueColumns, ...
-%            otherColumns, format_s);
-        
-%         % Pre-allocate
-%         numObj = numel(obj);
-%         imo_c = cell(1, numObj);
-%         speed_c = cell(1, numObj);
-%         power_c = cell(1, numObj);
-%         trim_c = cell(1, numObj);
-%         displacement_c = cell(1, numObj);
-%         
-%         % Generate matrix of all speed, power curves for all vessels
-%         for oi = 1:numObj
-%             
-%             speed_c{oi} = obj(oi).Speed;
-%             power_c{oi} = obj(oi).Power;
-%             trim_c{oi} = obj(oi).Trim;
-%             displacement_c{oi} = obj(oi).Displacement;
-%             imo_c{oi} = obj.repeatInputs(obj.IMO_Vessel_Number, ...
-%                 obj(oi).Speed);
-%         end
-%         
-%         tableMat = cell2mat([imo_c, displacement_c, trim_c, speed_c, ...
-%             power_c]);
-        tableName = 'SpeedPower';
-        obj.insertIntoTable(tableName);
+       % Insert into vesselspeedpowermodel
+       nsp = arrayfun(@(x) numel(x.SpeedPower), obj);
+       imo_c = arrayfun(@(x, y) repmat(x.IMO_Vessel_Number, 1, y), ...
+           obj, nsp, 'Uni', 0);
+       imo_v = [imo_c{:}];
+       obj.insertIntoTable(...
+           'vesselspeedpowermodel', sp, ...
+           'IMO_Vessel_Number', imo_v,...
+           'Speed_Power_Model', [sp.ModelID]);
        
+%        
+%         tableName = 'SpeedPower';
+%         obj.insertIntoTable(tableName);
+%        
        end
        
        function obj = insertBunkerDeliveryNote(obj)
@@ -1021,93 +999,125 @@ classdef cVessel < cMySQL
             if numel(windCoeffs_v) > 0
                 
                 tabName = 'WindCoefficientDirection';
-                obj.insertIntoTable(tabName, windCoeffs_v);
+%                 obj.insertIntoTable(tabName, windCoeffs_v);
+                windCoeffs_v.insertIntoTable(tabName);
             end
         end
         
-        function [obj, tempISOTbl] = ISO19030(obj, varargin)
+        function [obj, exc_st] = ISO19030(obj, varargin)
         % Process raw data for this vessel according to ISO19030 procedure 
         
-        % Input
-        all_l = true;
-        if nargin > 1
-            all_l = varargin{1};
-            validateattributes(all_l, {'logical'}, {'scalar'}, ...
-                'cVessel.ISO19030', 'all', 1);
-        end
-        
-        sp_l = true;
-        if nargin > 2
-            sp_l = varargin{2};
-            validateattributes(sp_l, {'logical'}, {'scalar'}, ...
-                'cVessel.ISO19030', 'speedPower', 2);
-        end
-        
-        sfoc_l = true;
-        if nargin > 3
-            sfoc_l = varargin{3};
-            validateattributes(sfoc_l, {'logical'}, {'scalar'}, ...
-                'cVessel.ISO19030', 'SFOC', 3);
-        end
+        % Initalise outputs
+        exc_st = struct('IMO_Vessel_Number', [], 'message', [],...
+                        'identifier', [], 'stack', []);
         
         % Call SQL procedure, with filter inputs
         for oi = 1:numel(obj)
             
             imo = obj(oi).IMO_Vessel_Number;
             imo_ch = num2str(imo);
-%             inputArg_c = arrayfun(@num2str, [imo, all_l, sp_l, sfoc_l],...
-%                 'Uni', 0);
-%             proc_sql = 'ProcessISO19030';
-%             obj(oi) = obj(oi).call(proc_sql, inputArg_c);
             
-%         try
-            tic;
-            % Call ISO
-            obj(oi) = obj(oi).call('ISO19030A', imo_ch);
-            obj(oi) = obj(oi).updateDisplacement;
-            obj(oi) = obj(oi).call('ISO19030B', imo_ch);
-            obj(oi) = obj(oi).updateWindResistanceRelative;
-            obj(oi) = obj(oi).call('ISO19030C', imo_ch);
-            
-            % Assign output
-            [obj(oi), tempISOTbl] = obj(oi).select('tempRawISO', '*');
-            
-            % Copy ISO data into new temp table
-            currTab = ['tempRawISO_', imo_ch];
-            obj(oi) = obj(oi).drop('TABLE', currTab, true);
-            obj(oi) = obj(oi).createLike(currTab, 'tempRawISO');
-            obj(oi) = obj(oi).insertSelect('tempRawISO', '*', currTab, '*');
-            
-%             % Insert into performance data
-%             input_ch = obj(oi).colSepList(arrayfun(@num2str, [all_l, sp_l, sfoc_l], 'Uni', 0));
-%             obj(oi) = obj(oi).call('insertIntoPerformanceData', input_ch);
-            
-            % Refresh performance data
-            cols = {'DateTime_UTC', 'Speed_Loss'};
-            [~, tempTbl] = obj(oi).select(currTab, cols);
-            props = {'DateTime_UTC', 'Speed_Index'};
-%             % Refresh performance data
-%             cols = {'DateTime_UTC', 'Speed_Index'};
-%             [~, tempTbl] = obj(oi).select('PerformanceData', ...
-%                 cols, ...
-%                 ['IMO_Vessel_Number = ', num2str(obj(oi).IMO_Vessel_Number)]);
-%             tempTbl = struct(tempTbl);
-            if isempty(tempTbl)
-                obj(oi).DateTime_UTC = [];
-                obj(oi).Performance_Index = [];
-                obj(oi).Speed_Index = [];
-            else
-                obj(oi) = assignPerformanceData(obj(oi), tempTbl, props, cols);
+            try
+                
+                tic;
+                % Call ISO
+                obj(oi) = obj(oi).call('ISO19030A', imo_ch);
+                obj(oi) = obj(oi).updateDisplacement;
+                obj(oi) = obj(oi).call('ISO19030B', imo_ch);
+                obj(oi) = obj(oi).updateWindResistanceRelative;
+                obj(oi) = obj(oi).call('ISO19030C', imo_ch);
+
+                % Copy ISO data into new temp table
+                currTab = ['tempRawISO_', imo_ch];
+                obj(oi) = obj(oi).drop('TABLE', currTab, true);
+                obj(oi) = obj(oi).createLike(currTab, 'tempRawISO');
+                obj(oi) = obj(oi).insertSelect('tempRawISO', '*', currTab, '*');
+
+                % Update filters
+                if nargin > 1
+
+                    obj(oi) = obj(oi).updateFilters(varargin{:});
+                end
+
+                % Refresh performance data
+                [obj, tempISOTbl] = obj.applyFilters(varargin{:});
+                cols = {'DateTime_UTC', 'Speed_Loss'};
+                props = {'DateTime_UTC', 'Speed_Index'};
+                if isempty(tempISOTbl)
+                    obj(oi).DateTime_UTC = [];
+                    obj(oi).Performance_Index = [];
+                    obj(oi).Speed_Index = [];
+                else
+
+                    obj(oi) = assignPerformanceData(obj(oi), tempISOTbl, props, cols);
+                end
+                
+            catch ee
+                
+                exc_st(oi).IMO_Vessel_Number = imo;
+                exc_st(oi).message = ee.message;
+                exc_st(oi).identifier = ee.identifier;
+                exc_st(oi).stack = ee.stack;
             end
+            
             toc;
-%         catch ee
-%             
-%             disp(ee.message);
-%             msg = ['Error during analysis of vessel ', imo_ch];
-%             disp(msg);
-%         end
-%             obj(oi).Speed_Index = tempTbl.speed_index;
-%             obj(oi).DateTime_UTC = tempTbl.datetime_utc;
+        end
+        
+        % Remove empty elements from exceptions structure
+        empty_l = cellfun(@isempty, {exc_st.IMO_Vessel_Number});
+        exc_st(empty_l) = [];
+        end
+        
+        function [obj, exc_st] = ISO19030Analysis(obj, comment, varargin)
+        % Update ISO19030 analysis with filter criteria and comment
+        
+        % Input
+        comment = validateCellStr(comment, 'cVessel.ISO19030Analysis', 'comment', 2);
+        params_c = [varargin{:}];
+        nAdditionalArgin = numel(params_c);
+        
+        if nargin > 2
+            
+           allCell = all(cellfun(@iscell, varargin));
+           if allCell && ~isequal(nAdditionalArgin, numel(obj))
+            
+               errid = 'cV:ISO:InputsSizeMismatchParams';
+               errmsg = ['If a cell array of parameter, value inputs are'...
+                   ' given, the number of cells must match the number of'...
+                   ' OBJ'];
+               error(errid, errmsg);
+           end
+           
+           if ~allCell
+               
+               params_c = repmat({varargin}, numel(obj), 1);
+           end
+        end
+        
+        if ~isequal(numel(comment), numel(params_c))
+            
+            errid = 'cV:ISO:InputsSizeMismatchComment';
+            errmsg = ['If multiple sets of name, value parameters are '...
+                'input, their number must match that of cell array of '...
+                'strings COMMENT'];
+            error(errid, errmsg);
+        end
+        
+        commentParams_c = cellfun(@(x, y) [x, y], comment, params_c, ...
+            'Uni', 0);
+        
+        % Call SQL procedure, with filter inputs
+        for oi = 1:numel(obj)
+            
+            % Current inputs
+            currParams_c = params_c{oi, :};
+            currCommentParams_c = commentParams_c{oi, :};
+            
+            % Perform analysis
+            [obj(oi), exc_st] = obj(oi).ISO19030(currParams_c{:});
+            
+            % Insert into performance data table
+            obj(oi) = obj(oi).insertIntoPerformanceData(currCommentParams_c{:});
         end
         
         end
@@ -1489,7 +1499,6 @@ classdef cVessel < cMySQL
         ddi = [oldRows_c{:, find(allIntervalRow_l, 1)}];
         
         end
-
     end
     
     methods
@@ -1506,13 +1515,13 @@ classdef cVessel < cMySQL
            end
            obj.IMO_Vessel_Number = IMO;
            
-           % Apply to Speed, Power
-           if ~isempty(IMO)
-               
-               sp = obj.SpeedPower;
-               [sp.IMO_Vessel_Number] = deal(IMO);
-               obj.SpeedPower = sp;
-           end
+%            % Apply to Speed, Power
+%            if ~isempty(IMO)
+%                
+%                sp = obj.SpeedPower;
+%                [sp.IMO_Vessel_Number] = deal(IMO);
+%                obj.SpeedPower = sp;
+%            end
            
 %            if ~isempty(obj.DryDockDates)
 %                
@@ -1579,49 +1588,49 @@ classdef cVessel < cMySQL
            
        end
        
-       function speed = get.Speed(obj)
-       % Get Speed from SpeedPower object
-       
-       % Get matrix of speed, power, draft, trim
-       spdt = obj.SpeedPower.speedPowerDraftTrim;
-       
-       % Index appropriately
-       speed = spdt(:, 1);
-           
-       end
-       
-       function power = get.Power(obj)
-       % Get Speed from SpeedPower object
-       
-       % Get matrix of speed, power, draft, trim
-       spdt = obj.SpeedPower.speedPowerDraftTrim;
-       
-       % Index appropriately
-       power = spdt(:, 2);
-           
-       end
-       
-       function disp = get.Displacement(obj)
-       % Get Speed from SpeedPower object
-       
-       % Get matrix of speed, power, draft, trim
-       spdt = obj.SpeedPower.speedPowerDraftTrim;
-       
-       % Index appropriately
-       disp = spdt(:, 3);
-           
-       end
-       
-       function trim = get.Trim(obj)
-       % Get Speed from SpeedPower object
-       
-       % Get matrix of speed, power, draft, trim
-       spdt = obj.SpeedPower.speedPowerDraftTrim;
-       
-       % Index appropriately
-       trim = spdt(:, 4);
-           
-       end
+%        function speed = get.Speed(obj)
+%        % Get Speed from SpeedPower object
+%        
+%        % Get matrix of speed, power, draft, trim
+%        spdt = obj.SpeedPower.speedPowerDraftTrim;
+%        
+%        % Index appropriately
+%        speed = spdt(:, 1);
+%            
+%        end
+%        
+%        function power = get.Power(obj)
+%        % Get Speed from SpeedPower object
+%        
+%        % Get matrix of speed, power, draft, trim
+%        spdt = obj.SpeedPower.speedPowerDraftTrim;
+%        
+%        % Index appropriately
+%        power = spdt(:, 2);
+%            
+%        end
+%        
+%        function disp = get.Displacement(obj)
+%        % Get Speed from SpeedPower object
+%        
+%        % Get matrix of speed, power, draft, trim
+%        spdt = obj.SpeedPower.speedPowerDraftTrim;
+%        
+%        % Index appropriately
+%        disp = spdt(:, 3);
+%            
+%        end
+%        
+%        function trim = get.Trim(obj)
+%        % Get Speed from SpeedPower object
+%        
+%        % Get matrix of speed, power, draft, trim
+%        spdt = obj.SpeedPower.speedPowerDraftTrim;
+%        
+%        % Index appropriately
+%        trim = spdt(:, 4);
+%            
+%        end
        
        function etaD = get.Propulsive_Efficiency(obj)
            
@@ -1696,23 +1705,35 @@ classdef cVessel < cMySQL
        
        end
        
-       function obj = set.SpeedPower(obj, sp)
-           
-           % Input
-           validateattributes(sp, {'cVesselSpeedPower'}, {'vector'});
-           
-           % Assign IMO
-           imo = obj.IMO_Vessel_Number;
-           if ~isempty(imo)
-               newSp = sp.copy;
-               [newSp.IMO_Vessel_Number] = deal(imo);
-           end
-           
-           % Copy connection details to object
-%            newSp = newSp.copyConnection(obj);
-           
-           % Assign object
-           obj.SpeedPower = newSp;
+       function obj = set.Displacement(obj, disp)
+       % Displacement
+       
+           validateattributes(disp, {'cVesselDisplacement'}, {'scalar'},...
+               'cVessel.set.Displacement', 'Displacement');
+           obj.Displacement = disp;
        end
+       
+%        function obj = set.SpeedPower(obj, sp)
+%            
+%            % Input
+%            validateattributes(sp, {'cVesselSpeedPower'}, {'vector'});
+%            
+%            % Assign IMO
+%            imo = obj.IMO_Vessel_Number;
+%            if isempty(imo)
+%                
+%                newSp = cVesselSpeedPower();
+%            else
+%                
+%                newSp = sp.copy;
+%                [newSp.IMO_Vessel_Number] = deal(imo);
+%            end
+%            
+%            % Copy connection details to object
+% %            newSp = newSp.copyConnection(obj);
+%            
+%            % Assign object
+%            obj.SpeedPower = newSp;
+%        end
     end
 end

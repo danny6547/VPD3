@@ -11,4 +11,5 @@ nextIter = currIter + nDDi;
 
 [obj.CurrIter] = deal(nextIter);
 
-obj = obj.checkFinishIter(nextIter);
+% obj = obj.checkFinishIter(nextIter);
+obj = obj.checkFinishIter(currIter);
