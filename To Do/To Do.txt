@@ -345,7 +345,31 @@ DB: Change Compliance table name to Analysis, include Comment TEXT column
 DB: Create table Filters, with column for IMO, DateTime and all filters cols in tempRawISO
 DB: Create table KPI: IMO, StartDate, EndDate, KPI (in-service, DD, trigger, effect), Value
 cV.ISO19030: implement all filters in inputs
-
-
 DB: Sort out ModelID 
 Insert_data: allow scripts to be "called" within function while allowing database selection.
+Allow Vessels not in DB to be created via 'IMO' input.
+tempRawISO: Create tempRawISO columns Filter_SFOC_Below, Filter_SFOC_After
+applyFilters.sql: return table of IMO, Date, Speed_Index after apply all filters form Filter table
+insertIntoPerformanceData.sql: call applyFilters in final insert statement
+cV.updateFilters: include disp and trim widths
+filterSpeedPowerLookup: include disp widths as input
+updateNearestTrim: include trim widths as input
+updateFilters: include iteration over OBJ, where each OBJi can have a corresponding threshold value.
+insertIntoPerformanceData: include additional outputs, time and performance data array
+cV.applyFilters: take same inputs as cV.ISO19030, call updateFilters, call applyFilters.sql, call assignPerformanceData
+ISO19030.sql: NULL values for columns lead to TRUE values for filter columns (e.g. no displacement data, so filter based on speed, power condition).
+ISO19030.sql: error when insufficient static vessel data found
+cModelID: "empty" row of data left in table after data inserted.
+DB: copy the contents of files from AMCL which give "update links?" prompt, interrupting calling function
+DB: find cause of NULL values for performance values in performanceData 
+cMySQL.loadInFile: replace two set inputs with one cellstr of set statements
+cDB.create: return warnings from SQL load in file commands to make user aware of any possible failure to read files
+DB: remove "block coefficient" from Vessels table
+cV, cVC: remove property Block Coefficient
+loadXLSX: document
+loadXLSX: include input FormatStringIdx, giving indicies of columns which are strings, from this create input 'Format' for readtable call
+	importOptions
+	headerlines
+	don't convert dates
+loadXLSX: create "nullif" command for all table columns not in inputs
+loadXLSX: write NULL instead of NAN for empties
