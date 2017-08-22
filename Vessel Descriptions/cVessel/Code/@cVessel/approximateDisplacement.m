@@ -26,18 +26,18 @@ function [ obj, dates_v, disp_v ] = approximateDisplacement(obj, disp_tbl)
     [~, nearDraftI_v, diffDraft_v] = FindNearestInVector(evalDraft_v, refDraft_v);
     
     % Output dates
-    dates_v = datenum(eval_tbl.datetime_utc, 'yyyy-mm-dd HH:MM:SS');
+    dates_v = datenum(eval_tbl.datetime_utc, 'dd-mm-yyyy');
     
     disp_v = nan(height(eval_tbl), 1);
     
     for di = 1:height(eval_tbl)
         
         % Next-Lowest Draft
-        if diffDraft_v(di) < 0
+        if diffDraft_v(di) < 0 && nearDraftI_v(di) ~= 1
             
-            nearDraftI_v(ri) = nearDraftI_v(ri) - 1;
+            nearDraftI_v(di) = nearDraftI_v(di) - 1;
         end
-        currIdx = nearDraftI_v(ri);
+        currIdx = nearDraftI_v(di);
         
         % Trim correction
         currLcf = lcf(currIdx);

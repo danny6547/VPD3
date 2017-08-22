@@ -5,7 +5,7 @@ function [ obj ] = updateDisplacement(obj )
     % Get table with displacements for this vessel
     imo = obj.IMO_Vessel_Number;
     dispCols_c = {'Draft_Mean', 'Trim', 'Displacement', 'lcf', 'tpc'};
-    modelID = 0;
+    modelID = obj.Displacement.ModelID;
     dispWhere_ch = ['ModelID = ', num2str(modelID) ' ORDER BY Draft_Mean ASC'];
     [~, disp_tbl] = obj.select('Displacement', dispCols_c, dispWhere_ch);
     
@@ -36,11 +36,16 @@ function [ obj ] = updateDisplacement(obj )
     
     % Convert displacement volume from displacement table to mass of
     % displaced fluid (to match values currently in speedpowercoefficients)
-    disp_v = disp_v*1.025*1e3;
+%     disp_v = disp_v*1.025*1e3;
     
     % Insert values duplicate
-    imo_v = repmat(imo, height(eval_tbl), 1);
+    imo_v = repmat(imo, length(dates_v), 1);
+    dates_c = cellstr(datestr(dates_v, 'yyyy-mm-dd HH:MM:SS'));
+    imo_c = num2cell(imo_v);
+    disp_c = num2cell(disp_v);
+    
     outCols_c = {'IMO_Vessel_Number', 'DateTime_UTC', 'Displacement'};
-    outData_m = [imo_v(:), dates_v(:), disp_v(:)];
+    outData_m = [imo_c(:), dates_c(:), disp_c(:)];
+    evalTab_ch = 'tempRawISO';
     obj = obj.insertValuesDuplicate(evalTab_ch, outCols_c, outData_m);
 end
