@@ -2,7 +2,6 @@ function obj = loadUASCNoon(obj, filename, varargin)
 %loadUASCNoon Load data from UASC noon data file
 %   Detailed explanation goes here
 
-
 % Input
 imo = obj.IMO_Vessel_Number;
 if isempty(imo)

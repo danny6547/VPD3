@@ -1,0 +1,100 @@
+% This is an "Insert data" script. It will create a cVessel object in
+% variable VESS and insert the data into the database, unless VESS already
+% exists in which case it will assign data to the object but not insert.
+
+% Inputs
+vesselInput = exist('vess', 'var');
+if ~vesselInput
+    
+    vess = cVessel();
+end
+
+% Create vessels, Assign IMO
+imo = [...
+		9336737
+        ];
+		
+for vi = 1:numel(imo)
+    
+    vess(vi).IMO_Vessel_Number = imo(vi);
+end
+
+% Assign Static Data
+[vess.Owner] = deal('');
+
+engine = cVesselEngine();
+engine.Name = '';
+
+vessClass = cVesselClass();
+vessClass.WeightTEU = [];
+vessClass.Engine = engine;
+vessClass.Transverse_Projected_Area_Design = [];
+vessClass.Block_Coefficient = [];
+vessClass.Length_Overall = [];
+vessClass.Breadth_Moulded = [];
+vessClass.Draft_Design = [];
+vessClass.LBP = [];
+vessClass.Anemometer_Height = [];
+vess(1:2) = vess(1:2).assignClass(vessClass);
+vess(1).Name = 'Al Qibla';
+vess(2).Name = 'Jebel Ali';
+
+engineHyundai = cVesselEngine();
+engineHyundai.Name = 'Hyundai - Sulzer 11RT-flex96C';
+
+% Assign Speed, Power
+knots2mps = 0.514444444;
+ballast = [...
+        ];
+
+vessSP = cVesselSpeedPower([1, 2]);
+[vessSP(1).Speed] = ballast(:, 1) * knots2mps;
+[vessSP(1).Power] = ballast(:, 2) * 1e3;
+[vessSP(1).Trim] = -6.05;
+[vessSP(1).Displacement] =  70303 * 1e3;
+vessSP(1).Name = '';
+
+design = [...
+    17.996008	21.392618
+    18.417818	22.571247
+    19.150326	24.927418
+    19.83843	27.165703
+    20.504189	29.75612
+    21.192047	32.699104
+    21.879904	35.64209
+    22.6341	39.525322
+    23.343891	43.290672
+    24.031172	47.877953
+    24.452488	50.465977
+    24.762693	53.052914
+    25.09512	55.640068
+    25.471827	58.69746
+    25.759644	61.75398
+    26.202728	65.63416
+    26.401823	68.22002
+    26.689764	70.92419
+    26.955442	73.74559
+    27.176554	76.91891
+    27.442108	80.09265
+        ];
+
+vessSP(2).Speed = design(:, 1) * knots2mps;
+vessSP(2).Power = design(:, 2) * 1e3;
+vessSP(2).Trim = 0;
+vessSP(2).Displacement = 164768;
+vessSP(2).Name = '';
+[vess(1:2).SpeedPower] = deal(vessSP);
+
+% Assign Wind
+wind = cVesselWindCoefficient();
+wind.Name = 'Container Vessel 6800TEU, Laden with containers';
+wind.Wind_Reference_Height_Design = 10;
+[vess.WindCoefficient] = deal(wind);
+
+% Assign Bunker Delivery
+
+if ~vesselInput
+    
+    % Insert data
+    vess = vess.insert;
+end
