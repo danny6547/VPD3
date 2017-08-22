@@ -1,9 +1,6 @@
 /* Create filter for values below the lowest value of power in the speed,
 power data. */
 
-
-
-
 DROP PROCEDURE IF EXISTS filterPowerBelowMinimum;
 
 delimiter //
@@ -53,21 +50,17 @@ BEGIN
 		q.Power = e.Power
 		GROUP BY q.id) u
 			ON y.id = u.id
-			SET y.Filter_Speed_Below  = u.SLow,
-				 y.Filter_Speed_Above  = u.SHigh,
-				 y.Filter_Power_Below  = u.PLow,
-				 y.Filter_Power_Above  = u.PHigh
+			SET y.Filter_SpeedPower_Below  = u.SLow OR u.PLow,
+				 y.Filter_SpeedPower_Above  = u.SHigh OR u.PHigh
 			;
     
     /* Filter variable when STW is NULL */
-	UPDATE tempRawISO SET Filter_Speed_Below  = IFNULL(Filter_Speed_Below, TRUE);
-	UPDATE tempRawISO SET Filter_Speed_Above  = IFNULL(Filter_Speed_Above, TRUE);
-	UPDATE tempRawISO SET Filter_Speed_Below  = TRUE WHERE Speed_Through_Water IS NULL;
-	UPDATE tempRawISO SET Filter_Speed_Above  = TRUE WHERE Speed_Through_Water IS NULL;
+	UPDATE tempRawISO SET Filter_SpeedPower_Below  = IFNULL(Filter_SpeedPower_Below, TRUE);
+	UPDATE tempRawISO SET Filter_SpeedPower_Above  = IFNULL(Filter_SpeedPower_Above, TRUE);
+	UPDATE tempRawISO SET Filter_SpeedPower_Below  = TRUE WHERE Speed_Through_Water IS NULL;
+	UPDATE tempRawISO SET Filter_SpeedPower_Above  = TRUE WHERE Speed_Through_Water IS NULL;
     
-	UPDATE tempRawISO SET Filter_Power_Below  = IFNULL(Filter_Power_Below, TRUE);
-	UPDATE tempRawISO SET Filter_Power_Above  = IFNULL(Filter_Power_Above, TRUE);
-	UPDATE tempRawISO SET Filter_Power_Below  = TRUE WHERE Corrected_Power IS NULL;
-	UPDATE tempRawISO SET Filter_Power_Above  = TRUE WHERE Corrected_Power IS NULL;
+	UPDATE tempRawISO SET Filter_SpeedPower_Below  = TRUE WHERE Corrected_Power IS NULL;
+	UPDATE tempRawISO SET Filter_SpeedPower_Above  = TRUE WHERE Corrected_Power IS NULL;
             
 END
