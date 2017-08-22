@@ -1,9 +1,9 @@
 %% Get file paths
-homeDir = 'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data';
-amcl = 'AMCL';
-aesm = 'Anglo-Eastern Ship management';
-euronav = 'Euronav';
-setaf = 'SETAF-SAGET';
+homeDir = 'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels';
+amcl = 'AMCL\Data\DNVGL\Performance';
+aesm = 'Anglo-Eastern Ship management\Data\DNVGL\Performance';
+euronav = 'Euronav\Data\DNVGL\Performance';
+setaf = 'SETAF-SAGET\Data\DNVGL\Processed';
 
 allSubs_c = {amcl, aesm, euronav, setaf};
 allFiles = {};
@@ -17,10 +17,10 @@ for si = 1:numel(allSubs_c)
 end
 
 % CMA CGM
-cmaSiDir_ch = fullfile(homeDir, 'CMA CGM\CMA CGM 090217'); %'C:\Users\damcl\Documents\Ship Data\CMA CGM\CMA CGM 090217';
+cmaSiDir_ch = fullfile(homeDir, 'CMA CGM\Ship Data\DNVGL\CMA CGM 090217'); %'C:\Users\damcl\Documents\Ship Data\CMA CGM\CMA CGM 090217';
 cmaSiDir = rdir([cmaSiDir_ch, '\**\*Single vessel timeline*.xlsx']);
 cmaSi_c = {cmaSiDir.name}';
-cmaPiDir_ch = fullfile(homeDir, 'CMA CGM\CMA CGM 290816'); %'C:\Users\damcl\Documents\Ship Data\CMA CGM\CMA CGM 290816';
+cmaPiDir_ch = fullfile(homeDir, 'CMA CGM\Ship Data\DNVGL\CMA CGM 290816'); %'C:\Users\damcl\Documents\Ship Data\CMA CGM\CMA CGM 290816';
 cmaPiDir = rdir([cmaPiDir_ch, '\**\*Single vessel timeline*.xlsx']);
 cmaPi_c = {cmaPiDir.name}';
 cmaFile_c = cell(length(cmaPi_c) + length(cmaSi_c), 1);
@@ -106,8 +106,8 @@ ym_c = {ym_st.name};
 allFiles = [allFiles; ym_c(:)];
 
 % Berge Bulk
-bergeFiles_c = {'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data\Berge Kibo\DNVGL\Processed\EI2113 Hull and propeller performance - Single vessel timeline.xlsx',...
-    'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data\Berge Kibo\DNVGL\Processed\EI2123 Speed deviation - Single vessel timeline.xlsx'};
+bergeFiles_c = {'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\Berge Bulk\Berge Kibo\DNVGL\Processed\EI2113 Hull and propeller performance - Single vessel timeline.xlsx',...
+    'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\Berge Bulk\Berge Kibo\DNVGL\Processed\EI2123 Speed deviation - Single vessel timeline.xlsx'};
 allFiles = [allFiles; bergeFiles_c(:)];
 
 %%
@@ -196,6 +196,10 @@ allFiles = [allFiles; bergeFiles_c(:)];
 IMO_v = [...
   9445631, ... AMCL
   9445631, ...
+  8130875, ... Mighty Servant 1
+  8130875, ... 
+  8130899, ... Mighty Servant 3
+  8130899, ... 
   9516117, ... Devon
   9516117, ...
   9398084, ... Hakone
