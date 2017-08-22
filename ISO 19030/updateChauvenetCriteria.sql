@@ -358,7 +358,7 @@ BEGIN
 		
 		CALL IMOStartEnd(@imo, @startd, @endd);
 		IF @imo IS NOT NULL AND @startd IS NOT NULL AND @endd IS NOT NULL THEN
-			INSERT INTO StandardCompliance (IMO_Vessel_Number, StartDate, EndDate, ChauvenetFiltered)
+			INSERT INTO Analysis (IMO_Vessel_Number, StartDate, EndDate, ChauvenetFiltered)
 			VALUES (@imo, @startd, @endd, @ChauvenetFiltered) ON DUPLICATE KEY UPDATE ChauvenetFiltered = VALUES(ChauvenetFiltered);
 		END IF;
 END;
