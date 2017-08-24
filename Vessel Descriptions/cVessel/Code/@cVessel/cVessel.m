@@ -346,7 +346,9 @@ classdef cVessel < cMySQL
            obj = insertBunkerDeliveryNote(obj);
            
            % Displacement
-           obj.Displacement.insertIntoTable('Displacement');
+           if ~isempty(obj.Displacement)
+            obj.Displacement.insertIntoTable('Displacement');
+           end
            
        end
        
@@ -1018,15 +1020,23 @@ classdef cVessel < cMySQL
             imo_ch = num2str(imo);
             
             try
-                
+
                 tic;
+                
+                % Check if displacement values needed
+                [~, iso_tbl] = obj(oi).select('tempRawISO', 'Displacement');
+                disp_v = iso_tbl.displacement;
+                needDisplacement_l = all(isnan(disp_v));
+                
                 % Call ISO
                 obj(oi) = obj(oi).call('ISO19030A', imo_ch);
-                obj(oi) = obj(oi).updateDisplacement;
+                if needDisplacement_l
+                    obj(oi) = obj(oi).updateDisplacement;
+                end
                 obj(oi) = obj(oi).call('ISO19030B', imo_ch);
                 obj(oi) = obj(oi).updateWindResistanceRelative;
                 obj(oi) = obj(oi).call('ISO19030C', imo_ch);
-
+                
                 % Copy ISO data into new temp table
                 currTab = ['tempRawISO_', imo_ch];
                 obj(oi) = obj(oi).drop('TABLE', currTab, true);
@@ -1336,7 +1346,7 @@ classdef cVessel < cMySQL
         
         function obj = updateWindResistanceRelative(obj)
         % 
-            
+        
         % Get Variables
         tab = 'tempRawISO';
         cols_c = {'IMO_Vessel_Number', 'DateTime_UTC', 'Air_Density', ...
@@ -1366,7 +1376,7 @@ classdef cVessel < cMySQL
         At = iso_tbl.transverse_projected_area_current;
         relspeed = iso_tbl.relative_wind_speed_reference;
         res = 0.5 .* rho .* At .* coeff .* relspeed.^2;
-            
+        
         % Insert update resistance
         resCol = {'IMO_Vessel_Number', 'DateTime_UTC', ...
             'Wind_Resistance_Relative'};
@@ -1380,7 +1390,6 @@ classdef cVessel < cMySQL
         sqldates_c = cellstr(sqldates_ch);
         resData_c = [num2cell(iso_tbl.imo_vessel_number),...
             sqldates_c, num2cell(res)];
-        
         
        % Create temp file and load, if data too big
        if size(resData_c, 1) > 5e4
