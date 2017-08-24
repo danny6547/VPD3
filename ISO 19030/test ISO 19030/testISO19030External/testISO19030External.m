@@ -86,7 +86,6 @@ properties
                     'Trim'
                     'Chauvenet_Criteria'
                     'Validated'
-                    'Displacement_Correction_Needed'
                     'Filter_All'
                     'Filter_SFOC_Out_Range'
                     'Filter_Reference_Seawater_Temp'
@@ -142,6 +141,7 @@ methods(Static)
     
     % Create wind coefficients (model ID 1 in database)
     wind = cVesselWindCoefficient();
+    wind.Name = 'test';
     wind.Direction = [0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180];
     wind.Coefficient = [1.2640,1.3450,1.4090,1.3890,1.3150,1.1430,0.9230,0.6840,0.5100,0.3200,0.0780,-0.2070,-0.5560,-0.9420,-1.2350,-1.4660,-1.5740,-1.4630,-1.2570];
     wind.Wind_Reference_Height_Design = 10;
@@ -149,7 +149,7 @@ methods(Static)
     
     % Create vessel
     testvessel = cVessel();
-    testvessel.Database = 'test';
+    testvessel.Database = 'test14';
     testvessel.IMO_Vessel_Number = 1234567;
     testvessel.Name = 'Test Vessel';
     testvessel.Draft_Design = 10;
@@ -181,6 +181,7 @@ methods(Static)
 
         % Create wind coefficients (model ID 1 in database)
         wind = cVesselWindCoefficient();
+        wind.Name = 'test';
         wind.Direction = [0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180];
         wind.Coefficient = [1.2640,1.3450,1.4090,1.3890,1.3150,1.1430,0.9230,0.6840,0.5100,0.3200,0.0780,-0.2070,-0.5560,-0.9420,-1.2350,-1.4660,-1.5740,-1.4630,-1.2570];
         wind.Wind_Reference_Height_Design = 10;
@@ -188,7 +189,7 @@ methods(Static)
 
         % Create vessel
         testvessel = cVessel();
-        testvessel.Database = 'test';
+        testvessel.Database = 'test14';
         testvessel.IMO_Vessel_Number = 1234567;
         testvessel.Name = 'Test Vessel';
         testvessel.Draft_Design = 10;
@@ -227,6 +228,7 @@ methods(Static)
         dirs(dirsAbove180) = [];
         coeffs(dirsAbove180) = [];
         wind = cVesselWindCoefficient();
+        wind.Name = 'test';
         wind.Direction = dirs;
         wind.Coefficient = coeffs;
         wind.Wind_Reference_Height_Design = 10;
@@ -234,7 +236,7 @@ methods(Static)
 
         % Create vessel
         testvessel = cVessel();
-        testvessel.Database = 'test';
+        testvessel.Database = 'test14';
         testvessel.IMO_Vessel_Number = 1234567;
         testvessel.Name = 'Test Vessel';
         testvessel.Draft_Design = 10;
@@ -266,6 +268,7 @@ methods(Static)
 
         % Create wind coefficients (model ID 1 in database)
         wind = cVesselWindCoefficient();
+        wind.Name = 'test';
         wind.Direction = [0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180];
         wind.Coefficient = [1.2640,1.3450,1.4090,1.3890,1.3150,1.1430,0.9230,0.6840,0.5100,0.3200,0.0780,-0.2070,-0.5560,-0.9420,-1.2350,-1.4660,-1.5740,-1.4630,-1.2570];
         wind.Wind_Reference_Height_Design = 10;
@@ -273,7 +276,7 @@ methods(Static)
 
         % Create vessel
         testvessel = cVessel();
-        testvessel.Database = 'test';
+        testvessel.Database = 'test14';
         testvessel.IMO_Vessel_Number = 1234567;
         testvessel.Name = 'Test Vessel';
         testvessel.Draft_Design = 10;
@@ -544,7 +547,7 @@ methods
         [obj, tbl] = readInputTable(obj, fldr);
         obj.InputTableValidated = tbl;
     end
-       
+    
     function [obj, tbl, varargout] = readInputTablePower(obj)
         
         fldr = obj.TestDirPower;
@@ -593,7 +596,7 @@ methods
                     };
         delim_ch = ',';
         ignore_ch = 0;
-        set = ['SET IMO_Vessel_Number = ', num2str(vessel.IMO_Vessel_Number),','];
+        set = ['SET IMO_Vessel_Number = ', num2str(vessel.IMO_Vessel_Number)];
 
         delete_sql = ['DELETE FROM ', tab, ' WHERE IMO_Vessel_Number = ',...
             num2str(vessel.IMO_Vessel_Number), ';'];
@@ -640,7 +643,7 @@ methods
                     };
         delim_ch = ',';
         ignore_ch = 0;
-        set = ['SET IMO_Vessel_Number = ', num2str(vessel.IMO_Vessel_Number),','];
+        set = ['SET IMO_Vessel_Number = ', num2str(vessel.IMO_Vessel_Number)];
 
         delete_sql = ['DELETE FROM ', tab, ' WHERE IMO_Vessel_Number = ',...
             num2str(vessel.IMO_Vessel_Number), ';'];
@@ -687,12 +690,13 @@ methods
                     };
         delim_ch = ',';
         ignore_ch = 0;
-        set = ['SET IMO_Vessel_Number = ', num2str(vessel.IMO_Vessel_Number),','];
-
+        set = ['SET IMO_Vessel_Number = ', num2str(vessel.IMO_Vessel_Number)];
+        
         delete_sql = ['DELETE FROM ', tab, ' WHERE IMO_Vessel_Number = ',...
             num2str(vessel.IMO_Vessel_Number), ';'];
         vessel.execute(delete_sql);
         vessel = vessel.loadInFile(rawFile, tab, cols_c, delim_ch, ignore_ch, set);
+        obj.refreshTestTable;
         
         % Delete test vessel data already in database
         vessel.execute(['SELECT * FROM PerformanceData WHERE IMO_Vessel_Number = ',...
@@ -700,8 +704,8 @@ methods
         
         % Run in database
 %         vessel.ISO19030(false, false, false);
-        obj.refreshTestTable;
-        vessel.call('ISO19030', num2str(vessel.IMO_Vessel_Number));
+        vessel.ISO19030();
+%         vessel.call('ISO19030', num2str(vessel.IMO_Vessel_Number));
     end
     
     function obj = runISOOnInputPV(obj)
@@ -734,7 +738,7 @@ methods
                     };
         delim_ch = ',';
         ignore_ch = 0;
-        set = ['SET IMO_Vessel_Number = ', num2str(vessel.IMO_Vessel_Number),','];
+        set = ['SET IMO_Vessel_Number = ', num2str(vessel.IMO_Vessel_Number)];
 
         delete_sql = ['DELETE FROM ', tab, ' WHERE IMO_Vessel_Number = ',...
             num2str(vessel.IMO_Vessel_Number), ';'];
@@ -742,7 +746,8 @@ methods
         vessel = vessel.loadInFile(rawFile, tab, cols_c, delim_ch, ignore_ch, set);
         
         % Run ISO
-        vessel.call('ISO19030', num2str(vessel.IMO_Vessel_Number));
+        vessel = vessel.ISO19030();
+%         vessel.call('ISO19030', num2str(vessel.IMO_Vessel_Number));
         
         % Insert "input" to procedures: corrected power read from software
         [obj, pv_tbl] = obj.readOutPVTablePV;
@@ -1308,7 +1313,7 @@ methods(Test)
     testcase.verifyEqual(db_filt, file_filt, filt_msg);
     
     end
-        
+    
     function testFiltered(testcase)
     % testFiltering Test that filtering is carried out according to Annex I
     % 1: Test that rows in the output file with suffix "_Validated" match 
@@ -1399,13 +1404,14 @@ methods(Test)
     [~, commonFromDB, commonFromOut] = intersect(actDates, expDates);
     act_tbl = act_tbl(commonFromDB, :);
     exp_sl = exp_sl(commonFromOut, :);
-    act_sl = act_tbl.speed_loss;
+    act_sl = act_tbl.speed_loss .* 1e2;
     exp_sl = pv_tbl.PV;
     
     % Verify
     msg_sl = ['Performance Values calculated by Hempel are expected to '...
         'match those of the software.'];
-    testcase.verifyEqual(act_sl, exp_sl, 'AbsTol', 3, msg_sl);
+    testcase.verifyEqual(act_sl, exp_sl, 'AbsTol', 5, msg_sl);
+%     testcase.verifyEqual(act_sl, exp_sl, 'RelTol', 0.1, msg_sl);
     
 %     % Plot
 %     act_date = act_tbl.datetime_utc;

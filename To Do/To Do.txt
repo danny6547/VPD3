@@ -176,15 +176,15 @@ Extract "timestep" into high-level metadata table
 
 # Convert insertIntoTable into cMySQL method
 removeNullRows: set filter for rows where any primary or secondary parameter is NULL
-Write ON DUPLICATE KEY UPDATE calls into tables:
-	BunkerDeliveryNote
-	DryDockDates
-	SFOCCoefficints
-	SpeedPower
-	SpeedPowerCoefficients
-	VesselCoating
-	Vessels
-	windcoefficientdirection: Unique(imo, start direction) and Unique(imo, end direction)
+# Write ON DUPLICATE KEY UPDATE calls into tables:
+# 	BunkerDeliveryNote
+# 	DryDockDates
+# 	SFOCCoefficints
+# 	SpeedPower
+# 	SpeedPowerCoefficients
+# 	VesselCoating
+# 	Vessels
+# 	windcoefficientdirection: Unique(imo, start direction) and Unique(imo, end direction)
 	
 insertBunkerDeliveryNoteDNVGL: convert from function to method of cVesselDB, use insertDuplicate
 # rename table PerformanceDataDNVGL to DNVGLPerformanceData
@@ -253,7 +253,7 @@ cV.InsertRaw: MATLAB raw data insert function (a function with inputs for IMO,
 # ISOProcess.sql: SQL procedure to extract relevant raw data, run iso with 
 #  default filters, insert results into PerformanceData.
 # DB: make engine_model of SFOCCoefficients unique
-DB: Document unknowns with ship model data (e.g. the Man Engine data, is SFOC curve dependent on num cylinders?)
+# DB: Document unknowns with ship model data (e.g. the Man Engine data, is SFOC curve dependent on num cylinders?)
 # DB: recreate table windcoefficientdirection, now with only columns modelID, Direction, Coefficient
 # updateWindResistance: find nearest to measured direction
 # cVWC.extend360: rotate angular vectors by 180 degrees to cover full circle
@@ -261,20 +261,20 @@ DB: Document unknowns with ship model data (e.g. the Man Engine data, is SFOC cu
 # cVSP.fit: method to fit data to regression
 # cVWC.nextModelID: get next highest unique index
 # cVWC: hide inherited properties
-DB.insertIntoWind: autoincrement the modelID field when input value is empty
-cV.insertIntoWindCoeff: call DB.insertIntoWind in loop
-DB: replace IMO_Vessel_Number in speedPowerCoefficients table with ModelID
+# DB.insertIntoWind: autoincrement the modelID field when input value is empty
+# cV.insertIntoWindCoeff: call DB.insertIntoWind in loop
+# DB: replace IMO_Vessel_Number in speedPowerCoefficients table with ModelID
 # cVWC.incrementModelID: check if exact values found in DB and assign values accordingly
 # DB: make the following table: columns non-null
 #	SpeedPower: IMO
 #	Vessels: IMO
 # DB.createTable_: write procedure from each create table script
-DB.createTables: create all tables by calling all create table procedures
+# DB.createTables: create all tables by calling all create table procedures
 # cDB.create(dbname): static method which calls createTables.sql, loads all raw and processed data into tables.
 # cDB.createTest: calls cDB.create(test)
 # cDB.createHullPer: calls cDB.create(hull_performance)
 # cConnectMySQLDB.test: change name of test DB from 'test2' to 'test'
-DB: rebuild (some of the) DDDates and VesselCoating tables
+# DB: rebuild (some of the) DDDates and VesselCoating tables
 cVessel: intended to be arrays of cV, but inherited class cMySQL intended to work on scalars. Should cMySQL methods call only the first object in array?
 cV.performanceData: error when vessel (cassiopiea) has no dry-dock data
 cV.DryDockings: property dependent on DryDockDates
@@ -284,11 +284,11 @@ cV.set.PerformanceTable: get performance struct with same parameters as before, 
 # DB: write procedure updateWindReference
 # DB: include Relative_Wind_Direction_Reference column in tempRawISO
 # DB: include Relative_Wind_Speed_Reference column in tempRawISO
-DB: Where are speed, power coefficients being used?
-cV.assignPerformanceData: sort out problem where field names have to be lower case
+# DB: Where are speed, power coefficients being used?
+# cV.assignPerformanceData: sort out problem where field names have to be lower case
 DB: "NearestDisplacement" and "NearestTrim" can be misleading, as they can come from different speed, power curves.
 cDB: implement table vesselcoatings in cDB, creating and writing CMA data
-cDB: add 4 standard wind coefficient sets
+# cDB: add 4 standard wind coefficient sets
 # DB: calculate wind resistance correction on relative wind at reference
 # DB: correct for environmental conditions prior to speed, power lookup
 vesselName: remove hard-coded connection details (make cV method?)
@@ -296,23 +296,23 @@ updateAirResistanceNoWind.sql: take coefficient where direction covers 0.
 # speedPowerCoefficients: include CoefficientC column, replace ExponentA, B with Coeff_
 # speedPower, speedPowerCoefficients: replace IMO_Vessel_Number columns, properties with spModel
 DB: rebuild with externally validated scripts
-cDB: include dry dock dates file
+# cDB: include dry dock dates file
 cV.inServicePerformance: return in-service performance value by subtacting averages
 cV.dryDockingPerformance: rename to DryDockingImprovement (or something)
 cV.dryDockingPerformance: calculate as described in ISO
 cV.DryDockingImprovement: return struct same size as cV?
 DB: download all raw from DNVGL again (for the final time), rewrite loadDNVGLRaw to parse new format
 cV: the following code deletes connections of all but first vessel vess(n).SpeedPower(m) = vessSP;
-cVSP, cVWC: multiple objects can have the same ModelID when both instantiated without writing to DB.
-	cMID: when any data assigned to properties (other than ModelID), get next modelID, assign, write modelID into DB.
-	cMID: on deletion, if properties matching those of table are empty in OBJ and DB, remove modelID from DB
-cDB: add updateDefaultValues to list of procedures.
-cDB: add createVesselSpeedPowerModel to list of procedures.
-cVSP: write to VesselSpeedPowerModel when insert called.
-cDB: add updateWindReference to list of procedures.
+# cVSP, cVWC: multiple objects can have the same ModelID when both instantiated without writing to DB.
+# 	cMID: when any data assigned to properties (other than ModelID), get next modelID, assign, write modelID into DB.
+# 	cMID: on deletion, if properties matching those of table are empty in OBJ and DB, remove modelID from DB
+# cDB: add updateDefaultValues to list of procedures.
+# cDB: add createVesselSpeedPowerModel to list of procedures.
+# cVSP: write to VesselSpeedPowerModel when insert called.
+# cDB: add updateWindReference to list of procedures.
 updateWindReference: test and update to match results from DIGU script
-cModelID: adds duplicate rows to table 
-cVSP: insert value into speedpowermodel table
+# cModelID: adds duplicate rows to table 
+# cVSP: insert value into speedpowermodel table
 updateExpectedSpeed.sql: why do negative coefficients lead to invalid results?
 MATLAB: how to instantiate the calling class as an array?
 cVSP: bug where Coefficients may not match those of the S, P data if the data is changed after fitting
@@ -320,16 +320,15 @@ cVSP: allow user to select units of input
 cMySQL: allow for alias inputs between object properties and column names
 cVSP.copy: copy data and modelID, leave IMO_Vessel_Number blank
 Chauvenet_Criteria: set false when timestep less than 5 mins?
-Create filters: Filter_Speed_Below_Min, Filter_Speed_Above_Max, Filter_Power_Below_Min, Filter_Power_Above_Max
-updateWindResistance: IFNULL on propulsiveEfficiency 
+# updateWindResistance: IFNULL on propulsiveEfficiency 
 updateReferenceConditions: depth and wind inaccurate?
 check results for Filter_Speed_Above_Max, below (seem to be different)
 DB: createFilterTable to store numbers of data removed per filter for each analysis 
-cV.loadDNVGLReportingFormat: load from xlsx
-cV.loadXLSX(file, fileColID, tabColNames): load from csv by associating file column names or indices with table column names
-DB: ensure vessel input scripts in sync with ModelID values. Allow models to be assigned by Name?
+# cV.loadDNVGLReportingFormat: load from xlsx
+# cV.loadXLSX(file, fileColID, tabColNames): load from xlsx by associating file column names or indices with table column names
+# DB: ensure vessel input scripts in sync with ModelID values. Allow models to be assigned by Name?
 cV.ISO19030: write GUI filter selector
-cDB: add UASC, AMCL analyses to create?
+# cDB: add UASC, AMCL analyses to create?
 cV.insertDataDuplicate: call either insertValuesDuplicate or loadInFileDuplicate on a new text file depending on data size.
 Are noon-report drafts measured off draft-markings or corrected to perpendiculars?
 # Specify units of displacement in displacement table (m3 or tn)? m3!
@@ -341,16 +340,16 @@ updateDisplacement: remove conversion from volume to mass
 New Vanguard: Many Displacement not being read from file after DB rebuilt home 280717.
 Return data identifying which data was inserted after any insert statement into time-series tables
 DB: Include sister ships information
-DB: Change Compliance table name to Analysis, include Comment TEXT column
+# DB: Change Compliance table name to Analysis, include Comment TEXT column
 DB: Create table Filters, with column for IMO, DateTime and all filters cols in tempRawISO
 DB: Create table KPI: IMO, StartDate, EndDate, KPI (in-service, DD, trigger, effect), Value
-cV.ISO19030: implement all filters in inputs
-DB: Sort out ModelID 
-Insert_data: allow scripts to be "called" within function while allowing database selection.
+# cV.ISO19030: implement all filters in inputs
+# DB: Sort out ModelID 
+# Insert_data: allow scripts to be "called" within function while allowing database selection.
 Allow Vessels not in DB to be created via 'IMO' input.
 tempRawISO: Create tempRawISO columns Filter_SFOC_Below, Filter_SFOC_After
-applyFilters.sql: return table of IMO, Date, Speed_Index after apply all filters form Filter table
-insertIntoPerformanceData.sql: call applyFilters in final insert statement
+# applyFilters.sql: return table of IMO, Date, Speed_Index after apply all filters form Filter table
+# insertIntoPerformanceData.sql: call applyFilters in final insert statement
 cV.updateFilters: include disp and trim widths
 filterSpeedPowerLookup: include disp widths as input
 updateNearestTrim: include trim widths as input
@@ -367,9 +366,5 @@ cDB.create: return warnings from SQL load in file commands to make user aware of
 DB: remove "block coefficient" from Vessels table
 cV, cVC: remove property Block Coefficient
 loadXLSX: document
-loadXLSX: include input FormatStringIdx, giving indicies of columns which are strings, from this create input 'Format' for readtable call
-	importOptions
-	headerlines
-	don't convert dates
-loadXLSX: create "nullif" command for all table columns not in inputs
-loadXLSX: write NULL instead of NAN for empties
+# loadXLSX: create "nullif" command for all table columns not in inputs
+# loadXLSX: create statements to set NaN to NULL
