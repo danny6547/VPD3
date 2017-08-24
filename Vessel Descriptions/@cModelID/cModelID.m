@@ -303,7 +303,7 @@ classdef (Abstract) cModelID < cMySQL & handle
         % Ensure Name is char vector
         
             % Input
-            validateattributes(name, {'char'}, {'vector'}, ...
+            validateattributes(name, {'char'}, {}, ...
                 'cModelID.Name', 'Name', 1);
             
             % Get corresponding modelID
