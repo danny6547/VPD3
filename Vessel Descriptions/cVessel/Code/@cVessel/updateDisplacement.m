@@ -32,6 +32,12 @@ function [ obj ] = updateDisplacement(obj )
     elseif approx_l
         
         [~, dates_v, disp_v] = obj.approximateDisplacement(disp_tbl);
+        
+    else
+        
+        % Do nothing.... to make testExternal work without displacement
+        % table inputs
+        
     end
     
     % Convert displacement volume from displacement table to mass of

@@ -28,6 +28,27 @@ classdef cVesselDisplacement < cMySQL & cModelID
            
            
        end
+       
+       function empty = isempty(obj)
+           
+        empty = true(size(obj));
+        for oi = 1:numel(obj)
+
+          if (isempty(obj(oi).Draft_Mean) && ...
+                  isempty(obj(oi).Trim) && ...
+                  isempty(obj(oi).Displacement)) || ...
+                  (isempty(obj(oi).Draft_Mean) && ...
+                  isempty(obj(oi).TPC) && ...
+                  isempty(obj(oi).LCF) && ...
+                  isempty(obj(oi).Displacement))
+
+              empty(oi) = true;
+          end
+        end
+       
+        empty = all(empty);
+        
+       end
     end
     
     methods(Static)
