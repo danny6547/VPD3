@@ -368,3 +368,4 @@ cV, cVC: remove property Block Coefficient
 loadXLSX: document
 # loadXLSX: create "nullif" command for all table columns not in inputs
 # loadXLSX: create statements to set NaN to NULL
+DB: implement reference condition for true wind speeds above Beaufort 4
