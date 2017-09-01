@@ -9,7 +9,7 @@ CREATE PROCEDURE createAnalysis()
 BEGIN
 
 	CREATE TABLE Analysis (id INT PRIMARY KEY AUTO_INCREMENT,
-									 IMO_Vessel_Number INT(7) NOT NULL,
+									 IMO_Vessel_Number INT(7) NOT NULL COMMENT 'International Maritime Organisation Vessel Number',
 									 StartDate DATETIME NOT NULL,
 									 EndDate DATETIME NOT NULL,
 									 Compliant BOOLEAN DEFAULT FALSE,

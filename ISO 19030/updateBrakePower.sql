@@ -1,7 +1,7 @@
 /* Calculate brake power based on SFOC curve and mass of consumed fuel */
 
 
-
+DROP PROCEDURE IF EXISTS updateBrakePower;
 
 delimiter //
 
@@ -28,7 +28,5 @@ BEGIN
     UPDATE tempRawISO SET Brake_Power = 
 										X0
 									  + X1 * ( (Mass_Consumed_Fuel_Oil*Lower_Caloirifc_Value_Fuel_Oil) / (42.7 * 24) )
-									  + X2 * POWER(Mass_Consumed_Fuel_Oil*Lower_Caloirifc_Value_Fuel_Oil / (42.7 * 24), 2)
-    ;
-    
+									  + X2 * POWER(Mass_Consumed_Fuel_Oil*Lower_Caloirifc_Value_Fuel_Oil / (42.7 * 24), 2);
 END;

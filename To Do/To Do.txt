@@ -369,3 +369,9 @@ loadXLSX: document
 # loadXLSX: create "nullif" command for all table columns not in inputs
 # loadXLSX: create statements to set NaN to NULL
 DB: implement reference condition for true wind speeds above Beaufort 4
+cVSP.Speed: document units of knots
+cVSP.Power: document units of kW
+cVSP.Displacement: document units of tons
+cVSP.FluidDensity: new property giving the density at which the Displacement was calculated
+cVSP.insert: change displacement to m^3
+Acquire Adjunct to D1250-08 and Adjunct to D1250 from ASTM.
