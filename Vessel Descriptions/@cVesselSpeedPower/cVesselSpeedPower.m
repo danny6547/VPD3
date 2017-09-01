@@ -1,4 +1,4 @@
-classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable
+classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVesselDisplacementConversion
     %CVESSELSPEEDPOWER Vessel speed and power data
     %   Detailed explanation goes here
     
@@ -11,6 +11,7 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable
         Power double;
         Trim double;
         Displacement double;
+%         FluidDensity double;
         Speed_Power_Source char = '';
         Propulsive_Efficiency double = [];
         Coefficients double = [];
@@ -181,6 +182,9 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable
        % modelID and NULL or default values
        obj.releaseModelID;
        
+       % Convert
+       obj = obj.displacementInVolume;
+       
        % Insert
        insertIntoTable@cMySQL(obj, 'SpeedPower');
        insertIntoTable@cMySQL(obj, 'SpeedPowerCoefficients', [], ...
@@ -189,6 +193,10 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable
 %            'vesselspeedpowermodel', [], ...
 %            'Speed_Power_Model', [obj.ModelID]);
        obj.insertIntoModels();
+       
+       % Convert back
+       obj = obj.displacementInMass;
+       
        end
        
        function obj = readFromTable(obj, varargin)
@@ -354,6 +362,39 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable
                 currRow = currRow + currNumRows;
             end
             spdt = currOut_m;
+       end
+       
+       function obj = displacementInVolume(obj)
+       % displacementInVolume Convert displacement from mass to volume
+       
+       for oi = 1:numel(obj)
+          
+           if ~isempty(obj(oi).FluidDensity)
+           
+               dens = obj(oi).FluidDensity;
+           else
+               
+               dens = obj(oi).DefaultDensity;
+           end
+           
+           obj(oi).Displacement = obj(oi).Displacement * 1E3 / dens;
+       end
+       end
+       
+       function obj = displacementInMass(obj)
+       
+       for oi = 1:numel(obj)
+          
+           if ~isempty(obj(oi).FluidDensity)
+           
+               dens = obj(oi).FluidDensity;
+           else
+               
+               dens = obj(oi).DefaultDensity;
+           end
+           
+           obj(oi).Displacement = obj(oi).Displacement * 1E3 * dens;
+       end
        end
     end
     
@@ -567,5 +608,6 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable
 
             obj.R_Squared = r2;
         end
+        
     end
 end

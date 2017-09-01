@@ -38,16 +38,17 @@ design = [...
         ];
 
 vessSP = cVesselSpeedPower([1, 2]);
-[vessSP(1).Speed] = design(:, 1) * knots2mps;
-[vessSP(1).Power] = design(:, 2) * bhp2Kw * 1e3;
+[vessSP(1).Speed] = design(:, 1) * knots2mps; % m/s
+[vessSP(1).Power] = design(:, 2) * bhp2Kw; % kW
 [vessSP(1).Trim] = [];
-[vessSP(1).Displacement] =  [] * 1e3;
+[vessSP(1).Displacement] =  [] ; % tonnes of seawater displaced at given seawater density
+[vessSP(1).FluidDensity] = 1025; % tn / m^3, optional, default values is 1025
 vessSP(1).Name = 'Example speed-power curve Design';
 
 ballast = [...
         ];
 vessSP(2).Speed = ballast(:, 1) * knots2mps;
-vessSP(2).Power = ballast(:, 2) * bhp2Kw * 1e3;
+vessSP(2).Power = ballast(:, 2) * bhp2Kw;
 vessSP(2).Trim = [];
 vessSP(2).Displacement = [];
 vessSP(2).Name = 'Example speed-power curve Ballast';
@@ -74,6 +75,16 @@ ddd = cVesselDryDockDates();
 ddd = ddd.assignDates('startDate', 'endDate');
 vessel.DryDockDates = ddd;
 vessel = vessel.insertIntoDryDockDates;
+
+% Displacement
+disp = cVesselDisplacement();
+disp.Draft_Mean = [];
+disp.Trim = [];
+disp.LCF = []; % Longitudinal centre of flotation
+disp.TPC = []; % Tonnes per centimeter immersion
+disp.Displacement = []; % tonnes
+disp.FluidDensity = 1025; % tn / m^3, optional, default values is 1025
+[vess.Displacement] = deal(disp);
 
 % Assign Bunker Delivery
 ...
