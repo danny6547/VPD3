@@ -1,4 +1,4 @@
-function obj = loadBergeNoon(obj, filename, sheetname, basedate, varargin)
+function [ obj, numWarnings, warnings ] = loadBergeNoon(obj, filename, sheetname, basedate, varargin)
 %loadBergeNoon Load data from Berge Bulk noon data file
 %   Detailed explanation goes here
 
@@ -138,7 +138,7 @@ for fi = 1:numel(filename)
 
         % Load time-seres data from xlsx
         currSheet = sheetname{si};
-        obj = obj.loadXLSX(currFile, currSheet, firstRowIdx - 1, fileColID, ...
+        [obj, numWarnings, warnings] = obj.loadXLSX(currFile, currSheet, firstRowIdx - 1, fileColID, ...
             fileColName, tab, tabColNames, SetSQL, '', 36);
     end
 end

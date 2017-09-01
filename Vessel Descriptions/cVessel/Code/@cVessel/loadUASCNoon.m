@@ -1,4 +1,4 @@
-function obj = loadUASCNoon(obj, filename, varargin)
+function [ obj, numWarnings, warnings ] = loadUASCNoon(obj, filename, varargin)
 %loadUASCNoon Load data from UASC noon data file
 %   Detailed explanation goes here
 
@@ -99,6 +99,6 @@ SetSQL = [SetSQL, set2_sql];
 % firstRowIdx = firstRowIdx - 1;
 
 % Load time-seres data from xlsx
-obj = obj.loadXLSX(filename, mainSheet, firstRowIdx, fileColID, fileColName, tab, tabColNames, SetSQL);
+[obj, numWarnings, warnings] = obj.loadXLSX(filename, mainSheet, firstRowIdx, fileColID, fileColName, tab, tabColNames, SetSQL);
 
 end

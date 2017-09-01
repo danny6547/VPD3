@@ -1,4 +1,4 @@
-function obj = loadAMCLRaw(obj, filename, set2_sql)
+function [ obj, numWarnings, warnings ] = loadAMCLRaw(obj, filename, set2_sql)
 %loadAMCLRaw Load raw data from AMCL file
 %   Detailed explanation goes here
     
@@ -73,5 +73,5 @@ set_sql = [{'DateTime_UTC = STR_TO_DATE(@DateTime_UTC, ''%Y-%m-%d %H:%i'')',...
             'Speed_Through_Water = knots2mps(nullif(@Speed_Through_Water, ''''))'},...
             set2_sql];
 dateTimeFormat_c = {'DateTime_UTC', 'yyyy-mm-dd HH:MM'};
-[obj] = obj.loadXLSX(filename, mainSheet, firstRow, fileColID, fileColName, tab, tabColNames, set_sql, dateTimeFormat_c);
+[obj, numWarnings, warnings] = obj.loadXLSX(filename, mainSheet, firstRow, fileColID, fileColName, tab, tabColNames, set_sql, dateTimeFormat_c);
 end

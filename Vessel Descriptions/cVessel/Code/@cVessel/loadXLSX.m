@@ -1,4 +1,4 @@
-function [obj] = loadXLSX(obj, filename, sheet, firstRow, fileColID, fileColName, tab, varargin)
+function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow, fileColID, fileColName, tab, varargin)
 %loadXLSX Call LOAD IN FILE on .xlsx file with associated table columns
 %   Detailed explanation goes here
 
@@ -157,10 +157,18 @@ function [obj] = loadXLSX(obj, filename, sheet, firstRow, fileColID, fileColName
         try obj = obj.loadInFileDuplicate(tempFile, fileColName, tempTab, tab,...
                 ',', 0, set_ch, tabColNames, '', {'none'});
             
+		   % Get warnings from load infile statement
+		   [obj, warnCount_tbl] = obj.warnings;
+		   numWarnings = [warnCount_tbl{:}];
+		   [obj, warn_tbl] = obj.warnings(false, 0, 10);
+		   warnings = warn_tbl;
+		   
         catch ee
             
+			% Remove file
             delete(tempFile);
             rethrow(ee);
+			
         end
         
         delete(tempFile);

@@ -1,4 +1,4 @@
-function obj = loadDNVGLReportingFormat(obj, filename, varargin )
+function [ obj, numWarnings, warnings ] = loadDNVGLReportingFormat(obj, filename, varargin )
 %loadDNVGLReportingFormat Load files with DNVGL noon-data format to RawData
 %   Detailed explanation goes here
 
@@ -135,7 +135,7 @@ firstRowIdx = firstRowIdx - 1;
 %             set2_sql];
 
 % Load time-seres data from xlsx
-obj = obj.loadXLSX(filename, mainSheet, firstRowIdx, fileColID, fileColName, tab, tabColNames, SetSQL);
+[obj, numWarnings, warnings] = obj.loadXLSX(filename, mainSheet, firstRowIdx, fileColID, fileColName, tab, tabColNames, SetSQL);
 
 % % Load bunker data from xlsx
 % bunkerSheet = 'Bunker Reporting';

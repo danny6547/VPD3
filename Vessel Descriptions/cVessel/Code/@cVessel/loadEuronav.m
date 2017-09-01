@@ -1,4 +1,4 @@
-function [ obj ] = loadEuronav(obj, filename, sheetname, varargin)
+function [ obj, numWarnings, warnings ] = loadEuronav(obj, filename, sheetname, varargin)
 %LOADEURONAV Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -86,6 +86,6 @@ for fi = 1:numel(filename)
     %     SetSQL = [SetSQL, set2_sql];
 
         % Load time-seres data from xlsx
-        obj = obj.loadXLSX(currFile, currSheet, firstRowIdx, fileColID, fileColName, tab, SetSQL);
+        [obj, numWarnings, warnings] = obj.loadXLSX(currFile, currSheet, firstRowIdx, fileColID, fileColName, tab, SetSQL);
     end
 end

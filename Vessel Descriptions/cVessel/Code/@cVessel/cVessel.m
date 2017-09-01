@@ -346,9 +346,8 @@ classdef cVessel < cMySQL
            obj = insertBunkerDeliveryNote(obj);
            
            % Displacement
-           if ~isempty(obj.Displacement)
-            obj.Displacement.insertIntoTable('Displacement');
-           end
+           obj = insertIntoDisplacement(obj);
+           
            
        end
        
@@ -644,7 +643,7 @@ classdef cVessel < cMySQL
         end
         end
 
-        function [obj, IMO] = loadDNVGLRaw(obj, filename)
+        function [obj, IMO, numWarnings, warnings, ] = loadDNVGLRaw(obj, filename)
         % loadDNVGLRaw Load raw data sourced from DNVGL
         
         % Input
@@ -898,6 +897,12 @@ classdef cVessel < cMySQL
         set_s = [set_s, setnull_ch];
         [obj, cols] = obj.loadInFile(filename, tempTab, cols_c, ...
             delimiter_s, ignore_s, set_s, setnull_c);
+		
+	   % Get warnings from load infile statement
+	   [obj, warnCount_tbl] = obj.warnings;
+	   numWarnings = [warnCount_tbl{:}];
+	   [obj, warn_tbl] = obj.warnings(false, 0, 10);
+	   warnings = warn_tbl;
         
         % Generate DateTime prior to using it for identification
         expr_sql = 'ADDTIME(Date_UTC, Time_UTC)';
@@ -1004,6 +1009,17 @@ classdef cVessel < cMySQL
 %                 obj.insertIntoTable(tabName, windCoeffs_v);
                 windCoeffs_v.insertIntoTable(tabName);
             end
+        end
+        
+        function obj = insertIntoDisplacement(obj)
+        % insertIntoDisplacement Insert displacement data into DB.
+            
+           if ~isempty(obj.Displacement)
+               
+               obj.Displacement.displacementInVolume;
+               obj.Displacement.insertIntoTable('Displacement');
+               obj.Displacement.displacementInMass;
+           end
         end
         
         function [obj, exc_st] = ISO19030(obj, varargin)
