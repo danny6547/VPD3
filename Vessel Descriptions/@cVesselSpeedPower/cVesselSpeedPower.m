@@ -183,19 +183,23 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
        obj.releaseModelID;
        
        % Convert
-       obj = obj.displacementInVolume;
+%        obj = obj.displacementInVolume;
+       
+       disp_v = obj.displacementInVolume();
+       dispInput_c = {'Displacement', disp_v};
+       additionalInputs_c = [coeffInput_c, dispInput_c];
        
        % Insert
-       insertIntoTable@cMySQL(obj, 'SpeedPower');
+       insertIntoTable@cMySQL(obj, 'SpeedPower', [], dispInput_c{:});
        insertIntoTable@cMySQL(obj, 'SpeedPowerCoefficients', [], ...
-           coeffInput_c{:});
+           additionalInputs_c{:});
 %        insertIntoTable@cMySQL(obj, ...
 %            'vesselspeedpowermodel', [], ...
 %            'Speed_Power_Model', [obj.ModelID]);
        obj.insertIntoModels();
        
        % Convert back
-       obj = obj.displacementInMass;
+%        obj = obj.displacementInMass;
        
        end
        
@@ -211,6 +215,9 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
            % Read from coefficients
            obj = readFromTable@cMySQL(obj, 'speedpowercoefficients', 'ModelID',...
                {'Displacement', 'Trim'}, varargin{:});
+           
+           dispMass_v = obj.displacementInMass();
+           [obj.Displacement] = deal(dispMass_v);
        end
        
        function [obj, h] = plot(obj)
@@ -364,38 +371,6 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
             spdt = currOut_m;
        end
        
-       function obj = displacementInVolume(obj)
-       % displacementInVolume Convert displacement from mass to volume
-       
-       for oi = 1:numel(obj)
-          
-           if ~isempty(obj(oi).FluidDensity)
-           
-               dens = obj(oi).FluidDensity;
-           else
-               
-               dens = obj(oi).DefaultDensity;
-           end
-           
-           obj(oi).Displacement = obj(oi).Displacement * 1E3 / dens;
-       end
-       end
-       
-       function obj = displacementInMass(obj)
-       
-       for oi = 1:numel(obj)
-          
-           if ~isempty(obj(oi).FluidDensity)
-           
-               dens = obj(oi).FluidDensity;
-           else
-               
-               dens = obj(oi).DefaultDensity;
-           end
-           
-           obj(oi).Displacement = obj(oi).Displacement * 1E3 * dens;
-       end
-       end
     end
     
     methods

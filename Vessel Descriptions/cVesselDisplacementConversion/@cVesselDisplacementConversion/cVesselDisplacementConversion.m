@@ -21,37 +21,39 @@ classdef cVesselDisplacementConversion < handle
     
     methods(Hidden)
        
-       function obj = displacementInVolume(obj)
+       function disp = displacementInVolume(obj)
        % displacementInVolume Convert displacement from mass to volume
        
+       dens = nan(size(obj));
+       disp = [obj.Displacement];
        for oi = 1:numel(obj)
-          
            if ~isempty(obj(oi).FluidDensity)
            
-               dens = obj(oi).FluidDensity;
+               dens(oi) = obj(oi).FluidDensity;
            else
                
-               dens = obj(oi).DefaultDensity;
+               dens(oi) = obj(oi).DefaultDensity;
            end
-           
-           obj(oi).Displacement = obj(oi).Displacement * 1E3 / dens;
-       end
        end
        
-       function obj = displacementInMass(obj)
+           disp = disp ./ (dens ./ 1e3);
+       end
        
+       function disp = displacementInMass(obj)
+       
+       dens = nan(size(obj));
+       disp = [obj.Displacement];
        for oi = 1:numel(obj)
-          
            if ~isempty(obj(oi).FluidDensity)
            
-               dens = obj(oi).FluidDensity;
+               dens(oi) = obj(oi).FluidDensity;
            else
                
-               dens = obj(oi).DefaultDensity;
+               dens(oi) = obj(oi).DefaultDensity;
            end
-           
-           obj(oi).Displacement = obj(oi).Displacement * 1E3 * dens;
        end
+       
+           disp = disp .* (dens ./ 1e3);
        end
     end
     

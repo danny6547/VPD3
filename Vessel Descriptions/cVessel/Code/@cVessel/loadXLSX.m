@@ -197,11 +197,18 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
                 ',', 0, set_ch, tabColNames, '', {'none'});
             
 		   % Get warnings from load infile statement
-		   [obj, warnCount_tbl] = obj.warnings;
-		   numWarnings = [warnCount_tbl{:}];
-		   [obj, warn_tbl] = obj.warnings(false, 0, 10);
-		   warnings = warn_tbl;
+% 		   [obj, warnCount_tbl] = obj.warnings;
+% 		   numWarnings = [warnCount_tbl{:}];
+% 		   [obj, warn_tbl] = obj.warnings(false, 0, 10);
+% 		   warnings = warn_tbl;
 		   
+           [obj, numWarnings] = obj.warnings;
+           warnings = struct();
+           if numWarnings ~= 0
+               [obj, warn_st] = obj.warnings(false, 0, 10);
+               warnings = warn_st;
+           end
+           
         catch ee
             
 			% Remove file

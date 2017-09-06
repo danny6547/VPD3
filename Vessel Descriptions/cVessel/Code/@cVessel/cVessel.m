@@ -203,6 +203,7 @@ classdef cVessel < cMySQL
                     name = repmat(name, size(imo));
                 end
            else
+%                 name = validateCellStr('');
                 name = vesselName(imo);
                 if isempty(name)
                     name = repmat({''}, size(imo));
@@ -1014,11 +1015,12 @@ classdef cVessel < cMySQL
         function obj = insertIntoDisplacement(obj)
         % insertIntoDisplacement Insert displacement data into DB.
             
-           if ~isempty(obj.Displacement)
+           if ~isempty([obj.Displacement])
                
-               obj.Displacement.displacementInVolume;
-               obj.Displacement.insertIntoTable('Displacement');
-               obj.Displacement.displacementInMass;
+%                obj.Displacement.displacementInVolume;
+               disp_v = obj.Displacement.displacementInVolume();
+               obj.Displacement.insertIntoTable('Displacement', [], 'Displacement', disp_v);
+%                obj.Displacement.displacementInMass;
            end
         end
         
@@ -1066,7 +1068,7 @@ classdef cVessel < cMySQL
                 end
 
                 % Refresh performance data
-                [obj, tempISOTbl] = obj.applyFilters(varargin{:});
+                [obj(oi), tempISOTbl] = obj(oi).applyFilters(varargin{:});
                 cols = {'DateTime_UTC', 'Speed_Loss'};
                 props = {'DateTime_UTC', 'Speed_Index'};
                 if isempty(tempISOTbl)
@@ -1099,6 +1101,7 @@ classdef cVessel < cMySQL
         
         % Input
         comment = validateCellStr(comment, 'cVessel.ISO19030Analysis', 'comment', 2);
+        comment = comment(:);
         params_c = [varargin{:}];
         nAdditionalArgin = numel(params_c);
         
@@ -1116,11 +1119,16 @@ classdef cVessel < cMySQL
            
            if ~allCell
                
-               params_c = repmat({varargin}, numel(obj), 1);
+               params_c = repmat({varargin}, numel(obj), 2);
            end
+           
+        else
+            
+            params_c = repmat({{}}, numel(comment), 1);
         end
         
-        if ~isequal(numel(comment), numel(params_c))
+        if (~isempty(comment) && ~isempty(params_c))...
+                && ~isequal(numel(comment), numel(params_c))
             
             errid = 'cV:ISO:InputsSizeMismatchComment';
             errmsg = ['If multiple sets of name, value parameters are '...
