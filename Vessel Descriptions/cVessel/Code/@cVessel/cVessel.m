@@ -643,7 +643,7 @@ classdef cVessel < cMySQL
         end
         end
 
-        function [obj, IMO, numWarnings, warnings, ] = loadDNVGLRaw(obj, filename)
+        function [obj, IMO, numWarnings, warnings] = loadDNVGLRaw(obj, filename)
         % loadDNVGLRaw Load raw data sourced from DNVGL
         
         % Input
