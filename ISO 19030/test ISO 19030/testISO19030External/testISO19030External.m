@@ -207,13 +207,13 @@ methods(Static)
        
         % Create speed, power curves
         objSP = cVesselSpeedPower();
-        objSP.Displacement = 5e5;
+        objSP.Displacement = 5e5 * 1.025;
         objSP.Trim = 0;
         objSP.Speed = 5:5:25;
         objSP.Power = 1e4:1e4:5e4;
         objSP.Propulsive_Efficiency = 0.7;
 
-        objSP(2).Displacement = 1e6;
+        objSP(2).Displacement = 1e6 * 1.025;
         objSP(2).Trim = -5;
         objSP(2).Speed = linspace(5, 20, 5);
         objSP(2).Power = linspace(1e4, 9e4, 5);
