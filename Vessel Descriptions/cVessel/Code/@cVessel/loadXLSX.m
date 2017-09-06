@@ -1,6 +1,38 @@
-function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow, fileColID, fileColName, tab, varargin)
-%loadXLSX Call LOAD IN FILE on .xlsx file with associated table columns
-%   Detailed explanation goes here
+function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow, fileColID, fileColName, varargin)
+%loadXLSX Call LOAD IN FILE on .xlsx file with data interpretation
+%   obj = loadXLSX(obj, filename, sheet, firstRow, fileColID, fileColName) 
+%	will load into database table 'RawData' the row, columns data in the 
+%	XLSX file FILENAME, in sheet SHEET, whose first row is given by 
+%	FIRSTROW, and whose column indices are given by FILECOLID and 
+%   corresponding column names by FILECOLNAME. FILENAME can be a file path
+%   string or a cell array of such strings. SHEET can be a string or cell
+%   array of strings containing the worksheet names. FIRSTROW must be a 
+%   positive, scalar integer. FILECOLID is a vector of positive integers
+%   and FILECOLNAME is a cell array of strings of equal length to FILECOLID
+%   and whose elements correspond to those of FILECOLID.
+%   obj = loadXLSX(..., tab) will do as above but load the data into
+%   database table given by string TAB. The default value for TAB is
+%   'RawData'.
+%   obj = loadXLSX(..., set) will do as above but also apply the SQL SET
+%   statment given by string cell array of strings SET within the SQL LOAD
+%   IN FILE statement.
+%   obj = loadXLSX(..., datecols) will do as above but will also use cell
+%   array of strings DATECOLS to identify and parse the date and time
+%   columns. DATECOLS has two columns and as many rows as date and time
+%   columns in the file. The first column contains the column header names
+%   and the second column contains the corresponding date format strings.
+%   See 'help datestr' for the definition of these strings. Note that this
+%   input is used only by MATLAB for date recognition and that the SQL LOAD
+%   IN FILE statement will require it's own date interpretation input.
+%   obj = loadXLSX(..., lastrow) will do as above but only read data down
+%   to the row index given by scalar integer LASTROW.
+%   [obj, numWarnings] = loadXLSX(obj, ...) will do as above but return in
+%   numerical scalar NUMWARNINGS the number of warning returned in loading
+%   the data.
+%   [..., warnings] = loadXLSX(obj, ...) will do as above but return in 
+%   WARNINGS a struct containing a number of the first warnings. WARNINGS
+%   has fields 'Leve', 'Code' and 'Message' corresponding to that returned
+%   by the SQL statement SHOW WARNINGS.
 
     % Input
     filename = validateCellStr(filename, 'cVessel.loadXLSX', 'filename', 2);
@@ -10,21 +42,28 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
     validateattributes(fileColID, {'numeric', 'cell'}, {'vector'}, ...
         'cVessel.loadXLSX', 'fileColID', 5);
     validateCellStr(fileColName, 'cVessel.loadXLSX', 'fileColName', 6);
-    validateattributes(tab, {'char'}, {'vector'}, ...
-        'cVessel.loadXLSX', 'tab', 7);
+	
+	tab = 'RawData';
+	if nargin > 6
+	
+        tab = varargin{1};
+		validateattributes(tab, {'char'}, {'vector'}, ...
+			'cVessel.loadXLSX', 'tab', 7);
+	end
+	
 %     tabColNames = validateCellStr(tabColNames, 'cVessel.loadXLSX', ...
 %         'tabColNames', 8);
     set_c = {''};
     if nargin > 7
         
-        set_c = varargin{1};
+        set_c = varargin{2};
         validateCellStr(set_c, 'cVessel.loadXLSX', 'set', 9);
     end
     
     dateCols_c = {''};
     if nargin > 8
         
-        dateForm_c = varargin{2};
+        dateForm_c = varargin{3};
         if ~isempty(dateForm_c)
             
             validateCellStr(dateForm_c, 'cVessel.loadXLSX', 'dateForm', 10);
@@ -36,7 +75,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
     lastRow_l = false;
     if nargin > 9
         
-        lastRow = varargin{3};
+        lastRow = varargin{4};
         validateattributes(lastRow, {'numeric'}, {'scalar'}, ...
             'cVessel.loadXLSX', 'lastRow', 11); 
         lastRow_l = true;
