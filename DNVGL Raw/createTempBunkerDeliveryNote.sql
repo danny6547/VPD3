@@ -1,5 +1,8 @@
 /* Create Temporary Bunker Delivery Note Table, storing data prior to inserting into final table without duplicates */
 
+
+DROP PROCEDURE IF EXISTS createTempBunkerDeliveryNote;
+
 delimiter //
 
 CREATE PROCEDURE createTempBunkerDeliveryNote()
@@ -15,6 +18,7 @@ CREATE TABLE TempBunkerDeliveryNote (id INT PRIMARY KEY AUTO_INCREMENT,
 								Mass DOUBLE(10, 3),
 								Sulphur_Content DOUBLE(2, 1),
 								Density_At_15dg DOUBLE(5, 4),
-								Lower_Heating_Value DOUBLE(5, 3));
+								Lower_Heating_Value DOUBLE(5, 3),
+                                CONSTRAINT UniIMO_BDN UNIQUE(IMO_Vessel_Number, BDN_Number));
                                 
 END
