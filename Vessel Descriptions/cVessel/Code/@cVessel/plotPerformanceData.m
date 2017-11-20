@@ -44,6 +44,11 @@ while ~obj.iterFinished
    
    currFig = figure;
    currAx = axes('Parent', currFig);
+   
+   % Temp code until I figure out how to iterate these things properly
+   if vesselI(1) > numel(obj)
+       break
+   end
    currVessel = obj(vesselI(1));
    
    % Find indices into input struct
@@ -196,7 +201,7 @@ while ~obj.iterFinished
    
    titleFontsz = 13;
    vesselNum = currVessel.IMO_Vessel_Number;
-   vesselName_ch = vesselName(vesselNum);
+   vesselName_ch = []; % vesselName(vesselNum);
    if isempty(vesselName_ch)
        vesselName_ch = num2str(vesselNum);
    end
