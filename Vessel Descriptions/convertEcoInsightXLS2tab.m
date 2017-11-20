@@ -104,9 +104,12 @@ else
     % Separate data by performance values
     timedata_st = arrayfun(@(x) structfun(@(y) y', x, 'Uni', 0), timedata_st);
 %     imo_c = num2cell(imo);
-    imo_c = arrayfun(@(x, y) repmat(x, size(y.dates)), imo(:)', timedata_st,...
-        'Uni', 0);
-    [timedata_st(:).IMO] = deal(imo_c{:});
+    if ~isfield(timedata_st, 'IMO')
+        
+        imo_c = arrayfun(@(x, y) repmat(x, size(y.dates)), imo(:)', timedata_st,...
+            'Uni', 0);
+        [timedata_st(:).IMO] = deal(imo_c{:});
+    end
     sidx = [timedata_st(:).sidx];
     pidx = [timedata_st(:).pidx];
     dates = [timedata_st(:).dates];
