@@ -1,9 +1,6 @@
 /* Insert data from DNVGLRaw into RawData for a given vessel, after some 
 modification. */
 
-
-
-
 DROP PROCEDURE IF EXISTS insertFromDNVGLRawIntoRaw;
 
 delimiter //
@@ -29,12 +26,12 @@ INSERT INTO rawdata (IMO_Vessel_Number,
 							 Air_Temperature,
 							 Air_Pressure,
 							 Mass_Consumed_Fuel_Oil,
-                             Shaft_Power,
+                             Delivered_Power,
                              Displacement
                              )
-SELECT IMO_Vessel_Number, 
-							 Water_Depth, 
-							 DateTime_UTC, 
+SELECT IMO_Vessel_Number,
+							 Water_Depth,
+							 DateTime_UTC,
 							 Relative_Wind_Speed,
 							 Relative_Wind_Direction,
 							 Speed_Over_Ground,
@@ -64,7 +61,7 @@ SELECT IMO_Vessel_Number,
                                     Air_Temperature = VALUES(Air_Temperature),
                                     Air_Pressure = VALUES(Air_Pressure),
                                     Mass_Consumed_Fuel_Oil = VALUES(Mass_Consumed_Fuel_Oil),
-                                    Shaft_Power = VALUES(Shaft_Power),
+                                    Delivered_Power = VALUES(Delivered_Power),
                                     Displacement = VALUES(Displacement)
 									;
 END;
