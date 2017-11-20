@@ -76,9 +76,25 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
     if nargin > 9
         
         lastRow = varargin{4};
-        validateattributes(lastRow, {'numeric'}, {'scalar'}, ...
-            'cVessel.loadXLSX', 'lastRow', 11); 
-        lastRow_l = true;
+        validateattributes(lastRow, {'numeric'}, {'vector'}, ...
+            'cVessel.loadXLSX', 'lastRow', 11);
+        lastRow_l = ~isempty(lastRow);
+        
+        if isscalar(lastRow)
+            
+            lastRow = repmat(lastRow, [1, numel(sheet)]);
+        end
+        
+        if ~isequal(numel(sheet), numel(lastRow))
+           
+            errid = 'loadXLSX:SheetRowNumberMismatch';
+            errmsg = ['When LASTROW is a vector, it must have as many '...
+                'elements as SHEET'];
+            error(errid, errmsg);
+        end
+        
+        % Reduce by one to fit data in Berge Blanc 2017 xlsx
+        lastRow = lastRow - 1;
     end
     
     readCols_l = iscellstr(fileColID);
@@ -195,7 +211,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
         % Load in CSV file
         try obj = obj.loadInFileDuplicate(tempFile, fileColName, tempTab, tab,...
                 ',', 0, set_ch, tabColNames, '', {'none'});
-            
+           
 		   % Get warnings from load infile statement
 % 		   [obj, warnCount_tbl] = obj.warnings;
 % 		   numWarnings = [warnCount_tbl{:}];
