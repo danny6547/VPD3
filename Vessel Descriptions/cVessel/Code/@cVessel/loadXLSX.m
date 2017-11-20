@@ -118,11 +118,12 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
         defSet_c(cols2replace_l) = set_c(x_l);
 %         set_c = [defSet_c, set_c(~x_l)];
         
-        % Set NaN in file to NULL in DB, for columns without explicit set
-        % statement
-        [~, ~, nanSet_c] = obj.setNullIfEmpty(tabColNames, false, '''Nan''');
-        nanSet_c(cols2replace_l) = [];
-        set_c = [defSet_c(:)', set_c(~x_l), nanSet_c(:)'];
+%         % Set NaN in file to NULL in DB, for columns without explicit set
+%         % statement
+%         [~, ~, nanSet_c] = obj.setNullIfEmpty(tabColNames, false, '''Nan''');
+%         nanSet_c(cols2replace_l) = [];
+%         set_c = [defSet_c(:)', set_c(~x_l), nanSet_c(:)'];
+        set_c = [defSet_c(:)', set_c(~x_l)];
         
     end
     set_ch = ['SET ', obj.colSepList(set_c)];
