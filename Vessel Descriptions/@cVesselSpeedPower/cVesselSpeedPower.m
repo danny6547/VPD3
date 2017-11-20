@@ -192,13 +192,13 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
        additionalInputs_c = [coeffInput_c, dispInput_c];
        
        % Insert
-       insertIntoTable@cMySQL(obj, 'SpeedPower', [], dispInput_c{:});
-       insertIntoTable@cMySQL(obj, 'SpeedPowerCoefficients', [], ...
+       insertIntoTable@cModelID(obj, 'SpeedPower', [], dispInput_c{:});
+       insertIntoTable@cModelID(obj, 'SpeedPowerCoefficients', [], ...
            additionalInputs_c{:});
 %        insertIntoTable@cMySQL(obj, ...
 %            'vesselspeedpowermodel', [], ...
 %            'Speed_Power_Model', [obj.ModelID]);
-       obj.insertIntoModels();
+%        obj.insertIntoModels();
        
        % Convert back
 %        obj = obj.displacementInMass;
