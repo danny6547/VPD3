@@ -375,3 +375,33 @@ cVSP.Displacement: document units of tons
 cVSP.FluidDensity: new property giving the density at which the Displacement was calculated
 cVSP.insert: change displacement to m^3
 Acquire Adjunct to D1250-08 and Adjunct to D1250 from ASTM.
+Need read-only mode for database access
+	MySQL (cConnectMySQLDB ?) property ReadOnly, logical
+	cModelID: exit the following methods when ReadOnly true: constructor, destructor, insertIntoTable, set methods
+	When all tests pass in read-only mode, code is compatible with read-only DB
+Tests:
+	
+loadBergeNoon: Fix bug where dates inserted with day field equal to 0.
+cVessel.regressions: rename method to regression.
+updateBrakePower: replace 24 hours with hours in service per record, limited to 25.
+VesselDisplacement: table for relating vessel IMO to displacement model
+BunkerDeliveryNote: make bdn independent of IMO_Vessel_Number
+cModelID: when a model is updated from a script, the Name property must be assigned to first, otherwise the other values will be overwritten
+
+cMID.Synched:
+	Data different from that in DB
+	When TRUE, delete data in DB before inserting new
+	When FALSE, skip insert
+
+cMID.set.Name / cMID.set.ModelID:
+	set Synched to TRUE
+	Check if data selected matches current data:
+		no: issue warning that data overwritten
+		
+cTableObject : abstract class for reading and writing data between objects in MATLAB and tables in a database 
+Move methods readFromTable and insertIntoTable from cMySql to cTO.
+Inherit cV, cSP, cW, cD from cTO.
+Extract method matchingFields from readFromTable.
+Create listeners for all matchingFields of cTO implementation classes.
+Inherit cMID from cTO.
+When cMID calls readFromTable, have listeners check whether data overwrites different data, issue warning if so.
