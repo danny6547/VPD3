@@ -20,6 +20,11 @@ classdef (Abstract) cModelID < cMySQL & handle
         ModelTable = 'Models'; 
     end
     
+    properties(Hidden)
+        
+        Synched = true;
+    end
+    
     methods
     
        function obj = cModelID(varargin)
@@ -57,7 +62,7 @@ classdef (Abstract) cModelID < cMySQL & handle
            obj.releaseModelID();
        end
        
-       function insertIntoTable(obj, table, varargin)
+       function insertIntoTable(obj, tab, varargin)
        % insertIntoTable
        
 %        % Assign model table parameters
@@ -73,9 +78,14 @@ classdef (Abstract) cModelID < cMySQL & handle
               errmsg = 'Model name cannot be empty';
               error(errid, errmsg);
            end
+           
+%            % Delete pre-existing model data
+%            where_sql = ['ModelID = ', num2str(obj.ModelID)];
+%            tab = obj(ii).DBTable{ti};
+%            obj(oi).delete(tab, where_sql);
 
            % Insert into "data table"
-           insertIntoTable@cMySQL(obj(oi), table, varargin{:});
+           insertIntoTable@cMySQL(obj(oi), tab, varargin{:});
 
            % Insert into "model table"
            obj = obj.insertIntoModels();
@@ -196,6 +206,17 @@ classdef (Abstract) cModelID < cMySQL & handle
         end
     end
     
+    methods(Static, Access = protected)
+        
+        function warnAboutOverwrite()
+        % warnAboutOverwrite Warn that data overwritten from database
+        
+            warnID = 'cMID:Overwrite';
+            warnMsg = 'Data overwritten when identifier changed';
+            warning(warnID, warnMsg);
+        end
+    end
+    
     methods(Access = private)
         
         function obj = reserveModelID(obj)
@@ -263,7 +284,7 @@ classdef (Abstract) cModelID < cMySQL & handle
         
         % If ModelID already in DB, read data out
         for ti = 1:numel(obj.DBTable)
-            try obj.readFromTable(obj.DBTable{ti}, obj.FieldName);
+            try obj = obj.readFromTable(obj.DBTable{ti}, obj.FieldName);
                 
             catch ee
                 
@@ -273,12 +294,19 @@ classdef (Abstract) cModelID < cMySQL & handle
             end
         end
         
+%         % Issure warnings if different to existing data
+%         if any(different_l)
+%             
+%             obj.warnAboutOverwrite();
+%         end
+        
         % Read Name from Models table
         modelID_ch = num2str(modelID, '%u');
         type_ch = ['''', obj.Type, ''''];
         where_sql = ['ModelID = ', modelID_ch, ' AND Type = ', type_ch];
         [~, tbl] = obj.select('Models', 'Name', where_sql);
         if ~isempty(tbl)
+            
             name = tbl.name{1};
             obj.Name = name;
         end
