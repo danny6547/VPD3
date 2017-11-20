@@ -258,6 +258,7 @@ classdef cVessel < cMySQL
             if ddi_l
                 ddIntIdx_c = {obj.DryDockInterval};
                 ddIdx_c = cellfun(@(x) x - 1, ddIntIdx_c, 'Uni', 0);
+%                 ddIdx_c = cellfun(@(x) x, ddIntIdx_c, 'Uni', 0);
                 w = ~cellfun(@(x) isempty(x) || isnan(x) || x == 0, ddIdx_c);
 
                 objddd(1, numel(find(w))) = cVesselDryDockDates();
@@ -898,8 +899,7 @@ classdef cVessel < cMySQL
             delimiter_s, ignore_s, set_s, setnull_c);
 		
 	   % Get warnings from load infile statement
-	   [obj, warnCount_tbl] = obj.warnings;
-	   numWarnings = [warnCount_tbl{:}];
+	   [obj, numWarnings] = obj.warnings;
 	   [obj, warn_tbl] = obj.warnings(false, 0, 10);
 	   warnings = warn_tbl;
         
@@ -913,7 +913,7 @@ classdef cVessel < cMySQL
             cols = cols{1}(:)';
         end
         tab1 = tempTab;
-        finalCols = [cols; {col}];
+        finalCols = [cols_c, {col}];
         cols1 = finalCols;
         tab2 = permTab;
         cols2 = finalCols;
@@ -1039,13 +1039,14 @@ classdef cVessel < cMySQL
 
                 tic;
                 
+                % Call ISO
+                obj(oi) = obj(oi).call('ISO19030A', imo_ch);
+                
                 % Check if displacement values needed
                 [~, iso_tbl] = obj(oi).select('tempRawISO', 'Displacement');
                 disp_v = iso_tbl.displacement;
                 needDisplacement_l = all(isnan(disp_v));
                 
-                % Call ISO
-                obj(oi) = obj(oi).call('ISO19030A', imo_ch);
                 if needDisplacement_l
                     obj(oi) = obj(oi).updateDisplacement;
                 end
@@ -1201,8 +1202,8 @@ classdef cVessel < cMySQL
         % rawData Get raw data for this vessel at this dry-docking interval
         
             % Get raw table name, performanceData inputs
-            rawTable = strrep(obj(1).PerformanceTable, 'PerformanceData',...
-                'raw');
+            rawTable = strrep(obj(1).PerformanceTable, 'Performance',...
+                'Raw');
             [imo, ddi] = obj.currentIMODryDockIndex;
             [~, rawColumns] = obj(1).colNames(rawTable);
             excludedCols = {'id'};
@@ -1407,7 +1408,7 @@ classdef cVessel < cMySQL
         sqldates_c(midnights_l) = cellfun(@(x) [x, ' 00:00:00'], ...
             iso_tbl.datetime_utc(midnights_l), 'Uni', 0);
         
-        sqldates_ch = datestr(datenum(sqldates_c, 'dd-mm-yyyy HH:MM:SS'),...
+        sqldates_ch = datestr(datenum(sqldates_c, obj(1).DateFormStr),...'dd-mm-yyyy HH:MM:SS'),...
             'yyyy-mm-dd HH:MM');
         sqldates_c = cellstr(sqldates_ch);
         resData_c = [num2cell(iso_tbl.imo_vessel_number),...
@@ -1441,10 +1442,7 @@ classdef cVessel < cMySQL
        
            obj.insertValuesDuplicate(tab, resCol, resData_c);
        end
-        end
-    end
-    
-    methods(Access = private, Hidden)
+       end
         
         function obj = assignPerformanceData(obj, dataStruct, varargin)
         % assignPerformanceData Assign from struct or table to obj
@@ -1483,6 +1481,10 @@ classdef cVessel < cMySQL
             end
         end
         end
+    end
+    
+    methods(Access = private, Hidden)
+        
         
         function obj = fitToData(obj, struc)
         % fitToData Expand OBJ to fit structure based on dates in structure
@@ -1723,12 +1725,12 @@ classdef cVessel < cMySQL
        % 
        
        % Input
-       validateattributes(ddd, {'cVesselDryDockDates'}, {'scalar'});
+       validateattributes(ddd, {'cVesselDryDockDates'}, {});
        
        % Assign IMO
        imo = obj.IMO_Vessel_Number;
        if ~isempty(imo)
-           ddd.IMO_Vessel_Number = imo;
+           [ddd.IMO_Vessel_Number] = deal(imo);
        end
        
        % Assign object
