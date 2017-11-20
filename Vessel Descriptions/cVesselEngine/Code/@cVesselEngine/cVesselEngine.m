@@ -34,7 +34,7 @@ classdef cVesselEngine < handle
             
             % Get FOC, Power 
             power = currObj.powerFromMCRPCT(powerPCT, mcr);
-            FOC = currObj.FOCFromSFOC(sfoc, power);
+            FOC = currObj.FOCFromSFOC(sfoc./1e6, power);
             
             % Assign vectors
             currObj.MCR = mcr;
