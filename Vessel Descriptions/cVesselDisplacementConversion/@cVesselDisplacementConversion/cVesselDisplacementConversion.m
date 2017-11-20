@@ -25,10 +25,13 @@ classdef cVesselDisplacementConversion < handle
        % displacementInVolume Convert displacement from mass to volume
        
        dens = nan(size(obj));
-       disp = [obj.Displacement];
+       disp_c = {obj.Displacement};
+       disp_c(cellfun(@isempty, disp_c)) = {nan};
+       disp = [disp_c{:}];
+       
        for oi = 1:numel(obj)
            if ~isempty(obj(oi).FluidDensity)
-           
+               
                dens(oi) = obj(oi).FluidDensity;
            else
                
