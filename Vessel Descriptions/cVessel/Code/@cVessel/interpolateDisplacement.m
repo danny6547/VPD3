@@ -15,7 +15,8 @@ function [obj, dates_v, disp_v ] = interpolateDisplacement(obj, disp_tbl )
     evalDraft_v = mean([eval_tbl.static_draught_fore, ...
         eval_tbl.static_draught_aft], 2);
     evalTrim_v = eval_tbl.trim;
-    dates_v = datenum(eval_tbl.datetime_utc, 'yyyy-mm-dd HH:MM:SS');
+%     dates_v = datenum(eval_tbl.datetime_utc, 'dd-mm-yyyy HH:MM:SS');
+    [~, dates_v] = obj(1).sql2matlabdates(eval_tbl.datetime_utc);
     
     nearDraft_v = FindNearestInVector(evalDraft_v, refDraft_v);
     
@@ -28,14 +29,14 @@ function [obj, dates_v, disp_v ] = interpolateDisplacement(obj, disp_tbl )
         % Get all rows of displacement table with this displacement
         currDraft = nearDraft_v(ri);
         currTrim = evalTrim_v(ri);
-        row_l = refDisp_v == currDraft;
+        row_l = refDraft_v == currDraft;
         
         % Get nearest trim from those rows
         refTrimAtDraft_v = refTrim_v(row_l);
         nearTrim = FindNearestInVector(currTrim, refTrimAtDraft_v);
         
         % Get Reference Displacement at nearest draft, trim
-        trim_l = refDisp_v == nearTrim;
+        trim_l = refTrim_v == nearTrim;
         currDispTrim_i = find(row_l & trim_l, 1);
         disp_v(ri) = refDisp_v(currDispTrim_i);
     end
