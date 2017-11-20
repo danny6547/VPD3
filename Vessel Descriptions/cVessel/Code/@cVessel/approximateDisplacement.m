@@ -11,6 +11,10 @@ function [ obj, dates_v, disp_v ] = approximateDisplacement(obj, disp_tbl)
         'Static_Draught_Aft', 'Trim'};
     [~, eval_tbl] = obj.select(evalTab_ch, evalCols_c);
     
+    % Filter mysterious rows of all nan values from table
+    filter_l = cellfun(@(x) isnumeric(x) && isnan(x), eval_tbl.datetime_utc);
+    eval_tbl(filter_l, :) = [];
+    
     % Get time-series columns
     evalDraft_v = mean([eval_tbl.static_draught_fore, ...
         eval_tbl.static_draught_aft], 2);
@@ -26,8 +30,7 @@ function [ obj, dates_v, disp_v ] = approximateDisplacement(obj, disp_tbl)
     [~, nearDraftI_v, diffDraft_v] = FindNearestInVector(evalDraft_v, refDraft_v);
     
     % Output dates
-    dates_v = datenum(eval_tbl.datetime_utc, 'dd-mm-yyyy');
-    
+    dates_v = datenum(eval_tbl.datetime_utc, obj(1).DateFormStr); % 'dd-mm-yyyy HH:MM:SS');
     disp_v = nan(height(eval_tbl), 1);
     
     for di = 1:height(eval_tbl)
