@@ -12,14 +12,25 @@ BEGIN
     DECLARE Fluid_Density INT(4);
     
     SET knots2SI := 0.5144444444;
-    SET Fluid_Density := 1025;
+    SET Fluid_Density := 1.025;
     
     /* Add columns matching those in rawdata table, update values appropriately */
-    UPDATE tempRaw SET Relative_Wind_Speed = Wind_Force_Kn * knots2SI;           /* Assume wind recorded is relative to ship's frame of reference */
+    UPDATE tempRaw SET Relative_Wind_Speed = knots2mps(Wind_Force_Kn);           /* Assume wind recorded is relative to ship's frame of reference */
     
-    UPDATE tempRaw SET Relative_Wind_Direction = Wind_Dir;           /* Assume ship forward direction is 0, clockwise positive*/
+    UPDATE tempRaw SET Relative_Wind_Direction = CASE            /* Assume ship forward direction is 0, clockwise positive*/
+													WHEN Wind_Dir = 1 THEN 0
+													WHEN Wind_Dir = 2 THEN 45
+													WHEN Wind_Dir = 3 THEN 90
+													WHEN Wind_Dir = 4 THEN 135
+													WHEN Wind_Dir = 5 THEN 180
+													WHEN Wind_Dir = 6 THEN 225
+													WHEN Wind_Dir = 7 THEN 270
+													WHEN Wind_Dir = 8 THEN 315
+												 END;
 	
-    UPDATE tempRaw SET Speed_Over_Ground = Speed_GPS;           /* Assume wind recorded is relative to ship's frame of reference */
+    UPDATE tempRaw SET Speed_Over_Ground = knots2mps(Speed_GPS);           /* Assume wind recorded is relative to ship's frame of reference */
+    
+    UPDATE tempRaw SET Current_Speed = knots2mps(Current_Speed);
     
     /* Ship heading not found in DNVGL raw files. Data required by ISO only for calculation of true wind speed and direction, not used in performance analysis.
 	ALTER TABLE tempRaw ADD Ship_Heading DOUBLE (10, 5);
@@ -35,7 +46,7 @@ BEGIN
 	ALTER TABLE tempRaw ADD Water_Depth DOUBLE(10, 5);
     UPDATE tempRaw SET Water_Depth = Water_Depth;            */
     
-    /* Rudder Angle not found in DNVGL raw files. Data required by ISO only for calculation of true wind speed and direction, not used in performance analysis.
+    /* Rudder Angle not found in DNVGL raw files. Data required by ISO only for reference conditions.
 	ALTER TABLE tempRaw ADD Rudder_Angle DOUBLE (10, 5);
     UPDATE tempRaw SET Rudder_Angle = NULL;           /* Assume wind recorded is relative to ship's frame of reference */
     
@@ -43,13 +54,13 @@ BEGIN
     
     UPDATE tempRaw SET Air_Temperature = Temperature_Ambient;
     
-    UPDATE tempRaw SET Air_Pressure = ME_Barometric_Pressure;           /* Assumes that ship has only one engine, and that air intake pressure is a sufficient approximation for atmospheric pressure.*/
+    UPDATE tempRaw SET Air_Pressure = bar2Pa(ME_Barometric_Pressure);           /* Assumes that ship has only one engine, and that air intake pressure is a sufficient approximation for atmospheric pressure.*/
     
     /* Air density is a derived value */
     
     /* Speed through water
-    ALTER TABLE tempRaw ADD Speed_Through_Water DOUBLE(10, 5);
-    UPDATE tempRaw SET Speed_Through_Water = Speed_Through_Water;         */
+    /* ALTER TABLE tempRaw ADD Speed_Through_Water DOUBLE(10, 5); */
+    UPDATE tempRaw SET Speed_Through_Water = knots2mps(Speed_Through_Water);
     
     /* Delivered Power is a derived value. It could be read from input after further code development. */
     
@@ -59,7 +70,7 @@ BEGIN
     
     /* Shaft Torque not found in DNVGL raw files. Procedure `updateShaftPower` not compatible with this input file type. */
     
-    UPDATE tempRaw SET Mass_Consumed_Fuel_Oil = ME_Consumption * 1e3;           /* Assume only one engine. */
+    UPDATE tempRaw SET Mass_Consumed_Fuel_Oil = ME_Consumption;           /* Assume only one engine. */
     
     /* Volume of consumed fuel oil not found in DNVGL raw files. Procedure `updateMassFuelOilConsumed` not compatible with this input file type. */
     
@@ -80,9 +91,9 @@ BEGIN
     
     /* Expected_Speed_Through_Water is a derived variable. */
     
-    /* Displacement is a derived variable. It could be optionally read from input after further code development.
-	ALTER TABLE tempRaw ADD Displacement DOUBLE(20, 10);
-    UPDATE tempRaw SET Displacement = Draft_Displacement_Actual / Fluid_Density;           /* Assume units of displacement in analysis are tonnes. */
+    /* Displacement is a derived variable. It could be optionally read from input after further code development. */
+	/* ALTER TABLE tempRaw ADD Displacement DOUBLE(20, 10); */
+    UPDATE tempRaw SET Displacement = Draft_Displacement_Actual / Fluid_Density;           /* Units of displacement in Hempel HPDB are m3. */
     
     /* Speed_Loss is a derived variable. */
     
