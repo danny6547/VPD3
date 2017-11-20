@@ -24,8 +24,10 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
     end
     
     properties(Hidden)
-       
+        
         Model = 'exponential';
+        Draft_Fore = [];
+        Draft_Aft = [];
     end
     
     properties(Hidden, Constant)
@@ -584,5 +586,29 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
             obj.R_Squared = r2;
         end
         
+        function obj = set.Draft_Fore(obj, d)
+            
+            if isempty(d)
+                
+               obj.Draft_Fore = [];
+               return
+            end
+            
+            validateattributes(d, {'numeric'}, ...
+                {'real', 'scalar', 'positive', 'nonnan'});
+            obj.Draft_Fore = d;
+        end
+        
+        function obj = set.Draft_Aft(obj, d)
+            
+            if isempty(d)
+                
+               obj.Draft_Aft = [];
+               return
+            end
+            validateattributes(d, {'numeric'}, ...
+                {'real', 'scalar', 'positive', 'nonnan'});
+            obj.Draft_Aft = d;
+        end
     end
 end
