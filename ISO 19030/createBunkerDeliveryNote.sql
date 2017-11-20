@@ -10,7 +10,7 @@ BEGIN
 
 CREATE TABLE BunkerDeliveryNote (id INT PRIMARY KEY AUTO_INCREMENT,
 								IMO_Vessel_Number INT,
-								BDN_Number VARCHAR(100) UNIQUE,
+								BDN_Number VARCHAR(100),
 								Bunker_Delivery_Date DATE,
 								Fuel_Type VARCHAR(100),
 								Mass DOUBLE(10, 3),
