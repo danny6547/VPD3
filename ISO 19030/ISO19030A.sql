@@ -7,8 +7,13 @@ delimiter //
 CREATE PROCEDURE ISO19030A(imo int)
 BEGIN
 	
-	/* Get retreived data set 5.3.3 */
+    /* Create Temporary table for analysis */
     CALL createTempRawISO(imo);
+    
+    /* Remove data which cannot be used in calculations */
+    CALL cleanData();
+    
+	/* Get retreived data set 5.3.3 */
     CALL removeInvalidRecords();
     CALL sortOnDateTime();
     CALL updateDefaultValues();
