@@ -1,9 +1,6 @@
 /* Update LCV and Density at 15 degrees Celsius of bunker fuel from bunker 
 notes */
 
-
-
-
 DROP PROCEDURE IF EXISTS updateFromBunkerNote;
 
 delimiter //
@@ -25,11 +22,11 @@ BEGIN
     
     IF BunkerReportAvailable
     THEN
-		UPDATE tempRaw SET Lower_Caloirifc_Value_Fuel_Oil = (SELECT Lower_Heating_Value FROM BunkerDeliveryNote WHERE BDN_Number = tempRaw.ME_Fuel_BDN);
-        UPDATE tempRaw SET Density_Fuel_Oil_15C = (SELECT Density_At_15dg FROM BunkerDeliveryNote WHERE BDN_Number = tempRaw.ME_Fuel_BDN);
+		UPDATE tempRaw SET Lower_Caloirifc_Value_Fuel_Oil = (SELECT DISTINCT(Lower_Heating_Value) FROM BunkerDeliveryNote WHERE BDN_Number = tempRaw.ME_Fuel_BDN);
+        UPDATE tempRaw SET Density_Fuel_Oil_15C = (SELECT DISTINCT(Density_At_15dg) FROM BunkerDeliveryNote WHERE BDN_Number = tempRaw.ME_Fuel_BDN);
     ELSE
-		UPDATE tempRaw SET Lower_Caloirifc_Value_Fuel_Oil = (SELECT Lower_Heating_Value FROM BunkerDeliveryNote WHERE BDN_Number = 'Default_HFO');
-        UPDATE tempRaw SET Density_Fuel_Oil_15C = (SELECT Density_At_15dg FROM BunkerDeliveryNote WHERE BDN_Number = 'Default_HFO');
+		UPDATE tempRaw SET Lower_Caloirifc_Value_Fuel_Oil = (SELECT DISTINCT(Lower_Heating_Value) FROM BunkerDeliveryNote WHERE BDN_Number = 'Default_HFO');
+        UPDATE tempRaw SET Density_Fuel_Oil_15C = (SELECT DISTINCT(Density_At_15dg) FROM BunkerDeliveryNote WHERE BDN_Number = 'Default_HFO');
     END IF;
     
     /*
