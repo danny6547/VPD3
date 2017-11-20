@@ -54,7 +54,7 @@ for vi = 1:numel(imo)
         % Get data for this dry-docking interval
         currDD = 1;
         currIter_ch = num2str(currDD);
-        [obj(1), tbl] = obj(1).call('performanceData', ...
+        [obj(1), tbl] = obj(1).call('DNVGLperformanceData', ...
             [{imo_ch, currIter_ch}, additionalInputs_c]);
         % 'Speed_Index', 'IMO_Vessel_Number', 'DryDockInterval'};
         
@@ -74,11 +74,14 @@ for vi = 1:numel(imo)
             currDD = currDD + 1;
             currIter_ch = num2str(currDD);
             
-            [obj(1), tbl] = obj(1).call('performanceData', ...
-                [{imo_ch, currIter_ch}, additionalInputs_c]);
             if ~isempty(tbl)
                 indb(vi) = true;
             end
+            [obj(1), tbl] = obj(1).call('DNVGLperformanceData', ...
+                [{imo_ch, currIter_ch}, additionalInputs_c]);
+%             if ~isempty(tbl)
+%                 indb(vi) = true;
+%             end
         end
         
     else
@@ -91,7 +94,7 @@ for vi = 1:numel(imo)
             ddi_ch = 'NULL';
         end
         
-        [obj(1), tbl] = obj(1).call('performanceData', [{imo_ch, ddi_ch},...
+        [obj(1), tbl] = obj(1).call('DNVGLperformanceData', [{imo_ch, ddi_ch},...
             additionalInputs_c]);
         if ~isempty(tbl)
             
