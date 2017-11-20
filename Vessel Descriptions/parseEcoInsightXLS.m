@@ -20,15 +20,18 @@ timedata = struct('dates', [], 'pidx', [], 'sidx', [], 'regr', []);
 % ship = repmat(struct(), [numFiles, 1]);
 dataStartRow = nan(1, numFiles);
 
-
 for fi = 1:numFiles
     
     % Read
-    [dat, txt] = xlsread(filename{fi});
-        version = 0;
+    [dat, txt, raw] = xlsread(filename{fi});
+    version = 0;
     try dataStartRow(fi) = find(cellfun(@(x) isequal(x, 'Date'), txt(:, 1)), 1) + 1;
         
-        version = 2;
+        if ismember('Time', txt(1, :))
+            version = 3;
+        else
+            version = 2;
+        end
         
     catch e
         
@@ -38,7 +41,6 @@ for fi = 1:numFiles
         catch ee
             
             rethrow(e);
-            
         end
     end
     
@@ -49,10 +51,20 @@ for fi = 1:numFiles
     elseif strcmpi(txt{dataStartRow(fi) - 1, 2}, 'Speed deviation')
         sidx = dat(:, 1);
         pidx = nan(size(dat(:, 1)));
+    elseif strcmpi(txt{dataStartRow(fi) - 1, 5}, 'Hull Performance Index') && ...
+            strcmpi(txt{dataStartRow(fi) - 1, 6}, 'Hull Speed Deviation')
+        
+        % Must be version 3 then
+        pidx = dat(:, 1);
+        sidx = dat(:, 2);
     end
     
     date_c = txt(dataStartRow(fi):end, 1);
-    regr = dat(:, 3);
+    
+    if version ~= 3
+        
+        regr = dat(:, 3);
+    end
     
     if version == 2
         shipDataLength = 18;
@@ -68,27 +80,65 @@ for fi = 1:numFiles
             % ship = repmat(struct(), [numFiles, 1]);
         end
 
-        ship(fi) = cell2struct(shipdata(:, 2), fnames_c, 1);
+        try ship(fi) = cell2struct(shipdata(:, 2), fnames_c, 1);
+            
+        catch ee
+            
+            warning(ee.identifier, '%s', ee.message); 
+        end
         
-    else
+    elseif version == 3
         
+        time_l = strcmpi(txt(dataStartRow(fi) - 1, :), 'Time');
+        time_c = txt(dataStartRow(fi):end, time_l);
+        
+        imo_l = strcmpi(txt(dataStartRow(fi) - 1, :), 'IMO Number');
+        imo_c = txt(dataStartRow(fi):end, imo_l);
+        
+        invalidTimes_l = cellfun(@isnan, raw(dataStartRow(fi):end, 5)) & ...
+            cellfun(@isnan, raw(dataStartRow(fi):end, 6));
+        
+        date_c(invalidTimes_l) = [];
+        time_c(invalidTimes_l) = [];
+        imo_c(invalidTimes_l) = [];
+        
+        invalidPer_l = all(isnan(dat)')';
+        pidx(invalidPer_l) = [];
+        sidx(invalidPer_l) = [];
+        
+        imo = cellfun(@str2double, imo_c);
+%         imo = [imo_v{:}];
 %         ship = struct();
-
     end
     
     % Assign output
     if ~exist('ship', 'var')
+        
         ship = struct();
     end
     
     % Convert Date
-    date_c = cellfun(@(x) datenum(x, 'dd-mm-yyyy'), date_c, 'Uni', 0);
+    if version == 3
+        
+        date_c = cellfun(@(x, y) datenum([x, ' ', y], 'dd-mm-yyyy HH:MM:SS'),...
+            date_c, time_c, 'Uni', 0);
+    else
+        
+        date_c = cellfun(@(x) datenum(x, 'dd-mm-yyyy'), date_c, 'Uni', 0);
+    end
     dates = [date_c{:}];
     dates = dates(:);
     
     timedata(fi).dates = dates;
     timedata(fi).pidx = pidx;
     timedata(fi).sidx = sidx;
-    timedata(fi).regr = regr;
     
+    if version == 3
+        
+        timedata(fi).IMO = imo;
+        
+    else
+        
+        timedata(fi).regr = regr;
+    end
 end
