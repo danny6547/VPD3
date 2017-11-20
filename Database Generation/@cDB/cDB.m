@@ -245,36 +245,15 @@ classdef cDB < cMySQL
        
        % Insert raw data, bunker delivery note
        if obj.LoadRaw
-           rawFiles_c = {...
-                        'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\Yang Ming\Data\DNVGL\Raw\1 Operational reporting 2017-02-08 11-17.csv'
-                        'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\TMS\DNVGL\Raw\LX7, ZX7\1 Operational reporting 2017-02-08 10-51.csv'
-                        'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\TMS\DNVGL\Raw\CX7, ASPC, BINT, CINT\1 Operational reporting 2017-02-08 11-46.csv'
-                        'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\Teekay\Data\DNVGL\Raw\1 Operational reporting 2016-10-07 11_59_All.csv'
-                        'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\Teekay\Data\DNVGL\Raw\1 Operational reporting 2017-02-08 09-36.csv'
-                        'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\SETAF-SAGET\Data\DNVGL\Raw\1 Operational reporting 2017-02-08 10-49.csv'
-                        'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\Euronav\Data\DNVGL\Raw\Sandra, Sara\1 Operational reporting 2017-02-08 10-38.csv'
-                        'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\Euronav\Data\DNVGL\Raw\Hakone, Hirado\1 Operational reporting 2017-02-08 10-28.csv'
-                        'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\Euronav\Data\DNVGL\Raw\Devon, Hakata\1 Operational reporting 2017-02-08 10-19.csv'
-                        'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\DFDS Seaways\DNVGL\Raw\1 Operational reporting 2017-02-08 10-44.csv'
-                        'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\CMA CGM\Data\Raw\DNVGL\Jules, Litani, Marco\1 Operational reporting 2017-01-03 14_04.csv'
-                        'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\CMA CGM\Data\Raw\DNVGL\Alexander Chopin, Danube, Dalila, Gemini\1 Operational reporting 2017-01-03 13_35.csv'
-                        'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\CMA CGM\Data\Raw\DNVGL\Almaviva, Cassiopeia, Gemini\1 Operational reporting 2017-01-03 12_41.csv'
-                        'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\Anglo-Eastern Ship management\Data\DNVGL\Raw\1 Operational reporting 2017-02-08 11-11.csv'
-                        'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\AMCL\Data\DNVGL\Raw\1 Operational reporting 2017-02-08 11-15.csv'
-    %                     'C:\Users\damcl\OneDrive - Hempel Group\Documents\Ship Data\Berge Kibo\DNVGL\Raw\1 Operational reporting 2017-03-10 13_58.csv'
-                        };
-           bunkerFiles_c = {...
-               'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\Yang Ming\Data\DNVGL\Raw\2 Bunker reporting 2017-04-24 08_09.csv'...
-               'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\TMS\DNVGL\Raw\2 Bunker reporting 2017-04-24 08_12.csv'...
-               'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\Teekay\Data\DNVGL\Raw\2 Bunker reporting 2017-04-24 08_14.csv'...
-               'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\CMA CGM\Data\Raw\DNVGL\2 Bunker reporting 2017-04-24 08_18.csv'...
-               'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\SETAF-SAGET\Data\DNVGL\Raw\2 Bunker reporting 2017-04-24 08_21.csv'...
-               'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\Euronav\Data\DNVGL\Raw\2 Bunker reporting 2017-04-24 08_21.csv'...
-               'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\AMCL\Data\DNVGL\Raw\2 Bunker reporting 2017-04-24 08_22.csv'
-               };
+           
+           rawDirect = 'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\External Vessel Data\DNV-GL\Raw';
+           rawFiles_st = rdir([rawDirect, '\**\*.csv']);
+           rawFiles_c = {rawFiles_st.name};
+           bunkerFile_ch = 'C:\Users\damcl\OneDrive - Hempel Group\Documents\temp DNVGL download 311017\Bunker Reporting\2 Bunker reporting 2017-10-31 09_39.csv';
+           
            obj_ves = cVessel();
            obj_ves.Database = name;
-           obj_ves = obj_ves.insertBunkerDeliveryNoteDNVGL(bunkerFiles_c);
+           obj_ves = obj_ves.insertBunkerDeliveryNoteDNVGL(bunkerFile_ch);
            obj_ves.loadDNVGLRaw(rawFiles_c);
 
             % Insert time-series data
@@ -305,11 +284,7 @@ classdef cDB < cMySQL
             % Take Speed over ground as that through water because data missing
             vess(1).update('RawData', 'Speed_Through_Water', 'Speed_Over_Ground WHERE IMO_Vessel_Number = 9445631');
             clear vess;
-            
-            
-
        end
-       
        
        % Load Dry Docking Dates from Files
        ddFiles = ['L:\Project\MWB-Fuel efficiency\Hull and propeller '...
