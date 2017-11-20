@@ -205,7 +205,7 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
        
        end
        
-       function obj = readFromTable(obj, varargin)
+       function [obj, diff_l] = readFromTable(obj, varargin)
        % readFromTable 
        
            % Inputs
