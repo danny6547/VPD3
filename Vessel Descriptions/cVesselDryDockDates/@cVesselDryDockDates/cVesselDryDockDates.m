@@ -82,8 +82,10 @@ classdef cVesselDryDockDates < cMySQL
         for oi = 1:numel(obj)
             
             obj(oi).IMO_Vessel_Number = file_t.IMO_Vessel_Number(oi);
-            obj(oi).StartDateNum = datenum(file_t.StartDate(oi), dateform);
-            obj(oi).EndDateNum = datenum(file_t.EndDate(oi), dateform);
+            
+            % Update for MATLAB 2017a, where file read with datetime objs
+            obj(oi).StartDateNum = datenum(file_t.StartDate(oi)); %, dateform);
+            obj(oi).EndDateNum = datenum(file_t.EndDate(oi)); %, dateform);
         end
         
        end
@@ -135,6 +137,11 @@ classdef cVesselDryDockDates < cMySQL
 
            % Execute
            [~, cl] = obj(1).executeIfOneOutput(1, ddi_sql);
+           
+           % Skip if no input found
+           if isempty(cl)
+               continue
+           end
 
            % Assign
            currDateForm = obj(oi).DateStrFormat;
