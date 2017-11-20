@@ -31,7 +31,7 @@ classdef cVesselDisplacement < cMySQL & cModelID & cVesselDisplacementConversion
        
        function empty = isempty(obj)
            
-        empty = true(size(obj));
+        empty = false(size(obj));
         for oi = 1:numel(obj)
 
           if (isempty(obj(oi).Draft_Mean) && ...
@@ -47,6 +47,34 @@ classdef cVesselDisplacement < cMySQL & cModelID & cVesselDisplacementConversion
         end
        
         empty = all(empty);
+        
+       end
+       
+       function obj = copyFromSpeedPower(obj, sp)
+       % copyFromSpeedPower Copy displacement, trim data from speed, power
+       
+        draft = nan(1, numel(sp));
+        trim = nan(1, numel(sp));
+        disp = nan(1, numel(sp));
+        rho = nan(1, numel(sp));
+        
+        for ii = 1:numel(sp)
+            
+            draft(ii) = mean([sp(ii).Draft_Fore, sp(ii).Draft_Aft]);
+            trim(ii) = sp(ii).Draft_Fore - sp(ii).Draft_Aft;
+            disp(ii) = sp(ii).Displacement;
+            rho(ii) = sp(ii).FluidDensity;
+        end
+        
+        obj.Draft_Mean = draft;
+        obj.Trim = trim;
+        obj.Displacement = disp;
+        obj.TPC = [];
+        obj.LCF = [];
+        if numel(unique(rho)) == 1
+            rho = unique(rho);
+        end
+        obj.FluidDensity = rho;
         
        end
     end
