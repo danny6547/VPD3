@@ -27,7 +27,7 @@ function [obj, tbl] = applyFilters(obj, varargin)
                  'Reference_Rudder_Angle',...
                  'SFOC_Out_Range'};
     in_sql = obj.procInputsFromStruct(res, filtCols_c);
-
+    
     % Call procedure
     [obj, tbl] = obj.call('applyFilters', in_sql);
     
@@ -35,7 +35,11 @@ function [obj, tbl] = applyFilters(obj, varargin)
     if ~isempty(tbl)
         try
             
-        tbl.datetime_utc = datenum(tbl.datetime_utc, 'dd-mm-yyyy HH:MM:SS');
+            midnights = cellfun(@(x) length(x) == 10, tbl.datetime_utc);
+            tbl.datetime_utc(midnights) = num2cell( datenum(tbl.datetime_utc(midnights), obj.DateFormStr(1:10)) );
+            tbl.datetime_utc(~midnights) = num2cell( datenum(tbl.datetime_utc(~midnights), obj.DateFormStr) );
+            tbl.datetime_utc = ([tbl.datetime_utc{:}])';
+%         tbl.datetime_utc = datenum(tbl.datetime_utc, obj.DateFormStr);
         catch ee
             try tbl.datetime_utc = datenum(tbl.datetime_utc, 'dd-mm-yyyy');
                 
