@@ -345,6 +345,39 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
 %        [obj(emptyModels_l).ModelID] = deal( newModelID_c{:} );
 %        
        end
+       
+       function obj = print(obj)
+       % print Print data into formatted columns
+       
+       % Fit
+       obj.fit();
+       
+       % Coeffs
+       a = arrayfun(@(x) x.Coefficients(1), obj)';
+       b = arrayfun(@(x) x.Coefficients(2), obj)';
+       
+       % Max, min power
+       minP = arrayfun(@(x) min(x.Power), obj)';
+       maxP = arrayfun(@(x) max(x.Power), obj)';
+       
+       % Numeric vectors of optional values, with nan where empty
+%        r2 = [obj.R_Squared]';
+       r2 = arrayfun(@(x) mean(x.R_Squared), obj)';
+%        tr = [obj.Trim]';
+       tr = arrayfun(@(x) mean(x.Trim), obj)';
+       diM3 = (obj.displacementInVolume())'; 
+       
+       % Concat
+       mat = [a, b, r2, minP, maxP, tr, diM3];
+       
+       % Output
+       fprintf(1, '%c\n', '');
+       fprintf(1, '%s\t%s\t%s\t  %s\t  %s\t      %s\t%s\n',...
+           'Coefficient A', 'Coefficient B', 'R Squared', 'MinPower',...
+           'MaxPower', 'Trim', 'Displacement (m^3)');
+       fprintf(1, '%11.10f\t%11.10f\t%9f\t%10.3f\t%10.3f\t%10f\t%10.3f\n', mat');
+       
+       end
     end
     
     methods(Hidden)
