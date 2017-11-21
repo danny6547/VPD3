@@ -14,7 +14,7 @@ BEGIN
 		JOIN SpeedPower p
 		ON t.IMO_Vessel_Number = p.IMO_Vessel_Number AND
 			t.NearestTrim = p.Trim AND
-            t.NearestDisplacement = p.Displacement
+            t.Nearest_Displacement = p.Displacement
 		SET t.Filter_SpeedPower_Below = t.Corrected_Power < MIN(p.Power)
         ; */
     
@@ -25,13 +25,13 @@ BEGIN
 											IFNULL(q.Speed_Through_Water < MinSpeed, FALSE) AS SLow,
 											IFNULL(q.Corrected_Power > MaxPower, FALSE) AS PHigh,
 											IFNULL(q.Corrected_Power < MinPower, FALSE) AS PLow FROM
-		(SELECT r.id, r.Corrected_Power, p.Power, r.NearestDisplacement, r.NearestTrim, r.Speed_Through_Water
+		(SELECT r.id, r.Corrected_Power, p.Power, r.Nearest_Displacement, r.NearestTrim, r.Speed_Through_Water
 			FROM tempRawISO r
 				JOIN SpeedPower p
 					ON
 					 /* r.IMO_Vessel_Number = p.IMO_Vessel_Number AND */
 					r.NearestTrim = p.Trim AND
-					r.NearestDisplacement = p.Displacement
+					r.Nearest_Displacement = p.Displacement
 					WHERE p.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)
 					) AS q
 		INNER JOIN
@@ -42,7 +42,7 @@ BEGIN
 						ON
 						/* t.IMO_Vessel_Number = p.IMO_Vessel_Number AND */
 						t.NearestTrim = p.Trim AND
-						t.NearestDisplacement = p.Displacement
+						t.Nearest_Displacement = p.Displacement
 						WHERE p.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)) AS w
 			GROUP BY id) AS e
 		ON

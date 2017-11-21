@@ -273,7 +273,7 @@ BEGIN
     /* Get valid displacement and nearest displacement */
     UPDATE tempRawISO t
 		JOIN (
-			SELECT z.id, z.ValidDisplacement, z.SPDisplacement AS 'NearestDisplacement'
+			SELECT z.id, z.ValidDisplacement, z.SPDisplacement AS 'Nearest_Displacement'
 				FROM
 					(SELECT
 						 b.id,
@@ -322,7 +322,7 @@ BEGIN
 					z.DiffDisp = x.MinDiff
 					GROUP BY z.id) w
                     ON t.id = w.id
-			 SET t.NearestDisplacement = w.NearestDisplacement,
+			 SET t.Nearest_Displacement = w.Nearest_Displacement,
 				 t.Filter_SpeedPower_Disp = NOT(w.ValidDisplacement);
     
     /* Get valid trim and nearest trim */

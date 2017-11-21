@@ -12,8 +12,8 @@ validateattributes(upperDiff, {'numeric'}, {'scalar', 'real', 'positive'},...
 lower_ch = [num2str(lowerDiff), '*Displacement'];
 upper_ch = [num2str(upperDiff), '*Displacement'];
 
-[~, expr] = obj.combineSQL('`NearestDisplacement` < ', lower_ch, ...
-                        'OR `NearestDisplacement` > ', upper_ch);
+[~, expr] = obj.combineSQL('`Nearest_Displacement` < ', lower_ch, ...
+                        'OR `Nearest_Displacement` > ', upper_ch);
 
 % Update table with new filter values
 tab = 'tempRawISO';
