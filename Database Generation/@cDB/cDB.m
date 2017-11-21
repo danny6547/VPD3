@@ -18,11 +18,12 @@ classdef cDB < cMySQL
     
     properties
         
-        CreateSchema = true;
+        BuildSchema = true;
         LoadRaw = true;
         LoadPerformance = true;
         RunISO = true;
-        InsertStatic = {...
+        InsertStatic = true;
+        InsertStaticScripts = {...
             ['L:\Project\MWB-Fuel efficiency\Hull and propeller performance'...
             '\Vessels\AMCL\Data\Scripts\Insert_Static_AMCL.m']...
             ['L:\Project\MWB-Fuel efficiency\Hull and propeller performance'...
@@ -34,21 +35,21 @@ classdef cDB < cMySQL
             };
         ISO19030Parameters = {9288095, 'Only one speed, power curve from Sea Trial and that is of sister vessel New Century. Estimates made for Ta and Anemometer Height. Shaft torsiometer data utilised. Wind coefficients taken from ISO15016 for tanker with conventional bow. No displacement data available prior to 2016.', {};...                    % New Spirit
                               9445631, 'No speed, power curves available so that of New Century, another vessel of the same owner applied. Estimates made for Ta and Anemometer Height. Shaft torsiometer data utilised. Wind coefficients taken from ISO15016 for tanker with conventional bow. No displacement data available prior to 2016.', {}; ...     % New Vanguard
-                              9434632, 'No speed, power curves available so that of New Century, another vessel of the same owner applied. Estimates made for Ta and Anemometer Height. Shaft torsiometer data utilised. Wind coefficients taken from ISO15016 for tanker with conventional bow. No displacement data available prior to 2016.', {}, ...     % New Success
-                              9525924, '', {},...
-                                9525936, '', {},...
-                                9525895, '', {},...
-                                9525871, '', {},...
-                                9525869, '', {},...
-                                9525883, '', {},...
-                                9525900, '', {},...
-                                9525857, '', {},...
-                                9349552, '', {},...
-                                9349502, '', {},...
-                                9349538, '', {},...
-                                9349564, '', {},...
-                                9349497, '', {},...
-                                9349540, '', {},...
+                              9434632, 'No speed, power curves available so that of New Century, another vessel of the same owner applied. Estimates made for Ta and Anemometer Height. Shaft torsiometer data utilised. Wind coefficients taken from ISO15016 for tanker with conventional bow. No displacement data available prior to 2016.', {}; ...     % New Success
+                              9525924, '', {};...
+                                9525936, '', {};...
+                                9525895, '', {};...
+                                9525871, '', {};...
+                                9525869, '', {};...
+                                9525883, '', {};...
+                                9525900, '', {};...
+                                9525857, '', {};...
+                                9349552, '', {};...
+                                9349502, '', {};...
+                                9349538, '', {};...
+                                9349564, '', {};...
+                                9349497, '', {};...
+                                9349540, '', {};...
                                 9349514, '', {}...
                               };
     end
@@ -72,7 +73,7 @@ classdef cDB < cMySQL
        % take string TOPLEVELDIR as the path to the top-level directory of
        % the Vessel Performance Database repository working directory.
        
-       scripts_c = obj.InsertStatic;
+       scripts_c = obj.InsertStaticScripts;
        
        % Input
        validateattributes(name, {'char'}, {'vector'}, 'create', 'name', 2);
@@ -89,7 +90,8 @@ classdef cDB < cMySQL
        obj.Database = name;
        
        % Get file paths to create tables
-       if obj.CreateSchema
+       if obj.BuildSchema
+           
            ISODir = 'ISO 19030';
            ISO19030Create_c = {...
                                 'createAnalysis.sql'
@@ -309,45 +311,48 @@ classdef cDB < cMySQL
        % Run Additional Scripts
        executedFully_l = false(size(scripts_c));
        insertedVessels = [];
-       for si = 1:numel(scripts_c)
+       if obj.InsertStatic
            
-           % Run script, temporarily adding directory to path if necessary
-           vess = cVessel();
-           [vess.Database] = deal(name);
-           currScript = scripts_c{si};
-           
-           try run(currScript);
-               
-               executedFully_l(si) = true;
-           catch ee
-               
-               if strcmp(ee.identifier, 'MATLAB:UndefinedFunction');
-                   
-                   scriptDir = fileparts(currScript);
-                   addpath(scriptDir);
-                   
-                   try run(currScript);
-                       
-                   catch ee
-                       
-                       rmpath(scriptDir);
+           for si = 1:numel(scripts_c)
+
+               % Run script, temporarily adding directory to path if necessary
+               vess = cVessel();
+               [vess.Database] = deal(name);
+               currScript = scripts_c{si};
+
+               try run(currScript);
+
+                   executedFully_l(si) = true;
+               catch ee
+
+                   if strcmp(ee.identifier, 'MATLAB:UndefinedFunction');
+
+                       scriptDir = fileparts(currScript);
+                       addpath(scriptDir);
+
+                       try run(currScript);
+
+                       catch ee
+
+                           rmpath(scriptDir);
+                           throw(ee);
+                       end
+
+                   else
+
                        throw(ee);
                    end
-                   
-               else
-                   
-                   throw(ee);
                end
+
+               % Change database of vessel returned by script and insert data
+               vess.insert;
+               insertedVessels = [insertedVessels, vess];
+
+               % Clear up handles with ModelID properties
+    %            vess.delete;
+    %            sp = [vess.SpeedPower];
+    %            sp.delete;
            end
-           
-           % Change database of vessel returned by script and insert data
-           vess.insert;
-           insertedVessels = [insertedVessels, vess];
-           
-           % Clear up handles with ModelID properties
-%            vess.delete;
-%            sp = [vess.SpeedPower];
-%            sp.delete;
        end
        
        if obj.RunISO
