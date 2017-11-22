@@ -1,6 +1,9 @@
 function obj = updateFilterTrim(obj, lowerTrim, upperTrim)
 %updateFilterTrim Trim filter based on relative difference range on LBP
-%   Detailed explanation goes here
+%   updateFilterTrim(obj, lowerTrim, upperTrim) will update the values of
+%   column Filter_SpeedPower_Trim in the current analysis to FALSE when
+%   the current trim is within LOWERTRIM and UPPERTRIM of the LBP of the 
+%   trim of the nearest speed, power curve, and TRUE otherwise.
 
 % Inputs
 validateattributes(lowerTrim, {'numeric'}, {'scalar', 'real', 'positive'},...

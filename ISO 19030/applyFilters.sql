@@ -5,7 +5,7 @@ DROP PROCEDURE IF EXISTS applyFilters;
 
 delimiter //
 
-CREATE PROCEDURE applyFilters(SpeedPower_Below BOOLEAN, SpeedPower_Above BOOLEAN, SpeedPower_Trim BOOLEAN, SpeedPower_Disp BOOLEAN, Reference_Seawater_Temp BOOLEAN, Reference_Wind_Speed BOOLEAN, Reference_Water_Depth BOOLEAN, Reference_Rudder_Angle BOOLEAN, SFOC_Out_Range BOOLEAN)
+CREATE PROCEDURE applyFilters(SpeedPower_Below BOOLEAN, SpeedPower_Above BOOLEAN, SpeedPower_Trim BOOLEAN, SpeedPower_Disp BOOLEAN, Reference_Seawater_Temp BOOLEAN, Reference_Wind_Speed BOOLEAN, Reference_Water_Depth BOOLEAN, Reference_Rudder_Angle BOOLEAN, SFOC_Out_Range BOOLEAN, Chauvenet BOOLEAN, Valid BOOLEAN)
 
 BEGIN
 
@@ -53,9 +53,14 @@ IF Reference_Rudder_Angle THEN
 	UPDATE tempRawISO SET Filter_All = TRUE WHERE Filter_Reference_Rudder_Angle;
 END IF;
 
-IF SFOC_Out_Range THEN
+IF Chauvenet THEN
 
-	UPDATE tempRawISO SET Filter_All = TRUE WHERE Filter_SFOC_Out_Range;
+	UPDATE tempRawISO SET Filter_All = TRUE WHERE Chauvenet_Criteria;
+END IF;
+
+IF Valid THEN
+
+	UPDATE tempRawISO SET Filter_All = TRUE WHERE Validated;
 END IF;
 
 /* Query performance values */
