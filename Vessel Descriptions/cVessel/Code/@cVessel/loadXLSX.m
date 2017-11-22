@@ -217,7 +217,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
         tempFile = 'tempCSVLoadFile.csv';
         matDir = [getenv('HOMEDRIVE') getenv('HOMEPATH') '\OneDrive - Hempel Group\Documents\MATLAB'];
         tempFile = fullfile(matDir, tempFile);
-            tempTab = 'tempCSVLoad';
+        tempTab = 'tempCSVLoad';
         writetable(file_tbl, tempFile, 'WriteVariableNames', false,...
                 'QuoteStrings',false);
         

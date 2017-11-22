@@ -1,6 +1,20 @@
-function [ obj, filters ] = updateFilters(obj, varargin)
+function obj = updateFilters(obj, varargin)
 %updateFilters Update values in table filters based on thresholds
-%   Detailed explanation goes here
+%   updateFilters(obj, filter, value, ...) updates the values for filter 
+%   column FILTER to TRUE or FALSE based on a comparison with the numeric 
+%   scalar VALUE. Any number of filter, value pairs may be input. The
+%   available filters, default values and relationships are as follows:
+%   FILTER                          DEFAULT                     FILTER WHEN
+%   SpeedPower_Lower                Min. of nearest speed, power curve   <
+%   SpeedPower_Upper                Max. of nearest speed, power curve   >
+%   Reference_Seawater_Temp_Lower	2                                    >
+%   Reference_Wind_Speed_Upper      7.9                                  >
+%   Reference_Water_Depth_Lower     Dependent on Eq. (5) and (6)         <
+%   Reference_Rudder_Angle_Upper	5                                    >
+%   
+%    Example: 
+%        obj.updateFilters('Reference_Seawater_Temp_Lower', 0, ...
+%                          ''Reference_Wind_Speed_Upper', 10);
 
 if nargin > 1
     

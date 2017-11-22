@@ -14,13 +14,7 @@ obj = cMySQL();
 if ~isTab
     
     % Build DB
-    obj_db = cDB();
-    obj_db.LoadPerformance = false;
-    obj_db.LoadRaw = false;
-    obj_db.RunISO = false;
-    obj_db.InsertStatic = false;
-    
-    obj_db.createHullPer;
+    Build_Local_Database
 end
 
 % Create object
@@ -56,7 +50,7 @@ end
 
 %% Update selected filters, then apply to object data
 obj = obj.updateFilters('SpeedPower_Lower', 7E3);
-obj = obj.updateFilterDisp(0.95, 1.05);
+obj = obj.updateFilterDisp(0.05, 0.05);
 obj = obj.updateFilterTrim(0.002, 0.002);
 [obj, tbl] = obj.applyFilters('SFOC_Out_Range', false, ...
     'SpeedPower_Trim', false, 'SpeedPower_Disp', false, ...
