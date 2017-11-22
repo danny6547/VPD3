@@ -44,7 +44,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
     validateCellStr(fileColName, 'cVessel.loadXLSX', 'fileColName', 6);
 	
 	tab = 'RawData';
-	if nargin > 6
+	if nargin > 6 && ~isempty(varargin{1})
 	
         tab = varargin{1};
 		validateattributes(tab, {'char'}, {'vector'}, ...
@@ -54,7 +54,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
 %     tabColNames = validateCellStr(tabColNames, 'cVessel.loadXLSX', ...
 %         'tabColNames', 8);
     set_c = {''};
-    if nargin > 7
+    if nargin > 7 && ~isempty(varargin{2})
         
         set_c = varargin{2};
         validateCellStr(set_c, 'cVessel.loadXLSX', 'set', 9);
@@ -101,7 +101,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
     
     % Append set SQL
     [~, tabColNames] = obj.colNames('RawData');
-    if ~isempty(set_c)
+    if ~isequal(set_c, {''})
 
         % Generate default set statement
         tabColNames = setdiff(tabColNames, 'id');
@@ -124,20 +124,32 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
 %         nanSet_c(cols2replace_l) = [];
 %         set_c = [defSet_c(:)', set_c(~x_l), nanSet_c(:)'];
         set_c = [defSet_c(:)', set_c(~x_l)];
+        set_ch = ['SET ', obj.colSepList(set_c)];
         
+        % Get IMO number for insertion into RawData
+        imo_ch = '';
+        setNames_c = cellfun(cutAtEquals_f, set_c, 'Uni', 0);
+
+    else
+        
+        set_ch = '';
+        setNames_c = {''};
     end
-    set_ch = ['SET ', obj.colSepList(set_c)];
 
-    % Get IMO number for insertion into RawData
-    imo_ch = '';
-    setNames_c = cellfun(cutAtEquals_f, set_c, 'Uni', 0);
     [isIMO, idxIMO] = ismember('IMO_Vessel_Number', setNames_c);
-
     if isIMO
 
         imoNum_ch = set_c{idxIMO}(strfind(set_c{idxIMO}, ' = ')+3:end);
-        fileColName = [fileColName,{'IMO_Vessel_Number'}];
+        imo = str2double(imoNum_ch);
+        
+    elseif ~isempty(obj.IMO_Vessel_Number)
+        
+        imo = obj.IMO_Vessel_Number;
+    else
+        
+        % Error, need IMO somewhere to insert data 
     end
+    fileColName = [fileColName,{'IMO_Vessel_Number'}];
 
     % Iterate over files
     for fi = 1:numel(filename)
@@ -181,7 +193,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
             if dInput
                 dateForm_ch = dateFormats_c{dIdx};
             end
-            file_tbl(:, idxDT) = cellstr(datestr(datenum(file_tbl{:, idxDT}, dateForm_ch), 'yyyy-mm-dd HH:MM:SS'));
+            file_tbl(:, idxDT) = cellstr(datestr(datenum(file_tbl{:, idxDT}, dateForm_ch), 'yyyy-mm-dd HH:MM:SS.FFF'));
         end
         
 %         for ti = 1:width(file_tbl)
@@ -194,6 +206,13 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
 %             end
 %         end
         
+        % Prepare outpus
+%         if isIMO
+            
+            imo_v = repmat(imo, [height(file_tbl), 1]);
+            file_tbl.IMO_Vessel_Number = imo_v; 
+%         end
+
         % Write table as csv
         tempFile = 'tempCSVLoadFile.csv';
         matDir = [getenv('HOMEDRIVE') getenv('HOMEPATH') '\OneDrive - Hempel Group\Documents\MATLAB'];
@@ -202,12 +221,6 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
         writetable(file_tbl, tempFile, 'WriteVariableNames', false,...
                 'QuoteStrings',false);
         
-        % Prepare outpus
-        if isIMO
-            
-            imo_v = repmat(str2double(imoNum_ch), [height(file_tbl), 1]);
-            file_tbl.IMO_Vessel_Number = imo_v; 
-        end
         
         % Load in CSV file
         try obj = obj.loadInFileDuplicate(tempFile, fileColName, tempTab, tab,...
