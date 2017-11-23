@@ -78,8 +78,9 @@ classdef cDB < cMySQL
        % Input
        validateattributes(name, {'char'}, {'vector'}, 'create', 'name', 2);
        
-       topleveldir = ['C:\Users\damcl\OneDrive - Hempel Group\Documents\'...
-           'SQL\tests\EcoInsight Test Scripts'];
+%        topleveldir = ['C:\Users\damcl\OneDrive - Hempel Group\Documents\'...
+%            'SQL\tests\EcoInsight Test Scripts'];
+       topleveldir = fileparts(fileparts(fileparts(mfilename('fullpath'))));
        if nargin > 2
            topleveldir = varargin{1};
            validateattributes(topleveldir, {'char'}, {'vector'}, 'create', ...
