@@ -14,8 +14,8 @@ validateattributes(upperDiff, {'numeric'}, {'scalar', 'real', 'positive'},...
     'updateFilterDisp', 'upperDiff', 2);
 
 % Build expression
-lower_ch = ['1-' num2str(lowerDiff), '*Displacement'];
-upper_ch = ['1+' num2str(upperDiff), '*Displacement'];
+lower_ch = ['(1-' num2str(lowerDiff), ')*Displacement'];
+upper_ch = ['(1+' num2str(upperDiff), ')*Displacement'];
 
 [~, expr] = obj.combineSQL('`Nearest_Displacement` < ', lower_ch, ...
                         'OR `Nearest_Displacement` > ', upper_ch);
