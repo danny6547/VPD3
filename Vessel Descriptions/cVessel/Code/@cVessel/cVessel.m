@@ -204,7 +204,8 @@ classdef cVessel < cMySQL
                 end
            else
 %                 name = validateCellStr('');
-                name = vesselName(imo);
+%                 name = vesselName(imo);
+                name = '';
                 if isempty(name)
                     name = repmat({''}, size(imo));
                 else
