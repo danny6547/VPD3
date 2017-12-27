@@ -11,19 +11,17 @@ validateattributes(outFile, {'char'}, {'vector'}, 'combineCSVExportScript',...
 validateattributes(imo, {'numeric'}, {'scalar', 'integer', 'positive'},...
     'combineCSVExportScript', 'imo', 4);
 
+% Read Files
 q = readtable(calcFile);
-fprintf('First file read');
+fprintf('First file read\n');
 
-% rawfile = 'C:\Users\damcl\OneDrive - Hempel Group\Documents\temp\RawData06.csv';
 w = readtable(rawFile);
-fprintf('Second file read');
+fprintf('Second file read\n');
 
-% imo = 9567063;
-
+% Prepare tables for filtering
 q.Vessel_Configuration_Id = [];
 q.x___Calculated_Data_Id = [];
-q.Raw_Data_Id = [];
-% q.Row = [];
+% q.Raw_Data_Id = [];
 q.Invalid_Rpm = [];
 q.Invalid_Rudder_Angle = [];
 q.Invalid_Speed_Over_Ground = [];
@@ -55,14 +53,14 @@ w.DateTime_UTC = datestr(w.DateTime_UTC, 'yyyy-mm-dd HH:MM:SS.000');
 w.IMO_Vessel_Number = repmat(imo, [height(w), 1]);
 w.Temp_Fuel_Oil_At_Flow_Meter = [];
 w.Displacement = [];
-w.x___Raw_Data_Id = [];
-% w.NearestDisplacement = w.Nearest_Displacement;
-% w.Nearest_Displacement = [];
-% w.NearestTrim = w.Nearest_Trim;
-% w.Nearest_Trim = [];
+% w.x___Raw_Data_Id = [];
 w.Vessel_Id = [];
 
+% % Remove rows from raw data where no calculations have been done
+% e_l = ~ismember(w.x___Raw_Data_Id, q.Raw_Data_Id);
+% w(e_l, :) = [];
+
+% Concat and write
 tempRawISO = [q, w];
 writetable(tempRawISO, outFile, 'WriteVariableNames', true);
-
 end
