@@ -239,7 +239,18 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
                 if ~isempty(obj(oi).Coefficients)
                     
                     y = linspace(min(obj(oi).Power), max(obj(oi).Power), 1e3);
-                    x = polyval(obj(oi).Coefficients, y);
+                    coeffs = obj(oi).Coefficients;
+%                     x = polyval(obj(oi).Coefficients, y);
+
+                    switch obj(oi).Model
+                        
+                        case 'Exponential'
+                            
+                            x = (y / exp(coeffs(2))).^(1/coeffs(1));
+                        otherwise
+                        
+                    end
+                    
                     hold on;
                     plot(x, y, 'r--');
                     legend({'Speed, power data', 'Second-order polynomial fit'});
