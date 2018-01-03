@@ -211,15 +211,19 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
            % Inputs
            
            % Read from speed, power
-           obj = readFromTable@cMySQL(obj, 'speedpower', 'ModelID',...
+           [obj, diffSP_l] = readFromTable@cMySQL(obj, 'speedpower', 'ModelID',...
                {'Speed', 'Power'}, varargin{:});
            
            % Read from coefficients
-           obj = readFromTable@cMySQL(obj, 'speedpowercoefficients', 'ModelID',...
+           [obj, diffSPC_l] = readFromTable@cMySQL(obj, 'speedpowercoefficients', 'ModelID',...
                {'Displacement', 'Trim'}, varargin{:});
            
            dispMass_v = obj.displacementInMass();
            [obj.Displacement] = deal(dispMass_v);
+           
+           % Object read from DB different if either speed power or
+           % coefficients table have returned different results
+           diff_l = diffSP_l | diffSPC_l;
        end
        
        function [obj, h] = plot(obj)
