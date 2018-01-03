@@ -405,3 +405,78 @@ Extract method matchingFields from readFromTable.
 Create listeners for all matchingFields of cTO implementation classes.
 Inherit cMID from cTO.
 When cMID calls readFromTable, have listeners check whether data overwrites different data, issue warning if so.
+
+Process discrete speed, power data:
+	# cVSP.testFit: compare results to those obtained from digitised plot image
+	DB.SpeedPower: Replace digitised graph values with actual measurements from sea trial reports
+	Integrate into HPDB interface:
+		DB table for speed, power measurements
+		Add speed power model page accepts only columns for speed, power, scalars for density, displacement, trim, drafts (optional combos of the last four)
+		Return coefficients
+		Plot fit (measurements, errors, displacement transformation)
+		Assess fit
+		
+cModelID.SafeMode: default FALSE, when TRUE, error when change of Name causes change of data values
+cModelID.ModelID: remove property?
+cMID.set.Name:
+	if Name changes
+		if previous Name non-empty
+		if cMID.data is empty or cMID.SafeMode is FALSE
+			call cMID.eraseData
+			assign data to matching fields
+DB: make constraint where Name is Unique in each ModelType table
+DB.Models: make constraint where Name, ModelType pairs are unique
+cMID.insertIntoTable: error if obj.changePending returns TRUE and obj.SafeMode is TRUE
+
+cTO.eraseData:
+	get matchingFields
+	iterate over matching fields, replace with empty/default value
+cTO.changePending: TRUE when data in matchingFields not equal to data read from DB
+
+cModelName: rename from cModelID (after removing ModelID from properties)
+
+cMN.Name
+cMN.Table = cell of strings of DB table Names for object data
+cMN.ReadOnly: logical scalar property
+cMN.id: hidden prop giving primary identifier index for obj
+cMN.MaxNameLength: scalar numeric
+
+cMN.set.Name:
+	if Name in DB
+		Assign data to matchingFields
+cMN.insertIntoTable:
+	if ReadOnly True, error
+	call cMySQL.insertIntoTable
+	call cMN.insertIntoModels
+
+Events when user instantiates cMN:
+	obj has default empty Name
+	when user assigns non-empty to Name
+		if Name in DB, assign DB Model data to obj data props
+		else, create new (temporary) Name in DB table Models
+		check length against obj.MaxNameLength
+		assign obj.id
+	when user calls cMN.insertIntoTable with empty Name, error
+	when user calls cMN.insertIntoTable with non-empty Name, 
+		call cMySQL.insertIntoTable on each cMN.Table
+	obj.delete
+		if obj.id missing from any of obj.Tables
+			delete row from Models where Name = obj.Name
+
+testcMN.testreserveModelName:
+	test that DB table Models has row with Name after call
+	
+testcMN.testreleaseModelName:
+	test that DB table Models hasn't row with Name after call
+	
+testcMN.testdelete:
+	test that DB table Models hasn't row with Name when Model_id missing from any Table
+	
+testcMN.testinsertIntoTable:
+	test that when Name empty, error
+	test that when Name non-empty, data written to all Tables
+	
+testcMN.testsetName:
+	test that assigning existing Name reads out data
+	test that assigning new Name calls reserveModelName appropriately
+	test that new Name not longer than maximum

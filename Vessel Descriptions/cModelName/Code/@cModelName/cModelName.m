@@ -1,4 +1,4 @@
-classdef (Abstract) cModelID < cMySQL & handle
+classdef (Abstract) cModelName < cMySQL & handle
     %CMODELID Read from database all data for rows matching the model ID
     %   Detailed explanation goes here
     
@@ -83,10 +83,10 @@ classdef (Abstract) cModelID < cMySQL & handle
 %            where_sql = ['ModelID = ', num2str(obj.ModelID)];
 %            tab = obj(ii).DBTable{ti};
 %            obj(oi).delete(tab, where_sql);
-
+           
            % Insert into "data table"
            insertIntoTable@cMySQL(obj(oi), tab, varargin{:});
-
+           
            % Insert into "model table"
            obj = obj.insertIntoModels();
 %            vals = {obj(oi).ModelID, obj(oi).Name, obj(oi).Type};
@@ -284,7 +284,7 @@ classdef (Abstract) cModelID < cMySQL & handle
         
         % If ModelID already in DB, read data out
         for ti = 1:numel(obj.DBTable)
-            try obj = obj.readFromTable(obj.DBTable{ti}, obj.FieldName);
+            try [obj, diff_l] = obj.readFromTable(obj.DBTable{ti}, obj.FieldName);
                 
             catch ee
                 
