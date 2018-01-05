@@ -4,30 +4,30 @@ classdef (Abstract) cModelName < cMySQL & handle
     
     properties
         
-        ModelID = [];
         Name = '';
+        Description = '';
     end
     
     properties(Hidden, Constant, Abstract)
         
         DBTable;
-        FieldName;
         Type;
     end
     
     properties(Constant, Hidden)
         
+        FieldName = 'Models_id';
         ModelTable = 'Models'; 
     end
     
-    properties(Hidden)
+    properties(Dependent)
         
-        Synched = true;
+        Models_id = [];
     end
     
     methods
     
-       function obj = cModelID(varargin)
+       function obj = cModelName(varargin)
            
            % Input
            
@@ -43,23 +43,42 @@ classdef (Abstract) cModelName < cMySQL & handle
            if nargin > 1
                
                names_c = varargin{2};
-               names_c = validateCellStr(names_c, 'cModelID.cModelID', ...
+               names_c = validateCellStr(names_c, 'cModelName.cModelName', ...
                    'Name', 2);
                
                % Error if number of names doesn't match size of OBJ
                
                [obj.Name] = deal(names_c{:});
-           else
-               
-               % Create new row in database with ModelID
-               obj = obj.reserveModelID();
+%            else
+%                
+%                % Create new row in database with ModelID
+%                obj = obj.reserveModelName();
            end
        end
        
        function delete(obj)
            
-           % Release a reserved row in DB if no other data was input
-           obj.releaseModelID();
+           if isempty(obj.Name)
+               
+               return
+           end
+           
+           where_sql = [obj.FieldName, ' = ', num2str(obj.Models_id)];
+           ti = 1;
+           while ti <= numel(obj.DBTable)
+               
+               currTab = obj.DBTable{ti};
+               [~, dataTbl] = obj.select(currTab, '*', where_sql);
+               if isempty(dataTbl)
+                   
+                   % Release a reserved row in DB if no other data was input
+                   obj.releaseModelID();
+                   
+                   return
+               end
+               ti = ti + 1;
+           end
+           
        end
        
        function insertIntoTable(obj, varargin)
@@ -139,15 +158,13 @@ classdef (Abstract) cModelName < cMySQL & handle
         table = obj(1).ModelTable;
         for oi = 1:numel(obj)
             
-            nameEmpty_l = isempty(obj(oi).Name);
-            
-            if ~nameEmpty_l
-                
+%             nameEmpty_l = isempty(obj(oi).Name);
+%             if ~nameEmpty_l
+%                 
                 where_sql = ['Name = ', ...
                     cMySQL.encloseStringQuotes(obj(oi).Name)];
                 obj(oi).deleteSQL(table, where_sql);
-            end
-            
+%             end
 %             for ti = 1:numel(obj(oi).DBTable)
 %                 
 % %                 [~, tbl] = obj(1).select(obj(oi).DBTable{ti}, {}, [obj(oi).FieldName ' = ', num2str(obj(oi).ModelID)]);
@@ -222,10 +239,17 @@ classdef (Abstract) cModelName < cMySQL & handle
            
            for oi = 1:numel(obj)
                
-               [~, mid_t] = obj.select(tab, 'MAX(ModelID)');
-               redundnatModelID = [mid_t{:, :}] + 1;
+               [~, mid_t] = obj.select(tab, ['MAX(', obj(oi).FieldName, ')']);
+               currMaxModel = [mid_t{:, :}];
+               
+               if isnan(currMaxModel)
+                   
+                   currMaxModel = 0;
+               end
+               
+               redundnatModelID = currMaxModel + 1;
                vals = {redundnatModelID, name, obj(oi).Type};
-               obj(oi).insertValuesDuplicate(tab, [{'ModelID'}, cols], vals);
+               obj(oi).insertValuesDuplicate(tab, [{obj.FieldName}, cols], vals);
            end
         end
     end
@@ -379,11 +403,15 @@ classdef (Abstract) cModelName < cMySQL & handle
                 ' AND Type = ', obj.encloseStringQuotes(obj.Type)];
             [~, tbl] = obj.select('Models', 'Name', where_sql);
             modelInDB_l = ~isempty(tbl);
+            
+            % Assign now so that Models_id can be read out later
+            obj.Name = name;
+            
             if modelInDB_l
                 
-                % Get corresponding modelID and assign
-                [~, ID] = obj.idFromName(name);
-                obj.ModelID = ID;
+%                 % Get corresponding modelID and assign
+%                 [~, ID] = obj.idFromName(name);
+%                 obj.Models_id = ID;
                 
                 % If Model already in DB, read data out
                 for ti = 1:numel(obj.DBTable)
@@ -404,13 +432,24 @@ classdef (Abstract) cModelName < cMySQL & handle
                 obj = obj.reserveModelName(name);
                 
                 % Get corresponding modelID and assign
-                [~, ID] = obj.idFromName(name);
-                obj.ModelID = ID;
+                
+%                 obj.Models_id = ID;
 
             end
             
-            % Assign to OBJ
-            obj.Name = name;
+        end
+        
+        function mid = get.Models_id(obj)
+        % Get method for depenedent property Models_id
+            
+            name = obj.Name;
+            [~, mid] = obj.idFromName(name);
+        
+        end
+        
+        function obj = set.Models_id(obj, value)
+            
+            error('cMN:Nope', ['Nope!!', value])
         end
     end
 end

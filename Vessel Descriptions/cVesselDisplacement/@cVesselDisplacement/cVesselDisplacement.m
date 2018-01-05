@@ -1,4 +1,4 @@
-classdef cVesselDisplacement < cMySQL & cModelID & cVesselDisplacementConversion
+classdef cVesselDisplacement < cMySQL & cModelName & cVesselDisplacementConversion
     %CVESSELDISPLACEMENT Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -14,7 +14,7 @@ classdef cVesselDisplacement < cMySQL & cModelID & cVesselDisplacementConversion
     properties(Hidden, Constant)
         
         DBTable = {'Displacement'}; 
-        FieldName = 'ModelID'; 
+%         FieldName = 'Models_id'; 
         Type = 'Displacement'; 
     end
     

@@ -33,7 +33,7 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
     properties(Hidden, Constant)
        
         DBTable = {'speedpowercoefficients', 'speedpower'};
-        FieldName = 'ModelID';
+%         FieldName = 'Models_id';
         Type = 'Speed, Power';
     end
     
@@ -332,34 +332,34 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
        
        end
        
-       function obj = incrementModelID(obj)
-       % Lowest value of ModelID not yet in DB table.
-       
-       
-%        % Build SQL
-%        maxPlusOne_sql = ['SELECT MAX(ModelID) + 1 FROM '...
-%            'speedpowercoefficients'];
+%        function obj = incrementModelID(obj)
+%        % Lowest value of ModelID not yet in DB table.
 %        
-%        % Get empty ModelIDs of object array
-%        emptyModels_l = arrayfun(@(x) isempty(x.ModelID), obj);
 %        
-%        % Get new highest value
-%        [~, out_c] = obj(1).execute(maxPlusOne_sql);
-%        firstModelID = str2double([out_c{:}]);
-%        
-%        % Account for case where table was empty or column was all null
-%        if isnan(firstModelID)
-%            firstModelID = 1;
+% %        % Build SQL
+% %        maxPlusOne_sql = ['SELECT MAX(ModelID) + 1 FROM '...
+% %            'speedpowercoefficients'];
+% %        
+% %        % Get empty ModelIDs of object array
+% %        emptyModels_l = arrayfun(@(x) isempty(x.ModelID), obj);
+% %        
+% %        % Get new highest value
+% %        [~, out_c] = obj(1).execute(maxPlusOne_sql);
+% %        firstModelID = str2double([out_c{:}]);
+% %        
+% %        % Account for case where table was empty or column was all null
+% %        if isnan(firstModelID)
+% %            firstModelID = 1;
+% %        end
+% %        
+% %        % Increment all empty ModelIDs
+% %        newModelID_c = num2cell( firstModelID:firstModelID + ...
+% %            numel(find(emptyModels_l)) - 1 );
+% %        
+% %        % Assign
+% %        [obj(emptyModels_l).ModelID] = deal( newModelID_c{:} );
+% %        
 %        end
-%        
-%        % Increment all empty ModelIDs
-%        newModelID_c = num2cell( firstModelID:firstModelID + ...
-%            numel(find(emptyModels_l)) - 1 );
-%        
-%        % Assign
-%        [obj(emptyModels_l).ModelID] = deal( newModelID_c{:} );
-%        
-       end
        
        function obj = print(obj)
        % print Print data into formatted columns
@@ -462,7 +462,7 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
         end
         
         if ~isempty(speed)
-            obj = obj.incrementModelID;
+%             obj = obj.incrementModelID;
         end
         
         obj.Speed = speed;
@@ -495,7 +495,7 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
         end
         
         if ~isempty(power)
-            obj = obj.incrementModelID;
+%             obj = obj.incrementModelID;
         end
         obj.Power = power;
             
@@ -511,7 +511,7 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
 %         obj.Trim = trim;
             
         if ~isempty(trim)
-            obj = obj.incrementModelID;
+%             obj = obj.incrementModelID;
         end
         obj.Trim = trim;
         
@@ -526,7 +526,7 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
         end
         
         if ~isempty(displacement)
-            obj = obj.incrementModelID;
+%             obj = obj.incrementModelID;
         end
         obj.Displacement = displacement;
         
@@ -619,7 +619,7 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
             if ~isempty(coeff)
                 validateattributes(coeff, {'numeric'}, ...
                     {'vector', 'real', 'numel', nVals});
-                obj = obj.incrementModelID;
+%                 obj = obj.incrementModelID;
             end
             
             obj.Coefficients = coeff;

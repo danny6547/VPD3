@@ -14,10 +14,10 @@ CREATE PROCEDURE createModels()
 
 	BEGIN
 	
-	CREATE TABLE Models (id INT PRIMARY KEY AUTO_INCREMENT,
-								 ModelID INT NOT NULL,
-								 Name VARCHAR(255) UNIQUE,
+	CREATE TABLE Models (Models_id INT PRIMARY KEY AUTO_INCREMENT,
+								 Name VARCHAR(50) UNIQUE,
 								 Type VARCHAR(25),
-                                 CONSTRAINT UniqueModelsOfType UNIQUE(ModelID, Type)
+                                 Description VARCHAR(255),
+                                 CONSTRAINT UniqueModelsOfType UNIQUE(Models_id, Type)
                                  );
 	END;

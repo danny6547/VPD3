@@ -4,7 +4,7 @@ classdef testcModelName < matlab.unittest.TestCase & cMySQL
 
 properties(Constant)
     
-    TestDatabase = 'test14';
+    TestDatabase = 'test15';
     TestModelName = 'Test Model';
     TestModelNameLong = repmat('a', [1, testcModelName.testObj.maxNameLength + 1]);
     TestModelDataName = 'Test Model 1';
@@ -15,6 +15,7 @@ properties(Constant)
             14, 14e4, 0, 1e5;...
             };
     TestModelCoefficients = {1.5, 2, 0, 1e5};
+    SpecMaxNameLength = 50;
 %     Database = testcModelName.TestDatabase;
 end
 
@@ -39,11 +40,11 @@ methods(TestClassSetup)
         testObj.deleteSQL(tab, where);
         
         tab = 'SpeedPower';
-        where = ['ModelID = ', '''' num2str(testcase.TestModelDataID) ''''];
+        where = ['Models_id = ', '''' num2str(testcase.TestModelDataID) ''''];
         testObj.deleteSQL(tab, where);
         
         tab = 'SpeedPowerCoefficients';
-        where = ['ModelID = ', '''' num2str(testcase.TestModelDataID) ''''];
+        where = ['Models_id = ', '''' num2str(testcase.TestModelDataID) ''''];
         testObj.deleteSQL(tab, where);
     end
     
@@ -98,7 +99,7 @@ methods
         tab = 'Models';
         where = ['Name = ', ...
             testObj.encloseStringQuotes(testcase.TestModelDataName)];
-        [~, mid_t] = testObj.select(tab, 'ModelID', where);
+        [~, mid_t] = testObj.select(tab, 'Models_id', where);
         testObj.deleteSQL(tab, where);
         
         if isempty(mid_t)
@@ -107,11 +108,11 @@ methods
         end
         
         tab = 'speedPower';
-        where = ['ModelID = ', num2str([mid_t{:, :}])];
+        where = ['Models_id = ', num2str([mid_t{:, :}])];
         testObj.deleteSQL(tab, where);
         
         tab = 'speedPowerCoefficients';
-        where = ['ModelID = ', num2str([mid_t{:, :}])];
+        where = ['Models_id = ', num2str([mid_t{:, :}])];
         testObj.deleteSQL(tab, where);
     end
     
@@ -120,20 +121,22 @@ methods
         testObj = testcase.testObj();
         
         tab = 'Models';
-        cols = {'Name', 'ModelID', 'Type'};
-        test_id = testcase.TestModelDataID;
-        values = [{testcase.TestModelDataName}, test_id, testObj.Type];
+        cols = {'Name', 'Type'};
+%         test_id = testcase.TestModelDataID;
+        values = [{testcase.TestModelDataName}, testObj.Type];
         testObj.insertValues(tab, cols, values);
-        testObj.ModelID = test_id;
+%         testObj.Models_id = test_id;
+        testObj.Name = testcase.TestModelDataName;
+        test_id = testObj.Models_id;
         
         tab = 'speedPower';
-        cols = {'ModelID', 'Speed', 'Power', 'Trim', 'Displacement'};
+        cols = {'Models_id', 'Speed', 'Power', 'Trim', 'Displacement'};
         values = [repmat({test_id}, size(testcase.TestModelData, 1), 1), ...
             testcase.TestModelData];
         testObj.insertValues(tab, cols, values);
         
         tab = 'speedPowerCoefficients';
-        cols = {'ModelID', 'Coefficient_A', 'Coefficient_B', 'Trim', 'Displacement'};
+        cols = {'Models_id', 'Coefficient_A', 'Coefficient_B', 'Trim', 'Displacement'};
         values = [{test_id}, testcase.TestModelCoefficients];
         testObj.insertValues(tab, cols, values);
     end
@@ -143,9 +146,9 @@ methods(Test)
 
     function testmaxNameLength(testcase)
     % testmaxNameLength Method will return specified maximum length
-
+    
     % Input
-    exp_Len = 50;
+    exp_Len = testcase.SpecMaxNameLength;
     input_obj = testcase.TestObj;
     
     % Execute
@@ -221,7 +224,7 @@ methods(Test)
         input_obj = testcase.testObj;
         input_Name = 'Test Model testdelete';
         input_obj.Name = input_Name;
-        id = input_obj.ModelID;
+        id = input_obj.Models_id;
         
         % Execute
         input_obj.delete();
@@ -233,7 +236,7 @@ methods(Test)
         for ti = 1:numel(emptyObj.DBTable)
             
             isDataRow = testcase.isRow(emptyObj, emptyObj.DBTable{ti}, ...
-                ['ModelID = ', num2str(id)]);
+                ['Models_id = ', num2str(id)]);
             testcase.assertFalse(isDataRow, data_msg);
         end
         
@@ -284,7 +287,7 @@ methods(Test)
     msg_data = ['Values from object''s data fields are expected to be '...
         'inserted into the tables given in ''DBTable'' property at any '...
         'fields matching the properties of OBJ'];
-    where_sql = ['ModelID = ', num2str(input_obj.ModelID)];
+    where_sql = ['Models_id = ', num2str(input_obj.Models_id)];
     for ti = 1:numel(input_obj.DBTable)
         
         isrow = testcase.isRow(input_obj, input_obj.DBTable{ti}, where_sql);
@@ -292,7 +295,7 @@ methods(Test)
     end
     
     % Clean up
-    testcase.deleteTestModelData();
+%     testcase.insertTestModelData();
     
     end
 end

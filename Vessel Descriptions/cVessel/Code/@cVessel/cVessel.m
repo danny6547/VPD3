@@ -1005,9 +1005,9 @@ classdef cVessel < cMySQL
             windCoeffs_v(isempty(windCoeffs_v)) = [];
             if numel(windCoeffs_v) > 0
                 
-                tabName = 'WindCoefficientDirection';
+%                 tabName = 'WindCoefficientDirection';
 %                 obj.insertIntoTable(tabName, windCoeffs_v);
-                windCoeffs_v.insertIntoTable(tabName);
+                windCoeffs_v.insertIntoTable();
             end
         end
         
@@ -1691,7 +1691,7 @@ classdef cVessel < cMySQL
            id = [];
            if ~isempty(obj.WindCoefficient)
                
-               id = obj.WindCoefficient.ModelID;
+               id = obj.WindCoefficient.Models_id;
            end
        end
 
@@ -1700,7 +1700,7 @@ classdef cVessel < cMySQL
            validateattributes(wc, {'cVesselWindCoefficient'}, {'scalar'});
            
            obj.WindCoefficient = wc;
-           obj.Wind_Model_ID = wc.ModelID;
+           obj.Wind_Model_ID = wc.Models_id;
        end
        
        function model = get.Engine_Model(obj)

@@ -1,4 +1,4 @@
-classdef cVesselWindCoefficient < cMySQL & cModelID
+classdef cVesselWindCoefficient < cMySQL & cModelName
     %CVESSELWINDCOEFFICIENT Wind resistance coefficents for ships.
     %   Detailed explanation goes here
     
@@ -19,7 +19,7 @@ classdef cVesselWindCoefficient < cMySQL & cModelID
     properties(Hidden, Constant)
         
         DBTable = {'windcoefficientdirection'};
-        FieldName = 'ModelID';
+%         FieldName = 'Models_id';
         Type = 'Wind';
     end
     
@@ -27,7 +27,7 @@ classdef cVesselWindCoefficient < cMySQL & cModelID
     
        function obj = cVesselWindCoefficient(varargin)
            
-           obj = obj@cModelID(varargin{:});
+           obj = obj@cModelName(varargin{:});
        end
        
        function prop = properties(obj)
@@ -35,7 +35,7 @@ classdef cVesselWindCoefficient < cMySQL & cModelID
            prop = {
                     'Direction'
                     'Coefficient'
-                    'ModelID'
+                    'Models_id'
                     'Name'
 %                     'Server'
 %                     'Database'
@@ -112,33 +112,33 @@ classdef cVesselWindCoefficient < cMySQL & cModelID
            
        end
        
-       function obj = incrementModelID(obj)
-       % Lowest value of ModelID not yet in DB table.
-       
-       % Build SQL
-       maxPlusOne_sql = ['SELECT MAX(ModelID) + 1 FROM '...
-           'windcoefficientdirection'];
-       
-       % Get empty ModelIDs of object array
-       emptyModels_l = arrayfun(@(x) isempty(x.ModelID), obj);
-       
-       % Get new highest value
-       [~, out_c] = obj(1).execute(maxPlusOne_sql);
-       firstModelID = str2double([out_c{:}]);
-       
-       % Account for case where table was empty or column was all null
-       if isnan(firstModelID)
-           firstModelID = 1;
-       end
-       
-       % Increment all empty ModelIDs
-       newModelID_c = num2cell( firstModelID:firstModelID + ...
-           numel(find(emptyModels_l)) - 1 );
-       
-       % Assign
-       [obj(emptyModels_l).ModelID] = deal( newModelID_c{:} );
-       
-       end
+%        function obj = incrementModelID(obj)
+%        % Lowest value of ModelID not yet in DB table.
+%        
+%        % Build SQL
+%        maxPlusOne_sql = ['SELECT MAX(ModelID) + 1 FROM '...
+%            'windcoefficientdirection'];
+%        
+%        % Get empty ModelIDs of object array
+%        emptyModels_l = arrayfun(@(x) isempty(x.ModelID), obj);
+%        
+%        % Get new highest value
+%        [~, out_c] = obj(1).execute(maxPlusOne_sql);
+%        firstModelID = str2double([out_c{:}]);
+%        
+%        % Account for case where table was empty or column was all null
+%        if isnan(firstModelID)
+%            firstModelID = 1;
+%        end
+%        
+%        % Increment all empty ModelIDs
+%        newModelID_c = num2cell( firstModelID:firstModelID + ...
+%            numel(find(emptyModels_l)) - 1 );
+%        
+%        % Assign
+%        [obj(emptyModels_l).ModelID] = deal( newModelID_c{:} );
+%        
+%        end
        
        function empty = isempty(obj)
        % isempty True for empty object data.
@@ -212,18 +212,18 @@ classdef cVesselWindCoefficient < cMySQL & cModelID
         
         function obj = set.Direction(obj, dir)
             
-            if ~isempty(dir)
-                obj = obj.incrementModelID;
-            end
+%             if ~isempty(dir)
+%                 obj = obj.incrementModelID;
+%             end
             obj.Direction = dir(:)';
             
         end
         
         function obj = set.Coefficient(obj, coeff)
             
-            if ~isempty(coeff)
-                obj = obj.incrementModelID;
-            end
+%             if ~isempty(coeff)
+%                 obj = obj.incrementModelID;
+%             end
             obj.Coefficient = coeff(:)';
         end
         
