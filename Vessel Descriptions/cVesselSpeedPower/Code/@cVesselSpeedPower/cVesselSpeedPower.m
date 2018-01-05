@@ -4,9 +4,6 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
     
     properties
         
-%         ModelID double = []; % ModelID of SpeedPower table %
-        
-%         IMO_Vessel_Number double;
         Speed double;
         Power double;
         Trim double;
@@ -14,7 +11,9 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
 %         FluidDensity double;
         Speed_Power_Source char = '';
         Propulsive_Efficiency double = [];
-        Coefficients double = [];
+        Coefficient_A double = [];
+        Coefficient_B double = [];
+        Coefficient_Q double = [];
         R_Squared double = [];
     end
     
@@ -33,7 +32,6 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
     properties(Hidden, Constant)
        
         DBTable = {'speedpowercoefficients', 'speedpower'};
-%         FieldName = 'Models_id';
         Type = 'Speed, Power';
     end
     
@@ -42,14 +40,6 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
        function obj = cVesselSpeedPower(varargin)
            
            obj = obj@cModelName(varargin{:});
-%            if nargin > 0
-%                
-%               
-% %                size_c = num2cell(size(varargin{1}));
-% %                obj(size_c{:}) = cVesselSpeedPower();
-% %                propValue_c = 
-% %                set(obj, varargin{:});
-%            end
        end
        
        function [obj, coeffs, R2] = fit(obj, varargin)
@@ -91,7 +81,6 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
                 case 'exponential'
                     
                     fo = polyfit(log(speed), log(power), 1);
-%                     fo = abs(fo);
                     residuals = speed - (fo(2) + fo(1).*log(power));
                 case 'polynomial2'
                     
@@ -105,126 +94,31 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
             % Assign into obj, outputs
             obj(oi).Speed = speed;
             obj(oi).Power = power;
-            obj(oi).Coefficients = fo;
-%             obj(oi).Exponent_B = fo(2);
-%             
-%             if numel(fo) > 2
-%                 
-%                 obj(oi).Exponent_C = fo(3);
-%             end
-            obj(oi).R_Squared = 0; %r2;
             
-%             coeffs = nan(numObj, numel(fo));
+            if numel(fo) > 2
+                
+                obj(oi).Coefficient_A = fo(1);
+                obj(oi).Coefficient_B = fo(2);
+                obj(oi).Coefficient_Q = fo(3);
+            else
+                
+                obj(oi).Coefficient_A = fo(1);
+                obj(oi).Coefficient_B = fo(2);
+            end
+            obj(oi).R_Squared = 0;
+            
             coeffs(oi, 1:numel(fo)) = fo;
             R2(oi) = r2;
        end
        end
        
-%        function insertIntoTable(obj)
-%        % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs
-%        
-%        % Check that at least one OBJ has data, which can then be fitted,
-%        % so that the matrix of coefficients can be initialised before loop
-%        
-% %        % Filter obj without IMO numbers
-% %        withIMO_l = ~cellfun(@isempty, {obj.IMO_Vessel_Number});
-% %        obj2insert = obj(withIMO_l);
-% %        if isempty(obj2insert)
-% %            
-% %            errid = 'cVSP:NoIMO';
-% %            errmsg = ['OBJ must have an associated IMO_Vessel_Number before '...
-% %                'inserting into the database.'];
-% %            error(errid, errmsg);
-% %        end
-% %        
-% %        % Filter obj already in DB
-% %        [obj, indb] = isInDB(obj);
-% %        obj = obj(~indb);
-% %        if isempty(obj)
-% %            
-% %            warnid = 'cVSP:AlreadyInDB';
-% %            warnmsg = 'All speed, power data already in database.';
-% %            warning(warnid, warnmsg);
-% %            return
-% %        end
-%        
-%        % Fit
-%        if isempty(obj(1).Coefficients)
-%            
-%            obj(1) = obj(1).fit;
-%        end
-%        
-%        % Generate struct containing coefficients in same structure as table
-%        numCoeffs = numel(obj(1).Coefficients);
-%        firstLetters_c = cellstr(char(97:97+numCoeffs-1)');
-%        coeffNames_c = strcat('Coefficient_', firstLetters_c);
-%        coeff_c = nan(1, numCoeffs);
-%        for oi = 1:numel(obj)
-%            
-%            % Fit
-%            if isempty(obj(oi).Coefficients)
-%                
-%                obj(oi) = obj(oi).fit;
-%            end
-%            
-%            % Create matrix of coefficients
-%            for ci = 1:numCoeffs
-%                
-%                coeff_c(oi, ci) = obj(oi).Coefficients(ci);
-%            end
-%        end
-%        
-%        coeff_c = mat2cell(coeff_c, numel(obj), ones(1, numCoeffs));
-%        nCols = numCoeffs*2;
-%        coeffInput_c = cell(1, nCols);
-%        coeffInput_c(1:2:nCols-1) = coeffNames_c;
-%        coeffInput_c(2:2:nCols) = coeff_c;
-%        
-%        % Release the model ID to get rid of any rows containing just the
-%        % modelID and NULL or default values
-%        obj.releaseModelID;
-%        
-%        % Convert
-% %        obj = obj.displacementInVolume;
-%        
-%        disp_v = obj.displacementInVolume();
-%        dispInput_c = {'Displacement', disp_v};
-%        additionalInputs_c = [coeffInput_c, dispInput_c];
-%        
-%        % Insert
-%        insertIntoTable@cModelName(obj, 'SpeedPower', [], dispInput_c{:});
-%        insertIntoTable@cModelName(obj, 'SpeedPowerCoefficients', [], ...
-%            additionalInputs_c{:});
-% %        insertIntoTable@cMySQL(obj, ...
-% %            'vesselspeedpowermodel', [], ...
-% %            'Speed_Power_Model', [obj.ModelID]);
-% %        obj.insertIntoModels();
-%        
-%        % Convert back
-% %        obj = obj.displacementInMass;
-%        
-%        end
+       function insertIntoTable(obj)
+       % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs
        
-%        function [obj, diff_l] = readFromTable(obj, varargin)
-%        % readFromTable 
-%        
-%            % Inputs
-%            
-%            % Read from speed, power
-%            [obj, diffSP_l] = readFromTable@cMySQL(obj, 'speedpower', 'ModelID',...
-%                {'Speed', 'Power'}, varargin{:});
-%            
-%            % Read from coefficients
-%            [obj, diffSPC_l] = readFromTable@cMySQL(obj, 'speedpowercoefficients', 'ModelID',...
-%                {'Displacement', 'Trim'}, varargin{:});
-%            
-%            dispMass_v = obj.displacementInMass();
-%            [obj.Displacement] = deal(dispMass_v);
-%            
-%            % Object read from DB different if either speed power or
-%            % coefficients table have returned different results
-%            diff_l = diffSP_l | diffSPC_l;
-%        end
+           obj = obj.fit;
+           
+           insertIntoTable@cModelName(obj);
+       end
        
        function [obj, h] = plot(obj)
        % plot
@@ -331,36 +225,7 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
        end
        
        end
-       
-%        function obj = incrementModelID(obj)
-%        % Lowest value of ModelID not yet in DB table.
-%        
-%        
-% %        % Build SQL
-% %        maxPlusOne_sql = ['SELECT MAX(ModelID) + 1 FROM '...
-% %            'speedpowercoefficients'];
-% %        
-% %        % Get empty ModelIDs of object array
-% %        emptyModels_l = arrayfun(@(x) isempty(x.ModelID), obj);
-% %        
-% %        % Get new highest value
-% %        [~, out_c] = obj(1).execute(maxPlusOne_sql);
-% %        firstModelID = str2double([out_c{:}]);
-% %        
-% %        % Account for case where table was empty or column was all null
-% %        if isnan(firstModelID)
-% %            firstModelID = 1;
-% %        end
-% %        
-% %        % Increment all empty ModelIDs
-% %        newModelID_c = num2cell( firstModelID:firstModelID + ...
-% %            numel(find(emptyModels_l)) - 1 );
-% %        
-% %        % Assign
-% %        [obj(emptyModels_l).ModelID] = deal( newModelID_c{:} );
-% %        
-%        end
-       
+
        function obj = print(obj)
        % print Print data into formatted columns
        
@@ -494,9 +359,6 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
             error(errID, errMsg);
         end
         
-        if ~isempty(power)
-%             obj = obj.incrementModelID;
-        end
         obj.Power = power;
             
         end
@@ -508,11 +370,7 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
             validateattributes(trim, {'numeric'}, {'real', 'scalar',...
                 'nonnan'});
         end
-%         obj.Trim = trim;
-            
-        if ~isempty(trim)
-%             obj = obj.incrementModelID;
-        end
+        
         obj.Trim = trim;
         
         end
@@ -525,9 +383,6 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
                 'nonnan'});
         end
         
-        if ~isempty(displacement)
-%             obj = obj.incrementModelID;
-        end
         obj.Displacement = displacement;
         
         end
@@ -546,45 +401,7 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
             
             obj.Model = model;
         end
-%         
-%         function obj = set.ModelID(obj, modelID)
-%         % set.ModelID Update values with those from DB
-%         
-%         % Check integer scalar
-%         validateattributes(modelID, {'numeric'}, ...
-%             {'scalar', 'integer', 'real'}, ...
-%             'cVesselSpeedPower.set.ModelID', 'modelID', 1);
-%         
-%         % If ModelID already in DB, read data out
-%         tab1 = 'speedpowercoefficients';
-%         cols1 = {'Coefficient_A', 'Coefficient_B', 'Coefficient_C', ...
-%             'Dispalcement', 'Trim', 'R_Sqaured'};
-%         
-%         tab2 = 'speedpower';
-%         cols2 = {'Speed', 'Power', 'Propulsive_Efficiency'};
-%         [~, temp] = obj.execute(['SELECT MAX(ModelID) FROM ' tab1]);
-%         highestExistingModel = temp{1};
-%         
-%         % Assign
-%         obj.ModelID = modelID;
-%         
-%         if modelID <= highestExistingModel
-%             
-%             obj = obj.readFromTable(tab1, 'ModelID', cols1);
-%             obj = obj.readFromTable(tab2, 'ModelID', cols2);
-%         else
-%             
-%             obj.Speed = [];
-%             obj.Power = [];
-%             obj.Trim = [];
-%             obj.Displacement = [];
-%             obj.Speed_Power_Source = '';
-%             obj.Propulsive_Efficiency = [];
-%             obj.Coefficients = [];
-%             obj.R_Squared = [];
-%         end
-%         end
-%         
+
         function obj = set.Speed_Power_Source(obj, sps)
             
             if ~isempty(sps)
@@ -604,33 +421,35 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
             obj.Propulsive_Efficiency = propEff;
         end
         
-        function obj = set.Coefficients(obj, coeff)
-            
-            
-            if strcmp(obj.Model, 'polynomial2')
-                
-                nVals = 3;
-                
-            elseif strcmp(obj.Model, 'exponential')
-                
-                nVals = 2;
-            end
+        function obj = set.Coefficient_A(obj, coeff)
             
             if ~isempty(coeff)
-                validateattributes(coeff, {'numeric'}, ...
-                    {'vector', 'real', 'numel', nVals});
-%                 obj = obj.incrementModelID;
+                validateattributes(coeff, {'numeric'}, {'scalar', 'real'});
             end
             
-            obj.Coefficients = coeff;
+            obj.Coefficient_A = coeff;
+        end
+        
+        function obj = set.Coefficient_B(obj, coeff)
+            
+            if ~isempty(coeff)
+                validateattributes(coeff, {'numeric'}, {'scalar', 'real'});
+            end
+            
+            obj.Coefficient_B = coeff;
+        end
+        
+        function obj = set.Coefficient_Q(obj, coeff)
+            
+            if ~isempty(coeff)
+                validateattributes(coeff, {'numeric'}, {'scalar', 'real'});
+            end
+            
+            obj.Coefficient_Q = coeff;
         end
         
         function obj = set.R_Squared(obj, r2)
             
-            if ~isempty(r2)
-                obj = obj.incrementModelID;
-            end
-
             obj.R_Squared = r2;
         end
         

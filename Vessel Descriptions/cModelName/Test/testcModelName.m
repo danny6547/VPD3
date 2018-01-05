@@ -16,7 +16,6 @@ properties(Constant)
             };
     TestModelCoefficients = {1.5, 2, 0, 1e5};
     SpecMaxNameLength = 50;
-%     Database = testcModelName.TestDatabase;
 end
 
 properties
@@ -283,7 +282,8 @@ methods(Test)
     input_obj.Power = [data_c{:, 2}];
     input_obj.Trim = data_c{1, 3};
     input_obj.Displacement = data_c{1, 4};
-    input_obj.Coefficients = [testcase.TestModelCoefficients{1:2}];
+    input_obj.Coefficient_A = [testcase.TestModelCoefficients{1}];
+    input_obj.Coefficient_B = [testcase.TestModelCoefficients{2}];
     
     % Execute
     input_obj.insertIntoTable();

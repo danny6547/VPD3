@@ -13,19 +13,13 @@ classdef cVesselDisplacement < cMySQL & cModelName & cVesselDisplacementConversi
     
     properties(Hidden, Constant)
         
-        DBTable = {'Displacement'}; 
-%         FieldName = 'Models_id'; 
+        DBTable = {'Displacement'};  
         Type = 'Displacement'; 
     end
     
     methods
        
        function obj = cVesselDisplacement()
-           
-       end
-       
-       function obj = assignFromTable(obj, tbl)
-           
            
        end
        

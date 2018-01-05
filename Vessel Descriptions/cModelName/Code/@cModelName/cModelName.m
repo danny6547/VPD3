@@ -30,7 +30,6 @@ classdef (Abstract) cModelName < cMySQL & handle
        function obj = cModelName(varargin)
            
            % Input
-           
            if nargin > 0
                
                sizeVect_v = varargin{1};
@@ -46,48 +45,40 @@ classdef (Abstract) cModelName < cMySQL & handle
                names_c = validateCellStr(names_c, 'cModelName.cModelName', ...
                    'Name', 2);
                
-               % Error if number of names doesn't match size of OBJ
-               
                [obj.Name] = deal(names_c{:});
-%            else
-%                
-%                % Create new row in database with ModelID
-%                obj = obj.reserveModelName();
            end
        end
        
        function delete(obj)
+       % delete Delete object and remove any reserved models from DB
            
-           if isempty(obj.Name)
-               
+       % Check object is not empty
+       if isempty(obj.Name)
+
+           return
+       end
+           
+       % Iterate over DB tables and check if model missing from any
+       where_sql = [obj.FieldName, ' = ', num2str(obj.Models_id)];
+       ti = 1;
+       while ti <= numel(obj.DBTable)
+
+           currTab = obj.DBTable{ti};
+           [~, dataTbl] = obj.select(currTab, '*', where_sql);
+           if isempty(dataTbl)
+
+               % Release a reserved row in DB if no other data was input
+               obj.releaseModelID();
+
                return
            end
-           
-           where_sql = [obj.FieldName, ' = ', num2str(obj.Models_id)];
-           ti = 1;
-           while ti <= numel(obj.DBTable)
-               
-               currTab = obj.DBTable{ti};
-               [~, dataTbl] = obj.select(currTab, '*', where_sql);
-               if isempty(dataTbl)
-                   
-                   % Release a reserved row in DB if no other data was input
-                   obj.releaseModelID();
-                   
-                   return
-               end
-               ti = ti + 1;
-           end
-           
+           ti = ti + 1;
+       end
        end
        
        function insertIntoTable(obj, varargin)
-       % insertIntoTable
+       % insertIntoTable Insert object data into specified DB tables
        
-%        % Assign model table parameters
-%        tab = obj(1).ModelTable;
-%        cols = {'ModelID', 'Name', 'Type'};
-        
        for oi = 1:numel(obj)
        
            % All models must be named
@@ -97,9 +88,6 @@ classdef (Abstract) cModelName < cMySQL & handle
               errmsg = 'Model name cannot be empty';
               error(errid, errmsg);
            end
-%            % Delete pre-existing model data
-%            where_sql = ['ModelID = ', num2str(obj.ModelID)];
-%            obj(oi).delete(tab, where_sql);
           
            tables = obj(oi).DBTable;
            for ti = 1:numel(tables)
@@ -108,43 +96,9 @@ classdef (Abstract) cModelName < cMySQL & handle
                tab = tables{ti};
                insertIntoTable@cMySQL(obj(oi), tab, varargin{:});
            end
-           
-%            % Insert into "model table"
-%            obj = obj.insertIntoModels();
-%            vals = {obj(oi).ModelID, obj(oi).Name, obj(oi).Type};
-%            obj(oi).insertValuesDuplicate(tab, cols, vals);
        end
        end
-       
-       function length = maxNameLength(obj)
-           
-           show_sql = ['SHOW COLUMNS FROM ', obj.ModelTable, ...
-               ' WHERE Field = ''Name'''];
-           show_t = obj.execute(show_sql);
-           type_ch = show_t.type;
-           length_i = regexp(type_ch, '[^varchar()]');
-           length = str2double(type_ch(length_i));
-       end
-       
-%        function obj = readFromTable(obj, varargin)
-%        % readFromTable
-%        
-%        for oi = 1:numel(obj)
-%        
-%            % Check modelID before
-%            oldModel = obj(oi).ModelID;
-%            
-%            % Read from table
-%            obj = readFromTable@cMySQL(obj, varargin{:});
-%            
-%            % Release if new model
-%            newModel = obj(oi).ModelID;
-%            if ~isequal(oldModel, newModel)
-%            
-%                obj(oi) = obj(oi).releaseModelID;
-%            end
-%        end
-%        end
+      
     end
     
     methods(Access = protected, Hidden)
@@ -152,46 +106,17 @@ classdef (Abstract) cModelName < cMySQL & handle
         function obj = releaseModelID(obj)
         % releaseModelID Remove modelID rows from table when empty
         
-        % Determine if table has only written ModelID, not any other data
-%         selectIdRows_sql = ['SELECT * FROM ', obj.DBTable, ' WHERE ', ...
-%             obj.FieldName ' = ', num2str(obj.ModelID)];
         table = obj(1).ModelTable;
         for oi = 1:numel(obj)
             
-%             nameEmpty_l = isempty(obj(oi).Name);
-%             if ~nameEmpty_l
-%                 
-                where_sql = ['Name = ', ...
-                    cMySQL.encloseStringQuotes(obj(oi).Name)];
-                obj(oi).deleteSQL(table, where_sql);
-%             end
-%             for ti = 1:numel(obj(oi).DBTable)
-%                 
-% %                 [~, tbl] = obj(1).select(obj(oi).DBTable{ti}, {}, [obj(oi).FieldName ' = ', num2str(obj(oi).ModelID)]);
-% %         %         [q, w, tbl] = obj.execute(selectIdRows_sql);
-% %                 tblCols_c = tbl.Properties.VariableNames;
-% %                 idCols_c = lower([{'id'}, obj(oi).FieldName]);
-% %                 idCol_l = ismember(tblCols_c, idCols_c);
-% %                 tbl = tbl(:, ~idCol_l);
-% %                 nonIdTbl = table2cell(tbl);
-% %                 allDataNull_l = all(cellfun(@isnan, nonIdTbl(:)));
-% %                 tableModelEmpty_l = size(tbl, 1) == 1 && allDataNull_l;
-%                 
-%                 % Delete ModelID from table
-% %                 if tableModelEmpty_l
-%                 if nameEmpty_l
-%                     
-%                     id = num2str(obj(oi).ModelID);
-%                     sql = ['DELETE FROM ' obj(oi).DBTable{ti} ' WHERE '...
-%                         obj(oi).FieldName ' = ' id];
-%                     obj(oi).execute(sql);
-%                 end
-%             end
+            where_sql = ['Name = ', ...
+                cMySQL.encloseStringQuotes(obj(oi).Name)];
+            obj(oi).deleteSQL(table, where_sql);
         end
         end
         
         function [obj, id] = idFromName(obj, name)
-        % modelIDFromName Get ModelID corresponding to Name from table
+        % modelIDFromName Get Models_id corresponding to Name from table
         
             % Select ID based on type
             tab = obj.ModelTable;
@@ -208,46 +133,32 @@ classdef (Abstract) cModelName < cMySQL & handle
                 error(errid, errmsg);
             else
                 
-%                 obj = obj.releaseModelID();
                 id = [tbl{:, :}];
             end
         end
         
-        function [obj, name] = nameFromID(obj, id)
-        % modelIDFromName Get ModelID corresponding to Name from table
-        
-            % Select ID based on type
-            tab = obj.ModelTable;
-            col = obj.FieldName;
-            where_sql = ['Type = ', obj.Type, ' AND ModelID = ', id];
-            [obj, ~, tbl] = obj.select(tab, col, where_sql);
-            name = [tbl{:}];
-            
-            % Reserve this modelID 
-            obj.Name = name;
-%             if isempty(name)
-%                 
-%                 obj = obj.reserveModelID();
-%                 id = obj.ModelID;
-%             end
-        end
-        
         function obj = insertIntoModels(obj, name)
+        % insertIntoModels Insert model into DB table 'Models'
            
            tab = obj(1).ModelTable;
            cols = {'Name', 'Type'};
            
            for oi = 1:numel(obj)
                
+               % Get current highest model id
                [~, mid_t] = obj.select(tab, ['MAX(', obj(oi).FieldName, ')']);
                currMaxModel = [mid_t{:, :}];
                
+               % If NaN, no models created yet
                if isnan(currMaxModel)
                    
                    currMaxModel = 0;
                end
                
+               % Get next unique model id
                redundnatModelID = currMaxModel + 1;
+               
+               % Write into table
                vals = {redundnatModelID, name, obj(oi).Type};
                obj(oi).insertValuesDuplicate(tab, [{obj.FieldName}, cols], vals);
            end
@@ -268,118 +179,40 @@ classdef (Abstract) cModelName < cMySQL & handle
     methods(Access = protected, Hidden)
         
         function obj = reserveModelName(obj, name)
-        % reserveModelID Get unique modelID and write into DB
+        % reserveModelID Create entry for model in DB without writing data
         
-%         for oi = 1:numel(obj)
-            
-%             if ~isempty(obj(oi).Name)
-%                continue 
-%             end
-            
-%             id = nextUniqueID(obj(oi));
-            
-%             for ti = 1:numel(obj(oi).DBTable)
-%                 
-%                 table = obj(oi).DBTable{ti};
-%                 columns = obj(oi).FieldName;
-%                 tab = obj(oi).DBTable{ti};
-%                 obj(oi).ModelID = id;
-%                 
-%                 % Get any default values and concat
-%     %             [obj, sql, defs] = defaultValues(obj, tab);
-%                 obj(oi).insertValues(table, columns, id);
-%             end
-            
             obj = obj.insertIntoModels(name);
-
-
-%         end
         end
-        
-%         function id = nextUniqueID(obj)
-%         % nextUniqueID Get the next unique ID in DB
-%         
-%         sql = ['SELECT MAX(', obj.FieldName, ')+1 FROM ', obj.DBTable{1}];
-%         [~, id_c] = obj.execute(sql);
-%         id_ch = id_c{1};
-%         id = str2double(id_ch);
-%         
-%            % Account for case where table was empty or column was all null
-%            if isnan(id)
-%                id = 1;
-%            end
-%         end
+    end
+    
+    methods(Hidden)
+       
+       function length = maxNameLength(obj)
+       % maxNameLength Maximum length of model Name allowed by DB
+           
+           show_sql = ['SHOW COLUMNS FROM ', obj.ModelTable, ...
+               ' WHERE Field = ''Name'''];
+           show_t = obj.execute(show_sql);
+           type_ch = show_t.type;
+           length_i = regexp(type_ch, '[^varchar()]');
+           length = str2double(type_ch(length_i));
+       end
+       
+       function length = maxDescriptionLength(obj)
+       % maxNameLength Maximum length of model Description allowed by DB
+           
+           show_sql = ['SHOW COLUMNS FROM ', obj.ModelTable, ...
+               ' WHERE Field = ''Description'''];
+           show_t = obj.execute(show_sql);
+           type_ch = show_t.type;
+           length_i = regexp(type_ch, '[^varchar()]');
+           length = str2double(type_ch(length_i));
+       end
     end
     
     methods
         
-%         function obj = set.ModelID(obj, modelID)
-%         % set.ModelID Update values with those from DB
-%         
-%         % Check integer scalar
-%         validateattributes(modelID, {'numeric'}, ...
-%             {'scalar', 'integer', 'real'}, ...
-%             'cModelID.set.ModelID', 'modelID', 1);
-%         
-%         % If value unchanged, do nothing
-%         if isequal(modelID, obj.ModelID)
-%             return
-%         end
-%         
-%         % If current modelID in DB, check if it should be released
-%         if ~isempty(obj.ModelID)
-%             obj = obj.releaseModelID;
-%         end
-%         
-%         % Assign
-%         obj.ModelID = modelID;
-%         
-%         % If ModelID already in DB, read data out
-%         for ti = 1:numel(obj.DBTable)
-%             try [obj, diff_l] = obj.readFromTable(obj.DBTable{ti}, obj.FieldName);
-%                 
-%             catch ee
-%                 
-%                 if ~strcmp(ee.identifier, 'readTable:IdentifierDataMissing')
-%                     rethrow(ee);
-%                 end
-%             end
-%         end
-%         
-% %         % Issure warnings if different to existing data
-% %         if any(different_l)
-% %             
-% %             obj.warnAboutOverwrite();
-% %         end
-%         
-%         % Read Name from Models table
-%         modelID_ch = num2str(modelID, '%u');
-%         type_ch = ['''', obj.Type, ''''];
-%         where_sql = ['ModelID = ', modelID_ch, ' AND Type = ', type_ch];
-%         [~, tbl] = obj.select('Models', 'Name', where_sql);
-%         if ~isempty(tbl)
-%             
-%             name = tbl.name{1};
-%             obj.Name = name;
-%         end
-%         
-%         end
-        
-%         function obj = set.FieldName(obj, fie)
-%             
-%             validateattributes(fie, {'char'}, {'vector', 'row'});
-%             obj.FieldName = fie;
-%             
-%         end
-%         
-%         function obj = set.DBTable(obj, tab)
-%             
-%             validateattributes(tab, {'char'}, {'vector', 'row'});
-%             obj.DBTable = tab;
-%             
-%         end
-%         
-        function obj = set.Name(obj, name)
+        function set.Name(obj, name)
         % Ensure Name is char vector
         
             % Input
@@ -398,7 +231,6 @@ classdef (Abstract) cModelName < cMySQL & handle
             end
             
             % Read out data, if model already in DB
-%             type_ch = ['''', obj.Type, ''''];
             where_sql = ['Name = ', obj.encloseStringQuotes(name), ...
                 ' AND Type = ', obj.encloseStringQuotes(obj.Type)];
             [~, tbl] = obj.select('Models', 'Name', where_sql);
@@ -409,12 +241,9 @@ classdef (Abstract) cModelName < cMySQL & handle
             
             if modelInDB_l
                 
-%                 % Get corresponding modelID and assign
-%                 [~, ID] = obj.idFromName(name);
-%                 obj.Models_id = ID;
-                
                 % If Model already in DB, read data out
                 for ti = 1:numel(obj.DBTable)
+                    
                     try obj = obj.readFromTable(obj.DBTable{ti},...
                             obj.FieldName);
                         
@@ -429,12 +258,7 @@ classdef (Abstract) cModelName < cMySQL & handle
             else
                 
                 % If model not in DB, reserve Name in Model table
-                obj = obj.reserveModelName(name);
-                
-                % Get corresponding modelID and assign
-                
-%                 obj.Models_id = ID;
-
+                obj.reserveModelName(name);
             end
             
         end
@@ -443,13 +267,36 @@ classdef (Abstract) cModelName < cMySQL & handle
         % Get method for depenedent property Models_id
             
             name = obj.Name;
-            [~, mid] = obj.idFromName(name);
-        
+            if isempty(name)
+                mid = [];
+            else
+                [~, mid] = obj.idFromName(name);
+            end
         end
         
-        function obj = set.Models_id(obj, value)
+        function set.Models_id(~, ~)
             
-            error('cMN:Nope', ['Nope!!', value])
+            msg = 'Property ''Models_id'' cannot be assigned to.';
+            error('cMN:ModelIDReadOnly', msg)
+        end
+        
+        function set.Description(obj, desc)
+            
+            validateattributes(desc, {'char'}, {'vector'}, ...
+               'cModelName.set.Description');
+           
+            % Error if too long
+            maxlength = obj.maxDescriptionLength;
+            if numel(desc) > maxlength
+                
+                errid = 'cMN:NameTooLong';
+                errmsg = ['Length of property ''Description'' cannot exceed the '...
+                    'limit of field ''Description'' in DB table ''Models'', i.e. ',...
+                    num2str(maxlength), ' characters.'];
+                error(errid, errmsg);
+            end
+            
+            obj.Description = desc;
         end
     end
 end

@@ -7,19 +7,11 @@ classdef cVesselWindCoefficient < cMySQL & cModelName
         Direction double = [];
         Coefficient double = [];
         Wind_Reference_Height_Design = [];
-%         ModelID = [];
-%         Name char = '';
-    end
-    
-    properties(Hidden)
-        
-%         DBTable = '';
     end
     
     properties(Hidden, Constant)
         
         DBTable = {'windcoefficientdirection'};
-%         FieldName = 'Models_id';
         Type = 'Wind';
     end
     
@@ -30,18 +22,13 @@ classdef cVesselWindCoefficient < cMySQL & cModelName
            obj = obj@cModelName(varargin{:});
        end
        
-       function prop = properties(obj)
+       function prop = properties(~)
            
            prop = {
                     'Direction'
                     'Coefficient'
                     'Models_id'
                     'Name'
-%                     'Server'
-%                     'Database'
-%                     'UserID'
-%                     'Password'
-%                     'Connection'
                                 };
        end
        
@@ -112,34 +99,6 @@ classdef cVesselWindCoefficient < cMySQL & cModelName
            
        end
        
-%        function obj = incrementModelID(obj)
-%        % Lowest value of ModelID not yet in DB table.
-%        
-%        % Build SQL
-%        maxPlusOne_sql = ['SELECT MAX(ModelID) + 1 FROM '...
-%            'windcoefficientdirection'];
-%        
-%        % Get empty ModelIDs of object array
-%        emptyModels_l = arrayfun(@(x) isempty(x.ModelID), obj);
-%        
-%        % Get new highest value
-%        [~, out_c] = obj(1).execute(maxPlusOne_sql);
-%        firstModelID = str2double([out_c{:}]);
-%        
-%        % Account for case where table was empty or column was all null
-%        if isnan(firstModelID)
-%            firstModelID = 1;
-%        end
-%        
-%        % Increment all empty ModelIDs
-%        newModelID_c = num2cell( firstModelID:firstModelID + ...
-%            numel(find(emptyModels_l)) - 1 );
-%        
-%        % Assign
-%        [obj(emptyModels_l).ModelID] = deal( newModelID_c{:} );
-%        
-%        end
-       
        function empty = isempty(obj)
        % isempty True for empty object data.
        
@@ -182,68 +141,15 @@ classdef cVesselWindCoefficient < cMySQL & cModelName
     
     methods
         
-%         function obj = set.ModelID(obj, modelID)
-%         % set.ModelID Update values with those from DB
-%         
-%         % Check integer scalar
-%         validateattributes(modelID, {'numeric'}, ...
-%             {'scalar', 'integer', 'real'}, ...
-%             'cVesselWindCoefficient.set.ModelID', 'modelID', 1);
-%         
-%         % If ModelID already in DB, read data out
-%         tab = 'windcoefficientdirection';
-%         cols = {'Direction', 'Coefficient', 'Name'};
-%         [~, temp] = obj.execute(['SELECT MAX(ModelID) AS `A` FROM ' tab]);
-%         highestExistingModel = temp{1};
-%         
-%         % Assign
-%         obj.ModelID = modelID;
-%         
-%         if modelID <= highestExistingModel
-%             
-%             obj = obj.readFromTable(tab, 'ModelID', cols);
-%         else
-%             
-%             obj.Direction = [];
-%             obj.Coefficient = [];
-%             obj.Name = [];
-%         end
-%         end
-        
         function obj = set.Direction(obj, dir)
             
-%             if ~isempty(dir)
-%                 obj = obj.incrementModelID;
-%             end
             obj.Direction = dir(:)';
             
         end
         
         function obj = set.Coefficient(obj, coeff)
             
-%             if ~isempty(coeff)
-%                 obj = obj.incrementModelID;
-%             end
             obj.Coefficient = coeff(:)';
         end
-        
-%         function obj = set.Name(obj, name)
-%         % Set method for property 'Name'
-%         
-%         if iscellstr(name) && numel(unique(name)) == 1
-%             name = name{1};
-%         end
-%         
-%         % Input
-%         validateattributes(name, {'char'}, {});
-%         
-%         % If string is white space, let's make it empty
-%         if ~any(name)
-%             name = '';
-%         end
-%         
-%         obj.Name = name;
-%             
-%         end
     end
 end
