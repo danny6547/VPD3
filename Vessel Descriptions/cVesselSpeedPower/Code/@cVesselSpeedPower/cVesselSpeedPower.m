@@ -1,4 +1,4 @@
-classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVesselDisplacementConversion
+classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVesselDisplacementConversion
     %CVESSELSPEEDPOWER Vessel speed and power data
     %   Detailed explanation goes here
     
@@ -41,7 +41,7 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
     
        function obj = cVesselSpeedPower(varargin)
            
-           obj = obj@cModelID(varargin{:});
+           obj = obj@cModelName(varargin{:});
 %            if nargin > 0
 %                
 %               
@@ -120,111 +120,111 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
        end
        end
        
-       function insertIntoTable(obj)
-       % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs
-       
-       % Check that at least one OBJ has data, which can then be fitted,
-       % so that the matrix of coefficients can be initialised before loop
-       
-%        % Filter obj without IMO numbers
-%        withIMO_l = ~cellfun(@isempty, {obj.IMO_Vessel_Number});
-%        obj2insert = obj(withIMO_l);
-%        if isempty(obj2insert)
+%        function insertIntoTable(obj)
+%        % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs
+%        
+%        % Check that at least one OBJ has data, which can then be fitted,
+%        % so that the matrix of coefficients can be initialised before loop
+%        
+% %        % Filter obj without IMO numbers
+% %        withIMO_l = ~cellfun(@isempty, {obj.IMO_Vessel_Number});
+% %        obj2insert = obj(withIMO_l);
+% %        if isempty(obj2insert)
+% %            
+% %            errid = 'cVSP:NoIMO';
+% %            errmsg = ['OBJ must have an associated IMO_Vessel_Number before '...
+% %                'inserting into the database.'];
+% %            error(errid, errmsg);
+% %        end
+% %        
+% %        % Filter obj already in DB
+% %        [obj, indb] = isInDB(obj);
+% %        obj = obj(~indb);
+% %        if isempty(obj)
+% %            
+% %            warnid = 'cVSP:AlreadyInDB';
+% %            warnmsg = 'All speed, power data already in database.';
+% %            warning(warnid, warnmsg);
+% %            return
+% %        end
+%        
+%        % Fit
+%        if isempty(obj(1).Coefficients)
 %            
-%            errid = 'cVSP:NoIMO';
-%            errmsg = ['OBJ must have an associated IMO_Vessel_Number before '...
-%                'inserting into the database.'];
-%            error(errid, errmsg);
+%            obj(1) = obj(1).fit;
 %        end
 %        
-%        % Filter obj already in DB
-%        [obj, indb] = isInDB(obj);
-%        obj = obj(~indb);
-%        if isempty(obj)
+%        % Generate struct containing coefficients in same structure as table
+%        numCoeffs = numel(obj(1).Coefficients);
+%        firstLetters_c = cellstr(char(97:97+numCoeffs-1)');
+%        coeffNames_c = strcat('Coefficient_', firstLetters_c);
+%        coeff_c = nan(1, numCoeffs);
+%        for oi = 1:numel(obj)
 %            
-%            warnid = 'cVSP:AlreadyInDB';
-%            warnmsg = 'All speed, power data already in database.';
-%            warning(warnid, warnmsg);
-%            return
+%            % Fit
+%            if isempty(obj(oi).Coefficients)
+%                
+%                obj(oi) = obj(oi).fit;
+%            end
+%            
+%            % Create matrix of coefficients
+%            for ci = 1:numCoeffs
+%                
+%                coeff_c(oi, ci) = obj(oi).Coefficients(ci);
+%            end
+%        end
+%        
+%        coeff_c = mat2cell(coeff_c, numel(obj), ones(1, numCoeffs));
+%        nCols = numCoeffs*2;
+%        coeffInput_c = cell(1, nCols);
+%        coeffInput_c(1:2:nCols-1) = coeffNames_c;
+%        coeffInput_c(2:2:nCols) = coeff_c;
+%        
+%        % Release the model ID to get rid of any rows containing just the
+%        % modelID and NULL or default values
+%        obj.releaseModelID;
+%        
+%        % Convert
+% %        obj = obj.displacementInVolume;
+%        
+%        disp_v = obj.displacementInVolume();
+%        dispInput_c = {'Displacement', disp_v};
+%        additionalInputs_c = [coeffInput_c, dispInput_c];
+%        
+%        % Insert
+%        insertIntoTable@cModelName(obj, 'SpeedPower', [], dispInput_c{:});
+%        insertIntoTable@cModelName(obj, 'SpeedPowerCoefficients', [], ...
+%            additionalInputs_c{:});
+% %        insertIntoTable@cMySQL(obj, ...
+% %            'vesselspeedpowermodel', [], ...
+% %            'Speed_Power_Model', [obj.ModelID]);
+% %        obj.insertIntoModels();
+%        
+%        % Convert back
+% %        obj = obj.displacementInMass;
+%        
 %        end
        
-       % Fit
-       if isempty(obj(1).Coefficients)
-           
-           obj(1) = obj(1).fit;
-       end
-       
-       % Generate struct containing coefficients in same structure as table
-       numCoeffs = numel(obj(1).Coefficients);
-       firstLetters_c = cellstr(char(97:97+numCoeffs-1)');
-       coeffNames_c = strcat('Coefficient_', firstLetters_c);
-       coeff_c = nan(1, numCoeffs);
-       for oi = 1:numel(obj)
-           
-           % Fit
-           if isempty(obj(oi).Coefficients)
-               
-               obj(oi) = obj(oi).fit;
-           end
-           
-           % Create matrix of coefficients
-           for ci = 1:numCoeffs
-               
-               coeff_c(oi, ci) = obj(oi).Coefficients(ci);
-           end
-       end
-       
-       coeff_c = mat2cell(coeff_c, numel(obj), ones(1, numCoeffs));
-       nCols = numCoeffs*2;
-       coeffInput_c = cell(1, nCols);
-       coeffInput_c(1:2:nCols-1) = coeffNames_c;
-       coeffInput_c(2:2:nCols) = coeff_c;
-       
-       % Release the model ID to get rid of any rows containing just the
-       % modelID and NULL or default values
-       obj.releaseModelID;
-       
-       % Convert
-%        obj = obj.displacementInVolume;
-       
-       disp_v = obj.displacementInVolume();
-       dispInput_c = {'Displacement', disp_v};
-       additionalInputs_c = [coeffInput_c, dispInput_c];
-       
-       % Insert
-       insertIntoTable@cModelID(obj, 'SpeedPower', [], dispInput_c{:});
-       insertIntoTable@cModelID(obj, 'SpeedPowerCoefficients', [], ...
-           additionalInputs_c{:});
-%        insertIntoTable@cMySQL(obj, ...
-%            'vesselspeedpowermodel', [], ...
-%            'Speed_Power_Model', [obj.ModelID]);
-%        obj.insertIntoModels();
-       
-       % Convert back
-%        obj = obj.displacementInMass;
-       
-       end
-       
-       function [obj, diff_l] = readFromTable(obj, varargin)
-       % readFromTable 
-       
-           % Inputs
-           
-           % Read from speed, power
-           [obj, diffSP_l] = readFromTable@cMySQL(obj, 'speedpower', 'ModelID',...
-               {'Speed', 'Power'}, varargin{:});
-           
-           % Read from coefficients
-           [obj, diffSPC_l] = readFromTable@cMySQL(obj, 'speedpowercoefficients', 'ModelID',...
-               {'Displacement', 'Trim'}, varargin{:});
-           
-           dispMass_v = obj.displacementInMass();
-           [obj.Displacement] = deal(dispMass_v);
-           
-           % Object read from DB different if either speed power or
-           % coefficients table have returned different results
-           diff_l = diffSP_l | diffSPC_l;
-       end
+%        function [obj, diff_l] = readFromTable(obj, varargin)
+%        % readFromTable 
+%        
+%            % Inputs
+%            
+%            % Read from speed, power
+%            [obj, diffSP_l] = readFromTable@cMySQL(obj, 'speedpower', 'ModelID',...
+%                {'Speed', 'Power'}, varargin{:});
+%            
+%            % Read from coefficients
+%            [obj, diffSPC_l] = readFromTable@cMySQL(obj, 'speedpowercoefficients', 'ModelID',...
+%                {'Displacement', 'Trim'}, varargin{:});
+%            
+%            dispMass_v = obj.displacementInMass();
+%            [obj.Displacement] = deal(dispMass_v);
+%            
+%            % Object read from DB different if either speed power or
+%            % coefficients table have returned different results
+%            diff_l = diffSP_l | diffSPC_l;
+%        end
        
        function [obj, h] = plot(obj)
        % plot

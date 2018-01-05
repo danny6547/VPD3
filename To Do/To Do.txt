@@ -469,14 +469,14 @@ testcMN.testreserveModelName:
 testcMN.testreleaseModelName:
 	test that DB table Models hasn't row with Name after call
 	
-testcMN.testdelete:
-	test that DB table Models hasn't row with Name when Model_id missing from any Table
+# testcMN.testdelete:
+	# test that DB table Models hasn't row with Name when Model_id missing from any Table
 	
 testcMN.testinsertIntoTable:
 	test that when Name empty, error
 	test that when Name non-empty, data written to all Tables
 	
-testcMN.testsetName:
-	test that assigning existing Name reads out data
-	test that assigning new Name calls reserveModelName appropriately
-	test that new Name not longer than maximum
+# testcMN.testsetName:
+	# test that assigning existing Name reads out data
+	# test that assigning new Name calls reserveModelName appropriately
+	# test that new Name not longer than maximum
