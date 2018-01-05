@@ -32,20 +32,9 @@ methods(TestClassSetup)
         testcase.deleteTestModelData();
     end
     
-    function deleteTestModel(testcase)
+    function deleteTestModelStart(testcase)
         
-        testObj = testcase.testObj();
-        tab = 'Models';
-        where = ['Name = ', '''' testcase.TestModelName ''''];
-        testObj.deleteSQL(tab, where);
-        
-        tab = 'SpeedPower';
-        where = ['Models_id = ', '''' num2str(testcase.TestModelDataID) ''''];
-        testObj.deleteSQL(tab, where);
-        
-        tab = 'SpeedPowerCoefficients';
-        where = ['Models_id = ', '''' num2str(testcase.TestModelDataID) ''''];
-        testObj.deleteSQL(tab, where);
+        testcase.deleteTestModel;
     end
     
     function insertTestModelDataStart(testcase)
@@ -54,16 +43,16 @@ methods(TestClassSetup)
     end
 end
 
-methods(TestMethodSetup)
-    
-    
-end
-
 methods(TestClassTeardown)
     
     function deleteTestModelDataEnd(testcase)
         
        testcase.deleteTestModelData();
+    end
+    
+    function deleteTestModelEnd(testcase)
+        
+        testcase.deleteTestModel;
     end
 end
 
@@ -91,6 +80,22 @@ methods
         
         obj.TestObj.Name = name;
     
+    end
+    
+    function deleteTestModel(testcase)
+        
+        testObj = testcase.testObj();
+        tab = 'Models';
+        where = ['Name = ', '''' testcase.TestModelName ''''];
+        testObj.deleteSQL(tab, where);
+        
+        tab = 'SpeedPower';
+        where = ['Models_id = ', '''' num2str(testcase.TestModelDataID) ''''];
+        testObj.deleteSQL(tab, where);
+        
+        tab = 'SpeedPowerCoefficients';
+        where = ['Models_id = ', '''' num2str(testcase.TestModelDataID) ''''];
+        testObj.deleteSQL(tab, where);
     end
     
     function deleteTestModelData(testcase)
@@ -299,11 +304,4 @@ methods(Test)
     
     end
 end
-
-% Input
-
-% Execute
-
-% Verify
-
 end
