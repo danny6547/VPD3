@@ -144,9 +144,8 @@ methods
         % Delete any existing rows in the test table for test vessels
         testIMO_c = {testcase.InsertIntoSpeedPowerValues.IMO_Vessel_Number};
         testIMO_ch = strjoin(cellfun(@num2str, testIMO_c, 'Uni', 0), ', ');
-        testcase.MySQL.execute(['DELETE FROM SpeedPower WHERE '...
+        testcase.MySQL.execute(['DELETE FROM vesselspeedpowermodel WHERE '...
             'IMO_Vessel_Number IN (', testIMO_ch ,')']);
-        
     end
     
     function requirementsinsertIntoSpeedPowerCoefficients(testcase)
@@ -202,7 +201,6 @@ methods(TestClassTeardown)
         testcase.MySQL = testcase.MySQL.disconnect;
     
     end
-    
 end
 
 methods(Test)
@@ -592,6 +590,55 @@ methods(Test)
     msgTable = 'Table SFOCCoefficient data should match that input.';
     testcase.verifyEqual(actTable, expTable, 'RelTol', 1e-14, msgTable);
     
+    end
+    
+    function testDDIntervalsFromDates(testcase)
+    % testDDIntervalsFromDates Test logical matrix of dry dock intervals
+    % 1. Test that the logical matrix returned by the method will have one
+    % more columns than there are dry dockings and as many rows as data
+    % values.
+    % 2. Test that in each column, the only TRUE values are those
+    % corresponding to dates in OBJ.DateTime_UTC which fall within the
+    % dry-docking interval given by the column's index.
+    
+    % 1.
+    % Input
+    nDD = 2;
+    nData = 10;
+    ddd(nDD) = cVesselDryDockDates();
+    ddd(1).StartDate = '0000-01-02';
+    ddd(1).EndDate = '0000-01-03';
+    ddd(2).StartDate = '0000-01-06';
+    ddd(2).EndDate = '0000-01-08';
+    
+    input_obj = cVessel();
+    input_obj.DryDockDates = ddd;
+    input_dates = 1:nData;
+    input_obj.DateTime_UTC = input_dates;
+    
+    exp_size = [nData, nDD + 1];
+    
+    % Execute
+    act_mat = input_obj.DDIntervalsFromDates;
+    
+    % Verify
+    act_size = size(act_mat);
+    msg_size = ['Size of ouput is expected to be the number of '...
+        'datetime_utc values by the number of dry-dockings plus one.'];
+    testcase.verifyEqual(act_size, exp_size, msg_size);
+    
+    % 2.
+    % Input
+    exp_mat = false(nData, nDD + 1);
+    exp_mat([1, 2], 1) = true;
+    exp_mat([3:6], 2) = true;
+    exp_mat([8:10], 3) = true;
+    
+    % Verify
+    msg_size = ['Output is expected to match logical matrix whose columns '...
+        'correspond to dry dock intervals defined by data in property '...
+        '''DryDockDates''.'];
+    testcase.verifyEqual(act_mat, exp_mat, msg_size);
     end
 end
 

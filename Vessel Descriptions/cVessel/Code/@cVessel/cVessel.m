@@ -40,6 +40,8 @@ classdef cVessel < cMySQL
         InServicePerformance
         Activity double = nan;
         Wind_Model_ID;
+        
+        
     end
     
     properties(Hidden)
@@ -48,6 +50,7 @@ classdef cVessel < cMySQL
         CurrIter = 1;
         IterFinished = false;
         DryDockIndexDB = [];
+        q_Iterate_DD_Index = 1;
     end
     
     properties(Dependent)
@@ -56,9 +59,15 @@ classdef cVessel < cMySQL
 %         Power;
 %         Displacement
 %         Trim;
+
         Propulsive_Efficiency;
         Engine_Model;
         Wind_Reference_Height_Design;
+    end
+    
+    properties(Hidden, Dependent)
+        
+        q_Iterate_DD;
     end
     
     properties(Access = private)
@@ -192,6 +201,7 @@ classdef cVessel < cMySQL
            if shipData_l && ~any([file_l, imo_l])
                
                shipData = shipDataInput;
+               indb = true(1, size(shipData, 2));
            end
 
            % Get IMO from struct
@@ -1247,6 +1257,48 @@ classdef cVessel < cMySQL
             
             
         end
+        
+        function mat = DDIntervalsFromDates(obj)
+        % DDIntervalsFromDates Logical matrix giving dry-docking intervals
+        
+        for oi = 1:numel(obj)
+            
+            % Check whether dry-dock data given, pre-allocate arrays
+            nDDi = numel(obj(oi).DryDockDates) + 1;
+            if isempty(obj(oi).DryDockDates)
+                mat = true(numel(obj(oi).DateTime_UTC), 1);
+                continue
+            end
+            mat = false(numel(obj(oi).DateTime_UTC), nDDi);
+            currDates = obj(oi).DateTime_UTC;
+            
+            
+            for di = 1:nDDi
+                
+                % Create logical vectors for current interval from index
+                if di == 1
+                    
+                    currIntEnd = obj(oi).DryDockDates(di).StartDateNum;
+                    currInt_l = currDates <= currIntEnd;
+                    
+                elseif di == nDDi
+                    
+                    currIntEnd = obj(oi).DryDockDates(di-1).EndDateNum;
+                    currInt_l = currDates >= currIntEnd;
+                    
+                else
+                    
+                    currIntStart = obj(oi).DryDockDates(di - 1).EndDateNum;
+                    currIntEnd = obj(oi).DryDockDates(di).StartDateNum;
+                    currInt_l = currDates >= currIntStart & ...
+                        currDates <= currIntEnd;
+                end
+                
+                % Assign values for current interval to true
+                mat(currInt_l, di) = true;
+            end
+        end
+        end
 %        function obj = fitSpeedPower(obj, speed, power, varargin)
 %        % fitSpeedPower Fit speed, power data to model
 %        
@@ -1481,6 +1533,20 @@ classdef cVessel < cMySQL
                 obj(oi).(propName{pi}) = dataStruct.(lower(dataName{pi}));
             end
         end
+        end
+        
+        function currdd = q_Current_DD(obj)
+            
+            % Get current iterator
+            ii = obj.q_Iterate_DD_Index;
+            
+            % Read data
+            dd_c = obj.DryDockDates(ii);
+            row_l = obj.DateTime_UTC >= prevDate & ...
+                    obj.DateTime_UTC < currDate;
+            
+            % Increment iterator, or reset if at max
+            
         end
     end
     
@@ -1769,5 +1835,11 @@ classdef cVessel < cMySQL
 %            % Assign object
 %            obj.SpeedPower = newSp;
 %        end
+
+        function obj = get.q_Iterate_DD(obj)
+        % q_Current_DD 
+
+
+        end
     end
 end
