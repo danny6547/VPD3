@@ -11,25 +11,43 @@ function speedpowercoeffs(speed, power, varargin)
 %   the displacement, given by input numeric scalar DISP in tonnes. The 
 %   output will be in m^3.
 
-% Create object and assig
-obj = cVesselSpeedPower();
-obj.Speed = speed;
-obj.Power = power;
-if nargin > 2
+% Input
+validateattributes(speed, {'numeric'}, {'positive', 'real', 'nonempty'});
+validateattributes(power, {'numeric'}, {'positive', 'real', 'nonempty'});
+
+if (~isvector(speed) || ~isvector(power)) && (~isequal(size(speed), size(power)))
     
-    trim = varargin{1};
-    obj.Trim = trim;
+    errid = 'sp:SpeedPowerSizeMismatch';
+    errmsg = 'If speed and power are matrices, they must be the same size';
+    error(errid, errmsg);
 end
 
-if nargin > 3
-    
-    disp = varargin{2};
-    obj.Displacement = disp;
+% Pre-allocate
+nCurves = size(speed, 1);
+obj = cVesselSpeedPower([1, nCurves]);
+
+for ci = 1:nCurves
+
+    % Create object and assig
+    obj(ci).Speed = speed(ci, :);
+    obj(ci).Power = power(ci, :);
+    if nargin > 2
+
+        trim = varargin{1};
+        validateattributes(trim, {'numeric'}, {'real', 'vector', 'nonempty'});
+        obj(ci).Trim = trim((ci));
+    end
+
+    if nargin > 3
+
+        disp = varargin{2};
+        validateattributes(disp, {'numeric'}, {'real', 'vector', 'nonempty'});
+        obj(ci).Displacement = disp((ci));
+    end
+
+    % Fit
+    obj(ci).fit;
 end
-
-% Fit
-obj.fit;
-
 % Print
 obj.print;
 
