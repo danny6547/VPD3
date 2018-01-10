@@ -233,8 +233,8 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
        obj.fit();
        
        % Coeffs
-       a = arrayfun(@(x) x.Coefficients(1), obj)';
-       b = arrayfun(@(x) x.Coefficients(2), obj)';
+       a = arrayfun(@(x) x.Coefficient_A, obj)';
+       b = arrayfun(@(x) x.Coefficient_B, obj)';
        
        % Max, min power
        minP = arrayfun(@(x) min(x.Power), obj)';
