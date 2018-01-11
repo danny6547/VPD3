@@ -28,9 +28,10 @@ classdef cVessel < cMySQL
         Speed_Index
         DateTime_UTC
         TimeStep double = 1;
+        In_Service;
         
-        MovingAverages
-        Regression
+        MovingAverage = [];
+        Regression = [];
         ServiceInterval
         GuaranteeDurations
         PerformanceMark
@@ -40,8 +41,6 @@ classdef cVessel < cMySQL
         InServicePerformance
         Activity double = nan;
         Wind_Model_ID;
-        
-        
     end
     
     properties(Hidden)
@@ -50,7 +49,11 @@ classdef cVessel < cMySQL
         CurrIter = 1;
         IterFinished = false;
         DryDockIndexDB = [];
+        DDIterator = [1, 1];
         q_Iterate_DD_Index = 1;
+        currDD = {};
+%         currVesselIterator = [];
+%         currIntervalIterator = [];
     end
     
     properties(Dependent)
@@ -68,6 +71,8 @@ classdef cVessel < cMySQL
     properties(Hidden, Dependent)
         
         q_Iterate_DD;
+        DDIntervals;
+        numDDIntervals;
     end
     
     properties(Access = private)
@@ -86,93 +91,96 @@ classdef cVessel < cMySQL
            p = inputParser();
            p.addParameter('IMO', []);
            p.addParameter('FileName', '');
-           p.addParameter('DDi', []);
+%            p.addParameter('DDi', []);
            p.addParameter('ShipData', []);
-           p.addParameter('Name', '');
+%            p.addParameter('Name', '');
            p.parse(varargin{:});
            res = p.Results;
            
-           file = res.FileName;
+%            file = res.FileName;
            imo = res.IMO;
-           DDi = res.DDi;
+%            DDi = res.DDi;
            shipDataInput = res.ShipData;
-           vesselNames = res.Name;
+%            vesselNames = res.Name;
            
-           file_l = ~isempty(file);
+%            file_l = ~isempty(file);
            imo_l = ~isempty(imo);
-           ddi_l = ~isempty(DDi);
+%            ddi_l = ~isempty(DDi);
            shipData_l = ~isempty(shipDataInput);
-           vesselName_l = ~isempty(vesselNames);
+%            vesselName_l = ~isempty(vesselNames);
            
            % Append DDi to list of inputs for reading from DB, if input
            readInputs_c = {imo};
-           if ddi_l
-               
-               readInputs_c = [readInputs_c, {DDi}];
-           end
+%            if ddi_l
+%                
+%                readInputs_c = [readInputs_c, {DDi}];
+%            end
+
+           % Data reading procedures must read all DD intervals
+           DDi = [];
            
            if shipData_l
                
                validateattributes(shipDataInput, {'struct'}, {});
            end
-           
-           if file_l
+%            
+%            if file_l
+%                
+%                % Load data from file into DB
+%                file = validateCellStr(file, 'cVessel constructor', 'IMO');
+%                [valid, errmsg] = cellfun(@(x) cVessel.validateFileExists(x), file,...
+%                    'Uni', 0);
+%                valid = [valid{:}];
+%                if any(~valid)
+%                   
+%                    errmsg = errmsg{find(~valid, 1)};
+%                    errid = 'cVA:FileNotFound';
+%                    error(errid, strrep(errmsg, '\', '/'));
+%                end
+%                
+%                firstFile_ch = file{1};
+%                
+%                dnvglProc_l = strcmp(xlsfinfo(firstFile_ch), ...
+%                    'Microsoft Excel Spreadsheet');
+%                fid = fopen(firstFile_ch);
+%                 headerLine = textscan(fid, '%s', 1, 'delimiter', '\n');
+%                fclose(fid);
+%                
+%                validLengths = [235, 220];
+%                dnvglRaw_l = ismember(length(strsplit(headerLine{1}{:}, ',')),...
+%                    validLengths);
                
-               % Load data from file into DB
-               file = validateCellStr(file, 'cVessel constructor', 'IMO');
-               [valid, errmsg] = cellfun(@(x) cVessel.validateFileExists(x), file,...
-                   'Uni', 0);
-               valid = [valid{:}];
-               if any(~valid)
-                  
-                   errmsg = errmsg{find(~valid, 1)};
-                   errid = 'cVA:FileNotFound';
-                   error(errid, strrep(errmsg, '\', '/'));
-               end
+%                if dnvglRaw_l
+%                    
+%                    [obj, imoFile] = loadDNVGLRaw(obj, file);
+%                    
+%                    if imo_l && ~isequal(sort(imoFile), sort(file))
+%                        
+%                        errid = 'cVA:IMOInputFileMismatch';
+%                        errmsg = ['IMO numbers contained in files input do '...
+%                            'not match those of input parameter IMO.'];
+%                        error(errid, errmsg);
+%                    end
+%                    
+%                    imo = unique(imoFile);
+%                    
+%                elseif dnvglProc_l
+%                    
+%                    if ~imo_l
+%                        
+%                        errid = 'cVA:FileRequiresIMO';
+%                        errmsg = ['When filenames input are paths to DNVGL '...
+%                            'processed data files, the IMO of the vessels '...
+%                            'must also be given.'];
+%                        error(errid, errmsg);
+%                    end
+%                    
+%                    obj = obj.loadDNVGLPerformance(file, imo);
+%                end
                
-               firstFile_ch = file{1};
-               
-               dnvglProc_l = strcmp(xlsfinfo(firstFile_ch), ...
-                   'Microsoft Excel Spreadsheet');
-               fid = fopen(firstFile_ch);
-                headerLine = textscan(fid, '%s', 1, 'delimiter', '\n');
-               fclose(fid);
-               
-               validLengths = [235, 220];
-               dnvglRaw_l = ismember(length(strsplit(headerLine{1}{:}, ',')),...
-                   validLengths);
-               
-               if dnvglRaw_l
-                   
-                   [obj, imoFile] = loadDNVGLRaw(obj, file);
-                   
-                   if imo_l && ~isequal(sort(imoFile), sort(file))
-                       
-                       errid = 'cVA:IMOInputFileMismatch';
-                       errmsg = ['IMO numbers contained in files input do '...
-                           'not match those of input parameter IMO.'];
-                       error(errid, errmsg);
-                   end
-                   
-                   imo = unique(imoFile);
-                   
-               elseif dnvglProc_l
-                   
-                   if ~imo_l
-                       
-                       errid = 'cVA:FileRequiresIMO';
-                       errmsg = ['When filenames input are paths to DNVGL '...
-                           'processed data files, the IMO of the vessels '...
-                           'must also be given.'];
-                       error(errid, errmsg);
-                   end
-                   
-                   obj = obj.loadDNVGLPerformance(file, imo);
-               end
-               
-               readInputs_c = [{imo}, DDi];
-               [shipData, ddd] = obj.performanceData(readInputs_c{:});
-           end
+%                readInputs_c = [{imo}, DDi];
+%                [shipData, ddd] = obj.performanceData(readInputs_c{:});
+%            end
            
            if imo_l
                 
@@ -183,22 +191,23 @@ classdef cVessel < cMySQL
                [shipData, ddd, ~, indb] = obj.performanceData(readInputs_c{:});
            end
            
-           if shipData_l && file_l
-               
-               % Concatenate time-series data
-               allDates_c = arrayfun(@(x, y) cat(1, x.DateTime_UTC, ...
-                   y.DateTime_UTC), shipDataInput, shipData, 'Uni', 0);
-               allPI_c = arrayfun(@(x, y) cat(1, x.Performance_Index, ...
-                   y.Performance_Index), shipDataInput, shipData, 'Uni', 0);
-               allSI_c = arrayfun(@(x, y) cat(1, x.Speed_Index, ...
-                   y.Speed_Index), shipDataInput, shipData, 'Uni', 0);
-               [shipData.DateTime_UTC] = deal(allDates_c{:});
-               [shipData.Performance_Index] = deal(allPI_c{:});
-               [shipData.Speed_Index] = deal(allSI_c{:});
-               
-           end
+%            if shipData_l && file_l
+%                
+%                % Concatenate time-series data
+%                allDates_c = arrayfun(@(x, y) cat(1, x.DateTime_UTC, ...
+%                    y.DateTime_UTC), shipDataInput, shipData, 'Uni', 0);
+%                allPI_c = arrayfun(@(x, y) cat(1, x.Performance_Index, ...
+%                    y.Performance_Index), shipDataInput, shipData, 'Uni', 0);
+%                allSI_c = arrayfun(@(x, y) cat(1, x.Speed_Index, ...
+%                    y.Speed_Index), shipDataInput, shipData, 'Uni', 0);
+%                [shipData.DateTime_UTC] = deal(allDates_c{:});
+%                [shipData.Performance_Index] = deal(allPI_c{:});
+%                [shipData.Speed_Index] = deal(allSI_c{:});
+%                
+%            end
            
-           if shipData_l && ~any([file_l, imo_l])
+%            if shipData_l && ~any([file_l, imo_l])
+           if shipData_l && ~imo_l
                
                shipData = shipDataInput;
                indb = true(1, size(shipData, 2));
@@ -206,22 +215,22 @@ classdef cVessel < cMySQL
 
            % Get IMO from struct
            imo = deal([shipData(:).IMO_Vessel_Number]);
-           if vesselName_l
-                name = validateCellStr(vesselNames, 'cVessel constructor',...
-                    'name', 2);
-                if isscalar(name)
-                    name = repmat(name, size(imo));
-                end
-           else
-%                 name = validateCellStr('');
-%                 name = vesselName(imo);
-                name = '';
-                if isempty(name)
-                    name = repmat({''}, size(imo));
-                else
-                    name = validateCellStr(name);
-                end
-           end
+%            if vesselName_l
+%                 name = validateCellStr(vesselNames, 'cVessel constructor',...
+%                     'name', 2);
+%                 if isscalar(name)
+%                     name = repmat(name, size(imo));
+%                 end
+%            else
+% %                 name = validateCellStr('');
+% %                 name = vesselName(imo);
+%                 name = '';
+%                 if isempty(name)
+%                     name = repmat({''}, size(imo));
+%                 else
+%                     name = validateCellStr(name);
+%                 end
+%            end
            
            if ~any(indb)
                
@@ -232,9 +241,9 @@ classdef cVessel < cMySQL
                return
            end
 
-            szIn = size(shipData(:, indb));
-
-            numOuts = prod(szIn);
+%             szIn = size(shipData(:, indb));
+%             numOuts = prod(szIn);
+            numOuts = numel(shipData(:, indb));
             obj(numOuts) = cVessel;
 
             validFields = {'DateTime_UTC', ...
@@ -250,10 +259,10 @@ classdef cVessel < cMySQL
                     currField = fields2read{fi};
                     obj(ii).(currField) = shipData(ii).(currField);
                     obj(ii).IMO_Vessel_Number = imo(ii);
-                    obj(ii).Name = name{ii};
+%                     obj(ii).Name = name{ii};
                 end
             end
-            obj = reshape(obj, szIn);
+%             obj = reshape(obj, szIn);
             
             % Check that no duplicates were added when concatenating struct
             % data with that read from DB
@@ -266,32 +275,40 @@ classdef cVessel < cMySQL
             
             
             % Read Vessel static data from DB
-            if ddi_l
-                ddIntIdx_c = {obj.DryDockInterval};
-                ddIdx_c = cellfun(@(x) x - 1, ddIntIdx_c, 'Uni', 0);
-%                 ddIdx_c = cellfun(@(x) x, ddIntIdx_c, 'Uni', 0);
-                w = ~cellfun(@(x) isempty(x) || isnan(x) || x == 0, ddIdx_c);
-
-                objddd(1, numel(find(w))) = cVesselDryDockDates();
-                [objddd.IMO_Vessel_Number] = deal(obj(w).IMO_Vessel_Number);
-                objddd = objddd.readDatesFromIndex( [ddIdx_c{w}] );
-                objddd_c = num2cell(objddd);
-                [obj(w).DryDockDates] = deal(objddd_c{:});
+%             if ddi_l
+%                 ddIntIdx_c = {obj.DryDockInterval};
+%                 ddIdx_c = cellfun(@(x) x - 1, ddIntIdx_c, 'Uni', 0);
+% %                 ddIdx_c = cellfun(@(x) x, ddIntIdx_c, 'Uni', 0);
+%                 w = ~cellfun(@(x) isempty(x) || isnan(x) || x == 0, ddIdx_c);
+% 
+%                 objddd(1, numel(find(w))) = cVesselDryDockDates();
+%                 [objddd.IMO_Vessel_Number] = deal(obj(w).IMO_Vessel_Number);
+%                 objddd = objddd.readDatesFromIndex( [ddIdx_c{w}] );
+%                 objddd_c = num2cell(objddd);
+%                 [obj(w).DryDockDates] = deal(objddd_c{:});
+                
+            for vi = 1:numel(obj)
+                
+                dd_v = cVesselDryDockDates();
+                dd_v.IMO_Vessel_Number = obj(vi).IMO_Vessel_Number;
+                dd_v = dd_v.readFromTable;
+                obj(vi).DryDockDates = dd_v;
             end
+%             end
             
-            % Reshape so that each vessel has it's first data first
-            if size(obj, 1) > 1
-                e = reshape({obj.DateTime_UTC}, size(obj));
-                u = mat2cell(~cellfun(@(x) isempty(x) || all(isnan(x)), e), ...
-                    size(e, 1), ones(1, size(e, 2)));
-                i = cellfun(@(x) find(x, 1, 'first') - 1, u);
-                o = cellfun(@(x, y) circshift(obj(:, x), y, 1), num2cell(1:size(e, 2)),...
-                    num2cell(-i), 'Uni', 0);
-                obj = [o{:}];
-                empty_l = arrayfun(@(x) isempty(x.DateTime_UTC) || all(isnan(x.DateTime_UTC)), obj)';
-                emptyDDInt_l = all(empty_l');
-                obj(emptyDDInt_l, :) = [];
-            end
+%             % Reshape so that each vessel has it's first data first
+%             if size(obj, 1) > 1
+%                 e = reshape({obj.DateTime_UTC}, size(obj));
+%                 u = mat2cell(~cellfun(@(x) isempty(x) || all(isnan(x)), e), ...
+%                     size(e, 1), ones(1, size(e, 2)));
+%                 i = cellfun(@(x) find(x, 1, 'first') - 1, u);
+%                 o = cellfun(@(x, y) circshift(obj(:, x), y, 1), num2cell(1:size(e, 2)),...
+%                     num2cell(-i), 'Uni', 0);
+%                 obj = [o{:}];
+%                 empty_l = arrayfun(@(x) isempty(x.DateTime_UTC) || all(isnan(x.DateTime_UTC)), obj)';
+%                 emptyDDInt_l = all(empty_l');
+%                 obj(emptyDDInt_l, :) = [];
+%             end
             % Read SpeedPower
        end
        
@@ -533,13 +550,18 @@ classdef cVessel < cMySQL
        
        end
 
-        function obj = loadDNVGLPerformance(obj, filename, imo, varargin)
+        function obj = loadDNVGLPerformance(obj, filename, varargin)
         % loadDNVGLPerformance Load performance data sourced from DNVGL.
 
         % Input
         filename = validateCellStr(filename);
-        validateattributes(imo, {'numeric'}, {'vector', 'integer', ...
-            'positive'}, 'loadDNVGLPerformance', 'imo', 3);
+        imo = [];
+        if nargin > 2
+            
+            imo = varargin{1};
+            validateattributes(imo, {'numeric'}, {'vector', 'integer', ...
+                'positive'}, 'loadDNVGLPerformance', 'imo', 3);
+        end
 
         deleteTab_l = true;
         if nargin > 3
@@ -972,9 +994,10 @@ classdef cVessel < cMySQL
         prop = validateCellStr(prop, 'filterOnUniqueIndex', 'prop', 3);
         
         % Iterate and filter non-unique indices of index data
-        while ~obj.iterFinished
-            
-            [obj, ii] = obj.iter;
+%         while ~obj.iterFinished
+%             
+%             [obj, ii] = obj.iter;
+        for ii = 1:numel(obj)
             [uniIndex, uniIndexI] = unique(obj(ii).(index));
             
             for pi = 1:numel(prop)
@@ -985,7 +1008,7 @@ classdef cVessel < cMySQL
             
             obj(ii).(index) = uniIndex;
         end
-        obj = obj.iterReset;
+%         obj = obj.iterReset;
         
         end
 
@@ -1299,6 +1322,138 @@ classdef cVessel < cMySQL
             end
         end
         end
+        
+        function iter = iterateDD(obj)
+        % iterateDD Return for current dry docking interval while iterating
+           
+           % Get current iteration
+           currIdx = obj(1).DDIterator;
+%            currDDi = currIdx(1);
+           currVessel = currIdx(2);
+           
+           iter = currVessel <= numel(obj);
+           if ~iter
+               
+%                obj.incrementIteratorDD;
+               obj.resetIteratorDD();
+           end
+%            % Assign output
+%            iter = true;
+%            
+%            % Get current iteration
+%            currIdx = obj(1).DDIterator;
+%            currVessel = currIdx(1);
+%            currDDI = currIdx(2);
+%            
+%            % Check if iteration is to be reset, and if so return empty
+%            if currVessel > numel(obj)%  && currDDI > size(DDI_l, 2)
+%                
+%                iter = false;
+% %                tbl = table();
+%                currIdx = [1, 1];
+%                [obj.DDIterator] = deal(currIdx);
+%                return
+%            end
+           
+           
+%            % Get current dry dock interval
+%            DDI_l = obj(currVessel).DDIntervalsFromDates;
+%            data_l = DDI_l(:, currDDI);
+%            
+%            % Return vessel with this dry dock interval
+% %            objDD = obj(currVessel);
+%            
+%            % Temp code: build table from current data properties
+%            tbl = table(obj(currVessel).DateTime_UTC(:),...
+%                obj(currVessel).Speed_Index(:), ...
+%                'VariableNames', {'DateTime_UTC', 'Speed_Index'});
+%            
+%            % Index data with current dry dock interval
+%            tbl = tbl(data_l, :);
+%            
+%            % Create new object with this DD's data
+%            objDD = cVessel();
+%            objDD.In_Service = tbl;
+%            [obj.currDD] = deal(objDD);
+           
+           % Assign to current dry docking property
+%            obj.currDD = {tbl, objDD};
+           
+%            % Iterate
+%            if currDDI == size(DDI_l, 2)
+%                
+% %                if currVessel == numel(obj)
+% %                    
+% %                    currIdx = [1, 1];
+% %                else
+% %                    
+%                currIdx(1) = currIdx(1) + 1;
+%                currIdx(2) = 1;
+% %                end
+%            else
+%                
+%                currIdx(2) = currIdx(2) + 1;
+%            end
+%            [obj.DDIterator] = deal(currIdx);
+           
+        end
+        
+        function obj = incrementIteratorDD(obj)
+        % 
+        
+           currIdx = obj(1).DDIterator;
+           currDDI = currIdx(1);
+           currVessel = currIdx(2);
+           
+           % Iterate
+           if currDDI == obj(currVessel).numDDIntervals
+               
+%                if currVessel == numel(obj)
+%                    % Reset iteration
+%                    
+% %                    currIdx = [1, 1];
+%                else
+                   
+                   currIdx(2) = currIdx(2) + 1;
+                   currIdx(1) = 1;
+%                end
+           else
+               
+               currIdx(1) = currIdx(1) + 1;
+           end
+           [obj.DDIterator] = deal(currIdx);
+        end
+        
+        function obj = resetIteratorDD(obj)
+            
+            startIdx = [1, 1];
+            [obj.DDIterator] = deal(startIdx);
+        end
+        
+        function [tbl, objDD, ddi, vi] = currentDD(obj)
+           
+           % Assuming that array is non-empty, iterators can be taken from
+           % first element
+           refIndex = 1;
+           
+           % Get current iterators
+           ddi = obj(refIndex).DDIterator(1);
+           vi = obj(refIndex).DDIterator(2);
+           
+           % Get corresponding logical array
+           objDD = obj(vi);
+           DDI_l = objDD.DDIntervalsFromDates;
+           data_l = DDI_l(:, ddi);
+           
+           % Temp code: build table from current data properties
+           tbl = table(objDD.DateTime_UTC(data_l)',...
+               objDD.Speed_Index(data_l)', ...
+               'VariableNames', {'DateTime_UTC', 'Speed_Index'});
+           
+           % Iterate
+           obj.incrementIteratorDD;
+        end
+        
 %        function obj = fitSpeedPower(obj, speed, power, varargin)
 %        % fitSpeedPower Fit speed, power data to model
 %        
@@ -1552,7 +1707,6 @@ classdef cVessel < cMySQL
     
     methods(Access = private, Hidden)
         
-        
         function obj = fitToData(obj, struc)
         % fitToData Expand OBJ to fit structure based on dates in structure
         
@@ -1624,8 +1778,8 @@ classdef cVessel < cMySQL
 %            end
            
 %            if ~isempty(obj.DryDockDates)
-%                
-%                [obj.DryDockDates(:).IMO_Vessel_Number] = deal(IMO);
+            
+           [obj.DryDockDates(:).IMO_Vessel_Number] = deal(IMO);
 %            end
        end
        
@@ -1840,6 +1994,86 @@ classdef cVessel < cMySQL
         % q_Current_DD 
 
 
+        end
+        
+        function obj = set.DDIntervals(obj, ~)
+        % Set method for DDIntervals prevents user assigning to it
+        
+        end
+        
+        function ddi = get.DDIntervals(obj)
+        % Get method for DDIntervals returns matrix based on data, DD
+            
+            ddi = obj.DDIntervalsFromDates;
+        end
+                
+        function obj = set.numDDIntervals(obj, ~)
+        % Set method for numDDIntervals prevents user assigning to it
+        
+        end
+        
+        function ndd = get.numDDIntervals(obj)
+        % Get method for DDIntervals returns matrix based on data, DD
+            
+        if isempty(obj.DryDockDates)
+            
+            ndd = 1;
+        else
+            
+            ndd = numel(obj.DryDockDates) + 1;
+        end
+        
+        end
+        
+        function obj = set.DDIterator(obj, di)
+            
+            validateattributes(di, {'numeric'}, {'integer', 'positive',...
+                'size', [1, 2]});
+            
+            obj.DDIterator = di;
+            
+        end
+        
+        function obj = set.currDD(obj, dd)
+        % Check values and store values in only the first element in array
+        
+%             validateattributes(dd, {'cell'}, {'size', [1, 2]});
+%             validateattributes(dd{1}, {'table'});
+            validateattributes(dd, {'cVessel'}, {'scalar'});
+            
+            obj.currDD = dd;
+        
+        end
+        
+        function dd = get.currDD(obj)
+           
+           
+           % Get current iterators
+           ddi = obj.DDIterator(1);
+           vi = obj.DDIterator(2);
+           
+           % Get corresponding logical array
+           DDI_l = obj(vi).DDIntervalsFromDates;
+           data_l = DDI_l(:, ddi);
+            
+           % Temp code: build table from current data properties
+           tbl = table(obj(vi).DateTime_UTC(data_l)',...
+               obj(vi).Speed_Index(data_l)', ...
+               'VariableNames', {'DateTime_UTC', 'Speed_Index'});
+           
+           % Assign data table and corresponding object
+           dd{1} = tbl;
+           dd{2} = obj(vi);
+           
+           % Index data with current dry dock interval
+%            tbl = tbl(data_l, :);
+           
+%            % Create new object with this DD's data
+%            objDD = cVessel();
+%            objDD.In_Service = tbl;
+%            [obj.currDD] = deal(objDD);
+%            
+%            dd = obj.currDD.In_Service;
         end
     end
 end

@@ -24,6 +24,11 @@ classdef cVesselDryDockDates < cMySQL
         EndDateNum = [];
     end
     
+    properties(Hidden, Constant)
+        
+        DBTable = 'DryDockDates';
+    end
+    
     methods
         
        function obj = cVesselDryDockDates()
@@ -151,6 +156,51 @@ classdef cVesselDryDockDates < cMySQL
            obj(oi).DateStrFormat = currDateForm;
        end
        end
+       
+       function obj = readFromTable(obj)
+       % readFromTable
+       
+       % Can only read when object is empty to prevent overwriting
+       if ~isempty(obj)
+           
+           errid = 'cDDD:overwrite';
+           errmsg = ['Dry dock dates can only be read from table when '...
+               'calling object is empty'];
+           error(errid, errmsg);
+       end
+       
+       % Need IMO number to look up table
+       imo = obj(1).IMO_Vessel_Number;
+       if isempty(imo)
+           
+           errid = 'cDDD:NoIMO';
+           errmsg = ['Dry dock dates can only be read from table when '...
+               'IMO Vessel Number is known.'];
+           error(errid, errmsg);
+       end
+       
+        % Read data from table
+        tab = obj(1).DBTable;
+        cols = {'StartDate', 'EndDate'};
+        where_sql = ['IMO_Vessel_Number = ', num2str(imo)];
+        [~, ddd_t] = obj(1).select(tab, cols, where_sql);
+        
+        % Return if no dry-dockings found for vessel
+        if isempty(ddd_t)
+            return
+        end
+        
+        % Pre-allocate array of OBJ
+        nObj = height(ddd_t);
+        obj(nObj) = cVesselDryDockDates();
+        [obj.IMO_Vessel_Number] = deal(imo);
+        for ri = 1:nObj
+            
+            obj(ri).DateStrFormat = 'dd/mm/yyyy';
+            obj(ri).StartDate = ddd_t.startdate(ri);
+            obj(ri).EndDate = ddd_t.enddate(ri);
+        end
+      end
     end
     
     methods(Hidden)

@@ -1,4 +1,4 @@
-function [obj, avgStruct] = movingAverages(obj, durations, varargin)
+function [obj, avgStruct] = movingAverage(obj, durations, varargin)
 %movingAverages Calculate moving averages of time-series data
 %   avgStruct = movingAverages(obj, duration) will return in 
 %   AVGSTRUCT a struct with field names 'Average', 'StartDate' and 
@@ -38,18 +38,19 @@ sizeStruct = size(obj);
 reverse_l = false;
 errorSizeMatch_f = @(varname) error('moveAvg:InputSizeMismatch', ...
     ['If input ' varname ' is not a scalar, it must be the same size as '...
-    'input PERSTRUCT']);
-resizeMatch_f = @(match, this) repmat(match, size(this));
+    'OBJ']);
+resizeMatch_f = @(match, this) repmat(match, [this.numDDIntervals, numel(this)]);
 
 if nargin > 2
     validateattributes(varargin{1}, {'logical'}, {}, ...
         'movingAverages', 'reverse', 3);
     
     if ~isscalar(varargin{1}) && ~isequal(size(varargin{1}), sizeStruct)
-       errid = 'moveAvg:InputSizeMismatch';
-       errmsg = ['If input REVERSE is not a scalar, it must be the same '...
-           'size as input PERSTRUCT'];
-       error(errid, errmsg);
+%        errid = 'moveAvg:InputSizeMismatch';
+%        errmsg = ['If input REVERSE is not a scalar, it must be the same '...
+%            'size as input PERSTRUCT'];
+%        error(errid, errmsg);
+       errorSizeMatch_f('reverse')
     end
     
     reverse_l = varargin{1};
@@ -89,60 +90,70 @@ if isscalar(remove_l)
 end
 
 % Iterate over elements of data array
-while ~obj.iterFinished
-    
-    [obj, ii] = obj.iter;
-    
-    % Skip if empty
-    currObj = obj(ii);
+% while ~obj.iterFinished
+% for oi = 1:numel(obj)
+%     
+%     currObj = obj(oi);
+%     ddi = 1;
+%     
+while obj.iterateDD
+
+    [currDD_tbl, currObj, ddi] = obj.currentDD;
+
+%     [obj, ii] = obj.iter;
+%     
+%     % Skip if empty
+%     currObj = obj(ii);
     if all(isnan(currObj.(currObj.Variable)))
         continue
     end
-    
+
     % Index into input and get dates
-    currDate = currObj.DateTime_UTC;
-    currPerf = currObj.(currObj.Variable);
-    
+%     currDate = currObj.DateTime_UTC;
+%     currPerf = currObj.(currObj.Variable);
+    currDate = currDD_tbl.DateTime_UTC;
+    currPerf = currDD_tbl.(currObj.Variable);
+
     % Remove duplicate date data (redundant when no duplicates in db)
     [currDate, udi] = unique(currDate);
     currPerf = currPerf(udi);
-    
+
     % Get dates filtered by nan in performance data
     filtDate = currDate(~isnan(currPerf));
-    
+
     % NB. TAKE THE DRY-DOCK DATE FROM SERIES
-    
+
     % Initialise output struct
     Duration_st = struct('Average', [], 'StartDate', [], 'EndDate', []);
-    
+
     for di = 1:length(durations)
-        
+
         % Get dates for start and end of durations
         currDur = durations(di);
-        
+
         % Create timestep vector for current dates
         tstep = 1; % Replace with proper timestep value in DB later
         tstep_v = repmat(tstep, size(currDate));
-        
+
         preDates = currDate - 0.5*tstep_v;
         postDates = currDate + 0.5*tstep_v;
         numDur = ceil( (max(postDates) - min(preDates)) / currDur);
-        
-        if reverse_l(ii)
-            
+
+        if reverse_l(ddi)
+
             delimDates = linspace(postDates(end) - (currDur*numDur), ...
                 postDates(end), numDur + 1);
         else
-            
+
             delimDates = linspace(preDates(1), preDates(1)+(currDur*numDur),...
                 numDur + 1);
         end
-        
+
         startDates = delimDates(1:end-1); 
         endDates  = delimDates(2:end);
         startDates_c = num2cell(startDates);
         endDates_c = num2cell(endDates);
-        
+
         % Get result over durations and filter
         output = cellfun(@(start, endd) ...
             nanmean(currPerf(currDate >= start & currDate < endd)),...
@@ -152,10 +163,10 @@ while ~obj.iterFinished
         nanFilt_l = nanFilt_l(1:length(endDates));
         startDates(nanFilt_l) = [];
         endDates(nanFilt_l) = [];
-        
+
         % Remove outputs not within range
-        if remove_l(ii)
-            
+        if remove_l(ddi)
+
             startFilt = startDates + 0.5*tstep < min(currDate);
             startDates(startFilt) = [];
             endDates(startFilt) = [];
@@ -163,23 +174,23 @@ while ~obj.iterFinished
             startDates(endFilt) = [];
             endDates(endFilt) = [];
         end
-        
+
         % Trim start, end dates
-        if trim_l(ii)
-            
+        if trim_l(ddi)
+
             startDates(startDates < min(filtDate)) = min(filtDate);
             endDates(endDates > max(filtDate)) = max(filtDate);
         end
-        
+
         % Remove from all outputs if any corresponding have been removed
         outLength = min([length(output), length(startDates), ...
             length(endDates)]);
-        
+
         % Make all Row vectors
         output = output(:)';
         startDates = startDates(:)';
         endDates = endDates(:)';
-        
+
         % Calculate additional values
         outnansem = cellfun(@(start, endd) ...
             nansem(currPerf(currDate >= start & currDate < endd)),...
@@ -187,7 +198,7 @@ while ~obj.iterFinished
         counts = cellfun(@(start, endd) ...
             numel(currPerf(currDate >= start & currDate < endd)),...
             startDates_c, endDates_c);
-        
+
         % Assign into outputs
         Duration_st(di).Average = output(1:outLength);
         Duration_st(di).StartDate = startDates(1:outLength);
@@ -195,10 +206,15 @@ while ~obj.iterFinished
         Duration_st(di).StdOfMean = outnansem(1:outLength);
         Duration_st(di).Count = counts(1:outLength);
     end
-    
-    % Re-assign into Outputs
-    avgStruct(ii).Duration = Duration_st;
-    obj(ii).MovingAverages = avgStruct(ii);
-end
 
-obj = obj.iterReset;
+    % Re-assign into Outputs
+%         avgStruct(ddi).Duration = Duration_st;
+%         obj(ii).MovingAverage(ddi) = avgStruct(ddi);
+    currObj.MovingAverage(ddi).Duration = Duration_st;
+
+%         % Iterate DD
+%         ddi = ddi + 1;
+end
+% end
+
+% obj = obj.iterReset;

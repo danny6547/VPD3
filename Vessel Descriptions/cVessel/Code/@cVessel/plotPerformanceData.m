@@ -27,7 +27,7 @@ else
     szOut = sz(2:end);
 end
 
-figHandles = nan(szOut);
+% figHandles = nan(szOut);
 
 % idx_c = cell(1, ndims(obj));
 lineColours_m = get(groot, 'defaultAxesColorOrder');
@@ -35,54 +35,66 @@ numColours = size(lineColours_m, 1);
 DDColourOrder = repmat(1:numColours, [1, ceil(nDDi/numColours)]);
 
 % for ii = 1:nDDi:numel(obj)
-figCount = length(findall(0,'type','figure')) + ...
-    length(findobj(0,'type','figure'));
-while ~obj.iterFinished
+% figCount = length(findall(0,'type','figure')) + ...
+%     length(findobj(0,'type','figure'));
+
+nFigs = numel(obj);
+figHandles = arrayfun(@(x) figure, nan(1, nFigs));
+ax_v = arrayfun(@(x) axes('Parent', x), figHandles);
+set(ax_v, 'NextPlot', 'add');
+
+% while ~obj.iterFinished
+while obj.iterateDD
    
-   [obj, ~, vesselI] = obj.iterVessel;
-   figCount = figCount + 1;
+%    [obj, ~, vesselI] = obj.iterVessel;
+%    figCount = figCount + 1;
+
+   [currDD_tbl, currVessel, ddi, vi] = obj.currentDD;
    
-   currFig = figure;
-   currAx = axes('Parent', currFig);
+%    currFig = figHandles(vi);
+   currAx = ax_v(vi);
    
-   % Temp code until I figure out how to iterate these things properly
-   if vesselI(1) > numel(obj)
-       break
-   end
-   currVessel = obj(vesselI(1));
+%    currFig = figure;
+%    currAx = axes('Parent', currFig);
+   
+%    % Temp code until I figure out how to iterate these things properly
+%    if vesselI(1) > numel(obj)
+%        break
+%    end
+%    currVessel = obj(vesselI(1));
    
    % Find indices into input struct
 %    [idx_c{:}] = ind2sub(sz, ii);
    
-   % Plot each DDi separately
-   for ddii = 1:numel(vesselI) % nDDi
-       
-       ddi = vesselI(ddii);
+%    % Plot each DDi separately
+%    for ddii = 1:numel(vesselI) % nDDi
+%        
+%        ddi = vesselI(ddii);
        
        % Skip DDi if empty
-       currData = obj(ddi);
-       varname = currData.Variable;
-       if obj(ddi).isPerDataEmpty
+%        currData = obj(ddi);
+       varname = currVessel.Variable;
+       if currVessel.isPerDataEmpty
            continue
        end
       
         avg_l = false;
         numDur = 1;
-        if ~isempty(currData.MovingAverages)
+        if ~isempty(currVessel.MovingAverage)
 
             avg_l = true;
-            avgStruct = currData.MovingAverages; % varargin{1};
+            avgStruct = currVessel.MovingAverage; % varargin{1};
             validateattributes(avgStruct, {'struct'}, {}, 'plotPerformanceData',...
                 'avgStruct', 2);
             numDur = numel(avgStruct(1).Duration);
         end
 
         regr_l = false;
-        if ~isempty(currData.Regression)
+        if ~isempty(currVessel.Regression)
 
             regr_l = true;
             regri = 1;
-            regrStruct = currData.Regression; %varargin{2};
+            regrStruct = currVessel.Regression; %varargin{2};
             validateattributes(regrStruct, {'struct'}, {}, 'plotPerformanceData',...
                 'regrStruct', 3);
         end
@@ -90,21 +102,24 @@ while ~obj.iterFinished
         % varname = obj.Variable; %'Performance_Index';
        
        % Get data series colour
-       currColour = lineColours_m(DDColourOrder(ddii), :);
+       currColour = lineColours_m(DDColourOrder(ddi), :);
        
        % Plot data
-       hold on
-       xdata = currData.DateTime_UTC; % datenum(currData.DateTime_UTC, 'dd-mm-yyyy');
-       pi_line = plot(currAx, xdata, ...
-           currData.(varname) * 100, 'o', 'Color', currColour);
-       hold off
+%        hold on
+       xdata = currDD_tbl.DateTime_UTC; % datenum(currData.DateTime_UTC, 'dd-mm-yyyy');
+       ydata = currDD_tbl.(varname) * 100;
+       pi_line = line(currAx, xdata, ydata);
+%        hold off
+        pi_line.LineStyle = 'none';
+        pi_line.Marker = 'o';
+        pi_line.Color = currColour;
        pi_line.MarkerFaceColor = pi_line.Color;
        dataLines(end+1) = pi_line;
        
        % Plot averages
        if avg_l
            
-           currAvg_st = avgStruct; %(ddi);
+           currAvg_st = avgStruct(ddi); %(ddi);
            
            % Make average colors a series of increasingly light orange
 %            numDur = numel(currAvg.Duration);
@@ -112,7 +127,7 @@ while ~obj.iterFinished
            avgColours = [ones(numDur, 1), linspace(0.5, whiteLimit, numDur)',...
                linspace(0, whiteLimit, numDur)'];
            
-           for di = 1:numDur;
+           for di = 1:numDur
                
                currDur = currAvg_st.Duration(di);
                currStart = currDur.StartDate;
@@ -121,11 +136,11 @@ while ~obj.iterFinished
                
                hold on
                avgLines(end+1:end+numel(currAvg)) = ...
-                   line([currStart; currEnd], [currAvg; currAvg],...
+                   line(currAx, [currStart; currEnd], [currAvg; currAvg],...
                    'Color', avgColours(di, :),...
                    'LineWidth', 2);
                avgLines(end+1:end+numel(currAvg)) = ...
-                   line(currEnd(:), currAvg(:), 'Color', avgColours(di, :),...
+                   line(currAx, currEnd(:), currAvg(:), 'Color', avgColours(di, :),...
                    'LineStyle', 'none',...
                    'Marker', 'o',...
                    'MarkerFaceColor', avgColours(di, :),...
@@ -153,33 +168,36 @@ while ~obj.iterFinished
        % Plot regressions
        if regr_l
            
-           currRegr_st = currData.Regression;
-%            currRegr_st = regrStruct(ddi, idx_c{2:end});
-           coeffs = currRegr_st.Coefficients;
+           for oi = 1:numel(currVessel.Regression(ddi))
            
-           % Figure out plotting any order later...
-           if numel(coeffs) == 2
-                
-                m = coeffs(1);
-                c = coeffs(2);
-                
-                x1 = linspace(min(xdata), max(xdata), 1e3);
-                y1 = ( m*x1 + c ) * 100;
-                
-                % Regression lines are slightly darker than data points
-                currColour = currColour - 0.2;
-                currColour(currColour < 0) = 0;
-                
-                hold on
-                regrLines(regri) = ...
-                   line(x1, y1,...
-                       'Color', currColour,...
-                       'LineWidth', 2);
-                hold off
-                regri = regri + 1;
+               currRegr_st = currVessel.Regression(ddi).Order(oi);
+    %            currRegr_st = regrStruct(ddi, idx_c{2:end});
+               coeffs = currRegr_st.Coefficients;
+
+               % Figure out plotting any order later...
+               if numel(coeffs) == 2
+
+                    m = coeffs(1);
+                    c = coeffs(2);
+
+                    x1 = linspace(min(xdata), max(xdata), 1e3);
+                    y1 = ( m*x1 + c ) * 100;
+
+                    % Regression lines are slightly darker than data points
+                    currColour = currColour - 0.2;
+                    currColour(currColour < 0) = 0;
+
+                    hold on
+                    regrLines(regri) = ...
+                       line(currAx, x1, y1,...
+                           'Color', currColour,...
+                           'LineWidth', 2);
+                    hold off
+                    regri = regri + 1;
+               end
            end
        end
-   end
+%    end
    
    % Vertical starts at zero
 %    oldy = get(currAx, 'YLim'); 
@@ -188,25 +206,41 @@ while ~obj.iterFinished
    % Put ticks on axis keeping horizontal ticks and limits
 %    oldxlim = get(currAx, 'XLim');
 %    oldxtick = get(currAx, 'XTick');
-   datetick('x');
+   
 %    set(currAx, 'XLim', oldxlim); 
 %    set(currAx, 'XTick', oldxtick);
    
-   % Assign figure handle into outputs
-   figHandles(figCount) = currFig;
+%    % Assign figure handle into outputs
+%    figHandles(vi) = currFig;
+   
+end
+% obj = obj.iterReset;
+
+for vi = 1:nFigs
+    
+   currAx = ax_v(vi);
    
    % Labels
    labFontsz = 12;
-   ylabel([strrep(varname, '_', ' '), ' ( % )'], 'fontsize', labFontsz);
+   varname = obj(vi).Variable;
+   ylabel(currAx, [strrep(varname, '_', ' '), ' ( % )'], 'fontsize', labFontsz);
    
+   % Get vessel name
    titleFontsz = 13;
-   vesselNum = currVessel.IMO_Vessel_Number;
-   vesselName_ch = []; % vesselName(vesselNum);
+   vesselName_ch = obj(vi).Name;
+%    vesselName_ch = []; % vesselName(vesselNum);
    if isempty(vesselName_ch)
-       vesselName_ch = num2str(vesselNum);
+       vesselNum = obj(vi).IMO_Vessel_Number;
+       vesselName_ch = ['Vessel ', num2str(vesselNum)];
    end
-   titleStr = [strrep(varname, '_', ' '), ' against Time for Vessel ' vesselName_ch];
-   title(titleStr, 'fontsize', titleFontsz);
    
+   % Title
+   titleStr = [strrep(varname, '_', ' '), ' against Time for ' vesselName_ch];
+   title(currAx, titleStr, 'fontsize', titleFontsz);
+   
+   % Axis tick labels
+   datetick(currAx, 'x');
 end
-obj = obj.iterReset;
+
+% Return graphics objects' behaviour to defaults
+set(ax_v, 'NextPlot', 'add');

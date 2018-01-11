@@ -33,7 +33,7 @@ if nargin > 2
         'performanceData', 'DDi', 3);
     ddi_l = ~isempty(ddi);
     
-    if ddi_l && isequal(ddi, 0);
+    if ddi_l && isequal(ddi, 0)
         iterDD_l = true;
     end
 end
@@ -115,6 +115,7 @@ for vi = 1:numel(imo)
         % Append to output
         currOut.DryDockInterval = 1;
         currOut.IMO_Vessel_Number = currImo;
+        [~, currOut.DateTime_UTC] = obj.sql2matlabdates(currOut.DateTime_UTC);
         out(vi) = currOut;
     end
     

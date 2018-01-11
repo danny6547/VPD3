@@ -630,15 +630,87 @@ methods(Test)
     % 2.
     % Input
     exp_mat = false(nData, nDD + 1);
-    exp_mat([1, 2], 1) = true;
-    exp_mat([3:6], 2) = true;
-    exp_mat([8:10], 3) = true;
+    exp_mat(1:2, 1) = true;
+    exp_mat(3:6, 2) = true;
+    exp_mat(8:10, 3) = true;
     
     % Verify
     msg_size = ['Output is expected to match logical matrix whose columns '...
         'correspond to dry dock intervals defined by data in property '...
         '''DryDockDates''.'];
     testcase.verifyEqual(act_mat, exp_mat, msg_size);
+    end
+    
+    function testiterateDD(testcase)
+    % testiterateDD Test outputs relate to successive dry dock intervals
+    
+    % 1.
+    % Input
+    nData = 10;
+    ddd1(2) = cVesselDryDockDates();
+    ddd1(1).StartDate = '0000-01-02';
+    ddd1(1).EndDate = '0000-01-03';
+    ddd1(2).StartDate = '0000-01-06';
+    ddd1(2).EndDate = '0000-01-08';
+    
+    ddd2(1) = cVesselDryDockDates();
+    ddd2(1).StartDate = '0000-01-05';
+    ddd2(1).EndDate = '0000-01-06';
+    
+    input_obj(2) = cVessel();
+    input_obj(1).DryDockDates = ddd1;
+    input_obj(2).DryDockDates = ddd2;
+    
+    input_dates = 1:nData;
+    [input_obj(1:2).DateTime_UTC] = deal(input_dates);
+    si1 = randn(1, nData);
+    si2 = randn(1, nData);
+    input_obj(1).Speed_Index = si1;
+    input_obj(2).Speed_Index = si2;
+    
+    expobj_c = [input_obj(1), input_obj(1), input_obj(1), input_obj(2),...
+        input_obj(2)];
+    exptbl_c = {table(input_dates(1:2)', si1(1:2)', ...
+        'VariableNames', {'DateTime_UTC', 'Speed_Index'}), ...
+        table(input_dates(3:6)', si1(3:6)', ...
+        'VariableNames', {'DateTime_UTC', 'Speed_Index'}), ...
+        table(input_dates(8:10)', si1(8:10)', ...
+        'VariableNames', {'DateTime_UTC', 'Speed_Index'}), ...
+        table(input_dates(1:5)', si2(1:5)', ...
+        'VariableNames', {'DateTime_UTC', 'Speed_Index'}), ...
+        table(input_dates(6:10)', si2(6:10)', ...
+        'VariableNames', {'DateTime_UTC', 'Speed_Index'})};
+    
+    % Execute
+    nDDI = 5;
+%     obj_c = cell(1, nDDI);
+    tbl_c = cell(1, nDDI);
+%     for di = 1:nDDI
+%         
+%         [act_tbl, act_obj] = input_obj.iterateDD;
+%         obj_c(di) = act_obj;
+%         tbl_c{di} = act_tbl;
+%     end
+    
+    di = 1;
+    while input_obj.iterateDD
+        
+        [tbl_c{di}, obj_v(di)] = input_obj.currentDD;
+%         obj_v(di) = act_obj;
+%         tbl_c{di} = act_obj.In_Service;
+        di = di + 1;
+    end
+    
+    % Verify
+    msg_obj = ['Method is expected to return in the first output the '...
+        'cVessel object which has the corresponding dry-docking of this '...
+        'iteration.'];
+    testcase.verifyEqual(obj_v, expobj_c, msg_obj);
+    
+    msg_tbl = ['Method is expected to return in the second output a table '...
+        'containing the corresponding dry-docking of this iteration.'];
+    testcase.verifyEqual(tbl_c, exptbl_c, msg_tbl);
+    
     end
 end
 
