@@ -33,6 +33,10 @@ for fi = 1:numFiles
             version = 2;
         end
         
+%         if ismember('IMO Number', txt(1, :))
+%             version = 4;
+%         end
+        
     catch e
         
         try dataStartRow(fi) = find(cellfun(@(x) isequal(x, '     Date'), txt(:, 1)), 1) + 1;
@@ -120,11 +124,13 @@ for fi = 1:numFiles
     % Convert Date
     if version == 3
         
-        date_c = cellfun(@(x, y) datenum([x, ' ', y], 'dd-mm-yyyy HH:MM:SS'),...
+%         date_c = cellfun(@(x, y) datenum([x, ' ', y], 'dd-mm-yyyy HH:MM:SS'),...
+%             date_c, time_c, 'Uni', 0);
+        date_c = cellfun(@(x, y) datenum([x, ' ', y], 'dd/mm/yyyy HH:MM:SS'),...
             date_c, time_c, 'Uni', 0);
     else
         
-        date_c = cellfun(@(x) datenum(x, 'dd-mm-yyyy'), date_c, 'Uni', 0);
+        date_c = cellfun(@(x) datenum(x, 'dd/mm/yyyy'), date_c, 'Uni', 0);
     end
     dates = [date_c{:}];
     dates = dates(:);

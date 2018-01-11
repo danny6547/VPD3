@@ -29,7 +29,7 @@ else
 end
 
 imo_l = false;
-if nargin > 3
+if nargin > 3 && ~isempty(varargin{2})
     imo_l = true;
     imo = varargin{2};
     validateattributes(imo, {'numeric'}, {'vector'}, ...

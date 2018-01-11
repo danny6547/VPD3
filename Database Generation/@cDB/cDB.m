@@ -242,8 +242,13 @@ classdef cDB < cMySQL
        if obj.LoadPerformance
            
            % Insert performance data
-           run(['C:\Users\damcl\OneDrive - Hempel Group\Documents\SQL\tests\'...
-               'EcoInsight Test Scripts\Vessel Data\Load_All_DNVGL_Performance.m']);
+           allPerformanceFile_ch = ['L:\Project\MWB-Fuel efficiency\Hull '...
+               'and propeller performance\External Vessel Data\DNV-GL\'...
+               'Performance\Download.xlsx'];
+           obj_ves = cVessel();
+           obj_ves.loadDNVGLPerformance(allPerformanceFile_ch);
+%            run(['C:\Users\damcl\OneDrive - Hempel Group\Documents\SQL\tests\'...
+%                'EcoInsight Test Scripts\Vessel Data\Load_All_DNVGL_Performance.m']);
        end
        
        % Insert raw data, bunker delivery note
