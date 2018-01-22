@@ -30,8 +30,8 @@ classdef cDB < cMySQL
             '\Vessels\CMA CGM\Data\Raw\DNVGL\Scripts\Insert_Static_CMA_CGM.m']...
             ['L:\Project\MWB-Fuel efficiency\Hull and propeller performance'...
             '\Vessels\UASC data\Scripts\Insert_Static_UASC.m']...
-            ['L:\Project\MWB-Fuel efficiency\Hull and propeller performance'...
-            '\Vessels\UASC data\Scripts\Insert_Static_Al_Farahidi.m']...
+%             ['L:\Project\MWB-Fuel efficiency\Hull and propeller performance'...
+%             '\Vessels\UASC data\Scripts\Insert_Static_Al_Farahidi.m']...
             };
         ISO19030Parameters = {9288095, 'Only one speed, power curve from Sea Trial and that is of sister vessel New Century. Estimates made for Ta and Anemometer Height. Shaft torsiometer data utilised. Wind coefficients taken from ISO15016 for tanker with conventional bow. No displacement data available prior to 2016.', {};...                    % New Spirit
                               9445631, 'No speed, power curves available so that of New Century, another vessel of the same owner applied. Estimates made for Ta and Anemometer Height. Shaft torsiometer data utilised. Wind coefficients taken from ISO15016 for tanker with conventional bow. No displacement data available prior to 2016.', {}; ...     % New Vanguard
@@ -167,6 +167,7 @@ classdef cDB < cMySQL
                                 'knots2mps.sql'
                                 'updateNearestTrim.sql'
                                 'applyFilters.sql'
+                                'bar2Pa.sql'
                                 };
            createFiles1_c = cellfun(@(x) fullfile(topleveldir, ISODir, x), ...
                ISO19030Create_c, 'Uni', 0);
@@ -269,7 +270,7 @@ classdef cDB < cMySQL
             AMCLNoonFiles = 'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\AMCL\New Spirit\New Spirit - ????_before 2016.xls';
             vess(1) = vess(1).loadAMCLRaw(AMCLNoonFiles, {'IMO_Vessel_Number = 9288095', 'Displacement = 299825000'});
 
-            q = rdir('L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\AMCL\New Spirit\**.xlsx');
+            q = rdir('L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\AMCL\New Spirit\**\*.xlsx');
             NewSpiritDNVGLFiles_c = {q.name}'; 
             vess(1) = vess(1).loadDNVGLReportingFormat(NewSpiritDNVGLFiles_c, 9288095);
 
@@ -285,7 +286,7 @@ classdef cDB < cMySQL
             'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\AMCL\New Success\New Success Hempel''s Data Collection OF NOV-2016.xlsx'};
             vess(1) = vess(1).loadDNVGLReportingFormat(NewSuccessFiles_c, 9434632);
 
-            q = rdir('L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\AMCL\New Vanguard\**.xlsx');
+            q = rdir('L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\AMCL\New Vanguard\**\*.xlsx');
             NewVanguardFiles_c = [{q.name}'; 'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\Vessels\AMCL\New Vanguard\M.T. NEW VANGUARD -JUN 2016 Hempel''s Data Collection Form_Hull Performan....xlsx'];
             vess(1) = vess(1).loadDNVGLReportingFormat(NewVanguardFiles_c, 9445631, 'firstRowIdx', 16);
 
@@ -295,18 +296,21 @@ classdef cDB < cMySQL
        end
        
        % Load Dry Docking Dates from Files
+       % CMA CGM
        ddFiles = ['L:\Project\MWB-Fuel efficiency\Hull and propeller '...
            'performance\Vessels\CMA CGM\Cart reports 2\Cart reports '...
            'CMA CGM.xlsx'];
        objddd = cVesselDryDockDates();
-       objddd.readFile(ddFiles, 'dd-mm-yy');
+       objddd = objddd.readFile(ddFiles, 'dd-mm-yy');
+       objddd.insertIntoTable;
        
-       % Recreate file later
+       % Euronav
        objddd = cVesselDryDockDates();
        ddFileEuronav = ['L:\Project\MWB-Fuel efficiency\'...
            'Hull and propeller performance\Vessels\Euronav\Data\Scripts\'...
            'DryDockDates.xlsx'];
-       objddd.readFile(ddFileEuronav, 'dd-mm-yyyy');
+       objddd = objddd.readFile(ddFileEuronav, 'dd-mm-yyyy');
+       objddd.insertIntoTable;
        
        % Load standard wind coefficients
        windFile = ['L:\Project\MWB-Fuel efficiency\Hull and propeller '...
@@ -331,7 +335,7 @@ classdef cDB < cMySQL
                    executedFully_l(si) = true;
                catch ee
 
-                   if strcmp(ee.identifier, 'MATLAB:UndefinedFunction');
+                   if strcmp(ee.identifier, 'MATLAB:UndefinedFunction')
 
                        scriptDir = fileparts(currScript);
                        addpath(scriptDir);
@@ -379,7 +383,7 @@ classdef cDB < cMySQL
        function createTest(obj)
        % createTest Create the test database
        
-       obj = obj.test;
+%        obj = obj.test;
        obj.create(obj.Database);
            
        end
