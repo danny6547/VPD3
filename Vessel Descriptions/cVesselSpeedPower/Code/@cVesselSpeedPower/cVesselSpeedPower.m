@@ -226,6 +226,12 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
        
        end
 
+       function empty = isempty(obj)
+           
+           
+          empty = isempty(obj.speedPowerDraftTrim); 
+       end
+       
        function obj = print(obj)
        % print Print data into formatted columns
        
@@ -278,6 +284,10 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
                 out_c = cellfun(@(x) x(:), out_c, 'Uni', 0);
 %                 currOut_m = [currOut_m; cell2mat(out_c)];'
 %                 currMat = cell2mat(out_c);
+
+                % Error can occur when some props not assigned to. Fix with
+                % replacing missing values in matrix with nan columns
+
                 currMat = [out_c{:}];
                 currNumRows = size(currMat, 1);
                 currOut_m(currRow : currRow + currNumRows - 1, :) = currMat;
