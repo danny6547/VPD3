@@ -21,42 +21,62 @@ classdef cVesselDisplacementConversion < handle
     
     methods(Hidden)
        
-       function disp = displacementInVolume(obj)
+       function obj = displacementInVolume(obj, prop)
        % displacementInVolume Convert displacement from mass to volume
        
-       dens = nan(size(obj));
-       disp_c = {obj.Displacement};
-       disp_c(cellfun(@isempty, disp_c)) = {nan};
-       disp = [disp_c{:}];
-       
-       for oi = 1:numel(obj)
-           if ~isempty(obj(oi).FluidDensity)
-               
-               dens(oi) = obj(oi).FluidDensity;
-           else
-               
-               dens(oi) = obj(oi).DefaultDensity;
+           prop = validateCellStr(prop);
+           numProps = numel(prop);
+        for oi = 1:numel(obj)
+           for pi = 1:numProps
+
+               currProp = prop{pi};
+               disp = [obj(oi).(currProp)];
+%                disp_c(cellfun(@isempty, disp_c)) = {nan};
+%                disp = [disp_c{:}];
+%                dens = nan(size(disp));
+
+%                for oi = 1:numel(obj)
+                   if ~isempty(obj(oi).FluidDensity)
+
+                       dens = obj(oi).FluidDensity;
+                   else
+
+                       dens = obj(oi).DefaultDensity;
+                   end
+%                end
+
+               disp = disp ./ (dens ./ 1e3);
+               obj(oi).(currProp) = disp;
            end
+        end
        end
        
-           disp = disp ./ (dens ./ 1e3);
-       end
+       function obj = displacementInMass(obj, prop)
        
-       function disp = displacementInMass(obj)
-       
-       dens = nan(size(obj));
-       disp = [obj.Displacement];
-       for oi = 1:numel(obj)
-           if ~isempty(obj(oi).FluidDensity)
+           prop = validateCellStr(prop);
+           numProps = numel(prop);
            
-               dens(oi) = obj(oi).FluidDensity;
-           else
-               
-               dens(oi) = obj(oi).DefaultDensity;
+        for oi = 1:numel(obj)
+           for pi = 1:numProps
+
+               currProp = prop{pi};
+               disp = [obj.(currProp)];
+%                disp_c(cellfun(@isempty, disp_c)) = {nan};
+%                disp = [disp_c{:}];
+%                dens = nan(size(disp));
+%                for oi = 1:numel(obj)
+               if ~isempty(obj(oi).FluidDensity)
+
+                   dens = obj(oi).FluidDensity;
+               else
+
+                   dens = obj(oi).DefaultDensity;
+               end
+%                end
+               disp = disp .* (dens ./ 1e3);
+               obj(oi).(currProp) = disp;
            end
-       end
-       
-           disp = disp .* (dens ./ 1e3);
+        end
        end
     end
     
