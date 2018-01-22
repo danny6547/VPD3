@@ -271,14 +271,23 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
        function spdt = speedPowerDraftTrim(obj)
           
            % Repeat all to the same size
-           allLengths_c = arrayfun(@(x) length(x.Speed), obj, 'Uni', 0);
-           numRows = sum([allLengths_c{:}]);
+%            allLengths_c = arrayfun(@(x) length(x.Speed), obj, 'Uni', 0);
+%            numRows = sum([allLengths_c{:}]);
            
-           out_c = cell(1, 5);
-           currOut_m = nan(numRows, 5);
+           empties_c = arrayfun(@(x) [isempty(x.Speed), ...
+                        isempty(x.Power),...
+                        isempty(x.Displacement),...
+                        isempty(x.Trim), ...
+                        isempty(x.Propulsive_Efficiency)]', obj, 'Uni', 0);
+           
+           numCols = sum(any(~[empties_c{:}]'));
+           out_c = cell(1, numCols);
+           
            currRow = 1;
-            
-            for oi = 1:numel(obj)
+           for oi = 1:numel(obj)
+                
+                
+%                 currOut_m = nan(numRows, numNonEmptyProps);
                 [out_c{:}] = cVessel.repeatInputs({obj(oi).Speed, obj(oi).Power,...
                     obj(oi).Displacement, obj(oi).Trim, obj(oi).Propulsive_Efficiency});
                 out_c = cellfun(@(x) x(:), out_c, 'Uni', 0);
