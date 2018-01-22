@@ -46,20 +46,22 @@ for oi = 1:numel(obj)
     fprintf(fid, '%10f\t%10f\n', [obj(oi).WindCoefficient.Direction; obj(oi).WindCoefficient.Coefficient]);
     
     % Write Speed, Power Table
-    fprintf(fid, '\n%s\n', '%% SPEED POWER MODEL');
-    speedpowername = strrep(obj(oi).Displacement.Name, 'Empty Displacement Model', 'Speed Power Model');
-    fprintf(fid, '%s: %s\n', 'Speed Power Coefficient Model Name', speedpowername);
-    
-    obj(oi).SpeedPower = obj(oi).SpeedPower.fit;
-    for si = 1:numel(obj(oi).SpeedPower)
-        
-        fprintf(fid, '\n%s\n', 'Click "Add Model Value"');
-        fprintf(fid, '%s: %f\n', 'Coefficient A', obj(oi).SpeedPower(si).Coefficients(1));
-        fprintf(fid, '%s: %f\n', 'Coefficient B', obj(oi).SpeedPower(si).Coefficients(2));
-        fprintf(fid, '%s: %f\n', 'Min Power', min(obj(oi).SpeedPower(si).Power));
-        fprintf(fid, '%s: %f\n', 'Max Power', max(obj(oi).SpeedPower(si).Power));
-        fprintf(fid, '%s: %f\n', 'Trim', obj(oi).SpeedPower(si).Trim);
-        fprintf(fid, '%s: %f\n', 'Disp', obj(oi).SpeedPower(si).Displacement / (obj(oi).SpeedPower(si).FluidDensity / 1e3)); % Disp in m3
+    if ~isempty(obj(oi).SpeedPower)
+        fprintf(fid, '\n%s\n', '%% SPEED POWER MODEL');
+        speedpowername = strrep(obj(oi).Displacement.Name, 'Empty Displacement Model', 'Speed Power Model');
+        fprintf(fid, '%s: %s\n', 'Speed Power Coefficient Model Name', speedpowername);
+
+        obj(oi).SpeedPower = obj(oi).SpeedPower.fit;
+        for si = 1:numel(obj(oi).SpeedPower)
+
+            fprintf(fid, '\n%s\n', 'Click "Add Model Value"');
+            fprintf(fid, '%s: %f\n', 'Coefficient A', obj(oi).SpeedPower(si).Coefficients(1));
+            fprintf(fid, '%s: %f\n', 'Coefficient B', obj(oi).SpeedPower(si).Coefficients(2));
+            fprintf(fid, '%s: %f\n', 'Min Power', min(obj(oi).SpeedPower(si).Power));
+            fprintf(fid, '%s: %f\n', 'Max Power', max(obj(oi).SpeedPower(si).Power));
+            fprintf(fid, '%s: %f\n', 'Trim', obj(oi).SpeedPower(si).Trim);
+            fprintf(fid, '%s: %f\n', 'Disp', obj(oi).SpeedPower(si).Displacement / (obj(oi).SpeedPower(si).FluidDensity / 1e3)); % Disp in m3
+        end
     end
     
     % Write Engine Table
@@ -139,4 +141,11 @@ for oi = 1:numel(obj)
     
     % Close file
     fclose(fid);
+    
+    % Write in-service data
+    insFile = fullfile(direct, strcat(obj(oi).Name, '.xlsx'));
+    c(1, 1:2) = {'DateTime_UTC', 'Speed_Index'};
+    d = [cellstr(datestr(obj(oi).DateTime_UTC(:), 'dd-mm-yyyy HH:MM:SS')),....
+        num2cell(obj(oi).Speed_Index(:))];
+    xlswrite(insFile, [c; d]);
 end
