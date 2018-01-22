@@ -5,6 +5,10 @@ classdef cVesselDryDockDates < cMySQL
     properties
         
         IMO_Vessel_Number = [];
+        Vertical_Bottom_Surface_Prep
+        Vertical_Bottom_Coating
+        Flat_Bottom_Surface_Prep
+        Flat_Bottom_Coating
     end
     
     properties(Dependent)
@@ -83,14 +87,50 @@ classdef cVesselDryDockDates < cMySQL
             obj = [obj, newEmptyObj_v];
         end
         
+        % Relate file headings to object props
+        propHeads_c = {...
+            'StartDateNum', 'StartDate'; ....
+            'EndDateNum', 'EndDate'; ...
+            'Vertical_Bottom_Surface_Prep', 'VerticalBottomSurfacePrep'; ...
+            'Vertical_Bottom_Coating', 'VerticalBottomCoating'; ...
+            'Flat_Bottom_Surface_Prep', 'FlatBottomSurfacePrep'; ...
+            'Flat_Bottom_Coating', 'FlatBottomCoating' ...
+            };
+        fileVar_c = file_t.Properties.VariableNames;
+        propsInFile_l = ismember(propHeads_c(:, 2), fileVar_c);
+        vars2read_c = propHeads_c(propsInFile_l, 1);
+        [~, fileVarIdx_v] = ismember(propHeads_c(propsInFile_l, 2), fileVar_c);
+        
+        isDateVar_f = @(var) ismember(var, {'StartDate', 'EndDate'});
+        
         % Assing into obj
         for oi = 1:numel(obj)
             
             obj(oi).IMO_Vessel_Number = file_t.IMO_Vessel_Number(oi);
             
             % Update for MATLAB 2017a, where file read with datetime objs
-            obj(oi).StartDateNum = datenum(file_t.StartDate(oi)); %, dateform);
-            obj(oi).EndDateNum = datenum(file_t.EndDate(oi)); %, dateform);
+            for vi = 1:numel(fileVarIdx_v)
+                
+                currProp = vars2read_c{vi};
+                currFileVar_i = fileVarIdx_v(vi);
+                currFileVar = fileVar_c(currFileVar_i);
+                
+                if isDateVar_f(currFileVar)
+                    
+                    obj(oi).(currProp) = datenum(file_t{oi, currFileVar_i});
+                else
+                    
+                    obj(oi).(currProp) = file_t{oi, currFileVar_i};
+                end
+            end
+            
+%             obj(oi).StartDateNum = datenum(file_t.StartDate(oi)); %, dateform);
+%             obj(oi).EndDateNum = datenum(file_t.EndDate(oi)); %, dateform);
+%             
+%             obj(oi).Vertical_Bottom_Surface_Prep = file_t.VerticalBottomSurfacePrep{oi};
+%             obj(oi).Vertical_Bottom_Coating = file_t.VerticalBottomCoating{oi};
+%             obj(oi).Flat_Bottom_Surface_Prep = file_t.FlatBottomSurfacePrep{oi};
+%             obj(oi).Flat_Bottom_Coating = file_t.FlatBottomCoating{oi};
         end
         
        end
@@ -181,7 +221,9 @@ classdef cVesselDryDockDates < cMySQL
        
         % Read data from table
         tab = obj(1).DBTable;
-        cols = {'StartDate', 'EndDate'};
+        cols = {'StartDate', 'EndDate', 'Vertical_Bottom_Surface_Prep', ...
+            'Vertical_Bottom_Coating', 'Flat_Bottom_Surface_Prep', ...
+            'Flat_Bottom_Coating'};
         where_sql = ['IMO_Vessel_Number = ', num2str(imo)];
         [~, ddd_t] = obj(1).select(tab, cols, where_sql);
         
@@ -196,11 +238,28 @@ classdef cVesselDryDockDates < cMySQL
         [obj.IMO_Vessel_Number] = deal(imo);
         for ri = 1:nObj
             
-            obj(ri).DateStrFormat = 'dd/mm/yyyy';
+            obj(ri).DateStrFormat = 'dd-mm-yyyy';
             obj(ri).StartDate = ddd_t.startdate(ri);
             obj(ri).EndDate = ddd_t.enddate(ri);
+            obj(ri).Vertical_Bottom_Surface_Prep = ddd_t.vertical_bottom_surface_prep(ri);
+            obj(ri).Vertical_Bottom_Coating = ddd_t.vertical_bottom_coating(ri);
+            obj(ri).Flat_Bottom_Surface_Prep = ddd_t.flat_bottom_surface_prep(ri);
+            obj(ri).Flat_Bottom_Coating = ddd_t.flat_bottom_coating(ri);
         end
-      end
+       end
+      
+       function insertIntoTable(obj)
+           
+%            dataObj = [obj.DryDockDates];
+           obj(isempty(obj)) = [];
+           if ~isempty(obj)
+%                imo = [obj.IMO_Vessel_Number];
+%                [dataObj.IMO_Vessel_Number] = deal(imo(:));
+%                tab = 'DryDockDates';
+               tab = obj(1).DBTable;
+               insertIntoTable@cMySQL(obj, tab);
+           end 
+       end
     end
     
     methods(Hidden)
@@ -224,6 +283,32 @@ classdef cVesselDryDockDates < cMySQL
                 end
             end
             empty = all(all(empty));
+        end
+    end
+    
+    methods(Hidden, Static, Access=private)
+        
+        function ch = oneCellToString(c)
+            
+            if isequal(c, {''})
+                ch = '';
+                return
+            end
+            
+            if ischar(c) && isrow(c)
+                ch = c;
+                return
+            end
+            
+            % Allow for NaN (NULL) values
+            if (isnumeric(c) && isnan(c)) || isequal(c, {nan})
+                ch = nan;
+                return
+            end
+            
+            validateattributes(c, {'cell'}, {'scalar'});
+            ch = [c{:}];
+            validateattributes(ch, {'char'}, {'vector', 'row'});
         end
     end
     
@@ -266,6 +351,30 @@ classdef cVesselDryDockDates < cMySQL
             
             daten = datenum(date, obj.DateStrFormat);
             obj.EndDateNum = daten;
+        end
+        
+        function obj = set.Vertical_Bottom_Surface_Prep(obj, val)
+            
+            val = obj.oneCellToString(val);
+            obj.Vertical_Bottom_Surface_Prep = val;
+        end
+        
+        function obj = set.Vertical_Bottom_Coating(obj, val)
+            
+            val = obj.oneCellToString(val);
+            obj.Vertical_Bottom_Coating = val;
+        end
+        
+        function obj = set.Flat_Bottom_Surface_Prep(obj, val)
+            
+            val = obj.oneCellToString(val);
+            obj.Flat_Bottom_Surface_Prep = val;
+        end
+        
+        function obj = set.Flat_Bottom_Coating(obj, val)
+            
+            val = obj.oneCellToString(val);
+            obj.Flat_Bottom_Coating = val;
         end
     end
 end
