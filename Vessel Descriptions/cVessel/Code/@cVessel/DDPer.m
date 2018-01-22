@@ -9,7 +9,6 @@ ddPer = struct('DDPerformance', [], ...
     'ReferenceDuration', [], ...
     'EvaluationDuration', []);
 szIn = size(obj);
-nDDi = szIn(1);
 szOut = szIn;
 szOut(1) = szOut(1) - 1;
 ddPer = repmat(ddPer, szOut);
@@ -19,17 +18,25 @@ ddPer = repmat(ddPer, szOut);
 %     1);
 
 % Get annual averages after dry-dockings
-[~, annualAvgAft] = movingAverages(obj, 365.25, false);
+[~, annualAvgAft] = movingAverage(obj, 365.25, false);
 
 % Iterate over DD intervals, starting with second
-for ddi = 2:nDDi
+% for ddi = 2:nDDi
 
+while obj.iterateDD
+    
+    [~, currVessel, ddi, vi] = obj.currentDD;
+    
+    if ddi < 3
+        
+        continue
+    end
     
     % Take average first year of current DDi
-    ddPer(ddi-1).ReferenceAverage = annualAvgAft(ddi-1).Duration(1).Average;
+    ddPer(ddi-1).ReferenceAverage = annualAvgAft(vi).DryDockInterval(ddi-1).Average(1);
     
     % Take average first year of previous DDi
-    ddPer(ddi-1).EvaluationAverage = annualAvgAft(ddi).Duration(1).Average;
+    ddPer(ddi-1).EvaluationAverage = annualAvgAft(vi).DryDockInterval(ddi).Average(1);
     
     % Subtract
     ddPer(ddi-1).DDPerformance = ddPer(ddi-1).EvaluationAverage - ...
@@ -37,10 +44,16 @@ for ddi = 2:nDDi
     
     % Durations
     ddPer(ddi-1).ReferenceDuration = ...
-        annualAvgAft(ddi-1).Duration(1).EndDate(1) - ...
-        annualAvgAft(ddi-1).Duration(1).StartDate(1);
+        annualAvgAft(vi).DryDockInterval(ddi-1).EndDate(1) - ...
+        annualAvgAft(vi).DryDockInterval(ddi-1).StartDate(1);
     
     ddPer(ddi-1).EvaluationDuration = ...
-        annualAvgAft(ddi).Duration(1).EndDate(1) - ...
-        annualAvgAft(ddi).Duration(1).StartDate(1);
+        annualAvgAft(vi).DryDockInterval(ddi).EndDate(1) - ...
+        annualAvgAft(vi).DryDockInterval(ddi).StartDate(1);
+    
+    % Assign into obj when all DD done
+    if ddi == currVessel.numDDIntervals
+        
+        currVessel.DryDockingPerformance = ddPer;
+    end
 end

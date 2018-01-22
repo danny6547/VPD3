@@ -3,9 +3,11 @@ function [obj, servStruct] = serviceInterval(obj, varargin)
 %   Detailed explanation goes here
 
 % Output
-servStruct = struct('Duration', [], 'Units', [], 'StartDate', [], 'EndDate', []);
-sz = size(obj);
-servStruct = repmat(servStruct, sz);
+interval = struct('Duration', [], 'Units', [], 'StartDate', [], 'EndDate', []);
+% servStruct = struct('Duration', [], 'Units', [], 'StartDate', [], 'EndDate', []);
+servStruct = struct('DryDockInterval', interval);
+% sz = size(obj);
+% servStruct = repmat(servStruct, sz);
 
 % Input
 units = 'months';
@@ -22,21 +24,26 @@ if nargin > 2
 end
 
 % idx_c = cell(1, ndims(obj));
-while ~obj.iterFinished
+% while ~obj.iterFinished
+[obj.ServiceInterval] = deal(servStruct);
+
+while obj.iterateDD
 % for ii = 1:numel(obj)
    
    % Iterate
-   [obj, ii] = obj.iter;
+%    [obj, ii] = obj.iter;
+   [currTable, currVessel, ddi, vi] = obj.currentDD;
 %    [idx_c{:}] = ind2sub(sz, ii);
 %    currData = obj(ii);
    
-   % Skip DDi if empty
-   if obj(ii).isPerDataEmpty
-       continue
-   end
+%    % Skip DDi if empty
+%    if obj(ii).isPerDataEmpty
+%        continue
+%    end
    
    % Get range of date numbers in days
-   dates = obj(ii).DateTime_UTC; % datenum(currData.DateTime_UTC, 'dd-mm-yyyy');
+%    dates = obj(ii).DateTime_UTC; % datenum(currData.DateTime_UTC, 'dd-mm-yyyy');
+   dates = currTable.DateTime_UTC;
    numdays = max(dates) - min(dates);
    dvec = datevec(numdays);
    
@@ -66,12 +73,17 @@ while ~obj.iterFinished
    interval = struct('Duration', [], 'Units', [], 'StartDate', [], 'EndDate', []);
    interval.Duration = duration;
    interval.Units = units;
-   interval.StartDate = datestr(min(dates), obj(ii).DateFormStr);
-   interval.EndDate = datestr(max(dates), obj(ii).DateFormStr);
+   interval.StartDate = datestr(min(dates), currVessel.DateFormStr);
+   interval.EndDate = datestr(max(dates), currVessel.DateFormStr);
    
    % Assign into output
-   servStruct(ii) = interval;
-   obj(ii).ServiceInterval = interval;
+   servStruct(vi).DryDockInterval(ddi) = interval;
+   
+   % Assign into obj
+   if ddi == currVessel.numDDIntervals
+       
+       currVessel.ServiceInterval = servStruct(vi).DryDockInterval;
+   end
 end
 
-obj = obj.iterReset;
+% obj = obj.iterReset;

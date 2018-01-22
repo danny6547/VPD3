@@ -437,3 +437,16 @@ cTO.changePending: TRUE when data in matchingFields not equal to data read from 
 # cV.iterateDD: provide developer with easy way to iterate DD intervals
 cV.cV: allow for all cConnectMySQLDB properties input
 cV.set.Database: apply Database field value to all nested cModels
+cDB: create vesselWindModelTable
+
+cVD.convert_: track and check current units against method call
+DB: drop table vesselspeedpower, replace with column for sp model in Vessels table
+cV.insertIntoSpeedPower: omit code writing into vesselspeedpower
+cV.In-service: table with performance data by default, raw data when called
+cVDDD: rename to cVDD?
+
+the following cV methods need re-written to remove old dd indexing
+	cV.DDPer
+	cV.estimatedFuelConsumption
+	
+cV.powerIncreasePerCoating: remove method? seems redundant now we (soon will) have PowerBI comparing coatings

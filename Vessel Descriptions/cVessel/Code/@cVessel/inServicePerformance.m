@@ -1,10 +1,12 @@
-function [obj, servStruct ] = inServicePerformance(obj, varargin)
+function [obj, inserv ] = inServicePerformance(obj, varargin)
 %inServicePerformance In-service performance as defined by ISO 190303-2.
 %   Detailed explanation goes here
 
 % Outputs
-servStruct = struct('Duration', []);
-sizeStruct = size(obj);
+servStruct = struct('InservicePerformance', [], 'ReferenceDuration', [],...
+    'ReferenceValue', [], 'EvaluationDuration', [], 'EvaluationValue', []);
+inserv = struct('DryDockInterval', servStruct);
+% sizeStruct = size(obj);
 
 % Inputs
 
@@ -12,21 +14,24 @@ sizeStruct = size(obj);
 % obj = convertDate(obj); redundant function replaced with set method
 
 % Iterate over elements of data array
-while ~obj.iterFinished
+[obj.InServicePerformance] = deal(servStruct);
+while obj.iterateDD
+% while ~obj.iterFinished
     
-   [obj, ii] = obj.iter;
+%    [obj, ii] = obj.iter;
+   [currDD_tbl, currVessel, ddi] = obj.currentDD;
 % for si = 1:numel(obj)
     
-    % Skip if empty
-   if obj(ii).isPerDataEmpty
-       continue
-   end
+%     % Skip if empty
+%    if currVessel.isPerDataEmpty
+%        continue
+%    end
     
     % Index into input and get dates
 %     currDate = datenum(char(currStruct.DateTime_UTC), 'dd-mm-yyyy');
-    currDate = obj(ii).DateTime_UTC;
-    currVar = obj(ii).Variable;
-    currPerf = obj(ii).(currVar);
+    currDate = currDD_tbl.DateTime_UTC;
+    currVar = currVessel.Variable;
+    currPerf = currDD_tbl.(currVar);
 %     [ri, ci] = ind2sub(sizeStruct, si);
     
     % Remove duplicate date data (redundant when no duplicates in db)
@@ -92,9 +97,20 @@ while ~obj.iterFinished
         Duration_st(2).Count = counts(2);
         Duration_st(2).StartDate = startDate(2);
         Duration_st(2).EndDate = endDate(2);
-    
-        % Re-assign into Outputs
-        obj(ii).InServicePerformance = Duration_st;
+        
+        % Calculate Performance
+        servStruct.ReferenceDuration = Duration_st(1).EndDate - Duration_st(1).StartDate;
+        servStruct.ReferenceValue = Duration_st(1).Average;
+        servStruct.EvaluationDuration = Duration_st(2).EndDate - Duration_st(2).StartDate;
+        servStruct.EvaluationValue = Duration_st(2).Average;
+        servStruct.InservicePerformance = servStruct.ReferenceValue - servStruct.EvaluationValue;
+        inserv(ddi).DryDockInterval = servStruct;
+        currVessel.InServicePerformance(ddi) = servStruct;
+%         
+%         % Re-assign into Outputs
+%         if ddi == currVessel.numDDIntervals
+%             currVessel.InServicePerformance = [inserv.DryDockInterval];
+%         end
     end
 end
-obj = obj.iterReset;
+% obj = obj.iterReset;

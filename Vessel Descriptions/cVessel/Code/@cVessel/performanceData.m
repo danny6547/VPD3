@@ -101,6 +101,7 @@ for vi = 1:numel(imo)
             tbl.Properties.VariableNames = {'DateTime_UTC', 'Performance_Index',...
                                     'Speed_Index'};
             currOut = table2struct(tbl, 'ToScalar', 1);
+            [~, currOut.DateTime_UTC] = obj.sql2matlabdates(currOut.DateTime_UTC);
             indb(vi) = true;
         else
             
@@ -115,7 +116,7 @@ for vi = 1:numel(imo)
         % Append to output
         currOut.DryDockInterval = 1;
         currOut.IMO_Vessel_Number = currImo;
-        [~, currOut.DateTime_UTC] = obj.sql2matlabdates(currOut.DateTime_UTC);
+%         [~, currOut.DateTime_UTC] = obj.sql2matlabdates(currOut.DateTime_UTC);
         out(vi) = currOut;
     end
     

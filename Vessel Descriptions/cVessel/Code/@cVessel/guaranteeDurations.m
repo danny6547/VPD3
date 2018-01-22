@@ -1,4 +1,4 @@
-function [ obj, guarStruct ] = guaranteeDurations(obj, varargin)
+function [ obj, guarantee ] = guaranteeDurations(obj, varargin)
 %guaranteeDurations Calculate values relevant to performance guarantees
 %   obj = guaranteeDurations(obj) will return in property
 %   'GuaranteeDurations' a struct giving average performance values over
@@ -19,7 +19,8 @@ guarStruct = struct('StartMonth', [1, 13, 13, 13, 13], ...
                     'Average', [], ...
                     'Difference', [], ...
                     'RelativeDifference', []);
-guarStruct = repmat(guarStruct, size(obj));
+guarantee = struct('DryDockInterval', guarStruct);
+% guarStruct = repmat(guarStruct, size(obj));
 
 % Input
 % validateattributes(obj, {'struct'}, {});
@@ -34,28 +35,31 @@ end
 % sz = size(obj);
 avgMonthDuration = 365.25 / 12;
 
-while ~obj.iterFinished
+% while ~obj.iterFinished
+while obj.iterateDD
 
 % for ii = 1:numel(obj)
    
    % Iterate
-   [obj, ii] = obj.iter;
-   
+   [currTable, currVessel, ddi, vi] = obj.currentDD;
+    
+%    % Iterate
+%    [obj, ii] = obj.iter;
 %    [idx_c{:}] = ind2sub(sz, ii);
 %    currData = obj(idx_c{:});
    
-   % Skip DDi if empty
-   if obj(ii).isPerDataEmpty
-       continue
-   end
+%    % Skip DDi if empty
+%    if obj(ii).isPerDataEmpty
+%        continue
+%    end
    
    % Indices to data
-   dat = obj(ii).DateTime_UTC; % unique(datenum(currData.DateTime_UTC, 'dd-mm-yyyy'));
-   per = obj(ii).(obj(ii).Variable) * 100;
+   dat = currTable.DateTime_UTC; % unique(datenum(currData.DateTime_UTC, 'dd-mm-yyyy'));
+   per = currTable.(currVessel.Variable) * 100;
    [dat, dati] = sort(dat);
    per = per(dati);
-   relStartDates = ( guarStruct(ii).StartMonth - 1)*avgMonthDuration;
-   relEndDates = ( guarStruct(ii).EndMonth) * avgMonthDuration;
+   relStartDates = ( guarStruct.StartMonth - 1)*avgMonthDuration;
+   relEndDates = ( guarStruct.EndMonth) * avgMonthDuration;
    absStartDates = min(dat) + relStartDates;
    absEndDates = min(dat) + relEndDates;
    
@@ -73,7 +77,7 @@ while ~obj.iterFinished
    
 %     tstep = unique(diff(dat));
 %     tstep(tstep==0) = [];
-    tstep = obj(ii).TimeStep;
+    tstep = currVessel.TimeStep;
     tstep_v = repmat(tstep, [1, size(absStartDates, 2)]);
     
     preStartDates = absStartDates - 0.5*tstep_v;
@@ -86,7 +90,7 @@ while ~obj.iterFinished
 %    [~, endi, ~] = FindNearestInVector(postEndDates, dat);
    
    % Averages and differences
-   avg = nan(1, numel( guarStruct(ii).StartMonth ));
+   avg = nan(1, numel( guarStruct.StartMonth ));
    avg(~outOfRange_l) = arrayfun(@(x, y) nanmean(per(dat >= x & dat < y)),...
        preStartDates, postEndDates);
    baseline = repmat(avg(1), [1, numel(avg) - 1]);
@@ -94,10 +98,18 @@ while ~obj.iterFinished
    dif = baseline - evaluations;
    reldif = ( dif ./ baseline ) * 100;
    
+   guarStruct.Average = avg;
+   guarStruct.Difference = dif;
+   guarStruct.RelativeDifference = reldif;
+   
    % Output
-   guarStruct(ii).Average = avg;
-   guarStruct(ii).Difference = dif;
-   guarStruct(ii).RelativeDifference = reldif;
-   obj(ii).GuaranteeDurations = guarStruct(ii);
+%    guarantee(vi).DryDockInterval(ddi).Average = avg;
+%    guarantee(vi).DryDockInterval(ddi).Difference = dif;
+%    guarantee(vi).DryDockInterval(ddi).RelativeDifference = reldif;
+   guarantee(vi).DryDockInterval(ddi) = guarStruct;
+   if ddi == currVessel.numDDIntervals
+       
+       currVessel.GuaranteeDurations = guarantee(vi).DryDockInterval;
+   end
 end
-obj = obj.iterReset;
+% obj = obj.iterReset;

@@ -1,4 +1,4 @@
-function [ obj, markStruct ] = performanceMark(obj, varargin)
+function [ obj, perfMark ] = performanceMark(obj, varargin)
 %performanceMark Assign performance mark to performance data
 %   obj = performanceMark(obj) will generate a structure with field
 %   'PerformanceMark' in the PerformanceMark property of OBJ, containing a
@@ -14,8 +14,9 @@ function [ obj, markStruct ] = performanceMark(obj, varargin)
 
 % Output
 markStruct = struct('PerformanceMark', '');
-sz = size(obj);
-markStruct = repmat(markStruct, sz);
+perfMark = struct('DryDockInterval', markStruct);
+% sz = size(obj);
+% markStruct = repmat(markStruct, sz);
 
 % Input
 % validateattributes(obj, {'struct'}, {}, 'performanceMark', 'obj',...
@@ -35,20 +36,23 @@ grade_m = cell2mat(grade(:, 1:2));
 grade_c = grade(:, 3);
 
 % Iterate over guarantee struct to get averages
-while ~obj.iterFinished
+% while ~obj.iterFinished
+while obj.iterateDD
     
-   [obj, ii] = obj.iter;
+%    [obj, ii] = obj.iter;
+    [~, currVessel, ddi, vi] = obj.currentDD;
 % idx_c = cell(1, ndims(obj));
 % for ii = 1:numel(obj)
    
+%    % Skip DDi if empty
+%    if obj(ii).isPerDataEmpty
+%        continue
+%    end
+
 %    [idx_c{:}] = ind2sub(sz, ii);
    % currData = guarStruct(idx_c{:});
-   currData = obj(ii).GuaranteeDurations;
-   
-   % Skip DDi if empty
-   if obj(ii).isPerDataEmpty
-       continue
-   end
+%    currData = obj(ii).GuaranteeDurations;
+   currData = currVessel.GuaranteeDurations(ddi);
    
    if all(isnan(currData.Difference)) || all(isnan(currData.RelativeDifference))
        continue
@@ -61,7 +65,14 @@ while ~obj.iterFinished
     % Assign value based on grade
     grade_l = powerInc >= grade_m(:, 1) & powerInc < grade_m(:, 2);
     grade_s = [grade_c{grade_l}];
-    markStruct(ii).PerformanceMark = grade_s;
-    obj(ii).PerformanceMark = grade_s;
+    markStruct.PerformanceMark = grade_s;
+    
+    perfMark(vi).DryDockInterval(ddi) = markStruct;
+%     obj(ii).PerformanceMark = grade_s;
+    
+    if ddi == currVessel.numDDIntervals
+        
+        currVessel.PerformanceMark = perfMark(vi).DryDockInterval;
+    end
 end
-obj = obj.iterReset;
+% obj = obj.iterReset;

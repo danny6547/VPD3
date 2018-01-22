@@ -1,4 +1,4 @@
-function [ obj, maintrig ] = maintenanceTrigger( obj )
+function [ obj, trigger ] = maintenanceTrigger( obj )
 %maintenanceTrigger Maintenance Trigger KPI
 %   Detailed explanation goes here
 
@@ -8,9 +8,10 @@ maintrig = struct('MaintenanceTrigger', [], ...
     'EvaluationAverage', [], ...
     'ReferenceDuration', [], ...
     'EvaluationDuration', []);
-szIn = size(obj);
-nDDi = szIn(1);
-maintrig = repmat(maintrig, szIn);
+trigger = struct('DryDockInterval', maintrig);
+% szIn = size(obj);
+% nDDi = szIn(1);
+% maintrig = repmat(maintrig, szIn);
 
 % Input
 % validateattributes(obj, {'struct'}, {}, 'performanceMark', 'obj',...
@@ -18,28 +19,46 @@ maintrig = repmat(maintrig, szIn);
 
 % Get annual averages after dry-dockings
 months3 = (365.25 * 3)/12;
-[~, annualAvgRef] = movingAverages(obj, months3, true);
-[~, months3AvgEvl] = movingAverages(obj, months3, true);
+[~, annualAvgRef] = movingAverage(obj, months3, true);
+[~, months3AvgEvl] = movingAverage(obj, months3, true);
 
 % Iterate over DD intervals, starting with second
-for ddi = 1:nDDi
+% for ddi = 1:nDDi
+
+while obj.iterateDD
+    
+    [~, currVessel, ddi, vi] = obj.currentDD;
+    
+    % Skip when less than 6 months data in DD interval
+    if numel(annualAvgRef(vi).DryDockInterval(ddi).Average) < 2
+        
+        continue
+    end
     
     % Take average first year of current DDi
-    maintrig(ddi).ReferenceAverage = annualAvgRef(ddi).Duration(1).Average(1);
+    maintrig.ReferenceAverage = annualAvgRef(vi).DryDockInterval(ddi).Average(1);
     
     % Take average first year of previous DDi
-    maintrig(ddi).EvaluationAverage = months3AvgEvl(ddi).Duration(1).Average(end);
+    maintrig.EvaluationAverage = months3AvgEvl(vi).DryDockInterval(ddi).Average(end);
     
     % Subtract
-    maintrig(ddi).MaintenanceTrigger = maintrig(ddi).EvaluationAverage - ...
-        maintrig(ddi).ReferenceAverage;
+    maintrig.MaintenanceTrigger = maintrig.EvaluationAverage - ...
+        maintrig.ReferenceAverage;
     
     % Durations
-    maintrig(ddi).ReferenceDuration = ...
-        annualAvgRef(ddi).Duration(1).EndDate(1) - ...
-        annualAvgRef(ddi).Duration(1).StartDate(1);
+    maintrig.ReferenceDuration = ...
+        annualAvgRef(vi).DryDockInterval(ddi).EndDate(1) - ...
+        annualAvgRef(vi).DryDockInterval(ddi).StartDate(1);
     
-    maintrig(ddi).EvaluationDuration = ...
-        months3AvgEvl(ddi).Duration(1).EndDate(end) - ...
-        months3AvgEvl(ddi).Duration(1).StartDate(end);
+    maintrig.EvaluationDuration = ...
+        months3AvgEvl(vi).DryDockInterval(ddi).EndDate(end) - ...
+        months3AvgEvl(vi).DryDockInterval(ddi).StartDate(end);
+    
+    trigger(vi).DryDockInterval(ddi) = maintrig;
+    
+    % Assign into obj
+    if ddi == currVessel.numDDIntervals
+        
+        currVessel.MaintenanceTrigger = trigger(vi).DryDockInterval;
+    end
 end

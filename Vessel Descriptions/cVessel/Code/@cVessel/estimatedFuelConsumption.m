@@ -3,7 +3,8 @@ function [ obj, savings ] = estimatedFuelConsumption( obj )
 %   Detailed explanation goes here
 
 % Output
-savings = struct('Fuel', [], 'Cost', []);
+savings_st = struct('Fuel', [], 'Cost', []);
+savings = struct('DryDockInterval', savings_st);
 
 % Input
 speed2fuel = 3;
@@ -12,22 +13,34 @@ daysPerYear = 365.25;
 activity = 0.65;
 fuelCost = 300;
 
-obj = obj.regressions(1);
+[obj.EstimatedFuelConsumption] = deal(savings_st);
+while obj.iterateDD
 
-% Second DDi is evaluation, first is reference
-muRef = 0.059; % nanmean(obj(1).Speed_Index);
-muEval = obj.Regression.Coefficients(1) * daysPerYear; % nanmean(obj(2).Speed_Index);
+    [~, currVessel, ddi, vi] = obj.currentDD;
+%     obj = obj.regressions(1);
+    
+    currPerf = currVessel.InServicePerformance(ddi);
+    if isempty(currPerf)
+        continue
+    end
+    
+    marketAverage = 0.059;
+    speedDiff = marketAverage - currPerf.InservicePerformance;
 
-annualConsRef = (1 + speed2fuel*abs(muRef)) * consumptionPerDay * daysPerYear * activity;
-annualConsEval = (1 + speed2fuel*abs(muEval)) * consumptionPerDay * daysPerYear * activity;
+%     % Second DDi is evaluation, first is reference
+%     muRef = 0.059; % nanmean(obj(1).Speed_Index);
+%     muEval = obj.Regression.Coefficients(1) * daysPerYear; % nanmean(obj(2).Speed_Index);
 
-fuelSavings = annualConsRef - annualConsEval;
-costSavings = fuelSavings * fuelCost;
+    fuelSavings = speedDiff * speed2fuel * consumptionPerDay * daysPerYear * activity;
+%     annualConsRef = (1 + speed2fuel*marketAverage) * consumptionPerDay * daysPerYear * activity;
+%     annualConsEval = (1 + speed2fuel*abs(muEval)) * consumptionPerDay * daysPerYear * activity;
+%     fuelSavings = annualConsRef - annualConsEval;
+    costSavings = fuelSavings * fuelCost;
 
-savings.Fuel = fuelSavings;
-savings.Cost = costSavings;
+    savings_st.Fuel = fuelSavings;
+    savings_st.Cost = costSavings;
 
-% Assign struct to output
-obj.EstimatedFuelConsumption = savings;
-
+    % Assign struct to output
+    savings.DryDockInterval(ddi) = savings_st;
+    currVessel.EstimatedFuelConsumption(ddi) = savings_st;
 end

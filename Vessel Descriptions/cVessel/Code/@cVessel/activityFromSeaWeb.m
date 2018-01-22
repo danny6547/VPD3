@@ -29,7 +29,8 @@ for fi = 1:numel(filename)
 
     % Parse File
     currFile = filename{fi};
-    t = readtable(currFile, 'ReadVariableNames', false, 'HeaderLines', 1);
+    t = readtable(currFile, 'ReadVariableNames', false, 'HeaderLines', 1,...
+        'DatetimeType', 'text');
 
     % Filter missing times from table
     t.Properties.VariableNames = fileVars_c;
@@ -45,34 +46,46 @@ ihs_tbl.Sailed_Datenum = datenum(ihs_tbl.Sailed_Date, 'mm/dd/yyyy HH:MM:SS PM');
 ihs_tbl.Idle_Time = ihs_tbl.Sailed_Datenum - ihs_tbl.Arrival_Datenum;
     
 % Activity defined as ratio between total idle time and total time
-while ~obj.iterFinished
+% while ~obj.iterFinished
+%     
+%     % Iterate
+%     [obj, ii] = obj.iter;
+%     if obj(ii).isPerDataEmpty
+%         continue
+%     end
+%     
+% for ii = 1:numel(obj)
     
-    % Iterate
-    [obj, ii] = obj.iter;
-    if obj(ii).isPerDataEmpty
-        continue
-    end
+while obj.iterateDD
+    
+    % 
+    [currTable, currVessel, ddi] = obj.currentDD;
     
     % Get extents of dry-docking interval
-    intStart = min(obj(ii).DateTime_UTC);
-    intEnd = max(obj(ii).DateTime_UTC);
+%     intStart = min(obj(ii).DateTime_UTC);
+%     intEnd = max(obj(ii).DateTime_UTC);
+    intStart = min(currTable.DateTime_UTC);
+    intEnd = max(currTable.DateTime_UTC);
     
     % Find corresponding subset of table
-    int_tbl = ihs_tbl(ihs_tbl.IMO_LR_IHS_No_ == obj(ii).IMO_Vessel_Number & ...
+    int_tbl = ihs_tbl(ihs_tbl.IMO_LR_IHS_No_ == currVessel.IMO_Vessel_Number & ...
         ((ihs_tbl.Arrival_Datenum > intStart & ihs_tbl.Arrival_Datenum < intEnd) | ...
         (ihs_tbl.Sailed_Datenum > intStart & ihs_tbl.Sailed_Datenum < intEnd)), :);
     
     % Skip if no activity data found for this dry-docking interval
     if isempty(int_tbl)
         
-        activity(ii) = nan;
-        obj(ii).Activity = activity(ii);
+%         activity(ii) = nan;
+%         obj(ii).Activity = activity(ii);
+        currVessel.Activity(ddi) = nan; % activity; %(ii);
     else
         
         % Calculate activity from subset
-        activity(ii) = 1 - (sum(int_tbl.Idle_Time) / ...
+%         activity(ii) = 1 - (sum(int_tbl.Idle_Time) / ...
+%             (max(int_tbl.Sailed_Datenum) - min(int_tbl.Arrival_Datenum)));
+%         obj(ii).Activity = activity(ii);
+        currVessel.Activity(ddi) = 1 - (sum(int_tbl.Idle_Time) / ...
             (max(int_tbl.Sailed_Datenum) - min(int_tbl.Arrival_Datenum)));
-        obj(ii).Activity = activity(ii);
     end
 end
-obj = obj.iterReset;
+% obj = obj.iterReset;

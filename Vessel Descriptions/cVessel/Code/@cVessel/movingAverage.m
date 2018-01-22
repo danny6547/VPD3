@@ -31,7 +31,9 @@ function [obj, avgStruct] = movingAverage(obj, durations, varargin)
 %   The default value is FALSE.
 
 % Initialise Outpus
-avgStruct = struct('Duration', []);
+avgStruct = struct('DryDockInterval', []);
+avgStruct.DryDockInterval = struct('Average', [], 'StartDate', [],...
+    'EndDate', [], 'StdOfMean', [], 'Count', []);
 sizeStruct = size(obj);
 
 % Inputs
@@ -98,7 +100,7 @@ end
 %     
 while obj.iterateDD
 
-    [currDD_tbl, currObj, ddi] = obj.currentDD;
+    [currDD_tbl, currObj, ddi, vi] = obj.currentDD;
 
 %     [obj, ii] = obj.iter;
 %     
@@ -211,6 +213,7 @@ while obj.iterateDD
 %         avgStruct(ddi).Duration = Duration_st;
 %         obj(ii).MovingAverage(ddi) = avgStruct(ddi);
     currObj.MovingAverage(ddi).Duration = Duration_st;
+    avgStruct(vi).DryDockInterval(ddi) = Duration_st;
 
 %         % Iterate DD
 %         ddi = ddi + 1;
