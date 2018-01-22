@@ -25,7 +25,7 @@ end
 
 % idx_c = cell(1, ndims(obj));
 % while ~obj.iterFinished
-[obj.ServiceInterval] = deal(servStruct);
+% [obj.ServiceInterval] = deal(servStruct);
 
 while obj.iterateDD
 % for ii = 1:numel(obj)
@@ -82,7 +82,7 @@ while obj.iterateDD
    % Assign into obj
    if ddi == currVessel.numDDIntervals
        
-       currVessel.ServiceInterval = servStruct(vi).DryDockInterval;
+       currVessel.Report.ServiceInterval = servStruct(vi).DryDockInterval;
    end
 end
 

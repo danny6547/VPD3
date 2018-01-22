@@ -23,9 +23,9 @@ while obj.iterateDD
 %     [obj, ii] = obj.iter;
 %     currStruct = obj(ii);
     
-    if isnan(currObj_cv.IMO_Vessel_Number)
-        continue;
-    end
+%     if isnan(currObj_cv.IMO_Vessel_Number)
+%         continue;
+%     end
     
     x = currDD_tbl.DateTime_UTC;
     y = currDD_tbl.(currObj_cv.Variable);
@@ -48,7 +48,7 @@ while obj.iterateDD
         regStruct.Coefficients = p;
         regStruct.Order = order(oi);
         regStruct.Model = 'polynomial';
-        currObj_cv.Regression(ddi).Order(oi) = regStruct;
+        currObj_cv.Report.Regression(ddi).Order(oi) = regStruct;
     end
 end
 % obj = obj.iterReset;

@@ -80,21 +80,21 @@ while obj.iterateDD
       
         avg_l = false;
         numDur = 1;
-        if ~isempty(currVessel.MovingAverage)
+        if ~isempty(currVessel.Report.MovingAverage)
 
             avg_l = true;
-            avgStruct = currVessel.MovingAverage; % varargin{1};
+            avgStruct = currVessel.Report.MovingAverage; % varargin{1};
             validateattributes(avgStruct, {'struct'}, {}, 'plotPerformanceData',...
                 'avgStruct', 2);
             numDur = numel(avgStruct(1).Duration);
         end
 
         regr_l = false;
-        if ~isempty(currVessel.Regression)
+        if ~isempty(currVessel.Report.Regression)
 
             regr_l = true;
             regri = 1;
-            regrStruct = currVessel.Regression; %varargin{2};
+            regrStruct = currVessel.Report.Regression; %varargin{2};
             validateattributes(regrStruct, {'struct'}, {}, 'plotPerformanceData',...
                 'regrStruct', 3);
         end
@@ -174,9 +174,9 @@ while obj.iterateDD
        % Plot regressions
        if regr_l
            
-           for oi = 1:numel(currVessel.Regression(ddi))
+           for oi = 1:numel(currVessel.Report.Regression(ddi))
            
-               currRegr_st = currVessel.Regression(ddi).Order(oi);
+               currRegr_st = currVessel.Report.Regression(ddi).Order(oi);
     %            currRegr_st = regrStruct(ddi, idx_c{2:end});
                coeffs = currRegr_st.Coefficients;
 

@@ -15,25 +15,13 @@ classdef cVessel < cMySQL
         Engine = cVesselEngine();
         
         Variable = 'Speed_Index';
-        Performance_Index
-        Speed_Index
-        DateTime_UTC
+%         Performance_Index
+%         Speed_Index
+%         DateTime_UTC
         TimeStep double = 1;
-        In_Service;
+        InService;
         
-        MovingAverage = [];
-        Regression = [];
-        ServiceInterval
-        GuaranteeDurations
-        PerformanceMark
-        DryDockingPerformance
-        DryDockingImprovement
-        AnnualSavingsDD
-        EstimatedFuelConsumption
-        InServicePerformance
-        MaintenanceTrigger
-        Activity double = nan;
-        Wind_Model_ID;
+        Report cVesselReport = cVesselReport();
     end
     
     properties(Hidden)
@@ -99,17 +87,35 @@ classdef cVessel < cMySQL
            validateattributes(imo, {'numeric'},...
               {'positive', 'real', 'integer'}, 'cVessel constructor',...
               'IMO', 1);
-           [shipData, ~, ~, indb] = obj.performanceData(readInputs_c{:});
+           [obj, ~, ~, indb] = obj.performanceData(readInputs_c{:});
         end
 
         if shipData_l && ~imo_l
 
            shipData = shipDataInput;
-           indb = true(1, size(shipData, 2));
+%            indb = true(1, size(shipData, 2));
+            numOuts = numel(shipData);
+            obj(numOuts) = cVessel;
+            
+            validFields = {'DateTime_UTC', ...
+                            'Performance_Index',...
+                            'Speed_Index'};
+            inputFields = fieldnames(shipData);
+            fields2read = intersect(validFields, inputFields);
+
+            for ii = 1:numel(obj)
+                for fi = 1:numel(fields2read)
+
+                    currField = fields2read{fi};
+                    obj(ii).(currField) = shipData(ii).(currField);
+                    obj(ii).IMO_Vessel_Number = imo(ii);
+                    obj(ii).Particulars.IMO_Vessel_Number = imo(ii);
+                end
+            end
         end
 
         % Get IMO from struct
-        imo = deal([shipData(:).IMO_Vessel_Number]);
+%         imo = deal([shipData(:).IMO_Vessel_Number]);
         if ~any(indb)
 
            size_c = num2cell(size(imo));
@@ -121,24 +127,18 @@ classdef cVessel < cMySQL
            [parts.IMO_Vessel_Number] = deal(imo_c{:});
            return
         end
-
-        validFields = {'DateTime_UTC', ...
-                        'Performance_Index',...
-                        'Speed_Index'};
-        inputFields = fieldnames(shipData);
-        fields2read = intersect(validFields, inputFields);
-
+        
         % Expand array to size of input data and assign known values
-        numOuts = numel(shipData(:, indb));
-        obj(numOuts) = cVessel;
+%         numOuts = numel(shipData(:, indb));
+%         obj(numOuts) = cVessel;
         for ii = 1:numel(obj)
-            for fi = 1:numel(fields2read)
-
-                currField = fields2read{fi};
-                obj(ii).(currField) = shipData(ii).(currField);
+%             for fi = 1:numel(fields2read)
+% 
+%                 currField = fields2read{fi};
+%                 obj(ii).(currField) = shipData(ii).(currField);
                 obj(ii).IMO_Vessel_Number = imo(ii);
                 obj(ii).Particulars.IMO_Vessel_Number = imo(ii);
-            end
+%             end
         end
 
         % Check that no duplicates were added when concatenating struct
@@ -962,9 +962,10 @@ classdef cVessel < cMySQL
        % isPerDataEmpty True if performance data variable empty or NAN.
        
            vars = {obj.Variable};
-           skip = arrayfun(@(x, y) isempty(x.(y{:})) || ...
-                all(isnan(x.(y{:}))), obj, vars);
-           
+%            skip = arrayfun(@(x, y) isempty(x.(y{:})) || ...
+%                 all(isnan(x.(y{:}))), obj, vars);
+           skip = arrayfun(@(x, y) isempty(x.InService(y{:})) || ...
+                all(isnan(x.InService(y{:}))), obj, vars);
        end
        
         function obj = updateWindResistanceRelative(obj)
@@ -1078,25 +1079,27 @@ classdef cVessel < cMySQL
         end
         end
         
-        function obj = filterOnUniqueIndex(obj, index, prop)
+        function obj = filterOnUniqueIndex(obj, index, ~)
         % filterOnUniqueIndex Filter data based on duplicate keys.
         
         % Input
         validateattributes(index, {'char'}, {'vector'}, ...
             'filterOnUniqueIndex', 'index', 2);
-        prop = validateCellStr(prop, 'filterOnUniqueIndex', 'prop', 3);
+%         prop = validateCellStr(prop, 'filterOnUniqueIndex', 'prop', 3);
         
         % Iterate and filter non-unique indices of index data
         for ii = 1:numel(obj)
-            [uniIndex, uniIndexI] = unique(obj(ii).(index));
+            [~, uniIndexI] = unique(obj(ii).InService.(index));
             
-            for pi = 1:numel(prop)
-                
-                currData = obj(ii).(prop{pi});
-                obj(ii).(prop{pi}) = currData(uniIndexI);
-            end
+%             for pi = 1:numel(prop)
+%                 
+%                 currData = obj(ii).(prop{pi});
+%                 obj(ii).(prop{pi}) = currData(uniIndexI);
+%             end
+%             
+%             obj(ii).(index) = uniIndex;
             
-            obj(ii).(index) = uniIndex;
+            obj(ii).InService = obj(ii).InService(uniIndexI, :);
         end
         end
 
@@ -1109,29 +1112,37 @@ classdef cVessel < cMySQL
 %             nDDi = obj(oi).numDDIntervals; % numel(obj(oi).DryDockDates) + 1;
             nDDi = numel(obj(oi).DryDockDates) + 1;
             if isempty(obj(oi).DryDockDates)
-                mat = true(numel(obj(oi).DateTime_UTC), 1);
+                mat = true(numel(obj(oi).InService.DateTime_UTC), 1);
                 continue
             end
-            mat = false(numel(obj(oi).DateTime_UTC), nDDi);
-            currDates = obj(oi).DateTime_UTC;
+            mat = false(numel(obj(oi).InService.DateTime_UTC), nDDi);
+            currDates = obj(oi).InService.DateTime_UTC;
             
             for di = 1:nDDi
                 
                 % Create logical vectors for current interval from index
                 if di == 1
                     
-                    currIntEnd = obj(oi).DryDockDates(di).StartDateNum;
+                    currIntEnd = datetime(...
+                        obj(oi).DryDockDates(di).StartDateNum,...
+                        'ConvertFrom', 'datenum');
                     currInt_l = currDates <= currIntEnd;
                     
                 elseif di == nDDi
                     
-                    currIntEnd = obj(oi).DryDockDates(di-1).EndDateNum;
+                    currIntEnd = datetime(...
+                        obj(oi).DryDockDates(di-1).EndDateNum,...
+                        'ConvertFrom', 'datenum');
                     currInt_l = currDates >= currIntEnd;
                     
                 else
                     
-                    currIntStart = obj(oi).DryDockDates(di - 1).EndDateNum;
-                    currIntEnd = obj(oi).DryDockDates(di).StartDateNum;
+                    currIntStart = datetime(...
+                        obj(oi).DryDockDates(di - 1).EndDateNum,...
+                        'ConvertFrom', 'datenum');
+                    currIntEnd = datetime(...
+                        obj(oi).DryDockDates(di).StartDateNum,...
+                        'ConvertFrom', 'datenum');
                     currInt_l = currDates >= currIntStart & ...
                         currDates <= currIntEnd;
                 end
@@ -1229,11 +1240,11 @@ classdef cVessel < cMySQL
            data_l = DDI_l(:, ddi);
            
            % Temp code: build table from current data properties
-           tbl = table(objDD.DateTime_UTC(data_l)',...
-               objDD.Speed_Index(data_l)', ...
-               'VariableNames', {'DateTime_UTC', 'Speed_Index'});
+%            tbl = table(objDD.DateTime_UTC(data_l)',...
+%                objDD.Speed_Index(data_l)', ...
+%                'VariableNames', {'DateTime_UTC', 'Speed_Index'});
+           tbl = objDD.InService(data_l, :);
         end
-        
     end
     
     methods
@@ -1264,56 +1275,56 @@ classdef cVessel < cMySQL
 %            end
        end
        
-       function obj = set.DateTime_UTC(obj, dates)
-        % Set property method for DateTime_UTC
-        
-            dateFormStr = obj.DateFormStr;
-            errid = 'ShipAnalysis:InvalidDateType';
-            errmsg = ['Values representing dates must either be numeric '...
-                'MATLAB serial date values, strings representing those '...
-                'values or a cell array of strings representing those '...
-                'values.'];
-            
-            if iscell(dates)
-                
-                try dates = char(dates);
-                    
-                catch e
-                    
-                    try allNan_l = all(cellfun(@isnan, dates));
-
-                        if allNan_l
-                            dates = [dates{:}];
-                        end
-
-                    catch ee
-                        
-                        error(errid, errmsg);
-                    end
-                end
-            end
-            
-            if ischar(dates)
-                date_v = datenum(char(dates), dateFormStr);
-            elseif isnumeric(dates)
-                date_v = dates;
-            else
-                error(errid, errmsg);
-            end
-            obj.DateTime_UTC = date_v(:)';
-        
-       end
-       
-       function obj = set.Performance_Index(obj, per)
-           
-           obj.Performance_Index = per(:)';
-       end
-       
-       function obj = set.Speed_Index(obj, spe)
-           
-           obj.Speed_Index = spe(:)';
-       end
-       
+%        function obj = set.DateTime_UTC(obj, dates)
+%         % Set property method for DateTime_UTC
+%         
+%             dateFormStr = obj.DateFormStr;
+%             errid = 'ShipAnalysis:InvalidDateType';
+%             errmsg = ['Values representing dates must either be numeric '...
+%                 'MATLAB serial date values, strings representing those '...
+%                 'values or a cell array of strings representing those '...
+%                 'values.'];
+%             
+%             if iscell(dates)
+%                 
+%                 try dates = char(dates);
+%                     
+%                 catch e
+%                     
+%                     try allNan_l = all(cellfun(@isnan, dates));
+% 
+%                         if allNan_l
+%                             dates = [dates{:}];
+%                         end
+% 
+%                     catch ee
+%                         
+%                         error(errid, errmsg);
+%                     end
+%                 end
+%             end
+%             
+%             if ischar(dates)
+%                 date_v = datenum(char(dates), dateFormStr);
+%             elseif isnumeric(dates)
+%                 date_v = dates;
+%             else
+%                 error(errid, errmsg);
+%             end
+%             obj.DateTime_UTC = date_v(:)';
+%         
+%        end
+%        
+%        function obj = set.Performance_Index(obj, per)
+%            
+%            obj.Performance_Index = per(:)';
+%        end
+%        
+%        function obj = set.Speed_Index(obj, spe)
+%            
+%            obj.Speed_Index = spe(:)';
+%        end
+%        
        function obj = set.Variable(obj, variable)
        % Set property method for Variable
            
@@ -1322,21 +1333,21 @@ classdef cVessel < cMySQL
            
        end
        
-       function id = get.Wind_Model_ID(obj)
-           
-           id = [];
-           if ~isempty(obj.WindCoefficient)
-               
-               id = obj.WindCoefficient.Models_id;
-           end
-       end
+%        function id = get.Wind_Model_ID(obj)
+%            
+%            id = [];
+%            if ~isempty(obj.WindCoefficient)
+%                
+%                id = obj.WindCoefficient.Models_id;
+%            end
+%        end
 
        function obj = set.WindCoefficient(obj, wc)
            
            validateattributes(wc, {'cVesselWindCoefficient'}, {'scalar'});
            
            obj.WindCoefficient = wc;
-           obj.Wind_Model_ID = wc.Models_id;
+           obj.Particulars.Wind_Model_ID = wc.Models_id;
        end
        
        function model = get.Engine_Model(obj)
@@ -1449,6 +1460,13 @@ classdef cVessel < cMySQL
            validateattributes(part, {'cVesselParticulars'}, {'scalar'},...
                'cVessel.Particulars', 'Particulars');
            obj.Particulars = part;
+        end
+        
+        function obj = set.InService(obj, ins)
+            
+            validateattributes(ins, {'timetable'}, {}, ...
+                'cVessel.Particulars', 'Particulars');
+            obj.InService = ins;
         end
     end
 end

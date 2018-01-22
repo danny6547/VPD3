@@ -54,6 +54,6 @@ while obj.iterateDD
     % Assign into obj when all DD done
     if ddi == currVessel.numDDIntervals
         
-        currVessel.DryDockingPerformance = ddPer;
+        currVessel.Report.DryDockingPerformance = ddPer;
     end
 end

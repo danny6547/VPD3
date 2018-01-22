@@ -13,19 +13,19 @@ daysPerYear = 365.25;
 activity = 0.65;
 fuelCost = 300;
 
-[obj.EstimatedFuelConsumption] = deal(savings_st);
+% [obj.EstimatedFuelConsumption] = deal(savings_st);
 while obj.iterateDD
 
     [~, currVessel, ddi, vi] = obj.currentDD;
 %     obj = obj.regressions(1);
     
-    currPerf = currVessel.InServicePerformance(ddi);
+    currPerf = currVessel.Report.InServicePerformance(ddi);
     if isempty(currPerf)
         continue
     end
     
     marketAverage = 0.059;
-    speedDiff = marketAverage - currPerf.InservicePerformance;
+    speedDiff = marketAverage - currPerf.Report.InservicePerformance;
 
 %     % Second DDi is evaluation, first is reference
 %     muRef = 0.059; % nanmean(obj(1).Speed_Index);
@@ -42,5 +42,5 @@ while obj.iterateDD
 
     % Assign struct to output
     savings.DryDockInterval(ddi) = savings_st;
-    currVessel.EstimatedFuelConsumption(ddi) = savings_st;
+    currVessel.Report.EstimatedFuelConsumption(ddi) = savings_st;
 end

@@ -14,7 +14,7 @@ inserv = struct('DryDockInterval', servStruct);
 % obj = convertDate(obj); redundant function replaced with set method
 
 % Iterate over elements of data array
-[obj.InServicePerformance] = deal(servStruct);
+% [obj.InServicePerformance] = deal(servStruct);
 while obj.iterateDD
 % while ~obj.iterFinished
     
@@ -105,7 +105,7 @@ while obj.iterateDD
         servStruct.EvaluationValue = Duration_st(2).Average;
         servStruct.InservicePerformance = servStruct.ReferenceValue - servStruct.EvaluationValue;
         inserv(ddi).DryDockInterval = servStruct;
-        currVessel.InServicePerformance(ddi) = servStruct;
+        currVessel.Report.InServicePerformance(ddi) = servStruct;
 %         
 %         % Re-assign into Outputs
 %         if ddi == currVessel.numDDIntervals

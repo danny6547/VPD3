@@ -1,4 +1,4 @@
-function [ out, ddd, intd, indb] = performanceData(obj, imo, varargin)
+function [ obj, ddd, intd, indb] = performanceData(obj, imo, varargin)
 %performanceData Read ship performance data from database, over time range
 %   [out] = performanceData(imo) will read all data for the ship
 %   identified by numeric vector IMO from the database into output 
@@ -100,24 +100,35 @@ for vi = 1:numel(imo)
             
             tbl.Properties.VariableNames = {'DateTime_UTC', 'Performance_Index',...
                                     'Speed_Index'};
-            currOut = table2struct(tbl, 'ToScalar', 1);
-            [~, currOut.DateTime_UTC] = obj.sql2matlabdates(currOut.DateTime_UTC);
+%             currOut = table2struct(tbl, 'ToScalar', 1);
+            [~, tbl.DateTime_UTC] = obj.sql2matlabdates(tbl.DateTime_UTC);
+%             currOut = tbl;
+            tbl.DateTime_UTC = datetime(tbl.DateTime_UTC, 'ConvertFrom',...
+                'datenum');
+            currOut = table2timetable(tbl, 'RowTimes', 'DateTime_UTC');
             indb(vi) = true;
         else
-            
-            currOut = struct('DateTime_UTC', [],...
-                'Performance_Index', [],...
-                'Speed_Index', [],...
-                'DryDockInterval', [],...
-                'IMO_Vessel_Number', []);
+            currOut = timetable();
+%             currOut = timetable([], [], [], [], [], 'VariableNames', ...
+%                 {'DateTime_UTC', 'Performance_Index', 'Speed_Index',...
+%                 'DryDockInterval', 'IMO_Vessel_Number'});
+%             currOut = struct('DateTime_UTC', [],...
+%                 'Performance_Index', [],...
+%                 'Speed_Index', [],...
+%                 'DryDockInterval', [],...
+%                 'IMO_Vessel_Number', []);
             indb(vi) = false;
         end
         
         % Append to output
-        currOut.DryDockInterval = 1;
-        currOut.IMO_Vessel_Number = currImo;
+%         currOut.DryDockInterval = 1;
+%         currOut.IMO_Vessel_Number = repmat(int32(currImo),...
+%             max([1, height(currOut)]), 1);
 %         [~, currOut.DateTime_UTC] = obj.sql2matlabdates(currOut.DateTime_UTC);
-        out(vi) = currOut;
+
+        % Assign to obj
+        obj(vi).InService = currOut;
+%         out(vi) = currOut;
     end
     
     [~, currIntDates] = obj(1).executeIfOneOutput(1, ...

@@ -77,14 +77,14 @@ while obj.iterateDD
         
 %         activity(ii) = nan;
 %         obj(ii).Activity = activity(ii);
-        currVessel.Activity(ddi) = nan; % activity; %(ii);
+        currVessel.Report.Activity(ddi) = nan; % activity; %(ii);
     else
         
         % Calculate activity from subset
 %         activity(ii) = 1 - (sum(int_tbl.Idle_Time) / ...
 %             (max(int_tbl.Sailed_Datenum) - min(int_tbl.Arrival_Datenum)));
 %         obj(ii).Activity = activity(ii);
-        currVessel.Activity(ddi) = 1 - (sum(int_tbl.Idle_Time) / ...
+        currVessel.Report.Activity(ddi) = 1 - (sum(int_tbl.Idle_Time) / ...
             (max(int_tbl.Sailed_Datenum) - min(int_tbl.Arrival_Datenum)));
     end
 end

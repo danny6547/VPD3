@@ -109,7 +109,7 @@ while obj.iterateDD
    guarantee(vi).DryDockInterval(ddi) = guarStruct;
    if ddi == currVessel.numDDIntervals
        
-       currVessel.GuaranteeDurations = guarantee(vi).DryDockInterval;
+       currVessel.Report.GuaranteeDurations = guarantee(vi).DryDockInterval;
    end
 end
 % obj = obj.iterReset;
