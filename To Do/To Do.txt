@@ -450,3 +450,4 @@ the following cV methods need re-written to remove old dd indexing
 	cV.estimatedFuelConsumption
 	
 cV.powerIncreasePerCoating: remove method? seems redundant now we (soon will) have PowerBI comparing coatings
+# cVesselParticulars: move properties from cV to cVP

@@ -6,21 +6,13 @@ classdef cVessel < cMySQL
         
         IMO_Vessel_Number double = [];
         Name char = '';
-        Owner char = '';
-        Class = [];
-        LBP = [];
-        Engine = cVesselEngine();
-        Transverse_Projected_Area_Design = [];
-        Block_Coefficient = [];
-        Length_Overall = [];
-        Breadth_Moulded = [];
-        Draft_Design = [];
-        Anemometer_Height = [];
         
+        Particulars cVesselParticulars = cVesselParticulars();
         SpeedPower cVesselSpeedPower = cVesselSpeedPower();
         DryDockDates = cVesselDryDockDates();
         WindCoefficient = cVesselWindCoefficient();
         Displacement = cVesselDisplacement();
+        Engine = cVesselEngine();
         
         Variable = 'Speed_Index';
         Performance_Index
@@ -124,6 +116,9 @@ classdef cVessel < cMySQL
            obj(size_c{:}) = cVessel();
            imo_c = num2cell(imo);
            [obj.IMO_Vessel_Number] = deal(imo_c{:});
+           
+           parts = [obj.Particulars];
+           [parts.IMO_Vessel_Number] = deal(imo_c{:});
            return
         end
 
@@ -142,6 +137,7 @@ classdef cVessel < cMySQL
                 currField = fields2read{fi};
                 obj(ii).(currField) = shipData(ii).(currField);
                 obj(ii).IMO_Vessel_Number = imo(ii);
+                obj(ii).Particulars.IMO_Vessel_Number = imo(ii);
             end
         end
 
@@ -158,6 +154,8 @@ classdef cVessel < cMySQL
         % Read Vessel static data from DB
         try
             obj = obj.readFromTable('Vessels', 'IMO_Vessel_Number');
+            parts = obj.Particulars;
+            parts.readFromTable('Vessels', 'IMO_Vessel_Number');
         catch ee
             
             if ~strcmp(ee.identifier, 'readTable:IdentifierDataMissing')
@@ -228,8 +226,7 @@ classdef cVessel < cMySQL
        function obj = insertIntoVessels(obj)
        % insertIntoVessels Insert vessel data into table 'Vessels'.
        
-           obj.insertIntoTable('Vessels');
-       
+           obj.Particulars.insertIntoTable();
        end
        
        function obj = insertIntoSFOCCoefficients(obj)
@@ -1445,6 +1442,13 @@ classdef cVessel < cMySQL
             validateattributes(di, {'numeric'}, {'integer', '>=', 0, ...
                 'size', [1, 2]});
             obj.DDIterator = di;
+        end
+        
+        function obj = set.Particulars(obj, part)
+           
+           validateattributes(part, {'cVesselParticulars'}, {'scalar'},...
+               'cVessel.Particulars', 'Particulars');
+           obj.Particulars = part;
         end
     end
 end

@@ -88,7 +88,7 @@ classdef (Abstract) cModelName < cMySQL & handle
               errmsg = 'Model name cannot be empty';
               error(errid, errmsg);
            end
-          
+           
            tables = obj(oi).DBTable;
            for ti = 1:numel(tables)
                
