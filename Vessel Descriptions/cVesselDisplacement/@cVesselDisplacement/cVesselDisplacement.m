@@ -4,11 +4,11 @@ classdef cVesselDisplacement < cMySQL & cModelName & cVesselDisplacementConversi
     
     properties
         
+        Displacement = [];
         Draft_Mean = [];
         Trim = [];
         TPC = [];
         LCF = [];
-        Displacement = [];
     end
     
     properties(Hidden, Constant)
@@ -70,6 +70,22 @@ classdef cVesselDisplacement < cMySQL & cModelName & cVesselDisplacementConversi
         end
         obj.FluidDensity = rho;
         
+       end
+       
+       function obj = displacementInMass(obj)
+       % displacementInMass Covert displacement units to those of mass
+           
+           obj = displacementInMass@cVesselDisplacementConversion(obj, 'Displacement');
+%            newDisp_c = num2cell(newDisp_v);
+%            [obj.Displacement] = deal(newDisp_c{:});
+       end
+       
+       function obj = displacementInVolume(obj)
+       % displacementInMass Covert displacement units to those of mass
+           
+           obj = displacementInVolume@cVesselDisplacementConversion(obj, 'Displacement');
+%            newDisp_c = num2cell(newDisp_v);
+%            [obj.Displacement] = deal(newDisp_c{:});
        end
     end
     
