@@ -124,9 +124,7 @@ for fi = 1:numFiles
     % Convert Date
     if version == 3
         
-%         date_c = cellfun(@(x, y) datenum([x, ' ', y], 'dd-mm-yyyy HH:MM:SS'),...
-%             date_c, time_c, 'Uni', 0);
-        date_c = cellfun(@(x, y) datenum([x, ' ', y], 'dd/mm/yyyy HH:MM:SS'),...
+        date_c = cellfun(@(x, y) datenum([x, ' ', y], 'dd-mm-yyyy HH:MM:SS'),...
             date_c, time_c, 'Uni', 0);
     else
         
