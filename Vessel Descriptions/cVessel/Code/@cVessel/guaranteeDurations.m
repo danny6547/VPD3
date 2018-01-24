@@ -54,7 +54,7 @@ while obj.iterateDD
 %    end
    
    % Indices to data
-   dat = currTable.DateTime_UTC; % unique(datenum(currData.DateTime_UTC, 'dd-mm-yyyy'));
+   dat = currTable.datetime_utc; % unique(datenum(currData.DateTime_UTC, 'dd-mm-yyyy'));
    per = currTable.(currVessel.Variable) * 100;
    [dat, dati] = sort(dat);
    per = per(dati);
@@ -107,9 +107,10 @@ while obj.iterateDD
 %    guarantee(vi).DryDockInterval(ddi).Difference = dif;
 %    guarantee(vi).DryDockInterval(ddi).RelativeDifference = reldif;
    guarantee(vi).DryDockInterval(ddi) = guarStruct;
-   if ddi == currVessel.numDDIntervals
-       
-       currVessel.Report.GuaranteeDurations = guarantee(vi).DryDockInterval;
-   end
+   currVessel.Report.GuaranteeDurations(ddi) = guarStruct; 
+%    if ddi == currVessel.numDDIntervals
+%        
+%        currVessel.Report.GuaranteeDurations = guarantee(vi).DryDockInterval;
+%    end
 end
 % obj = obj.iterReset;

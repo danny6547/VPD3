@@ -5,7 +5,7 @@ function checkVarname(obj, varname )
     validateattributes(varname, {'char'}, {'vector'}, ...
         'inServicePerformance', 'varname', 2);
     
-    if ~ismember(varname, properties(obj))
+    if ~ismember(varname, obj.InService.Properties.VariableNames)
 
         errid = 'DB:NameUnknown';
         errmsg = 'Input VARNAME must be a field name of input struct PERSTRUCT';

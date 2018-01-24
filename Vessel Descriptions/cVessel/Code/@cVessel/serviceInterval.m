@@ -43,7 +43,7 @@ while obj.iterateDD
    
    % Get range of date numbers in days
 %    dates = obj(ii).DateTime_UTC; % datenum(currData.DateTime_UTC, 'dd-mm-yyyy');
-   dates = currTable.DateTime_UTC;
+   dates = currTable.datetime_utc;
    numdays = max(dates) - min(dates);
    dvec = datevec(numdays);
    

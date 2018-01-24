@@ -27,7 +27,7 @@ while obj.iterateDD
 %         continue;
 %     end
     
-    x = currDD_tbl.DateTime_UTC;
+    x = datenum(currDD_tbl.datetime_utc);
     y = currDD_tbl.(currObj_cv.Variable);
     
 %     x = currStruct.DateTime_UTC;

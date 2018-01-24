@@ -106,14 +106,14 @@ while obj.iterateDD
 %     
 %     % Skip if empty
 %     currObj = obj(ii);
-    if all(isnan(currObj.(currObj.Variable)))
-        continue
-    end
+%     if all(isnan(currObj.(currObj.Variable)))
+%         continue
+%     end
 
     % Index into input and get dates
 %     currDate = currObj.DateTime_UTC;
 %     currPerf = currObj.(currObj.Variable);
-    currDate = currDD_tbl.DateTime_UTC;
+    currDate = currDD_tbl.datetime_utc;
     currPerf = currDD_tbl.(currObj.Variable);
 
     % Remove duplicate date data (redundant when no duplicates in db)

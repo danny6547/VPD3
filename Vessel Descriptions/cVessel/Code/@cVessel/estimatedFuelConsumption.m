@@ -25,7 +25,7 @@ while obj.iterateDD
     end
     
     marketAverage = 0.059;
-    speedDiff = marketAverage - currPerf.Report.InservicePerformance;
+    speedDiff = marketAverage - currPerf.InservicePerformance;
 
 %     % Second DDi is evaluation, first is reference
 %     muRef = 0.059; % nanmean(obj(1).Speed_Index);

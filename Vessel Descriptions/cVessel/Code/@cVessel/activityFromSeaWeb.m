@@ -64,8 +64,8 @@ while obj.iterateDD
     % Get extents of dry-docking interval
 %     intStart = min(obj(ii).DateTime_UTC);
 %     intEnd = max(obj(ii).DateTime_UTC);
-    intStart = min(currTable.DateTime_UTC);
-    intEnd = max(currTable.DateTime_UTC);
+    intStart = min(currTable.datetime_utc);
+    intEnd = max(currTable.datetime_utc);
     
     % Find corresponding subset of table
     int_tbl = ihs_tbl(ihs_tbl.IMO_LR_IHS_No_ == currVessel.IMO_Vessel_Number & ...

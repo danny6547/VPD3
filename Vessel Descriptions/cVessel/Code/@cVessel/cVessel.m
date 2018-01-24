@@ -14,7 +14,7 @@ classdef cVessel < cMySQL
         Displacement = cVesselDisplacement();
         Engine = cVesselEngine();
         
-        Variable = 'Speed_Index';
+        Variable = 'speed_index';
 %         Performance_Index
 %         Speed_Index
 %         DateTime_UTC
@@ -143,9 +143,9 @@ classdef cVessel < cMySQL
 
         % Check that no duplicates were added when concatenating struct
         % data with that read from DB
-        index_c = 'DateTime_UTC';
-        prop_c = {'Performance_Index'...
-                'Speed_Index'};
+        index_c = 'datetime_utc';
+        prop_c = {'performance_index'...
+                'speed_index'};
         obj = obj.filterOnUniqueIndex(index_c, prop_c);
 
         % Error when inputs not recognised
@@ -226,7 +226,21 @@ classdef cVessel < cMySQL
        function obj = insertIntoVessels(obj)
        % insertIntoVessels Insert vessel data into table 'Vessels'.
        
-           obj.Particulars.insertIntoTable();
+       % If wind model given, assign id to particulars
+       wind_cvw = [obj.WindCoefficient];
+       hasWind_l = ~cellfun(@isempty, {wind_cvw.Name});
+       wind_cv = obj(hasWind_l);
+       
+       for oi = 1:numel(wind_cv)
+           
+           wind_cv(oi).Particulars.Wind_Model_ID = ...
+               wind_cv(oi).WindCoefficient.Models_id;
+       end
+       
+       % Insert
+       parts = [obj.Particulars];
+       parts.insertIntoTable();
+           
        end
        
        function obj = insertIntoSFOCCoefficients(obj)
@@ -300,7 +314,8 @@ classdef cVessel < cMySQL
                objdisp.insertIntoTable();
 
                objdisp.displacementInMass;
-               obj.Displacement = objdisp;
+               objdisp_c = num2cell(objdisp);
+               [obj.Displacement] = deal(objdisp_c{:});
            end
         end
         
@@ -418,7 +433,8 @@ classdef cVessel < cMySQL
         
         % Load performance, speed files
         tempTab = 'tempDNVPer';
-        permTab = 'DNVGLPerformanceData';
+%         permTab = 'DNVGLPerformanceData';
+        permTab = 'PerformanceData';
         delimiter_ch = '\t';
         ignore_i = 1;
         
@@ -819,7 +835,7 @@ classdef cVessel < cMySQL
             end
         end
         
-        function [rawStruc, rawTable] = rawData(obj)
+        function [obj, rawTable] = rawData(obj, varargin)
         % rawData Get raw data for this vessel at this dry-docking interval
         
 %             % Get raw table name, performanceData inputs
@@ -861,6 +877,31 @@ classdef cVessel < cMySQL
 %             % concatenate them, return as vector of tables
 %             rawTable = struct2table(rawStruc);
             
+            cols = '*';
+            if nargin > 1 && ~isempty(varargin{1})
+                
+                cols = varargin{1};
+                cols = validateCellStr(cols);
+            end
+            
+            start_l = false;
+            if nargin > 2 && ~isempty(varargin{2})
+                
+                start_dt = varargin{2};
+                startCondition_sql = ['DateTime_UTC >= ''',...
+                    datestr(start_dt, 'yyyy-mm-dd HH:MM:SS''')];
+                start_l = true;
+            end
+            
+            end_l = false;
+            if nargin > 3 && ~isempty(varargin{3})
+                
+                end_dt = varargin{3};
+                endCondition_sql = ['DateTime_UTC <= ''',...
+                    datestr(end_dt, 'yyyy-mm-dd HH:MM:SS''')];
+                end_l = true;
+            end
+            
             for oi = 1:numel(obj)
                 
                 % Get dry dock interval dates
@@ -868,15 +909,46 @@ classdef cVessel < cMySQL
                 
                 % Read from rawdata table with dates
                 tab = 'RawData';
-                cols = '*';
                 where_sql = ['IMO_Vessel_Number = ', ...
                     num2str(obj(oi).IMO_Vessel_Number)];
+                if start_l
+                    [~, where_sql] = obj(oi).combineSQL(where_sql, 'AND', ...
+                        startCondition_sql);
+                end
+                if end_l
+                    [~, where_sql] = obj(oi).combineSQL(where_sql, 'AND', ...
+                        endCondition_sql);
+                end
+                
+                % Columns read out must include date time
+                if ~isequal(cols, '*')
+                    cols = union(cols, 'datetime_utc');
+                end
+                
+                % Read data and convert to timetable
                 [~, rawTable] = obj(oi).select(tab, cols, where_sql);
+                rawTable.datetime_utc = datetime(rawTable.datetime_utc,...
+                    'ConvertFrom', 'datenum');
+                rawTable = table2timetable(rawTable, 'RowTimes', ...
+                    'datetime_utc');
                 
-                % Convert to struct
-                rawStruc = table2struct(rawTable);
+                % Remove variables which don't support empty values for
+                % auto-filling
+                rawVars = rawTable.Properties.VariableNames;
+                if ismember('imo_vessel_number', rawVars)
+                    
+                    rawTable.imo_vessel_number = [];
+                end
+                if ismember('id', rawVars)
+                    
+                    rawTable.id = [];
+                end
                 
-                % Join to performance data
+                % Get out performance data again, so table is re-created
+                obj(oi) = obj(oi).performanceData(obj(oi).IMO_Vessel_Number);
+                
+                % Synchronise raw table with InService data
+                obj(oi).InService = synchronize(obj(oi).InService, rawTable);
             end
         end
     end
@@ -964,8 +1036,8 @@ classdef cVessel < cMySQL
            vars = {obj.Variable};
 %            skip = arrayfun(@(x, y) isempty(x.(y{:})) || ...
 %                 all(isnan(x.(y{:}))), obj, vars);
-           skip = arrayfun(@(x, y) isempty(x.InService(y{:})) || ...
-                all(isnan(x.InService(y{:}))), obj, vars);
+           skip = arrayfun(@(x, y) isempty(x.InService.(y{:})) || ...
+                all(isnan(x.InService.(y{:}))), obj, vars);
        end
        
         function obj = updateWindResistanceRelative(obj)
@@ -1112,11 +1184,11 @@ classdef cVessel < cMySQL
 %             nDDi = obj(oi).numDDIntervals; % numel(obj(oi).DryDockDates) + 1;
             nDDi = numel(obj(oi).DryDockDates) + 1;
             if isempty(obj(oi).DryDockDates)
-                mat = true(numel(obj(oi).InService.DateTime_UTC), 1);
+                mat = true(numel(obj(oi).InService.datetime_utc), 1);
                 continue
             end
-            mat = false(numel(obj(oi).InService.DateTime_UTC), nDDi);
-            currDates = obj(oi).InService.DateTime_UTC;
+            mat = false(numel(obj(oi).InService.datetime_utc), nDDi);
+            currDates = obj(oi).InService.datetime_utc;
             
             for di = 1:nDDi
                 
@@ -1244,6 +1316,8 @@ classdef cVessel < cMySQL
 %                objDD.Speed_Index(data_l)', ...
 %                'VariableNames', {'DateTime_UTC', 'Speed_Index'});
            tbl = objDD.InService(data_l, :);
+           tbl = timetable2table(tbl);
+           tbl.datetime_utc = datenum(tbl.datetime_utc);
         end
     end
     
@@ -1346,8 +1420,12 @@ classdef cVessel < cMySQL
            
            validateattributes(wc, {'cVesselWindCoefficient'}, {'scalar'});
            
+           if ~isempty(wc.Name)
+               
+               obj.Particulars.Wind_Model_ID = wc.Models_id;
+           end
+           
            obj.WindCoefficient = wc;
-           obj.Particulars.Wind_Model_ID = wc.Models_id;
        end
        
        function model = get.Engine_Model(obj)
@@ -1459,6 +1537,10 @@ classdef cVessel < cMySQL
            
            validateattributes(part, {'cVesselParticulars'}, {'scalar'},...
                'cVessel.Particulars', 'Particulars');
+           if ~isempty(obj.IMO_Vessel_Number)
+               
+               part.IMO_Vessel_Number = obj.IMO_Vessel_Number;
+           end
            obj.Particulars = part;
         end
         

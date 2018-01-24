@@ -106,7 +106,7 @@ while obj.iterateDD
        
        % Plot data
 %        hold on
-       xdata = currDD_tbl.DateTime_UTC; % datenum(currData.DateTime_UTC, 'dd-mm-yyyy');
+       xdata = currDD_tbl.datetime_utc; % datenum(currData.DateTime_UTC, 'dd-mm-yyyy');
        ydata = currDD_tbl.(varname) * 100;
        pi_line = line(currAx, xdata, ydata);
 %        hold off

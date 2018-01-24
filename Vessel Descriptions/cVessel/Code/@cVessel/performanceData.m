@@ -98,14 +98,14 @@ for vi = 1:numel(imo)
             additionalInputs_c]);
         if ~isempty(tbl)
             
-            tbl.Properties.VariableNames = {'DateTime_UTC', 'Performance_Index',...
-                                    'Speed_Index'};
+%             tbl.Properties.VariableNames = {'DateTime_UTC', 'Performance_Index',...
+%                                     'Speed_Index'};
 %             currOut = table2struct(tbl, 'ToScalar', 1);
-            [~, tbl.DateTime_UTC] = obj.sql2matlabdates(tbl.DateTime_UTC);
+            [~, tbl.datetime_utc] = obj.sql2matlabdates(tbl.datetime_utc);
 %             currOut = tbl;
-            tbl.DateTime_UTC = datetime(tbl.DateTime_UTC, 'ConvertFrom',...
+            tbl.datetime_utc = datetime(tbl.datetime_utc, 'ConvertFrom',...
                 'datenum');
-            currOut = table2timetable(tbl, 'RowTimes', 'DateTime_UTC');
+            currOut = table2timetable(tbl, 'RowTimes', 'datetime_utc');
             indb(vi) = true;
         else
             currOut = timetable();
