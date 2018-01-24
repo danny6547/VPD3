@@ -54,6 +54,12 @@ classdef cDB < cMySQL
                               };
     end
     
+    properties(Hidden)
+        
+       TopLevelDir = fileparts(fileparts(fileparts(mfilename('fullpath'))));
+        
+    end
+    
     methods
     
        function obj = cDB()
@@ -80,7 +86,7 @@ classdef cDB < cMySQL
        
 %        topleveldir = ['C:\Users\damcl\OneDrive - Hempel Group\Documents\'...
 %            'SQL\tests\EcoInsight Test Scripts'];
-       topleveldir = fileparts(fileparts(fileparts(mfilename('fullpath'))));
+       topleveldir = obj.TopLevelDir; % fileparts(fileparts(fileparts(mfilename('fullpath'))));
        if nargin > 2
            topleveldir = varargin{1};
            validateattributes(topleveldir, {'char'}, {'vector'}, 'create', ...
@@ -133,7 +139,7 @@ classdef cDB < cMySQL
                                 'filterReferenceConditions.sql'
                                 'filterSFOCOutOfRange.sql'
                                 'filterSpeedPowerLookup.sql'
-                                'insertFromDNVGLRawIntoRaw.sql'
+                                %'insertFromDNVGLRawIntoRaw.sql'
                                 'insertIntoPerformanceData.sql'
                                 'isBrakePowerAvailable.sql'
                                 'isShaftPowerAvailable.sql'
@@ -175,23 +181,23 @@ classdef cDB < cMySQL
            createFiles2Dir_ch = 'Create Tables';
            createFiles2_c = {...
                         'createDDDtable.sql'
-                        'createDNVGLPerformanceData.sql'
-                        'createDNVGLRawTable.sql'
-                        'createDNVGLRawTempTable.sql'
+                        %'createDNVGLPerformanceData.sql'
+                        %'createDNVGLRawTable.sql'
+                        %'createDNVGLRawTempTable.sql'
                         'createRawData.sql'
                         'createVesselCoating.sql'
                     };
            createFiles2_c = cellfun(@(x) fullfile(topleveldir, createFiles2Dir_ch, x), ...
                createFiles2_c, 'Uni', 0);
 
-           dnvglrawDir_ch = '\DNVGL Raw';
-
-           createFiles3_c = {...
-               'convertDNVGLRawToRawData.sql'
-               'createTempBunkerDeliveryNote.sql'
-               };
-           createFiles3_c = cellfun(@(x) fullfile(topleveldir, dnvglrawDir_ch, x), ...
-               createFiles3_c, 'Uni', 0);
+%            dnvglrawDir_ch = '\DNVGL Raw';
+% 
+%            createFiles3_c = {...
+%                'convertDNVGLRawToRawData.sql'
+%                'createTempBunkerDeliveryNote.sql'
+%                };
+%            createFiles3_c = cellfun(@(x) fullfile(topleveldir, dnvglrawDir_ch, x), ...
+%                createFiles3_c, 'Uni', 0);
 
            createFiles4_c = {['C:\Users\damcl\OneDrive - Hempel Group\'...
                'Documents\SQL\tests\EcoInsight Test Scripts\Accessing Database'...
@@ -205,7 +211,7 @@ classdef cDB < cMySQL
            createFiles5_c = cellfun(@(x) fullfile(topleveldir, marorkaDir_ch, x), ...
                createFiles5_c, 'Uni', 0);
 
-           createFiles_c = [createFiles1_c; createFiles2_c; createFiles3_c;...
+           createFiles_c = [createFiles1_c; createFiles2_c;...
                createFiles4_c; createFiles5_c];
 
            % Create procedures for creating tables
@@ -227,9 +233,9 @@ classdef cDB < cMySQL
                            'createBunkerDeliveryNote'
                            'createvesselCoating'
                            'createrawdata'
-                           'createDNVGLRawTempTable'
-                           'createDNVGLRaw'
-                           'createDNVGLPerformanceData'
+%                            'createDNVGLRawTempTable'
+%                            'createDNVGLRaw'
+%                            'createDNVGLPerformanceData'
                            'createDryDockDates'
                            'createTempChauvenetFilter'
                            'createvesselspeedpowermodel'
@@ -240,30 +246,30 @@ classdef cDB < cMySQL
 
        end
        
-       if obj.LoadPerformance
-           
-           % Insert performance data
-           allPerformanceFile_ch = ['L:\Project\MWB-Fuel efficiency\Hull '...
-               'and propeller performance\External Vessel Data\DNV-GL\'...
-               'Performance\Download.xlsx'];
-           obj_ves = cVessel();
-           obj_ves.loadDNVGLPerformance(allPerformanceFile_ch);
-%            run(['C:\Users\damcl\OneDrive - Hempel Group\Documents\SQL\tests\'...
-%                'EcoInsight Test Scripts\Vessel Data\Load_All_DNVGL_Performance.m']);
-       end
+%        if obj.LoadPerformance
+%            
+%            % Insert performance data
+%            allPerformanceFile_ch = ['L:\Project\MWB-Fuel efficiency\Hull '...
+%                'and propeller performance\External Vessel Data\DNV-GL\'...
+%                'Performance\Download.xlsx'];
+%            obj_ves = cVessel();
+%            obj_ves.loadDNVGLPerformance(allPerformanceFile_ch);
+% %            run(['C:\Users\damcl\OneDrive - Hempel Group\Documents\SQL\tests\'...
+% %                'EcoInsight Test Scripts\Vessel Data\Load_All_DNVGL_Performance.m']);
+%        end
        
        % Insert raw data, bunker delivery note
        if obj.LoadRaw
            
-           rawDirect = 'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\External Vessel Data\DNV-GL\Raw';
-           rawFiles_st = rdir([rawDirect, '\**\*.csv']);
-           rawFiles_c = {rawFiles_st.name};
-           bunkerFile_ch = 'C:\Users\damcl\OneDrive - Hempel Group\Documents\temp DNVGL download 311017\Bunker Reporting\2 Bunker reporting 2017-10-31 09_39.csv';
-           
-           obj_ves = cVessel();
-           obj_ves.Database = name;
-           obj_ves = obj_ves.insertBunkerDeliveryNoteDNVGL(bunkerFile_ch);
-           obj_ves.loadDNVGLRaw(rawFiles_c);
+%            rawDirect = 'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\External Vessel Data\DNV-GL\Raw';
+%            rawFiles_st = rdir([rawDirect, '\**\*.csv']);
+%            rawFiles_c = {rawFiles_st.name};
+%            bunkerFile_ch = 'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\External Vessel Data\DNV-GL\Bunker Reporting\2 Bunker reporting 2017-10-31 09_39.csv';
+%            
+%            obj_ves = cVessel();
+%            obj_ves.Database = name;
+%            obj_ves = obj_ves.insertBunkerDeliveryNoteDNVGL(bunkerFile_ch);
+%            obj_ves.loadDNVGLRaw(rawFiles_c);
 
             % Insert time-series data
             vess = cVessel();
@@ -393,6 +399,101 @@ classdef cDB < cMySQL
        
        obj = obj.hullPer;
        obj.create(obj.Database);
+           
+       end
+       
+       function createDNVGL(obj)
+       % Create database for hull performance data provided by DNVGL
+       
+       % Assign DB?
+       database = 'dnvgl';
+       obj.Database = database;
+       
+       if obj.BuildSchema
+           
+           % Create tables
+           topleveldir = obj.TopLevelDir;
+
+           ISODir = 'ISO 19030';
+           ISO19030Create_c = {'createPerformanceData.sql'
+                                'createBunkerDeliveryNote.sql'
+                                'createTempRaw.sql'
+                                'insertFromDNVGLRawIntoRaw.sql'
+                                'updateFromBunkerNote.sql'
+                                'knots2mps.sql'
+                                'bar2Pa.sql'};
+           createFiles1_c = cellfun(@(x) fullfile(topleveldir, ISODir, x), ...
+               ISO19030Create_c, 'Uni', 0);
+
+           createFiles2Dir_ch = 'Create Tables';
+           createFiles2_c = {...
+                        'createDNVGLRawTable.sql'
+                        'createDNVGLRawTempTable.sql'
+                        'createRawData.sql'
+                    };
+           createFiles2_c = cellfun(@(x) fullfile(topleveldir, createFiles2Dir_ch, x), ...
+               createFiles2_c, 'Uni', 0);
+
+           dnvglrawDir_ch = '\DNVGL Raw';
+           createFiles3_c = {...
+               'convertDNVGLRawToRawData.sql'
+               'createTempBunkerDeliveryNote.sql'
+               };
+           createFiles3_c = cellfun(@(x) fullfile(topleveldir, dnvglrawDir_ch, x), ...
+               createFiles3_c, 'Uni', 0);
+
+           % Create procedures for creating tables
+           createFiles_c = [createFiles1_c; createFiles2_c; createFiles3_c];
+           obj.source(createFiles_c);
+
+           % Create tables
+           createProc_c = {...
+                           'createBunkerDeliveryNote'
+                           'createDNVGLRawTempTable'
+                           'createDNVGLRaw'
+                           'createPerformanceData'
+                           'createrawdata'
+                           };
+
+           % Check there are as many proc as files
+           cellfun(@(x) obj.call(x), createProc_c, 'Uni', 0);
+       end
+       
+       if obj.LoadPerformance
+           
+           % Insert performance data
+           allPerformanceFile_ch = ['L:\Project\MWB-Fuel efficiency\Hull '...
+               'and propeller performance\External Vessel Data\DNV-GL\'...
+               'Performance\Download.xlsx'];
+           obj_ves = cVessel();
+           obj_ves.Database = database;
+           obj_ves.loadDNVGLPerformance(allPerformanceFile_ch);
+       end
+       
+       if obj.LoadRaw
+           
+           % Load Raw
+           rawDirect = 'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\External Vessel Data\DNV-GL\Raw';
+           rawFiles_st = rdir([rawDirect, '\**\*.csv']);
+           rawFiles_c = {rawFiles_st.name};
+           bunkerFile_ch = 'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\External Vessel Data\DNV-GL\Bunker Reporting\2 Bunker reporting 2017-10-31 09_39.csv';
+           
+           obj_ves = cVessel();
+           obj_ves.Database = database;
+           obj_ves = obj_ves.insertBunkerDeliveryNoteDNVGL(bunkerFile_ch);
+           obj_ves.loadDNVGLRaw(rawFiles_c);
+           
+           obj_ves.drop('table', 'tempraw');
+           obj_ves.drop('table', 'tempbunkerdeliverynote');
+       end
+        
+       end
+       
+       function createForce(obj)
+       % Create database for hull performance data provided by Force Tech.
+       
+           
+           
            
        end
     end
