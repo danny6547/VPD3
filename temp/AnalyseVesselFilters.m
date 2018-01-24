@@ -50,6 +50,9 @@ if ~inTab
         combineCSVExportScript(rawFile, calculatedFile, outFile, imo);
     end
     
+    % Check outfile has only columns needed
+    checkCSVExportScript(outFile, imo);
+    
     % Load exported file
     obj.loadCSVExportScript(outFile, imo);
 end
