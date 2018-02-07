@@ -1,4 +1,4 @@
-function [obj, inserv ] = inServicePerformance(obj, varargin)
+function [obj, inserv, dur ] = inServicePerformance(obj, varargin)
 %inServicePerformance In-service performance as defined by ISO 190303-2.
 %   Detailed explanation goes here
 
@@ -6,6 +6,8 @@ function [obj, inserv ] = inServicePerformance(obj, varargin)
 servStruct = struct('InservicePerformance', [], 'ReferenceDuration', [],...
     'ReferenceValue', [], 'EvaluationDuration', [], 'EvaluationValue', []);
 inserv = struct('DryDockInterval', servStruct);
+dur = struct('Average', [], 'StartDate', [], 'EndDate', [],...
+    'StdOfMean', [], 'Count', []);
 % sizeStruct = size(obj);
 
 % Inputs
@@ -97,6 +99,7 @@ while obj.iterateDD
         Duration_st(2).Count = counts(2);
         Duration_st(2).StartDate = startDate(2);
         Duration_st(2).EndDate = endDate(2);
+        dur(end+1:end+2) = Duration_st;
         
         % Calculate Performance
         servStruct.ReferenceDuration = Duration_st(1).EndDate - Duration_st(1).StartDate;
@@ -113,4 +116,5 @@ while obj.iterateDD
 %         end
     end
 end
+dur(1) = [];
 % obj = obj.iterReset;

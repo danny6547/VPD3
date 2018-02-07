@@ -7,12 +7,12 @@ classdef cVessel < cMySQL
         IMO_Vessel_Number double = [];
         Name char = '';
         
-        Particulars cVesselParticulars = cVesselParticulars();
-        SpeedPower cVesselSpeedPower = cVesselSpeedPower();
-        DryDockDates = cVesselDryDockDates();
-        WindCoefficient = cVesselWindCoefficient();
-        Displacement = cVesselDisplacement();
-        Engine = cVesselEngine();
+        Particulars = [];
+        SpeedPower = [];
+        DryDockDates = [];
+        WindCoefficient = [];
+        Displacement = [];
+        Engine = [];
         
         Variable = 'speed_index';
 %         Performance_Index
@@ -21,7 +21,7 @@ classdef cVessel < cMySQL
         TimeStep double = 1;
         InService;
         
-        Report cVesselReport = cVesselReport();
+        Report = [];
     end
     
     properties(Hidden)
@@ -29,7 +29,7 @@ classdef cVessel < cMySQL
         DateFormStr char = 'dd/mm/yyyy HH:MM:SS';
         IterFinished = false;
         DryDockIndexDB = [];
-        DDIterator = [0, 1];
+        DDIterator = [0, 1, 0];
     end
     
     properties(Dependent)
@@ -55,8 +55,11 @@ classdef cVessel < cMySQL
        function obj = cVessel(varargin)
        % Class constructor. Construct new object, assign array of IMO.
        
+       % Initialise
+       
         if nargin == 0
 
+           obj = obj.assignDefaults();
            return
         end
 
@@ -87,9 +90,14 @@ classdef cVessel < cMySQL
            validateattributes(imo, {'numeric'},...
               {'positive', 'real', 'integer'}, 'cVessel constructor',...
               'IMO', 1);
+           
+           % Expand into array
+           obj = [obj, arrayfun(@(x) cVessel(), nan([1, numel(imo)-1]))];
+          
            [obj, ~, ~, indb] = obj.performanceData(readInputs_c{:});
         end
 
+        obj = obj.assignDefaults();
         if shipData_l && ~imo_l
 
            shipData = shipDataInput;
@@ -947,8 +955,14 @@ classdef cVessel < cMySQL
                 % Get out performance data again, so table is re-created
                 obj(oi) = obj(oi).performanceData(obj(oi).IMO_Vessel_Number);
                 
-                % Synchronise raw table with InService data
-                obj(oi).InService = synchronize(obj(oi).InService, rawTable);
+                if isempty(obj(oi).InService)
+                    
+                    obj(oi).InService = rawTable;
+                else
+                    
+                    % Synchronise raw table with InService data
+                    obj(oi).InService = synchronize(obj(oi).InService, rawTable);
+                end
             end
         end
     end
@@ -1228,9 +1242,17 @@ classdef cVessel < cMySQL
         function iter = iterateDD(obj)
         % iterateDD Return for current dry docking interval while iterating
            
+           % Don't iterate if no data given
+           noData_l = arrayfun(@(x) isempty(x.InService), obj);
+           if all(noData_l(:))
+               
+               iter = false;
+               return
+           end
+        
            % Get current iteration
            currIdx = obj(1).DDIterator;
-           currDDi = currIdx(1);
+           currDDi = currIdx(3);
            currVessel = currIdx(2);
            
            iterFinished = currVessel == numel(obj) && ...
@@ -1248,6 +1270,7 @@ classdef cVessel < cMySQL
            currIdx = obj(1).DDIterator;
            currDDI = currIdx(1);
            currVessel = currIdx(2);
+           nextDDINonEmpty_i = currIdx(3);
            
            % Check for data in next DD interval
            DDI_m = obj(currVessel).DDIntervalsFromDates;
@@ -1261,6 +1284,7 @@ classdef cVessel < cMySQL
                
                % Continue looking for data in next vessels
                nextVessel = currVessel + 1;
+               nextDDINonEmpty_i = 0;
                dataFound_l = false;
                while nextVessel <= numel(obj)
                    
@@ -1277,19 +1301,23 @@ classdef cVessel < cMySQL
                % If no DD intervals remain with data, end iteration
                if ~dataFound_l
                    
-                   nextVessel = numel(obj) + 1;
-                   nextDDI_i = 1;
+%                    nextVessel = numel(obj) + 1;
+%                    nextDDI_i = 1;
+                   nextVessel = numel(obj);
+                   nextDDI_i = obj(currVessel).numDDIntervals;
                end
            end
-           currIdx = [nextDDI_i(1), nextVessel];
+           nextDDIEmpty_i = nextDDI_i(1);
+           nextDDINonEmpty_i = nextDDINonEmpty_i + 1;
+           currIdx = [nextDDIEmpty_i, nextVessel, nextDDINonEmpty_i];
            
-            % Assign
+           % Assign
            [obj.DDIterator] = deal(currIdx);
         end
         
         function obj = resetIteratorDD(obj)
             
-            startIdx = [0, 1];
+            startIdx = [0, 1, 0];
             [obj.DDIterator] = deal(startIdx);
         end
         
@@ -1303,13 +1331,14 @@ classdef cVessel < cMySQL
            refIndex = 1;
            
            % Get current iterators
-           ddi = obj(refIndex).DDIterator(1);
+           ddiNonEmpty_i = obj(refIndex).DDIterator(1);
            vi = obj(refIndex).DDIterator(2);
+           ddi = obj(refIndex).DDIterator(3);
            
            % Get corresponding logical array
            objDD = obj(vi);
            DDI_l = objDD.DDIntervalsFromDates;
-           data_l = DDI_l(:, ddi);
+           data_l = DDI_l(:, ddiNonEmpty_i);
            
            % Temp code: build table from current data properties
 %            tbl = table(objDD.DateTime_UTC(data_l)',...
@@ -1318,6 +1347,21 @@ classdef cVessel < cMySQL
            tbl = objDD.InService(data_l, :);
            tbl = timetable2table(tbl);
            tbl.datetime_utc = datenum(tbl.datetime_utc);
+        end
+        
+        function obj = assignDefaults(obj)
+            
+            % Iterate and assign
+            for oi = 1:numel(obj)
+                
+                obj(oi).DryDockDates = cVesselDryDockDates();
+                obj(oi).Particulars = cVesselParticulars();
+                obj(oi).SpeedPower = cVesselSpeedPower();
+                obj(oi).Report = cVesselReport();
+                obj(oi).WindCoefficient = cVesselWindCoefficient();
+                obj(oi).Displacement = cVesselDisplacement();
+                obj(oi).Engine = cVesselEngine();
+            end
         end
     end
     
@@ -1334,6 +1378,7 @@ classdef cVessel < cMySQL
                 IMO = [];
            end
            obj.IMO_Vessel_Number = IMO;
+           obj.Particulars.IMO_Vessel_Number = IMO;
            
 %            % Apply to Speed, Power
 %            if ~isempty(IMO)
@@ -1529,7 +1574,7 @@ classdef cVessel < cMySQL
         function obj = set.DDIterator(obj, di)
             
             validateattributes(di, {'numeric'}, {'integer', '>=', 0, ...
-                'size', [1, 2]});
+                'size', [1, 3]});
             obj.DDIterator = di;
         end
         

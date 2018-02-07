@@ -116,11 +116,11 @@ while obj.iterateDD
        pi_line.MarkerFaceColor = pi_line.Color;
        dataLines(end+1) = pi_line;
        
-       %  
-       t = annotation('textbox');
-        sz = t.FontSize;
-        t.FontSize = 12;
-        t.String = 'DD Props';
+%        %  
+%        t = annotation('textbox');
+%         sz = t.FontSize;
+%         t.FontSize = 12;
+%         t.String = 'DD Props';
        
        % Plot averages
        if avg_l

@@ -134,15 +134,15 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
                 ylabel('Power (kW)');
                 title('Speed against Power data and fit');
                 
-                if ~isempty(obj(oi).Coefficients)
+                if ~isempty(obj(oi).Coefficient_A) && ~isempty(obj(oi).Coefficient_B)
                     
                     y = linspace(min(obj(oi).Power), max(obj(oi).Power), 1e3);
-                    coeffs = obj(oi).Coefficients;
+                    coeffs = [obj(oi).Coefficient_A, obj(oi).Coefficient_B];
 %                     x = polyval(obj(oi).Coefficients, y);
 
                     switch obj(oi).Model
                         
-                        case 'Exponential'
+                        case 'exponential'
                             
                             x = (y / exp(coeffs(2))).^(1/coeffs(1));
                         otherwise
@@ -251,7 +251,8 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
        r2 = arrayfun(@(x) mean(x.R_Squared), obj)';
 %        tr = [obj.Trim]';
        tr = arrayfun(@(x) mean(x.Trim), obj)';
-       diM3 = (obj.displacementInVolume())'; 
+       obj = obj.displacementInVolume('Displacement'); 
+       diM3 = arrayfun(@(x) mean(x.Displacement), obj)';
        
        % Concat
        mat = [a, b, r2, minP, maxP, tr, diM3];

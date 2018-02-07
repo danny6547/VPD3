@@ -26,7 +26,7 @@ end
 % Create object
 obj = cVessel();
 obj.IMO_Vessel_Number = imo;
-obj.LBP = lbp;
+obj.Particulars.LBP = lbp;
 obj.insertIntoVessels();
 
 % Check if vessel in DB
@@ -81,24 +81,28 @@ else
     disp(msg);
 end
 
-% Assign new table to object
-ddStart = datenum(DDStart, 'dd-mm-yyyy');
-ddEnd = datenum(DDEnd, 'dd-mm-yyyy');
-beforeDD_l = tbl.datetime_utc < ddStart;
-afterDD_l = tbl.datetime_utc > ddEnd;
+% % Assign new table to object
+% ddStart = datenum(DDStart, 'dd-mm-yyyy');
+% ddEnd = datenum(DDEnd, 'dd-mm-yyyy');
+% beforeDD_l = tbl.datetime_utc < ddStart;
+% afterDD_l = tbl.datetime_utc > ddEnd;
+% 
+% dd2 = any(beforeDD_l) && any(afterDD_l);
+% if dd2
+%     
+%     obj(1, 1).DateTime_UTC = tbl.datetime_utc(beforeDD_l);
+%     obj(1, 1).Speed_Index = tbl.speed_loss(beforeDD_l);
+%     obj(2, 1).DateTime_UTC = tbl.datetime_utc(afterDD_l);
+%     obj(2, 1).Speed_Index = tbl.speed_loss(afterDD_l);
+% else
+%     
 
-dd2 = any(beforeDD_l) && any(afterDD_l);
-if dd2
-    
-    obj(1, 1).DateTime_UTC = tbl.datetime_utc(beforeDD_l);
-    obj(1, 1).Speed_Index = tbl.speed_loss(beforeDD_l);
-    obj(2, 1).DateTime_UTC = tbl.datetime_utc(afterDD_l);
-    obj(2, 1).Speed_Index = tbl.speed_loss(afterDD_l);
-else
-    
-    obj.DateTime_UTC = tbl.datetime_utc;
-    obj.Speed_Index = tbl.speed_loss;
-end
+ddd = cVesselDryDockDates();
+ddd = ddd.assignDates(DDStart, DDEnd, 'dd-mm-yyyy');
+obj.DryDockDates = ddd;
+obj.InService = table2timetable(tbl);
+%     obj.InService.Speed_Index = tbl.speed_loss;
+% end
 
 %% Recalculate report parameters
 obj = obj.inServicePerformance();
@@ -107,8 +111,8 @@ obj = obj.inServicePerformance();
 [obj, f_h] = obj.plotPerformanceData();
 set(f_h(end), 'WindowStyle', 'Docked');
 
-if dd2
-    
-    slop = reg_st(2).Coefficients(1) * 365.25 * 1e2
-    ddImprovement = (avg_st(2).Duration.Average - avg_st(1).Duration.Average) * 1e2
-end
+% if dd2
+%     
+%     slop = reg_st(2).Coefficients(1) * 365.25 * 1e2
+%     ddImprovement = (avg_st(2).Duration.Average - avg_st(1).Duration.Average) * 1e2
+% end

@@ -492,9 +492,72 @@ classdef cDB < cMySQL
        function createForce(obj)
        % Create database for hull performance data provided by Force Tech.
        
+       % Assign DB?
+       database = 'force';
+       obj.Database = database;
+       
+       if obj.BuildSchema
            
+           % Create tables
+           topleveldir = obj.TopLevelDir;
            
+           ISODir = 'ISO 19030';
+           ISO19030Create_c = {'knots2mps'
+                               'rad2deg'
+                                };
+           createFiles1_c = cellfun(@(x) fullfile(topleveldir, ISODir, x), ...
+               ISO19030Create_c, 'Uni', 0);
            
+           ForceDir = 'Force Technologies';
+           force_c = {'createForceRaw'
+                      'createPerformanceData'
+                               };
+           createFiles2_c = cellfun(@(x) fullfile(topleveldir, ForceDir, x), ...
+               force_c, 'Uni', 0);
+           
+           createDir = 'Create Tables';
+           create_c = {'createRawData'
+                               };
+           createFiles3_c = cellfun(@(x) fullfile(topleveldir, createDir, x), ...
+               create_c, 'Uni', 0);
+           
+           % Create procedures to create tables and functions
+           createProc_c = [createFiles3_c; createFiles2_c; createFiles1_c];
+           createProc_c = strcat(createProc_c, '.sql');
+           obj.source(createProc_c);
+           
+           % Call procedures to create tables and functions
+           [~, procNames_c, ~] = cellfun(@fileparts, createProc_c, 'Uni', 0);
+           cellfun(@(x) obj.call(x), procNames_c, 'Uni', 0);
+       end
+       
+       % Insert raw data
+       if obj.LoadRaw || obj.LoadPerformance
+           
+           % Load Raw
+           rawDirect = ['L:\Project\MWB-Fuel efficiency\Hull and propeller'...
+               ' performance\External Vessel Data\Force\Raw'];
+           rawFiles_st = rdir([rawDirect, '\**\*.csv']);
+           rawFiles_c = {rawFiles_st.name};
+           
+           obj_ves = cVessel();
+           obj_ves.Database = database;
+           obj_ves.loadForceTech(rawFiles_c);
+           
+%            obj_ves.drop('table', 'tempforceraw');
+       end
+       
+%        % Insert Performance
+%        if obj.LoadPerformance
+%            
+%            % Insert performance data
+%            allPerformanceFile_ch = ['L:\Project\MWB-Fuel efficiency\Hull '...
+%                'and propeller performance\External Vessel Data\DNV-GL\'...
+%                'Performance\Download.xlsx'];
+%            obj_ves = cVessel();
+%            obj_ves.Database = database;
+%            obj_ves.loadForcePerformance(allPerformanceFile_ch);
+%        end
        end
     end
 end

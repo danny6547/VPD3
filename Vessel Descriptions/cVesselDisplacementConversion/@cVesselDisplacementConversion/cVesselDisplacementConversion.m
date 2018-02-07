@@ -24,8 +24,8 @@ classdef cVesselDisplacementConversion < handle
        function obj = displacementInVolume(obj, prop)
        % displacementInVolume Convert displacement from mass to volume
        
-           prop = validateCellStr(prop);
-           numProps = numel(prop);
+       prop = validateCellStr(prop);
+       numProps = numel(prop);
         for oi = 1:numel(obj)
            for pi = 1:numProps
 

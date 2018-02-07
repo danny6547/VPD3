@@ -128,7 +128,7 @@ for fi = 1:numFiles
             date_c, time_c, 'Uni', 0);
     else
         
-        date_c = cellfun(@(x) datenum(x, 'dd/mm/yyyy'), date_c, 'Uni', 0);
+        date_c = cellfun(@(x) datenum(x, 'dd-mm-yyyy'), date_c, 'Uni', 0);
     end
     dates = [date_c{:}];
     dates = dates(:);

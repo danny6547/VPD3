@@ -13,9 +13,9 @@ for fi = 1:numel(filename)
     
     currFile = filename{fi};
     for si = 1:numel(sheetname)
-
+        
         currSheet = sheetname{si};
-
+        
         p = inputParser();
         p.addParameter('firstRowIdx', 2);
         p.addParameter('fileColID', [1, 2, 3, 4, 5, 6, 7, 15, 24, 25, 26, 27, 28, 29, 30, 33]);  %, 22, 23, 24, 25, 26, 27]); % 8, 11, 14

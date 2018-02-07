@@ -94,7 +94,7 @@ for vi = 1:numel(imo)
             ddi_ch = 'NULL';
         end
         
-        [obj(1), tbl] = obj(1).call('DNVGLperformanceData', [{imo_ch, ddi_ch},...
+        [obj(1), tbl] = obj(1).call('`dnvgl`.`performanceData`', [{imo_ch, ddi_ch},...
             additionalInputs_c]);
         if ~isempty(tbl)
             

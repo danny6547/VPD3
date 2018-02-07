@@ -452,3 +452,27 @@ the following cV methods need re-written to remove old dd indexing
 cV.powerIncreasePerCoating: remove method? seems redundant now we (soon will) have PowerBI comparing coatings
 # cVesselParticulars: move properties from cV to cVP
 # cV: all "report methods" should assign into/ read from "obj.Report"
+# cV.iterateDD: return false if no data.
+
+cV.Report: make all "report methods" output only the kind of structs returned by movingAverage.
+cV.movingAverage: remove DryDockInterval from structure field (flat array of structs instead)
+cV.movingAverage: have only scalar numeric values in each field
+	cV.DryDockingPerformance: cV.Report.DDP: struct with fields StartDate, 
+	EndDate, Average, Std etc which allow for plot to draw lines for every 
+	value (ref, eval periods and vertical difference).
+	
+cV.set.AllModelProperty: IF model connection empty, copy connection from cV
+cV.RawDataLoaded: logical scalar set to true after rawData called
+cV.set.Database: delete InService, call performanceData, call rawData if requested
+cMN.set.Database: close connection, attempt new connection with same credentials, copy to all obj in input array
+Allow set of credentials to be "loaded" with one click after windows authentication?
+cDB
+	DNVGL.RawData: table matching contents of raw files downloaded from EcoInsight
+	DNVGL.PerformanceData: table matching contents of perf files downloaded from EcoInsight
+	Force.RawData: table matching contents of raw files downloaded from SeaTrend, without performance values
+	Force.PerformanceData: table matching contents of perf files downloaded from EcoInsight, only performance values
+	Static: all static ship data
+	TestStatic: all static ship data
+	Hempel: ISO-ready raw data, Hempel performance data, Analysis tables, constants and functions
+	TestHempel: ISO-ready raw data, Hempel performance data, Analysis tables
+
