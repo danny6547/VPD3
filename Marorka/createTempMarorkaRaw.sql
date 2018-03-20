@@ -27,10 +27,8 @@ BEGIN
 		`Draft fore [m]` 	DOUBLE(20, 5),
 		`Draft aft [m]` 	DOUBLE(20, 5),
 		`Relative wind speed [m/s]` 	DOUBLE(20, 5),
-		`Relative wind direction [Â°]` 	DOUBLE(20, 5),
-		`Relative wind direction [°]` 	DOUBLE(20, 5),
-		`COG heading [Â°]` 	DOUBLE(20, 5),
-		`COG heading [°]` 	DOUBLE(20, 5),
+		`Relative wind direction` 	DOUBLE(20, 5),
+		`COG heading` 	DOUBLE(20, 5),
 		`GPS speed [knots]` 	DOUBLE(20, 5),
 		`Log speed [knots]` 	DOUBLE(20, 5),
 		`Shaft generator power [kW]` 	DOUBLE(20, 5),
@@ -121,10 +119,9 @@ BEGIN
 		`WHR - LP ST steam dump valve available power []`  	DOUBLE(20, 5),                          
 		`WHR - ST water-steam outlet temperature []`  	DOUBLE(20, 5),
         `Voyage plan deviation [nm]`  	DOUBLE(20, 5),
-		`ME FO supply temperature [Â°C ]`                  	DOUBLE(20, 5),
-		`ME Fuel Temperature [Â°C]`                        	DOUBLE(20, 5),
-        `ME Fuel Temperature [Ã‚Â°C]'`                      DOUBLE(20, 5),
-		`Rudder Angle [Â°]`                                	DOUBLE(20, 5),
-		`Seawater temperature [Â°C]`                       	DOUBLE(20, 5)
+		`ME FO supply temperature`                  	DOUBLE(20, 5),
+		`ME Fuel Temperature`                        	DOUBLE(20, 5),
+		`Rudder Angle`                                	DOUBLE(20, 5),
+		`Seawater temperature`                       	DOUBLE(20, 5)
 										);
 END;
