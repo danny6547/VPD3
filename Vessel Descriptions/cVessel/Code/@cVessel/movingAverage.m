@@ -153,6 +153,12 @@ while obj.iterateDD
 
         startDates = delimDates(1:end-1); 
         endDates  = delimDates(2:end);
+        
+        calendarDays_l = false;
+        if calendarDays_l
+            startDates = floor(startDates);
+            endDates = ceil(endDates) - 1;
+        end
         startDates_c = num2cell(startDates);
         endDates_c = num2cell(endDates);
 
