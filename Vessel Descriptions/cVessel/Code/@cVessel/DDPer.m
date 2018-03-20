@@ -27,7 +27,7 @@ while obj.iterateDD
     
     [~, currVessel, ddi, vi] = obj.currentDD;
     
-    if ddi < 3
+    if ddi < 2
         
         continue
     end
