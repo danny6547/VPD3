@@ -60,7 +60,7 @@ classdef cVesselDisplacementConversion < handle
            for pi = 1:numProps
 
                currProp = prop{pi};
-               disp = [obj.(currProp)];
+               disp = [obj(oi).(currProp)];
 %                disp_c(cellfun(@isempty, disp_c)) = {nan};
 %                disp = [disp_c{:}];
 %                dens = nan(size(disp));
@@ -81,7 +81,7 @@ classdef cVesselDisplacementConversion < handle
     end
     
     methods
-    
+       
        function set.FluidDensity(obj, dens)
            
            validateattributes(dens, {'numeric', 'real', 'positive'},...
