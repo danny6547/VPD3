@@ -11,7 +11,8 @@ function [ obj, ddImprove ] = dryDockingImprovement( obj, varargin )
 
 % Output
 ddImp = struct('AvgPerPrior', [], 'AvgPerAfter', [], ...
-    'AbsDDImprovement', [], 'RelDDImprovement', []);
+    'AbsDDImprovement', [], 'RelDDImprovement', [], 'ReferenceCount', [],...
+    'EvaluationCount', []);
 ddImprove = struct('DryDockingInterval', ddImp);
 % [obj.Report.DryDockingImprovement] = deal(ddImp);
 % szIn = size(obj);
@@ -75,8 +76,10 @@ while obj.iterateDD
        ddImp(1).AvgPerAfter = avgAfter;
        ddImp(1).AbsDDImprovement = ddImpAbs;
        ddImp(1).RelDDImprovement = ddImpRel;
-       ddImprove(vi).DryDockingInterval(ddi) = ddImp;
-       currVessel.Report.DryDockingImprovement(ddi) = ddImp;
+       ddImp(1).ReferenceCount = annualAvgBef(vi).DryDockInterval(ddi-1).Count(end);
+       ddImp(1).EvaluationCount = annualAvgAft(vi).DryDockInterval(ddi).Count(1);
+       ddImprove(vi).DryDockingInterval(ddi-1) = ddImp;
+       currVessel.Report.DryDockingImprovement(ddi-1) = ddImp;
 %        obj(vi).DryDockingImprovement = ddImp(ddi);
     end
    
