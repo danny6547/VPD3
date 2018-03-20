@@ -84,6 +84,7 @@ tab = 'tempRawISO';
 filters_c = fieldnames(filters_st);
 updateTrue_c = cell(1, numel(filters_c));
 updateFalse_c = cell(1, numel(filters_c));
+updateNull_c = cell(1, numel(filters_c));
 cols_c = cell(1, numel(filters_c));
 for fi = 1:numel(filters_c)
     
@@ -122,6 +123,10 @@ for fi = 1:numel(filters_c)
     [obj, exprTrue_sql] = obj.combineSQL('TRUE WHERE', whereVessel_sql, ...
         valueCol, operator, currThreshold_ch);
     [obj, updateTrue_c{fi}] = obj.update(tab, currCol, exprTrue_sql);
+    
+%     [obj, exprNull_sql] = obj.combineSQL('TRUE WHERE', whereVessel_sql, ...
+%         valueCol, 'IS NULL');
+%     [obj, updateNull_c{fi}] = obj.update(tab, currCol, exprNull_sql);
     
     [obj, exprFalse_sql] = obj.combineSQL('FALSE WHERE ', whereVessel_sql, ...
         'NOT (', valueCol, operator, currThreshold_ch, ')');
