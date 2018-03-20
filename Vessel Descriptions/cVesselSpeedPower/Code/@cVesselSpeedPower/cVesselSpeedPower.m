@@ -253,6 +253,7 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
        tr = arrayfun(@(x) mean(x.Trim), obj)';
        obj = obj.displacementInVolume('Displacement'); 
        diM3 = arrayfun(@(x) mean(x.Displacement), obj)';
+       obj = obj.displacementInMass('Displacement'); 
        
        % Concat
        mat = [a, b, r2, minP, maxP, tr, diM3];
@@ -424,19 +425,18 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
 
         function obj = set.Speed_Power_Source(obj, sps)
             
-            if ~isempty(sps)
-                obj = obj.incrementModelID;
-            end
+%             if ~isempty(sps)
+%                 obj = obj.incrementModelID;
+%             end
             
             obj.Speed_Power_Source = sps;
-
         end
         
         function obj = set.Propulsive_Efficiency(obj, propEff)
             
-            if ~isempty(propEff)
-                obj = obj.incrementModelID;
-            end
+%             if ~isempty(propEff)
+%                 obj = obj.incrementModelID;
+%             end
             
             obj.Propulsive_Efficiency = propEff;
         end
