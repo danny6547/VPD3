@@ -37,7 +37,7 @@ SELECT IMONo,
 							 `Sea depth [m]`, 
 							 DateTime_UTC,
 							 `Relative wind speed [m/s]`,
-							 `Relative wind direction [Â°]`,
+							 `Relative wind direction`,
 							 `GPS speed [knots]` * 0.514444444,
                              `Log speed [knots]` * 0.514444444,
 							 `Shaft rpm [rpm]`,
@@ -48,10 +48,10 @@ SELECT IMONo,
 							 /* Air_Pressure, */
 							 `ME consumed [MT]`,
                              `Shaft power [kW]`,
-                             `COG heading [Â°]`,
+                             `COG heading`,
                              `Shaft Torque [kNm]`,
-                             `Rudder Angle [Â°]`,
-                             `Seawater temperature [Â°C]`
+                             `Rudder Angle`,
+                             `Seawater temperature`
                              /* Draft_Displacement_Actual */
 							 FROM tempMarorkaRaw
 								ON DUPLICATE KEY UPDATE 
