@@ -36,7 +36,17 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
 
     % Input
     filename = validateCellStr(filename, 'cVessel.loadXLSX', 'filename', 2);
-    sheet = validateCellStr(sheet, 'cVessel.loadXLSX', 'filename', 3);
+    try sheet = validateCellStr(sheet, 'cVessel.loadXLSX', 'sheet', 3);
+    catch ee
+        
+        if ~strcmp(ee.identifier, 'MATLAB:cVessel:loadXLSX:invalidType')
+            rethrow(ee)
+        end
+        
+        validateattributes(sheet, {'numeric'}, {'real', 'scalar',...
+            'integer', 'positive'},'cVessel.loadXLSX', 'sheet', 3);
+        sheet = num2cell(sheet);
+    end
     validateattributes(firstRow, {'numeric'}, {'scalar'}, ...
         'cVessel.loadXLSX', 'firstRow', 4);
     validateattributes(fileColID, {'numeric', 'cell'}, {'vector'}, ...
@@ -221,10 +231,9 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
         writetable(file_tbl, tempFile, 'WriteVariableNames', false,...
                 'QuoteStrings',false);
         
-        
         % Load in CSV file
         try obj = obj.loadInFileDuplicate(tempFile, fileColName, tempTab, tab,...
-                ',', 0, set_ch, tabColNames, '', {'none'});
+                ',', 1, set_ch, tabColNames, '', {'none'});
            
 		   % Get warnings from load infile statement
 % 		   [obj, warnCount_tbl] = obj.warnings;
