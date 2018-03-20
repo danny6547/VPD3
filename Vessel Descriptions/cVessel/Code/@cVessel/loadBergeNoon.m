@@ -41,10 +41,10 @@ for fi = 1:numel(filename)
         error(errid, errmsg);
     end
     
-    if nargin < 5
-        
-        lastrow = varargin{1};
-    end
+%     if nargin < 5
+%         
+%         lastrow = varargin{1};
+%     end
 
     sheetname = validateCellStr(sheetname, 'cVessel.loadBergeNoon', 'sheetname', 1);
     validateattributes(basedate, {'numeric'}, {'real', 'positive', ...
@@ -148,7 +148,7 @@ for fi = 1:numel(filename)
                     'WHEN CONCAT('''',@Wind_Angle * 1) = @Wind_Angle THEN @Wind_Angle ',...
                     'END']...
                     });
-        p.addParameter('LastRow', 37);
+        p.addParameter('LastRow', repmat(37, [1, numel(sheetname)]));
         paramValues_c = varargin;
         p.parse(paramValues_c{:});
     %     mainSheet = p.Results.mainSheet;
