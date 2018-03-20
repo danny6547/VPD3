@@ -107,7 +107,11 @@ while obj.iterateDD
        % Plot data
 %        hold on
        xdata = currDD_tbl.datetime_utc; % datenum(currData.DateTime_UTC, 'dd-mm-yyyy');
-       ydata = currDD_tbl.(varname) * 100;
+       convFact = 1;
+       if ismember(currVessel.Variable, {'speed_loss', 'speed_index'})
+           convFact = 1e2;
+       end
+       ydata = currDD_tbl.(varname) * convFact;
        pi_line = line(currAx, xdata, ydata);
 %        hold off
         pi_line.LineStyle = 'none';
@@ -138,7 +142,7 @@ while obj.iterateDD
                currDur = currAvg_st.Duration(di);
                currStart = currDur.StartDate;
                currEnd = currDur.EndDate;
-               currAvg = currDur.Average * 100;
+               currAvg = currDur.Average * convFact;
                
                hold on
                avgLines(end+1:end+numel(currAvg)) = ...
@@ -187,7 +191,7 @@ while obj.iterateDD
                     c = coeffs(2);
 
                     x1 = linspace(min(xdata), max(xdata), 1e3);
-                    y1 = ( m*x1 + c ) * 100;
+                    y1 = ( m*x1 + c ) * convFact;
 
                     % Regression lines are slightly darker than data points
                     currColour = currColour - 0.2;
