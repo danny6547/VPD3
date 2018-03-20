@@ -1,4 +1,4 @@
-classdef cVesselParticulars < cMySQL
+classdef cVesselParticulars < cMySQL & matlab.mixin.Copyable
     %CVESSELPARTICULARS Data relating to vessel particulars
     %   Detailed explanation goes here
     
