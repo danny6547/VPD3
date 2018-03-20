@@ -13,6 +13,7 @@ classdef cVessel < cMySQL
         WindCoefficient = [];
         Displacement = [];
         Engine = [];
+        FuelType = 'HFO';
         
         Variable = 'speed_index';
 %         Performance_Index
@@ -26,7 +27,7 @@ classdef cVessel < cMySQL
     
     properties(Hidden)
         
-        DateFormStr char = 'dd/mm/yyyy HH:MM:SS';
+        DateFormStr char = 'dd-mm-yyyy HH:MM:SS';
         IterFinished = false;
         DryDockIndexDB = [];
         DDIterator = [0, 1, 0];
@@ -93,7 +94,7 @@ classdef cVessel < cMySQL
            
            % Expand into array
            obj = [obj, arrayfun(@(x) cVessel(), nan([1, numel(imo)-1]))];
-          
+           
            [obj, ~, ~, indb] = obj.performanceData(readInputs_c{:});
         end
 
@@ -133,7 +134,17 @@ classdef cVessel < cMySQL
            
            parts = [obj.Particulars];
            [parts.IMO_Vessel_Number] = deal(imo_c{:});
-           return
+        else
+            
+            % Remove from array any without data
+            obj(~indb) = [];
+
+            % Check that no duplicates were added when concatenating struct
+            % data with that read from DB
+            index_c = 'datetime_utc';
+            prop_c = {'performance_index'...
+                    'speed_index'};
+            obj = obj.filterOnUniqueIndex(index_c, prop_c);
         end
         
         % Expand array to size of input data and assign known values
@@ -148,13 +159,7 @@ classdef cVessel < cMySQL
                 obj(ii).Particulars.IMO_Vessel_Number = imo(ii);
 %             end
         end
-
-        % Check that no duplicates were added when concatenating struct
-        % data with that read from DB
-        index_c = 'datetime_utc';
-        prop_c = {'performance_index'...
-                'speed_index'};
-        obj = obj.filterOnUniqueIndex(index_c, prop_c);
+        
 
         % Error when inputs not recognised
 
@@ -249,6 +254,8 @@ classdef cVessel < cMySQL
        parts = [obj.Particulars];
        parts.insertIntoTable();
            
+       obj.insertIntoTable();
+       
        end
        
        function obj = insertIntoSFOCCoefficients(obj)
@@ -953,7 +960,7 @@ classdef cVessel < cMySQL
                 end
                 
                 % Get out performance data again, so table is re-created
-                obj(oi) = obj(oi).performanceData(obj(oi).IMO_Vessel_Number);
+%                 obj(oi) = obj(oi).performanceData(obj(oi).IMO_Vessel_Number);
                 
                 if isempty(obj(oi).InService)
                     
@@ -1276,11 +1283,21 @@ classdef cVessel < cMySQL
            DDI_m = obj(currVessel).DDIntervalsFromDates;
            nonEmptyDDI_l = any(DDI_m);
            nonEmptyDD_i = find(nonEmptyDDI_l);
-           nextDDI_i = nonEmptyDD_i(currDDI+1:end);
+           nextDDI_i = currDDI + 1;
+           
+           q = zeros(1, length(nonEmptyDDI_l));
+           q(nonEmptyDDI_l) = find(nonEmptyDDI_l);
+           nextDDI_i = find(q >= nextDDI_i, 1, 'first');
+           
+           nextDDIEmpty_l = ~nonEmptyDDI_l(nextDDI_i);
+           remainingAreEmpty_l = ~any(nonEmptyDDI_l(nextDDI_i:end));
+           nextVessel_l = isempty(nextDDI_i) ||...
+               nextDDI_i > length(nonEmptyDDI_l) || remainingAreEmpty_l;
+%            nextDDI_i = nonEmptyDD_i(currDDI+1:end);
            nextVessel = currVessel;
            
            % If the next DD interval has no corresponding data
-           if isempty(nextDDI_i)
+           if nextVessel_l % nextDDIEmpty_l % isempty(nextDDI_i)
                
                % Continue looking for data in next vessels
                nextVessel = currVessel + 1;
@@ -1325,7 +1342,7 @@ classdef cVessel < cMySQL
            
            % Iterate
            obj.incrementIteratorDD;
-               
+           
            % Assuming that array is non-empty, iterators can be taken from
            % first element
            refIndex = 1;
@@ -1582,17 +1599,25 @@ classdef cVessel < cMySQL
            
            validateattributes(part, {'cVesselParticulars'}, {'scalar'},...
                'cVessel.Particulars', 'Particulars');
+           
+           obj.Particulars = copy(part);
            if ~isempty(obj.IMO_Vessel_Number)
                
-               part.IMO_Vessel_Number = obj.IMO_Vessel_Number;
+               obj.Particulars.IMO_Vessel_Number = obj.IMO_Vessel_Number;
            end
-           obj.Particulars = part;
         end
         
         function obj = set.InService(obj, ins)
             
+            if isa(ins, 'table')
+                
+                ins.datetime_utc = datetime(ins.datetime_utc, 'ConvertFrom', 'datenum');
+                ins = table2timetable(ins, 'RowTimes', 'datetime_utc');
+            end
+            
             validateattributes(ins, {'timetable'}, {}, ...
                 'cVessel.Particulars', 'Particulars');
+            ins = sortrows(ins);
             obj.InService = ins;
         end
     end

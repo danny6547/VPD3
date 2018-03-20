@@ -475,4 +475,58 @@ cDB
 	TestStatic: all static ship data
 	Hempel: ISO-ready raw data, Hempel performance data, Analysis tables, constants and functions
 	TestHempel: ISO-ready raw data, Hempel performance data, Analysis tables
+cV.tradingParameters: gives values inconcsistent with speedHistogram for Euronav vessels (mean speed lower than median?)
 
+Authentication
+	cV.cV: ask for credentials
+		shallow copy connection object to all nested objects
+	cMID.set.Database:
+		ask for credentials
+		shallow copy connection object to all members of array
+
+Change vessel identificiation to vessel config id from IMO
+cMN: remove class
+cMID: just like cMN but with Name functionally replaced by Model_ID. Name no longer a property.
+	cModelID abstract class with abstract props FieldName, ModelTable, DBTable, Column (to replace Type)
+	cV inherits from cMID
+		cV.ModelTable = 'Vessel', .FieldName = 'Vessel_Id'
+		cV.DBTable = {'VesselConfiguration', 'VesselInfo', 'BunkerDeliveryNote'}
+			when IMO value assigned to cV.ModelID,
+				cMID.set.MID reads OBJ data from all DBTable
+				for each cV property which is a cMID,
+				assign _Model_Id value read from VesselConfiguration to .MID property
+	
+	cVD inherits from cMID
+		cV.ModelTable = 'DisplacementModel', .FieldName = 'Displacment_Model_Id', .DBTable = 'Displacment_Model_Value'
+	cVSP inherits from cMID
+		cV.ModelTable = 'SpeedPowerCoefficientModel', .FieldName = 'Speed_Power_Coefficient_Model_Id', .DBTable = 'Speed_Power_Coefficient_Model_Value'
+	cVWC inherits from cMID
+		cV.ModelTable = 'WindCoefficientModel', .FieldName = 'Wind_Coefficient_Model_Id', .DBTable = 'Wind_Coefficient_Model_Value'
+
+cVesselEvent:
+	cVE: an event with a defined start and end where performance values are statistically dissimilar before and after
+	change cDDD to just cDD
+	make superclass of cDD
+	cHullCleaning, cConfigurationChange also sub class of cVE
+	replace cV.cDDD with cV.Event: a cell array of event sub classes
+	iterateDD becomes iterateEvent
+	plotPerformanceData optionally reports event type (on second horiztontal axis, on top of graph?)
+	
+cVC: rename from current cV, new prop Vessel contains handles to cV class.
+cVC.plotPerformanceData:
+	assign from each vessel into corresponding graph
+		iterateEvent
+			get current DD for current VC
+				use dates from and to for different configs
+			return DDi, VCi, Vi
+		plot into figure for current Vi data indexed by DDi, VCi
+cVC.cVC('IMO', imo): return in cVC all the configuration data for the MOST 
+	RECENT configuration for imo, and all previous configurations in prop 
+	Previous.
+	
+
+cTO
+
+applyFilters.sql: allow user to control filtering of speed through water values.
+cV.FuelType: move property to cVE
+cV.cV: initialise cV.Engine prop to "unknown" and default FuelType.
