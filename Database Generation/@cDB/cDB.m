@@ -318,6 +318,13 @@ classdef cDB < cMySQL
        objddd = objddd.readFile(ddFileEuronav, 'dd-mm-yyyy');
        objddd.insertIntoTable;
        
+       % UASC
+       objddd = cVesselDryDockDates();
+       ddFileUASC = ['https://hempelgroup.sharepoint.com/sites/'...
+           'HullPerformanceManagementTeam/Vessel Library/UASC/Scripts'];
+       objddd = objddd.readFile(ddFileUASC, 'yyyy-mm-dd');
+       objddd.insertIntoTable;
+       
        % Load standard wind coefficients
        windFile = ['L:\Project\MWB-Fuel efficiency\Hull and propeller '...
            'performance\Other Vessel Data\Wind\ISO15016\'...
