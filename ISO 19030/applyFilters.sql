@@ -12,6 +12,9 @@ BEGIN
 /* Reset filter column */
 UPDATE tempRawISO SET Filter_All = FALSE;
 
+UPDATE tempRawISO SET Filter_All = TRUE WHERE Speed_Through_Water > 18.0055556;
+UPDATE tempRawISO SET Filter_All = TRUE WHERE Speed_Through_Water <= 0;
+
 /* Apply selected filters */
 IF SpeedPower_Below THEN
 
@@ -35,22 +38,23 @@ END IF;
 
 IF Reference_Seawater_Temp THEN
 
-	UPDATE tempRawISO SET Filter_All = TRUE WHERE Filter_Reference_Seawater_Temp;
+	UPDATE tempRawISO SET Filter_All = TRUE WHERE Filter_Reference_Seawater_Temp OR Seawater_Temperature IS NULL;
 END IF;
 
 IF Reference_Wind_Speed THEN
 
-	UPDATE tempRawISO SET Filter_All = TRUE WHERE Filter_Reference_Wind_Speed;
+	UPDATE tempRawISO SET Filter_All = TRUE WHERE Filter_Reference_Wind_Speed OR Relative_Wind_Speed IS NULL;
 END IF;
 
 IF Reference_Water_Depth THEN
 
+	UPDATE tempRawISO SET Filter_All = TRUE WHERE Water_Depth IS NULL;
 	UPDATE tempRawISO SET Filter_All = TRUE WHERE Filter_Reference_Water_Depth;
 END IF;
 
 IF Reference_Rudder_Angle THEN
 
-	UPDATE tempRawISO SET Filter_All = TRUE WHERE Filter_Reference_Rudder_Angle;
+	UPDATE tempRawISO SET Filter_All = TRUE WHERE Filter_Reference_Rudder_Angle OR Rudder_Angle IS NULL;
 END IF;
 
 IF Chauvenet THEN
