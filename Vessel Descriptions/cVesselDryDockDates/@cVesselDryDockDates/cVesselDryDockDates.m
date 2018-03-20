@@ -301,7 +301,9 @@ classdef cVesselDryDockDates < cMySQL
             end
             
             % Allow for NaN (NULL) values
-            if (isnumeric(c) && isnan(c)) || isequal(c, {nan})
+            isScalarNanCell_l = iscell(c) && isscalar(c) && ...
+                isscalar([c{:}]) && isnan([c{:}]);
+            if (isnumeric(c) && isnan(c)) || isScalarNanCell_l
                 ch = nan;
                 return
             end
