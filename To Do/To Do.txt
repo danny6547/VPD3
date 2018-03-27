@@ -487,21 +487,23 @@ Authentication
 Change vessel identificiation to vessel config id from IMO
 cMN: remove class
 cMID: just like cMN but with Name functionally replaced by Model_ID. Name no longer a property.
-	cModelID abstract class with abstract props FieldName, ModelTable, DBTable, Column (to replace Type)
+	cModelID abstract class with abstract props FieldName, ModelTable, ValueTable, Column (to replace Type)
 	cV inherits from cMID
 		cV.ModelTable = 'Vessel', .FieldName = 'Vessel_Id'
 		cV.DBTable = {'VesselConfiguration', 'VesselInfo', 'BunkerDeliveryNote'}
 			when IMO value assigned to cV.ModelID,
 				cMID.set.MID reads OBJ data from all DBTable
 				for each cV property which is a cMID,
-				assign _Model_Id value read from VesselConfiguration to .MID property
-	
+					assign _Model_Id value read from VesselConfiguration to .MID property
 	cVD inherits from cMID
-		cV.ModelTable = 'DisplacementModel', .FieldName = 'Displacment_Model_Id', .DBTable = 'Displacment_Model_Value'
+		cVD.ModelTable = 'DisplacementModel', .FieldName = 'Displacment_Model_Id', .DBTable = 'Displacment_Model_Value'
 	cVSP inherits from cMID
-		cV.ModelTable = 'SpeedPowerCoefficientModel', .FieldName = 'Speed_Power_Coefficient_Model_Id', .DBTable = 'Speed_Power_Coefficient_Model_Value'
+		cVSP.ModelTable = 'SpeedPowerCoefficientModel', .FieldName = 'Speed_Power_Coefficient_Model_Id', .DBTable = 'Speed_Power_Coefficient_Model_Value'
 	cVWC inherits from cMID
-		cV.ModelTable = 'WindCoefficientModel', .FieldName = 'Wind_Coefficient_Model_Id', .DBTable = 'Wind_Coefficient_Model_Value'
+		cVWC.ModelTable = 'WindCoefficientModel', .FieldName = 'Wind_Coefficient_Model_Id', .DBTable = 'Wind_Coefficient_Model_Value'
+			when IMO value assigned to cV.ModelID not in DB,
+				reserve value in DBTable
+				if no values added, clear reserved value
 
 cVesselEvent:
 	cVE: an event with a defined start and end where performance values are statistically dissimilar before and after
@@ -524,9 +526,36 @@ cVC.cVC('IMO', imo): return in cVC all the configuration data for the MOST
 	RECENT configuration for imo, and all previous configurations in prop 
 	Previous.
 	
-
 cTO
 
 applyFilters.sql: allow user to control filtering of speed through water values.
 cV.FuelType: move property to cVE
 cV.cV: initialise cV.Engine prop to "unknown" and default FuelType.
+cDB.createDNVGL
+	create raw data table and insert all
+	create performance table and insert all
+cDB.createForce
+	as for createDNVGL
+cDB.createStatic
+	create static tables: vessel, sp, spc, spcvalue, wind, disp, vc
+cDB.createHempel
+	create DB with PerformanceData, RawData, Analysis, Constants tables, functions
+cV.cV: assign Delegate database as default
+cV.PerformanceTable (Hidden): string indicating table containing performance data
+cV.PerformanceColumn (Hidden): cell/string indicating columns of performance data
+cV.performanceTable(dbname): return performance table name for DBNAME
+	if DBNAME = 'the delegate one', 'CalculatedData'
+		DBNAME = 'DNVGL', 'PerformanceData'
+		etc
+	else
+		'CalculatedData'
+cV.updateNestedConnections: scalar logical indicating whether to copy connection object
+	to nested cMID in properties of cV (default TRUE)
+cV.set.Database:
+	call performanceTable with new Database
+	assign Database, PerformanceTable
+	do connection, authentication steps
+	if updateNestedConnections
+		for all properties which are cMID
+			copy connection object
+			read data from new connection
