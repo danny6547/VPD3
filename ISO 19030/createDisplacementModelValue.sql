@@ -9,21 +9,21 @@
  Displacement : m^3; Volume of fluid displaced by the hull
 */
 
-DROP PROCEDURE IF EXISTS createDisplacement;
+DROP PROCEDURE IF EXISTS createDisplacementModelValue;
 
 delimiter //
 
-CREATE PROCEDURE createDisplacement()
+CREATE PROCEDURE createDisplacementModelValue()
 
 	BEGIN
 	
-	CREATE TABLE Displacement (id INT PRIMARY KEY AUTO_INCREMENT,
-								 Models_id INT NOT NULL,
-								 Draft_Mean DOUBLE(5, 3),
-								 LCF DOUBLE(6, 5),
-								 TPC DOUBLE(7, 3),
-								 Trim DOUBLE(5, 3),
-								 Displacement DOUBLE(20, 5),
+	CREATE TABLE DisplacementModelValue (id INT PRIMARY KEY AUTO_INCREMENT,
+								 Displacement_Model_Id INT NOT NULL,
+								 Draft_Mean FLOAT(15, 3),
+								 LCF FLOAT(15, 5),
+								 TPC FLOAT(15, 3),
+								 Trim FLOAT(15, 3),
+								 Displacement FLOAT(15, 5),
                                  CONSTRAINT UniqueModelDraft UNIQUE(Models_id, Draft_Mean),
                                  CONSTRAINT UniqueModelDraftTrim UNIQUE(Models_id, Draft_Mean, Trim)
                                  );

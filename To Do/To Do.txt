@@ -525,17 +525,12 @@ cVC.plotPerformanceData:
 cVC.cVC('IMO', imo): return in cVC all the configuration data for the MOST 
 	RECENT configuration for imo, and all previous configurations in prop 
 	Previous.
-	
+
 cTO
 
 applyFilters.sql: allow user to control filtering of speed through water values.
 cV.FuelType: move property to cVE
 cV.cV: initialise cV.Engine prop to "unknown" and default FuelType.
-cDB.createDNVGL
-	create raw data table and insert all
-	create performance table and insert all
-cDB.createForce
-	as for createDNVGL
 cDB.createStatic
 	create static tables: vessel, sp, spc, spcvalue, wind, disp, vc
 cDB.createHempel
@@ -559,3 +554,23 @@ cV.set.Database:
 		for all properties which are cMID
 			copy connection object
 			read data from new connection
+			
+# write sql script: BunkerDeliveryNote.rpt             '
+write sql script: CalculatedData.rpt                 '
+# write sql script: DisplacementModel.rpt              '
+# write sql script: DisplacementModelValue.rpt         '
+# write sql script: DryDock.rpt                        '
+# write sql script: EngineModel.rpt                    '
+write sql script: GeneratedISO19030Report.rpt        '
+write sql script: ImportJob.rpt                      '
+# write sql script: RawData.rpt                        '
+# write sql script: SpeedPowerCoefficientModel.rpt     '
+# write sql script: SpeedPowerCoefficientModelValue.rpt'
+# write sql script: Vessel.rpt                     	 '
+# write sql script: VesselConfiguration.rpt            '
+# write sql script: VesselGroup.rpt                    '
+# write sql script: VesselInfo.rpt                     '
+# write sql script: VesselOwner.rpt                    '
+# write sql script: VesselToVesselOwner.rpt            '
+# write sql script: WindCoefficientModel.rpt           '
+# write sql script: WindCoefficientModelValue.rpt  	 '

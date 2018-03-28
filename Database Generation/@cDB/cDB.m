@@ -23,6 +23,7 @@ classdef cDB < cMySQL
         LoadPerformance = true;
         RunISO = true;
         InsertStatic = true;
+        InsertStaticDir = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'Insert_Static');
         InsertStaticScripts = {...
             ['L:\Project\MWB-Fuel efficiency\Hull and propeller performance'...
             '\Vessels\AMCL\Data\Scripts\Insert_Static_AMCL.m']...
@@ -565,6 +566,28 @@ classdef cDB < cMySQL
 %            obj_ves.Database = database;
 %            obj_ves.loadForcePerformance(allPerformanceFile_ch);
 %        end
+       end
+       
+       function createStatic(obj)
+       % Create database for static vessel data.
+       
+       % Create Database
+       dbname = 'Static';
+       obj = obj.drop('DATABASE', dbname);
+       obj = obj.createDatabase(dbname, true);
+       
+       % Build Schema
+       
+       % Run all files in InsertStatic dir
+       findStaticFiles_ch = [obj.InsertStaticDir, '*.m'];
+       allFiles_st = dir(findStaticFiles_ch);
+       allFilesNames = cellfun(@(x) fullfile(obj.InsertStaticDir, x), ...
+           {allFiles_st.name}, 'Uni', 0);
+       for fi = 1:numel(allFilesNames)
+           
+           run(allFilesNames{fi});
+       end
+       
        end
     end
 end

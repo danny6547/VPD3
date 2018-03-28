@@ -2,23 +2,29 @@
 
 
 
-DROP PROCEDURE IF EXISTS createDryDockDates;
+DROP PROCEDURE IF EXISTS createDryDock;
 
 delimiter //
 
-CREATE PROCEDURE createDryDockDates()
+CREATE PROCEDURE createDryDock()
 
 BEGIN
 
-	CREATE TABLE DryDockDates (id INTEGER AUTO_INCREMENT PRIMARY KEY,
-								IMO_Vessel_Number INT(7) NOT NULL,
+	CREATE TABLE DryDock (id INTEGER AUTO_INCREMENT PRIMARY KEY,
+								Vessel_Id INT(10) NOT NULL,
 								StartDate DATE NOT NULL,
 								EndDate DATE NOT NULL,
-								Vertical_Bottom_Surface_Prep VARCHAR(50),
-								Vertical_Bottom_Coating VARCHAR(50),
-								Flat_Bottom_Surface_Prep VARCHAR(50),
-								Flat_Bottom_Coating VARCHAR(50),
-								constraint UniRows UNIQUE(IMO_Vessel_Number, StartDate, EndDate)
+								Bot_Top_Surface_Prep NVARCHAR(255),
+								Bot_Top_Coating NVARCHAR(255),
+								Vertical_Bottom_Surface_Prep NVARCHAR(255),
+								Vertical_Bottom_Coating NVARCHAR(255),
+								Flat_Bottom_Surface_Prep NVARCHAR(255),
+								Flat_Bottom_Coating NVARCHAR(255),
+								Average_Speed_Expected FLOAT(15, 3),
+								Activity_Expected FLOAT(15, 3),
+								Longest_Idle_Period_Expected FLOAT(15, 3),
+								Deleted BINARY,
+								constraint UniRows UNIQUE(Vessel_Id, StartDate, EndDate)
 								);
 
 END
