@@ -1,11 +1,11 @@
-function convertXLSX2CSV(imo, infile, sheet, firstRow, fileColID, fileColName, outfile, setsql)
+function convertXLSX2CSV(imo, infile, sheet, firstRow, fileColID, fileColName, outfile, setsql, dateCols_c)
 %convertXLSX2CSV Summary of this function goes here
 %   Detailed explanation goes here
     
     obj = cVessel();
     obj.IMO_Vessel_Number = imo;
     
-    dateCols_c = {'DateTime_UTC', 'yyyy-mm-dd HH:MM:SS.000'};
+%     dateCols_c = {'DateTime_UTC', 'yyyy-mm-dd HH:MM:SS.000'};
     obj = loadXLSX(obj, infile, sheet, firstRow, fileColID, fileColName, ...
         '', setsql, dateCols_c);
     cols = {'DateTime_UTC' ...

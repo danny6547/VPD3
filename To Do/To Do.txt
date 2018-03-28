@@ -524,7 +524,6 @@ cVC.cVC('IMO', imo): return in cVC all the configuration data for the MOST
 	RECENT configuration for imo, and all previous configurations in prop 
 	Previous.
 	
-
 cTO
 
 applyFilters.sql: allow user to control filtering of speed through water values.
