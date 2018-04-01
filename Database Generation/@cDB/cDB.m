@@ -302,35 +302,33 @@ classdef cDB < cMySQL
             clear vess;
        end
        
-       % Load Dry Docking Dates from Files
-       % CMA CGM
-       ddFiles = ['L:\Project\MWB-Fuel efficiency\Hull and propeller '...
-           'performance\Vessels\CMA CGM\Cart reports 2\Cart reports '...
-           'CMA CGM.xlsx'];
-       objddd = cVesselDryDockDates();
-       objddd = objddd.readFile(ddFiles, 'dd-mm-yy');
-       objddd.insertIntoTable;
-       
-       % Euronav
-       objddd = cVesselDryDockDates();
-       ddFileEuronav = ['L:\Project\MWB-Fuel efficiency\'...
-           'Hull and propeller performance\Vessels\Euronav\Data\Scripts\'...
-           'DryDockDates.xlsx'];
-       objddd = objddd.readFile(ddFileEuronav, 'dd-mm-yyyy');
-       objddd.insertIntoTable;
-       
-       % UASC
-       objddd = cVesselDryDockDates();
-       ddFileUASC = ['https://hempelgroup.sharepoint.com/sites/'...
-           'HullPerformanceManagementTeam/Vessel Library/UASC/Scripts'];
-       objddd = objddd.readFile(ddFileUASC, 'yyyy-mm-dd');
-       objddd.insertIntoTable;
-       
-       % Load standard wind coefficients
-       windFile = ['L:\Project\MWB-Fuel efficiency\Hull and propeller '...
-           'performance\Other Vessel Data\Wind\ISO15016\'...
-           'Insert_ISO15016_Wind_Data.m'];
-       run(windFile);
+%        % Load Dry Docking Dates from Files
+%        % CMA CGM
+%        ddFiles = 'Metadata\Cart reports CMA CGM.xlsx';
+%        objddd = cVesselDryDockDates();
+%        objddd = objddd.readFile(ddFiles, 'dd-mm-yy');
+%        objddd.insertIntoTable;
+%        
+%        % Euronav
+%        objddd = cVesselDryDockDates();
+%        ddFileEuronav = ['L:\Project\MWB-Fuel efficiency\'...
+%            'Hull and propeller performance\Vessels\Euronav\Data\Scripts\'...
+%            'DryDockDates.xlsx'];
+%        objddd = objddd.readFile(ddFileEuronav, 'dd-mm-yyyy');
+%        objddd.insertIntoTable;
+%        
+%        % UASC
+%        objddd = cVesselDryDockDates();
+%        ddFileUASC = ['https://hempelgroup.sharepoint.com/sites/'...
+%            'HullPerformanceManagementTeam/Vessel Library/UASC/Scripts'];
+%        objddd = objddd.readFile(ddFileUASC, 'yyyy-mm-dd');
+%        objddd.insertIntoTable;
+%        
+%        % Load standard wind coefficients
+%        windFile = ['L:\Project\MWB-Fuel efficiency\Hull and propeller '...
+%            'performance\Other Vessel Data\Wind\ISO15016\'...
+%            'Insert_ISO15016_Wind_Data.m'];
+%        run(windFile);
        
        % Run Additional Scripts
        executedFully_l = false(size(scripts_c));
@@ -543,8 +541,8 @@ classdef cDB < cMySQL
        if obj.LoadRaw || obj.LoadPerformance
            
            % Load Raw
-           rawDirect = ['L:\Project\MWB-Fuel efficiency\Hull and propeller'...
-               ' performance\External Vessel Data\Force\Raw'];
+           rawDirect = ['C:\Users\damcl\OneDrive - Hempel Group\Documents'...
+               '\L DRIVE BACKUP\ARCHIVE\External Vessel Data\Force'];
            rawFiles_st = rdir([rawDirect, '\**\*.csv']);
            rawFiles_c = {rawFiles_st.name};
            
@@ -568,18 +566,172 @@ classdef cDB < cMySQL
 %        end
        end
        
+       function createHempel(obj)
+       % Create database for Hempel performance analysis
+       
+       % Create Database
+       dbname = 'Static';
+       obj = obj.drop('DATABASE', dbname, true);
+       obj = obj.createDatabase(dbname, true);
+       obj.Database = dbname;
+       
+       % Build Schema
+       topleveldir = obj.TopLevelDir;
+       ISODir = 'ISO 19030';
+       
+       % Build Schema
+       createTable_c = {
+        'createAnalysis.sql             '
+        'createGlobalConstants.sql              '
+        'createPerformanceData.sql         '
+        'createRawData.sql                        '
+        'createSensorRecalibration.sql                    '
+        'createTempRawISO.sql     '
+        };
+       createStaticFullpath_c = cellfun(@(x) fullfile(topleveldir, ISODir, x), ...
+           createTable_c, 'Uni', 0);
+       obj = obj.source(createStaticFullpath_c);
+       static_c = strrep(createStatic_c, '.sql', '');
+       cellfun(@(x) obj.call(x), static_c);
+       
+       createProc_c = {
+        'del10Min.sql'
+        'erfc10Mins.sql                     	'
+        'filterPowerBelowMinimum.sql            '
+        'filterReferenceConditions.sql                    '
+        'filterSFOCOutOfRange.sql                     '
+        'filterSpeedPowerLookup.sql                    '
+        'isBrakePowerAvailable.sql'
+        'ISO19030A.sql'
+        'ISO19030B.sql'
+        'ISO19030C.sql'
+        'isShaftPowerAvailable.sql'
+        'isBrakePowerAvailable.sql'
+        'normaliseHigherFreq.sql'
+        'normaliseLowerFreq.sql'
+        'ProcessISO19030.sql'
+        'removeFOCBelowMinimum.sql'
+        'removeInvalidRecords.sql'
+        'removeNullRows_prc.sql'
+        'sem10Mins.sql'
+        'sortOnDateTime.sql'
+        'updateAirDensity.sql'
+        'updateAirResistanceNoWind.sql'
+        'updateBrakePower.sql'
+        'updateChauvenetCriteria.sql'
+        'updateCorrectedPower.sql'
+        'updateDefaultValues.sql'
+        'updateDeliveredPower.sql'
+        'updateDisplacement.sql'
+        'updateDisplacementFromDraftTrim.sql'
+        'updateDisplacementWithTrimCorrection.sql'
+        'updateExpectedSpeed.sql'
+        'updateFromBunkerNote.sql'
+        'updateMassFuelOilConsumed.sql'
+        'updateNearestTrim.sql'
+        'updateShaftPower.sql'
+        'updateSpeedLoss.sql'
+        'updateTransProjArea.sql'
+        'updateTrim.sql'
+        'updateValidated.sql'
+        'updateWindReference.sql'
+        'updateWindResistanceCoefficient.sql'
+        'updateWindResistanceCorrection.sql'
+        'updateWindResistanceRelative.sql'
+        'validateFrequencies.sql'
+        
+        'insertFromDNVGLRawIntoRaw.sql            '
+        'insertIntoPerformanceData.sql           '
+        'createWindCoefficientModelValue.sql  	'
+        
+        'knots2mps.sql'
+        'mu10Min.sql'
+        'knots2mps.sql'
+        'rad2deg.sql'
+        
+        };
+       createProcFullpath_c = cellfun(@(x) fullfile(topleveldir, ISODir, x), ...
+           createProc_c, 'Uni', 0);
+       proc_c = strrep(createProcFullpath_c, '.sql', '');
+       cellfun(@(x) obj.call(x), proc_c);
+       
+       end
+       
+       function loadHempel(obj)
+          
+           obj.loadHempelModel;
+           obj.loadHempelTime;
+       end
+       
+       function runHempel(obj)
+       % Run analyses in Hempel database
+       
+       % Insert static and time data if requested
+       if obj.InsertStatic
+           
+           obj = obj.loadHempel;
+       end
+       
+       % Run Analyses
+       if obj.RunISO
+       
+           % Get IMO of vessels in Static DB
+           static_cm = cMySQL();
+           static_cm.Database = 'Static';
+           [~, vess_tbl] = static_cm.select('Vessel', ...
+               'DISTINCT(IMO) AS ''IMO''');
+           insertedIMO_v = vess_tbl.IMO;
+%            insertedIMO_v = [insertedVessels.IMO_Vessel_Number];
+           
+           % Run Analyses for requested vessels which have static data
+           ISOParams = obj.ISO19030Parameters;
+           rowsInTable_l = ismember([ISOParams{:, 1}], insertedIMO_v);
+           additionalInputs_c = ISOParams(rowsInTable_l, 3);
+           comment_c = ISOParams(rowsInTable_l, 2);
+           vessels2run_l = ismember(insertedIMO_v, [ISOParams{:, 1}]);
+           vess = insertedVessels(vessels2run_l);
+           vess.ISO19030Analysis(comment_c, additionalInputs_c);
+       end
+       
+       end
+       
        function createStatic(obj)
        % Create database for static vessel data.
        
        % Create Database
        dbname = 'Static';
-       obj = obj.drop('DATABASE', dbname);
+       obj = obj.drop('DATABASE', dbname, true);
        obj = obj.createDatabase(dbname, true);
+       obj.Database = dbname;
        
        % Build Schema
+       topleveldir = obj.TopLevelDir;
+       ISODir = 'ISO 19030';
+       createStatic_c = {
+        'createBunkerDeliveryNote.sql             '
+        'createDisplacementModel.sql              '
+        'createDisplacementModelValue.sql         '
+        'createDryDock.sql                        '
+        'createEngineModel.sql                    '
+        'createSpeedPowerCoefficientModel.sql     '
+        'createSpeedPowerCoefficientModelValue.sql'
+        'createVessel.sql                     	'
+        'createVesselConfiguration.sql            '
+        'createVesselGroup.sql                    '
+        'createVesselInfo.sql                     '
+        'createVesselOwner.sql                    '
+        'createVesselToVesselOwner.sql            '
+        'createWindCoefficientModel.sql           '
+        'createWindCoefficientModelValue.sql  	'
+        'createSpeedPower.sql'};
+       createStaticFullpath_c = cellfun(@(x) fullfile(topleveldir, ISODir, x), ...
+           createStatic_c, 'Uni', 0);
+       obj = obj.source(createStaticFullpath_c);
+       static_c = strrep(createStatic_c, '.sql', '');
+       cellfun(@(x) obj.call(x), static_c);
        
        % Run all files in InsertStatic dir
-       findStaticFiles_ch = [obj.InsertStaticDir, '*.m'];
+       findStaticFiles_ch = [obj.InsertStaticDir, '\*.m'];
        allFiles_st = dir(findStaticFiles_ch);
        allFilesNames = cellfun(@(x) fullfile(obj.InsertStaticDir, x), ...
            {allFiles_st.name}, 'Uni', 0);
@@ -589,5 +741,198 @@ classdef cDB < cMySQL
        end
        
        end
+       
+    end
+    
+    methods(Static)
+        
+       function Insert_ISO15016_Wind_Data()
+          
+           dbstatic = 'Static';
+           windData_m = [...
+            0	-0.019146806	-0.677665	-1.03173	-0.986038	-0.875632
+            7.5	7.434988	-0.74222815	-1.07344	-0.978263	-0.825984
+            15	14.888325	-0.7725274	-1.1342	-1.06567	-0.905776
+            22.5	22.340067	-0.7342987	-1.13404	-1.05028	-0.878966
+            30	29.664871	-0.6694229	-1.13008	-0.913072	-0.718913
+            45	44.690327	-0.40641463	-0.966054	-0.809965	-0.69195
+            60	59.971073	-0.25761423	-0.744929	-0.657366	-0.6193
+            75	74.749214	-0.22303768	-0.466693	-0.466693	-0.466693
+            90	89.78194	-0.27221212	-0.135159	-0.256981	-0.295057
+            105	104.42978	-0.06631846	0.257283	0.11642	0.021245
+            120	119.32546	0.3451643	0.74872	0.489834	0.40988
+            135	134.2231	0.6728907	1.07264	0.897518	0.794721
+            150	148.99716	0.88259417	1.15671	1.03108	0.966353
+            165	164.28252	0.83342505	1.16464	1.05043	0.985707
+            180	179.82368	0.6472055	0.925114	0.879426	0.86039];
+            dir = windData_m(:, 1);
+
+            obj_wnd = cVesselWindCoefficient();
+            obj_wnd.Database = dbstatic;
+            obj_wnd.Direction = dir;
+            obj_wnd.Coefficient = windData_m(:, 3);
+            obj_wnd = obj_wnd.mirrorAlong180;
+            obj_wnd.Name = 'ISO15016 Container Vessel 1';
+            obj_wnd.Description = 'Container Vessel 6800TEU, Laden with containers';
+            obj_ves = cVessel();
+            obj_ves.Database = dbstatic;
+            obj_ves.WindCoefficient = obj_wnd;
+            obj_ves.insertIntoWindCoefficients;
+
+            obj_wnd = cVesselWindCoefficient();
+            obj_wnd.Database = dbstatic;
+            obj_wnd.Direction = dir;
+            obj_wnd.Coefficient = windData_m(:, 4);
+            obj_wnd = obj_wnd.mirrorAlong180;
+            obj_wnd.Name = 'ISO15016 Container Vessel 2';
+            obj_wnd.Description = 'Container Vessel 6800TEU, Laden without containers, with lashing bridges';
+            obj_ves = cVessel();
+            obj_ves.Database = dbstatic;
+            obj_ves.WindCoefficient = obj_wnd;
+            obj_ves.insertIntoWindCoefficients;
+
+            obj_wnd = cVesselWindCoefficient();
+            obj_wnd.Database = dbstatic;
+            obj_wnd.Direction = dir;
+            obj_wnd.Coefficient = windData_m(:, 5);
+            obj_wnd = obj_wnd.mirrorAlong180;
+            obj_wnd.Name = 'ISO15016 Container Vessel 3';
+            obj_wnd.Description = 'Container Vessel 6800TEU, Laden without containers, with lashing bridges';
+            obj_ves = cVessel();
+            obj_ves.Database = dbstatic;
+            obj_ves.WindCoefficient = obj_wnd;
+            obj_ves.insertIntoWindCoefficients;
+
+            obj_wnd = cVesselWindCoefficient();
+            obj_wnd.Database = dbstatic;
+            obj_wnd.Direction = dir;
+            obj_wnd.Coefficient = windData_m(:, 6);
+            obj_wnd = obj_wnd.mirrorAlong180;
+            obj_wnd.Name = 'ISO15016 Container Vessel 4';
+            obj_wnd.Description = 'Container Vessel 6800TEU, Ballast without containers, without lashing bridges';
+            obj_ves = cVessel();
+            obj_ves.Database = dbstatic;
+            obj_ves.WindCoefficient = obj_wnd;
+            obj_ves.insertIntoWindCoefficients;
+
+            wind9200 = cVesselWindCoefficient();
+            wind9200.Database = 'test16';
+            dirCoeffs = ...
+            [
+            0	-0.9724771
+            7.573311	-0.96330273
+            14.917127	-1.0550458
+            22.41394	-1.0389909
+            29.98725	-0.9013761
+            44.980877	-0.79816514
+            59.821503	-0.6536697
+            74.968124	-0.48165137
+            89.885254	-0.2614679
+            104.878876	0.116972476
+            119.949	0.4885321
+            134.94263	0.9036697
+            149.85976	1.0298165
+            165.08287	1.0665138
+            179.92351	0.9105505
+            ];
+            directions = [0 7.5 15 22.5 30 45 60 75 90 105 120 135 150 165 180];
+            wind9200.Direction = directions;
+            wind9200.Coefficient = dirCoeffs(:, 2);
+            wind9200 = wind9200.mirrorAlong180;
+            wind9200.Name = 'ISO15016 Container Vessel 5';
+            wind9200.Description = ['Container Vessel 6800TEU, Ballast without containers, with lashing bridges'];
+            obj_ves = cVessel();
+            obj_ves.Database = dbstatic;
+            obj_ves.WindCoefficient = obj_wnd;
+            obj_ves.insertIntoWindCoefficients;
+
+            tankersBallastConventional = [...
+                0.0474177	-0.871362
+            10.3859	-0.766187
+            21.1052	-0.629526
+            31.4848	-0.460979
+            42.1904	-0.345442
+            52.359	-0.224323
+            62.1332	-0.155813
+            72.8045	-0.0930859
+            83.0745	-0.09353
+            92.8487	-0.0250199
+            102.796	0.0328277
+            112.768	0.127642
+            122.205	0.23332
+            132.34	0.301629
+            142.128	0.391263
+            151.909	0.470335
+            161.666	0.51244
+            171.419	0.549264
+            181.132	0.522717
+            ];
+            obj_wnd = cVesselWindCoefficient();
+            obj_wnd.Database = dbstatic;
+            obj_wnd.Direction = 0:10:180;
+            obj_wnd.Coefficient = tankersBallastConventional(:, 2);
+            obj_wnd = obj_wnd.mirrorAlong180;
+            obj_wnd.Name = 'ISO15016 Tanker 1';
+            obj_wnd.Description = 'Tankers in ballast with conventinoal bow';
+            obj_ves = cVessel();
+            obj_ves.Database = dbstatic;
+            obj_ves.WindCoefficient = obj_wnd;
+            obj_ves.insertIntoWindCoefficients;
+
+            generalCargo = [....
+                -0.60115	0
+            -0.874312	10
+            -0.997667	20
+            -1.00194	30
+            -0.875619	40
+            -0.84532	50
+            -0.657525	60
+            -0.435164	70
+            -0.285782	80
+            -0.113352	90
+            0.0667608	100
+            0.461987	110
+            0.822631	120
+            1.34419	130
+            1.44363	140
+            1.2934	150
+            0.885803	160
+            0.770147	170
+            ];
+            obj_wnd = cVesselWindCoefficient();
+            obj_wnd.Database = dbstatic;
+            obj_wnd.Direction = [0:10:120, 140:10:180];
+            obj_wnd.Coefficient = generalCargo(:, 1);
+            obj_wnd = obj_wnd.mirrorAlong180;
+            obj_wnd.Name = 'ISO15016 General Cargo Vessel 1';
+            obj_wnd.Description = 'General Cargo Vessel';
+            obj_ves = cVessel();
+            obj_ves.Database = dbstatic;
+            obj_ves.WindCoefficient = obj_wnd;
+            obj_ves.insertIntoWindCoefficients;
+       end
+       
+       function loadHempelModel
+           
+           
+           insertModel_c = {...
+               'https://hempelgroup.sharepoint.com/sites/'...
+               'HullPerformanceManagementTeam/Vessel%20Library/AMCL/Scripts/'...
+               'Insert_Model_AMCL.m'...
+               };
+           cellfun(@run, insertModel_c);
+       end
+       
+       function loadHempelTime
+           
+           
+           insertTime_c = {...
+               'https://hempelgroup.sharepoint.com/sites/'...
+               'HullPerformanceManagementTeam/Vessel%20Library/AMCL/Scripts/'...
+               'Insert_Time_AMCL.m'...
+               };
+           cellfun(@run, insertTime_c);
+       end
+       
     end
 end
