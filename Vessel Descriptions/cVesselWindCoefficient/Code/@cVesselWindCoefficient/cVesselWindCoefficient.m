@@ -1,9 +1,11 @@
-classdef cVesselWindCoefficient < cMySQL & cModelName
+classdef cVesselWindCoefficient < cMySQL & cModelID
     %CVESSELWINDCOEFFICIENT Wind resistance coefficents for ships.
     %   Detailed explanation goes here
     
     properties
         
+        Name = '';
+        Description = '';
         Direction double = [];
         Coefficient double = [];
         Wind_Reference_Height_Design = [];
@@ -11,15 +13,16 @@ classdef cVesselWindCoefficient < cMySQL & cModelName
     
     properties(Hidden, Constant)
         
-        DBTable = {'windcoefficientdirection'};
-        Type = 'Wind';
+        ModelTable = 'Wind_Coefficient_Model';
+        ValueTable = {'Wind_Coefficient_Model_value'};
+        ModelField = 'Wind_Coefficient_Model_Id';
     end
     
     methods
     
        function obj = cVesselWindCoefficient(varargin)
            
-           obj = obj@cModelName(varargin{:});
+           obj = obj@cModelID(varargin{:});
        end
        
        function prop = properties(~)
@@ -27,8 +30,9 @@ classdef cVesselWindCoefficient < cMySQL & cModelName
            prop = {
                     'Direction'
                     'Coefficient'
-                    'Models_id'
+                    'Model_ID'
                     'Name'
+                    'Deleted'
                                 };
        end
        
@@ -116,6 +120,21 @@ classdef cVesselWindCoefficient < cMySQL & cModelName
                if ~isempty(obj(oi).Name)
                    empty(oi) = false;
                end
+           end
+       end
+       
+       function insertIntoTable(obj)
+       % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs
+       
+           insertIntoTable@cModelID(obj);
+           
+           % ModelID subclass needs to write model name, description 
+           % because cModelID cannot have those properties
+           for oi = 1:numel(obj)
+               
+               currObj = obj(oi);
+               insertIntoTable@cMySQL(currObj, currObj.ModelTable, [], ...
+                   currObj.ModelField, currObj.Model_ID);
            end
        end
     end

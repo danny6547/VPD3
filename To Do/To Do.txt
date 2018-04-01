@@ -499,11 +499,11 @@ cMN: remove class
 #		cVD.ModelTable = 'DisplacementModel', .ModelField = 'Displacment_Model_Id', .ValueTable = 'Displacment_Model_Value'
 #	cVSP inherits from cMID
 #		cVSP.ModelTable = 'SpeedPowerCoefficientModel', .ModelField = 'Speed_Power_Coefficient_Model_Id', .ValueTable = 'Speed_Power_Coefficient_Model_Value'
-	cVWC inherits from cMID
-		cVWC.ModelTable = 'WindCoefficientModel', .ModelField = 'Wind_Coefficient_Model_Id', .ValueTable = 'Wind_Coefficient_Model_Value'
-			when IMO value assigned to cV.ModelID not in DB,
-				reserve value in ValueTable
-				if no values added, clear reserved value
+#	cVWC inherits from cMID
+#		cVWC.ModelTable = 'WindCoefficientModel', .ModelField = 'Wind_Coefficient_Model_Id', .ValueTable = 'Wind_Coefficient_Model_Value'
+#			when IMO value assigned to cV.ModelID not in DB,
+#				reserve value in ValueTable
+#				if no values added, clear reserved value
 				
 cCMSQLDB.ReadOnly: set parameters of connection to read-only
 cMN: rename to cMID
