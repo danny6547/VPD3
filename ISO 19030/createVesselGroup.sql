@@ -10,7 +10,7 @@ CREATE PROCEDURE createVesselGroup()
 
 BEGIN
 
-	CREATE TABLE Vessel_Group (id INT PRIMARY KEY AUTO_INCREMENT, 
+	CREATE TABLE VesselGroup (id INT PRIMARY KEY AUTO_INCREMENT, 
 								Name nvarchar(50) NOT NULL,
 								Description text,   
 								Select_Vessels_Query text,  

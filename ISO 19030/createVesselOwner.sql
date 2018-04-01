@@ -10,7 +10,7 @@ CREATE PROCEDURE createVesselOwner()
 
 BEGIN
 
-	CREATE TABLE Vessel_Owner (id INT PRIMARY KEY AUTO_INCREMENT,
+	CREATE TABLE VesselOwner (id INT PRIMARY KEY AUTO_INCREMENT,
 							 Vessel_Owner_Id INT(10),
 							 Vessel_Id INT(10),
 							 Ownership_Start DATETIME,

@@ -10,7 +10,7 @@ CREATE PROCEDURE createVesselConfiguration()
 
 BEGIN
 
-	CREATE TABLE Vessel_Configuration (Vessel_Configuration_Id INT PRIMARY KEY AUTO_INCREMENT,
+	CREATE TABLE VesselConfiguration (Vessel_Configuration_Id INT PRIMARY KEY AUTO_INCREMENT,
 							 Vessel_Id INT(10) UNIQUE NOT NULL,
 							 Engine_Model_Id INT(10),
 							 Valid_From DateTime,
