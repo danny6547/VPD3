@@ -1,9 +1,11 @@
-classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVesselDisplacementConversion
+classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVesselDisplacementConversion
     %CVESSELSPEEDPOWER Vessel speed and power data
     %   Detailed explanation goes here
     
     properties
         
+        Name = '';
+        Description = '';
         Speed double;
         Power double;
         Trim double;
@@ -15,6 +17,8 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
         Coefficient_B double = [];
         Coefficient_Q double = [];
         R_Squared double = [];
+        Maximum_Power = [];
+        Minimum_Power = [];
     end
     
     properties(Dependent, Hidden)
@@ -31,15 +35,16 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
     
     properties(Hidden, Constant)
        
-        DBTable = {'speedpowercoefficients', 'speedpower'};
-        Type = 'Speed, Power';
+        ModelTable = 'Speed_Power_Coefficient_Model';
+        ValueTable = {'Speed_Power_Coefficient_Model_Value', 'speed_power'};
+        ModelField = 'Speed_Power_Coefficient_Model_Id';
     end
     
     methods
     
        function obj = cVesselSpeedPower(varargin)
            
-           obj = obj@cModelName(varargin{:});
+           obj = obj@cModelID(varargin{:});
        end
        
        function [obj, coeffs, R2] = fit(obj, varargin)
@@ -116,8 +121,18 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
        % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs
        
            obj = obj.fit;
+           obj = obj.powerExtents;
            
-           insertIntoTable@cModelName(obj);
+           insertIntoTable@cModelID(obj);
+           
+           % ModelID subclass needs to write model name, description 
+           % because cModelID cannot have those properties
+           for oi = 1:numel(obj)
+               
+               currObj = obj(oi);
+               insertIntoTable@cMySQL(currObj, currObj.ModelTable, [], ...
+                   currObj.ModelField, currObj.Model_ID);
+           end
        end
        
        function [obj, h] = plot(obj)
@@ -307,6 +322,15 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
             spdt = currOut_m;
        end
        
+       function obj = powerExtents(obj)
+       % powerExtents Return extents of power values
+       
+       for oi = 1:numel(obj)
+           
+           obj(oi).Maximum_Power = max(obj(oi).Power);
+           obj(oi).Minimum_Power = min(obj(oi).Power);
+       end
+       end
     end
     
     methods
