@@ -495,8 +495,8 @@ cMN: remove class
 				cMID.set.MID reads OBJ data from all ValueTable
 				for each cV property which is a cMID,
 					assign _Model_Id value read from VesselConfiguration to .MID property
-	cVD inherits from cMID
-		cVD.ModelTable = 'DisplacementModel', .ModelField = 'Displacment_Model_Id', .ValueTable = 'Displacment_Model_Value'
+#	cVD inherits from cMID
+#		cVD.ModelTable = 'DisplacementModel', .ModelField = 'Displacment_Model_Id', .ValueTable = 'Displacment_Model_Value'
 #	cVSP inherits from cMID
 #		cVSP.ModelTable = 'SpeedPowerCoefficientModel', .ModelField = 'Speed_Power_Coefficient_Model_Id', .ValueTable = 'Speed_Power_Coefficient_Model_Value'
 	cVWC inherits from cMID
@@ -585,3 +585,4 @@ write sql script: ImportJob.rpt                      '
 Split all insert_data scripts into model and time
 Add all insert_model and insert_time scripts to cDB.runHempel
 cCMYSQLDB: Figure out default DB
+cWC.properties: remove, or implement for all cV_ classes?

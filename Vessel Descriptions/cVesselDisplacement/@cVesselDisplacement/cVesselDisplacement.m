@@ -15,9 +15,9 @@ classdef cVesselDisplacement < cMySQL & cModelID & cVesselDisplacementConversion
     
     properties(Hidden, Constant)
         
-        ModelTable = 'displacement_model';
-        ValueTable = {'displacement_model_value'};
-        ModelField = 'displacement_model_Id';
+        ModelTable = 'Displacement_Model';
+        ValueTable = {'Displacement_Model_value'};
+        ModelField = 'Displacement_Model_Id';
     end
     
     methods
