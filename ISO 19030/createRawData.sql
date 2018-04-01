@@ -2,11 +2,11 @@
 
 
 
-DROP PROCEDURE IF EXISTS createrawdata;
+DROP PROCEDURE IF EXISTS createRawData;
 
 delimiter //
 
-CREATE PROCEDURE createrawdata()
+CREATE PROCEDURE createRawData()
 
 BEGIN
 
@@ -37,7 +37,7 @@ CREATE TABLE rawdata (id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
 						 Volume_Consumed_Fuel_Oil FLOAT(15, 5),
 						 Temp_Fuel_Oil_At_Flow_Meter FLOAT(15, 5),
                          Displacement FLOAT(20, 10),
-                         CONSTRAINT UniqueVesselDate UNIQUE(Vessel_Id, DateTime_UTC),
+                         CONSTRAINT UniqueVesselDate UNIQUE(Vessel_Id, Timestamp)
                          /*,
                          Wind_Resistance_Relative FLOAT(15, 5),
                          Air_Resistance_No_Wind FLOAT(15, 5),

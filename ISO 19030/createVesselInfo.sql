@@ -10,10 +10,10 @@ CREATE PROCEDURE createVesselInfo()
 
 BEGIN
 
-	CREATE TABLE VesselInfo (id INT PRIMARY KEY AUTO_INCREMENT,
+	CREATE TABLE Vessel_Info (id INT PRIMARY KEY AUTO_INCREMENT,
 							 Vessel_id INT(10),
                              Valid_From DATETIME,
                              Vessel_Name DATETIME,
-                             Deleted BINARY
+                             Deleted BOOL
 							 );
 END;

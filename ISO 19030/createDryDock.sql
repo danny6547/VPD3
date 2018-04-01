@@ -10,7 +10,7 @@ CREATE PROCEDURE createDryDock()
 
 BEGIN
 
-	CREATE TABLE DryDock (id INTEGER AUTO_INCREMENT PRIMARY KEY,
+	CREATE TABLE Dry_Dock (id INTEGER AUTO_INCREMENT PRIMARY KEY,
 								Vessel_Id INT(10) NOT NULL,
 								StartDate DATE NOT NULL,
 								EndDate DATE NOT NULL,
@@ -23,7 +23,7 @@ BEGIN
 								Average_Speed_Expected FLOAT(15, 3),
 								Activity_Expected FLOAT(15, 3),
 								Longest_Idle_Period_Expected FLOAT(15, 3),
-								Deleted BINARY,
+								Deleted BOOL NOT NULL,
 								constraint UniRows UNIQUE(Vessel_Id, StartDate, EndDate)
 								);
 

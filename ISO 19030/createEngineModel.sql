@@ -10,8 +10,8 @@ CREATE PROCEDURE createEngineModel()
 
 BEGIN
 
-	CREATE TABLE EngineModel (id INT PRIMARY KEY AUTO_INCREMENT, 
-									Engine_Model NVARCHAR(100) , 
+	CREATE TABLE Engine_Model (id INT PRIMARY KEY AUTO_INCREMENT, 
+									Engine_Model NVARCHAR(100) UNIQUE, 
 									X0 FLOAT(15) NOT NULL, 
 									X1 FLOAT(15) NOT NULL,  
 									X2 FLOAT(15) NOT NULL, 
@@ -19,9 +19,7 @@ BEGIN
 									Lowest_Given_Brake_Power FLOAT(15) NOT NULL,
 									Highest_Given_Brake_Power FLOAT(15) NOT NULL, 
 									Description TEXT,
-									Fuel_Type NCHAR(10),
-									Highest_Given_Brake_Power FLOAT(15) NOT NULL, 
-									CONSTRAINT UniqueEngines UNIQUE(Engine_Model)
+									Fuel_Type NCHAR(10)
 									);
 									
 END;

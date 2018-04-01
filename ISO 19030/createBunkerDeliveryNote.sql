@@ -8,7 +8,7 @@ CREATE PROCEDURE createBunkerDeliveryNote()
 
 BEGIN
 
-CREATE TABLE BunkerDeliveryNote (id INT PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE Bunker_Delivery_Note (id INT PRIMARY KEY AUTO_INCREMENT,
 								Vessel_Id INT(10),
 								BDN_Number VARCHAR(100),
 								Bunker_Delivery_Date DATETIME,
@@ -18,7 +18,7 @@ CREATE TABLE BunkerDeliveryNote (id INT PRIMARY KEY AUTO_INCREMENT,
 								Density_At_15dg FLOAT(15, 4),
 								Lower_Heating_Value FLOAT(15, 3),
 								Density_Change_Rate_Per_C FLOAT(15, 10),
-								Deleted BINARY,
+								Deleted BOOL NOT NULL,
                                 CONSTRAINT UniIMO_BDN UNIQUE(Vessel_Id, BDN_Number)
                                 );
 END

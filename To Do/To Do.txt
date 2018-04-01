@@ -471,7 +471,7 @@ cDB
 	DNVGL.PerformanceData: table matching contents of perf files downloaded from EcoInsight
 	Force.RawData: table matching contents of raw files downloaded from SeaTrend, without performance values
 	Force.PerformanceData: table matching contents of perf files downloaded from EcoInsight, only performance values
-	Static: all static ship data
+# 	Static: all static ship data
 	TestStatic: all static ship data
 	Hempel: ISO-ready raw data, Hempel performance data, Analysis tables, constants and functions
 	TestHempel: ISO-ready raw data, Hempel performance data, Analysis tables
@@ -486,24 +486,31 @@ Authentication
 
 Change vessel identificiation to vessel config id from IMO
 cMN: remove class
-cMID: just like cMN but with Name functionally replaced by Model_ID. Name no longer a property.
-	cModelID abstract class with abstract props FieldName, ModelTable, ValueTable, Column (to replace Type)
+# cMID: just like cMN but with Name functionally replaced by Model_ID. Name no longer a property.
+#	cModelID abstract class with abstract props FieldName, ModelTable, ValueTable, Column (to replace Type)
 	cV inherits from cMID
-		cV.ModelTable = 'Vessel', .FieldName = 'Vessel_Id'
-		cV.DBTable = {'VesselConfiguration', 'VesselInfo', 'BunkerDeliveryNote'}
+		cV.ModelTable = 'Vessel', .ModelField = 'Vessel_Id'
+		cV.ValueTable = {'VesselConfiguration', 'VesselInfo', 'BunkerDeliveryNote'}
 			when IMO value assigned to cV.ModelID,
-				cMID.set.MID reads OBJ data from all DBTable
+				cMID.set.MID reads OBJ data from all ValueTable
 				for each cV property which is a cMID,
 					assign _Model_Id value read from VesselConfiguration to .MID property
 	cVD inherits from cMID
-		cVD.ModelTable = 'DisplacementModel', .FieldName = 'Displacment_Model_Id', .DBTable = 'Displacment_Model_Value'
-	cVSP inherits from cMID
-		cVSP.ModelTable = 'SpeedPowerCoefficientModel', .FieldName = 'Speed_Power_Coefficient_Model_Id', .DBTable = 'Speed_Power_Coefficient_Model_Value'
+		cVD.ModelTable = 'DisplacementModel', .ModelField = 'Displacment_Model_Id', .ValueTable = 'Displacment_Model_Value'
+#	cVSP inherits from cMID
+#		cVSP.ModelTable = 'SpeedPowerCoefficientModel', .ModelField = 'Speed_Power_Coefficient_Model_Id', .ValueTable = 'Speed_Power_Coefficient_Model_Value'
 	cVWC inherits from cMID
-		cVWC.ModelTable = 'WindCoefficientModel', .FieldName = 'Wind_Coefficient_Model_Id', .DBTable = 'Wind_Coefficient_Model_Value'
+		cVWC.ModelTable = 'WindCoefficientModel', .ModelField = 'Wind_Coefficient_Model_Id', .ValueTable = 'Wind_Coefficient_Model_Value'
 			when IMO value assigned to cV.ModelID not in DB,
-				reserve value in DBTable
+				reserve value in ValueTable
 				if no values added, clear reserved value
+				
+cCMSQLDB.ReadOnly: set parameters of connection to read-only
+cMN: rename to cMID
+cMID.Name: remove prop
+cMID.set.Name: replace all references to Name with Model_ID
+cMID.set.MID: read any data from all ValueTable identified by Model_ID
+cMID.set.MID: reserve Model_ID in ModelTable if not found and if ReadOnly is FALSE
 
 cVesselEvent:
 	cVE: an event with a defined start and end where performance values are statistically dissimilar before and after
@@ -574,3 +581,7 @@ write sql script: ImportJob.rpt                      '
 # write sql script: VesselToVesselOwner.rpt            '
 # write sql script: WindCoefficientModel.rpt           '
 # write sql script: WindCoefficientModelValue.rpt  	 '
+
+Split all insert_data scripts into model and time
+Add all insert_model and insert_time scripts to cDB.runHempel
+cCMYSQLDB: Figure out default DB

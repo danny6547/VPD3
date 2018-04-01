@@ -17,15 +17,15 @@ CREATE PROCEDURE createDisplacementModelValue()
 
 	BEGIN
 	
-	CREATE TABLE DisplacementModelValue (id INT PRIMARY KEY AUTO_INCREMENT,
+	CREATE TABLE Displacement_Model_Value (id INT PRIMARY KEY AUTO_INCREMENT,
 								 Displacement_Model_Id INT NOT NULL,
 								 Draft_Mean FLOAT(15, 3),
 								 LCF FLOAT(15, 5),
 								 TPC FLOAT(15, 3),
 								 Trim FLOAT(15, 3),
 								 Displacement FLOAT(15, 5),
-                                 CONSTRAINT UniqueModelDraft UNIQUE(Models_id, Draft_Mean),
-                                 CONSTRAINT UniqueModelDraftTrim UNIQUE(Models_id, Draft_Mean, Trim)
+                                 CONSTRAINT UniqueModelDraft UNIQUE(Displacement_Model_Id, Draft_Mean),
+                                 CONSTRAINT UniqueModelDraftTrim UNIQUE(Displacement_Model_Id, Draft_Mean, Trim)
                                  );
 								 
 	END;
