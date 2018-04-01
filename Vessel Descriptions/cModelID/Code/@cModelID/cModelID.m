@@ -89,7 +89,6 @@ classdef (Abstract) cModelID < cMySQL & handle
            end
        end
        end
-      
     end
     
     methods(Access = protected, Hidden)

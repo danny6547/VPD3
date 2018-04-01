@@ -1,9 +1,11 @@
-classdef cVesselDisplacement < cMySQL & cModelName & cVesselDisplacementConversion
+classdef cVesselDisplacement < cMySQL & cModelID & cVesselDisplacementConversion
     %CVESSELDISPLACEMENT Summary of this class goes here
     %   Detailed explanation goes here
     
     properties
         
+        Name = '';
+        Description = '';
         Displacement = [];
         Draft_Mean = [];
         Trim = [];
@@ -13,8 +15,9 @@ classdef cVesselDisplacement < cMySQL & cModelName & cVesselDisplacementConversi
     
     properties(Hidden, Constant)
         
-        DBTable = {'Displacement'};  
-        Type = 'Displacement'; 
+        ModelTable = 'displacement_model';
+        ValueTable = {'displacement_model_value'};
+        ModelField = 'displacement_model_Id';
     end
     
     methods
@@ -86,6 +89,21 @@ classdef cVesselDisplacement < cMySQL & cModelName & cVesselDisplacementConversi
            obj = displacementInVolume@cVesselDisplacementConversion(obj, 'Displacement');
 %            newDisp_c = num2cell(newDisp_v);
 %            [obj.Displacement] = deal(newDisp_c{:});
+       end
+       
+       function insertIntoTable(obj)
+       % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs
+           
+           insertIntoTable@cModelID(obj);
+           
+           % ModelID subclass needs to write model name, description 
+           % because cModelID cannot have those properties
+           for oi = 1:numel(obj)
+               
+               currObj = obj(oi);
+               insertIntoTable@cMySQL(currObj, currObj.ModelTable, [], ...
+                   currObj.ModelField, currObj.Model_ID);
+           end
        end
     end
     
