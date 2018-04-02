@@ -4,8 +4,8 @@ classdef cVesselDisplacement < cMySQL & cModelID & cVesselDisplacementConversion
     
     properties
         
-        Name = '';
-        Description = '';
+%         Name = '';
+%         Description = '';
         Displacement = [];
         Draft_Mean = [];
         Trim = [];
@@ -15,8 +15,8 @@ classdef cVesselDisplacement < cMySQL & cModelID & cVesselDisplacementConversion
     
     properties(Hidden, Constant)
         
-        ModelTable = 'Displacement_Model';
-        ValueTable = {'Displacement_Model_value'};
+        ModelTable = 'DisplacementModel';
+        ValueTable = {'DisplacementModelvalue'};
         ModelField = 'Displacement_Model_Id';
     end
     

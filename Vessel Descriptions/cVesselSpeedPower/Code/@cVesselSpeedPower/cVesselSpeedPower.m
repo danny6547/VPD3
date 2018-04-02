@@ -4,8 +4,6 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
     
     properties
         
-        Name = '';
-        Description = '';
         Speed double;
         Power double;
         Trim double;
@@ -35,8 +33,8 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
     
     properties(Hidden, Constant)
        
-        ModelTable = 'Speed_Power_Coefficient_Model';
-        ValueTable = {'Speed_Power_Coefficient_Model_Value', 'speed_power'};
+        ModelTable = 'SpeedPowerCoefficientModel';
+        ValueTable = {'SpeedPowerCoefficientModelValue', 'speedpower'};
         ModelField = 'Speed_Power_Coefficient_Model_Id';
     end
     
@@ -117,22 +115,25 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
        end
        end
        
-       function insertIntoTable(obj)
+       function insertModel(obj)
        % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs
        
            obj = obj.fit;
            obj = obj.powerExtents;
            
-           insertIntoTable@cModelID(obj);
+%            obj.insertModel;
+           insertModel@cModelID(obj);
            
-           % ModelID subclass needs to write model name, description 
-           % because cModelID cannot have those properties
-           for oi = 1:numel(obj)
-               
-               currObj = obj(oi);
-               insertIntoTable@cMySQL(currObj, currObj.ModelTable, [], ...
-                   currObj.ModelField, currObj.Model_ID);
-           end
+%            insertIntoTable@cModelID(obj);
+%            
+%            % ModelID subclass needs to write model name, description 
+%            % because cModelID cannot have those properties
+%            for oi = 1:numel(obj)
+%                
+%                currObj = obj(oi);
+%                insertIntoTable@cMySQL(currObj, currObj.ModelTable, [], ...
+%                    currObj.ModelField, currObj.Model_ID);
+%            end
        end
        
        function [obj, h] = plot(obj)

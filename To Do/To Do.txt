@@ -586,3 +586,32 @@ Split all insert_data scripts into model and time
 Add all insert_model and insert_time scripts to cDB.runHempel
 cCMYSQLDB: Figure out default DB
 cWC.properties: remove, or implement for all cV_ classes?
+cV.Name: make Name dependent, set value when Info added
+
+To sync data between an object with a model table and multiple nested objects referencing same table:
+	cV.IMO = imo:
+		1. Find most recent configuration for imo, return corresponding Vessel_Id
+		2. cV.Vessel_: call cMySQL.readFromTable(tab, 'vessel_id')
+	cTO.readFromTable: as cMySQL
+	cTO.checkModel(obj, table, field, mid): read out data if found, 
+		increment model id otherwise (as cModelID.set.ModelID) 
+		all input can be same size and corresponding elements will be taken 
+		together, otherwise obj, field can be scalar and table cellstr and 
+		obj will be assigned to from multiple table identified by same field
+	cMID: inherit from cTO
+	cMID.set.ModelID: extract method checkModel(obj, [{ModelTable}, ValueTable], ModelField) call checkModel on ModelTable and ValueTable
+	cV: don't inherit from cMID, inherit from cTO
+	cV.set.IMO(imo):
+		cV.mostRecentConfiguration(imo)
+		cV.checkModel on all sub-classes
+	cMID.insertIntoModels: insert method into reserveModel?
+	cTO.reserveModel: copy method from cMID, new input TABLE
+	cTO.releaseModel: copy method from cMID, new input TABLE
+	cMID.reserveModel, releaseModel: call with appropriate table
+
+?alias_c = obj.propertyAlias;
+?reserveModelID calls insertIntoTable
+?cTO.Deleted
+cVSP.insert:
+	if mid empty, increment
+	call cMID.insertIntoTable on sp, spcm, spcmv

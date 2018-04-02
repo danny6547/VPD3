@@ -4,8 +4,8 @@ classdef cVesselWindCoefficient < cMySQL & cModelID
     
     properties
         
-        Name = '';
-        Description = '';
+%         Name = '';
+%         Description = '';
         Direction double = [];
         Coefficient double = [];
         Wind_Reference_Height_Design = [];
@@ -13,8 +13,8 @@ classdef cVesselWindCoefficient < cMySQL & cModelID
     
     properties(Hidden, Constant)
         
-        ModelTable = 'Wind_Coefficient_Model';
-        ValueTable = {'Wind_Coefficient_Model_value'};
+        ModelTable = 'WindCoefficientModel';
+        ValueTable = {'WindCoefficientModelvalue'};
         ModelField = 'Wind_Coefficient_Model_Id';
     end
     

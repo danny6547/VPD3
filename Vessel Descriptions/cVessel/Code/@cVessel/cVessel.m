@@ -1,18 +1,20 @@
-classdef cVessel < cMySQL
+classdef cVessel < cTableObject
     %CVESSEL Summary of this class goes here
     %   Detailed explanation goes here
     
     properties
         
-        IMO_Vessel_Number double = [];
+        IMO double = [];
         Name char = '';
+        Vessel_Id double = [];
         
-        Particulars = [];
+        Configuration = cVesselConfiguration;
         SpeedPower = [];
         DryDockDates = [];
         WindCoefficient = [];
         Displacement = [];
         Engine = [];
+        Owner = cVesselOwner;
         FuelType = 'HFO';
         
         Variable = 'speed_index';
@@ -49,10 +51,18 @@ classdef cVessel < cMySQL
     properties(Access = private)
         
         PerformanceTable = 'PerformanceData';
+        Info = cVesselInfo;
+    end
+    
+    properties(Hidden, Constant)
+       
+        ModelTable = 'Vessel';
+        ValueTable = {'VesselConfiguration', 'VesselInfo', 'BunkerDeliveryNote'};
+        ModelField = 'Vessel_Id';
     end
     
     methods
-    
+       
        function obj = cVessel(varargin)
        % Class constructor. Construct new object, assign array of IMO.
        
@@ -69,8 +79,15 @@ classdef cVessel < cMySQL
         p.addParameter('IMO', []);
         p.addParameter('FileName', '');
         p.addParameter('ShipData', []);
+        p.addParameter('Database', '');
         p.parse(varargin{:});
         res = p.Results;
+        
+        % Re-assign DB
+        if ~isempty(res.Database)
+            
+            obj.Database = res.Database;
+        end
 
         imo = res.IMO;
         shipDataInput = res.ShipData;
@@ -130,7 +147,7 @@ classdef cVessel < cMySQL
            size_c = num2cell(size(imo));
            obj(size_c{:}) = cVessel();
            imo_c = num2cell(imo);
-           [obj.IMO_Vessel_Number] = deal(imo_c{:});
+           [obj.IMO] = deal(imo_c{:});
            
            parts = [obj.Particulars];
            [parts.IMO_Vessel_Number] = deal(imo_c{:});
@@ -211,29 +228,65 @@ classdef cVessel < cMySQL
        
        end
        
-       function obj = insert(obj)
+       function obj = insertIntoTable(obj)
        % insert Insert all available vessel data into database
            
            % Vessels
-           obj = obj.insertIntoVessels();
+%            obj = obj.insertIntoVessels();
+
+           % Vessels
+%            insertIntoTable@cModelID(obj);
            
-           % SpeedPower
-           obj = obj.insertIntoSpeedPower();
+           for oi = 1:numel(obj)
+               
+               % ModelID subclass needs to write model name, description 
+               % because cModelID cannot have those properties
+               currObj = obj(oi);
+               
+%                if isempty(currObj.Model_ID)
+%                    
+%                    id = nextUniqueID(obj);
+%                    obj.Model_ID = id;
+%                end
+               
+%                insertIntoTable@cMySQL(currObj, currObj.ModelTable, ...
+%                    currObj);
+%                insertIntoTable@cMySQL(currObj, 'VesselConfiguration', ...
+%                    currObj.Configuration);
+               
+               insertIntoTable@cTableObject(currObj, 'Vessel');
+               
+               currObj = currObj.checkModel('Vessel', 'IMO', currObj.IMO);
+               insertIntoTable@cTableObject(currObj.Configuration, ...
+                   'VesselConfiguration', [], 'Vessel_Id', currObj.Vessel_Id);
+               
+%                insertIntoTable@cMySQL(currObj, 'VesselGroup', [], ...
+%                    currObj.ModelField, currObj.Model_ID);
+%                
+%                insertIntoTable@cMySQL(currObj, 'VesselInfo', [], ...
+%                    currObj.ModelField, currObj.Model_ID);
+%                
+%                insertIntoTable@cMySQL(currObj, 'VesselOwner', [], ...
+%                    currObj.ModelField, currObj.Model_ID);
+           end
            
-           % Wind
-           obj = insertIntoWindCoefficients(obj);
-           
-           % Dry Dock Dates
-           obj = insertIntoDryDockDates(obj);
-           
-           % SFOC
-           obj = insertIntoSFOCCoefficients(obj);
-           
-           % Bunker delivery notes
-           obj = insertBunkerDeliveryNote(obj);
-           
-           % Displacement
-           obj = insertIntoDisplacement(obj);
+%            % SpeedPower
+%            obj = obj.insertIntoSpeedPower();
+%            
+%            % Wind
+%            obj = insertIntoWindCoefficients(obj);
+%            
+%            % Dry Dock Dates
+%            obj = insertIntoDryDockDates(obj);
+%            
+%            % SFOC
+%            obj = insertIntoSFOCCoefficients(obj);
+%            
+%            % Bunker delivery notes
+%            obj = insertBunkerDeliveryNote(obj);
+%            
+%            % Displacement
+%            obj = insertIntoDisplacement(obj);
        end
        
        function obj = insertIntoVessels(obj)
@@ -1372,7 +1425,7 @@ classdef cVessel < cMySQL
             for oi = 1:numel(obj)
                 
                 obj(oi).DryDockDates = cVesselDryDockDates();
-                obj(oi).Particulars = cVesselParticulars();
+                obj(oi).Configuration = cVesselConfiguration();
                 obj(oi).SpeedPower = cVesselSpeedPower();
                 obj(oi).Report = cVesselReport();
                 obj(oi).WindCoefficient = cVesselWindCoefficient();
@@ -1384,7 +1437,7 @@ classdef cVessel < cMySQL
     
     methods
        
-       function obj = set.IMO_Vessel_Number(obj, IMO)
+       function obj = set.IMO(obj, IMO)
            
            if ~isempty(IMO(~isnan(IMO)))
                 validateattributes(IMO, {'numeric'}, ...
@@ -1394,8 +1447,33 @@ classdef cVessel < cMySQL
                     {'scalar'});
                 IMO = [];
            end
-           obj.IMO_Vessel_Number = IMO;
-           obj.Particulars.IMO_Vessel_Number = IMO;
+           obj.IMO = IMO;
+           
+%            obj.readFromTable('Vessel', 'IMO');
+%            
+%            imo_ch = num2str(IMO);
+%            [~, vess_tbl] = obj.select('Vessel', 'Vessel_Id',...
+%                ['IMO = ', imo_ch, ' AND Deleted = 0']);
+%            
+%            if isempty(vess_tbl)
+%                
+%                [~, newid_tbl] = obj.select('Vessel', 'MAX(Vessel_Id)+1');
+%                vid = str2double([newid_tbl{:, :}]);
+%                obj.Vessel_Id = vid;
+%            else
+%                
+%                vid = vess_tbl.Vessel_Id;
+%            end
+           
+           obj = obj.checkModel('Vessel', 'IMO', IMO);
+           vid = obj.Vessel_Id;
+           
+           field = 'Vessel_Id';
+           obj.Configuration = obj.Configuration.checkModel('VesselConfiguration', field, vid);
+           obj.Owner = obj.Owner.checkModel('VesselOwner', field, vid);
+           obj.Info = obj.Info.checkModel('VesselInfo', field, vid);
+           
+%            obj.Particulars.IMO_Vessel_Number = IMO;
            
 %            % Apply to Speed, Power
 %            if ~isempty(IMO)
@@ -1516,7 +1594,7 @@ classdef cVessel < cMySQL
        validateattributes(ddd, {'cVesselDryDockDates'}, {});
        
        % Assign IMO
-       imo = obj.IMO_Vessel_Number;
+       imo = obj.IMO;
        if ~isempty(imo)
            [ddd.IMO_Vessel_Number] = deal(imo);
        end
@@ -1540,7 +1618,7 @@ classdef cVessel < cMySQL
 %            validateattributes(sp, {'cVesselSpeedPower'}, {'vector'});
 %            
 %            % Assign IMO
-%            imo = obj.IMO_Vessel_Number;
+%            imo = obj.IMO;
 %            if isempty(imo)
 %                
 %                newSp = cVesselSpeedPower();
@@ -1595,17 +1673,17 @@ classdef cVessel < cMySQL
             obj.DDIterator = di;
         end
         
-        function obj = set.Particulars(obj, part)
-           
-           validateattributes(part, {'cVesselParticulars'}, {'scalar'},...
-               'cVessel.Particulars', 'Particulars');
-           
-           obj.Particulars = copy(part);
-           if ~isempty(obj.IMO_Vessel_Number)
-               
-               obj.Particulars.IMO_Vessel_Number = obj.IMO_Vessel_Number;
-           end
-        end
+%         function obj = set.Configuration(obj, part)
+%            
+%            validateattributes(part, {'cVesselParticulars'}, {'scalar'},...
+%                'cVessel.Particulars', 'Particulars');
+%            
+%            obj.Particulars = copy(part);
+%            if ~isempty(obj.IMO)
+%                
+%                obj.Particulars.IMO_Vessel_Number = obj.IMO;
+%            end
+%         end
         
         function obj = set.InService(obj, ins)
             
