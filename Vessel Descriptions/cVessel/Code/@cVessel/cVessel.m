@@ -33,6 +33,7 @@ classdef cVessel < cTableObject
         IterFinished = false;
         DryDockIndexDB = [];
         DDIterator = [0, 1, 0];
+        Info = cVesselInfo;
     end
     
     properties(Dependent)
@@ -51,7 +52,6 @@ classdef cVessel < cTableObject
     properties(Access = private)
         
         PerformanceTable = 'PerformanceData';
-        Info = cVesselInfo;
     end
     
     properties(Hidden, Constant)
@@ -255,19 +255,19 @@ classdef cVessel < cTableObject
 %                    currObj.Configuration);
                
                insertIntoTable@cTableObject(currObj, 'Vessel');
-               
                currObj = currObj.checkModel('Vessel', 'IMO', currObj.IMO);
+               
                insertIntoTable@cTableObject(currObj.Configuration, ...
                    'VesselConfiguration', [], 'Vessel_Id', currObj.Vessel_Id);
                
 %                insertIntoTable@cMySQL(currObj, 'VesselGroup', [], ...
 %                    currObj.ModelField, currObj.Model_ID);
-%                
-%                insertIntoTable@cMySQL(currObj, 'VesselInfo', [], ...
-%                    currObj.ModelField, currObj.Model_ID);
-%                
-%                insertIntoTable@cMySQL(currObj, 'VesselOwner', [], ...
-%                    currObj.ModelField, currObj.Model_ID);
+               
+               insertIntoTable@cTableObject(currObj.Info, ...
+                   'VesselInfo', [], 'Vessel_Id', currObj.Vessel_Id);
+               
+               insertIntoTable@cTableObject(currObj.Owner,...
+                   'VesselOwner', [], 'Vessel_Id', currObj.Vessel_Id);
            end
            
 %            % SpeedPower

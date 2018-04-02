@@ -13,7 +13,7 @@ BEGIN
 	CREATE TABLE VesselInfo (id INT PRIMARY KEY AUTO_INCREMENT,
 							 Vessel_Id INT(10),
                              Valid_From DATETIME,
-                             Vessel_Name DATETIME,
+                             Vessel_Name TEXT,
                              Deleted BOOL
 							 );
 END;
