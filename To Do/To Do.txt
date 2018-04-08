@@ -615,3 +615,11 @@ To sync data between an object with a model table and multiple nested objects re
 cVSP.insert:
 	if mid empty, increment
 	call cMID.insertIntoTable on sp, spcm, spcmv
+cDateConvert: find how to have subclasses Start, End properties reflect DateFormStr always
+
+cMYSQL.Connections: COM.ADODB_Connection array
+cMYSQL.cMYSQL: allow for Connection to be input
+cMYSQL.connect: check if any conn in Connections has input properties, index or create
+cV.cV: pass connection inputs to cMYSQL/cTableObject
+cV.set.Database: pass Connection to cVSP, cVD ... (all nested cMYSQL children)
+cV.cV: call assignDefaults after connection made

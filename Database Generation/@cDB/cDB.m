@@ -695,11 +695,19 @@ classdef cDB < cMySQL
        
        end
        
-       function createStatic(obj)
+       function createStatic(obj, varargin)
        % Create database for static vessel data.
        
-       % Create Database
+       % Input
        dbname = 'Static';
+       if nargin > 1 && ~isempty(varargin{1})
+           
+           dbname = varargin{1};
+           validateattributes(dbname, {'char'}, {'vector'}, ...
+               'cDB.createStatic', 'dbname', 2);
+       end
+       
+       % Create Database
        obj = obj.drop('DATABASE', dbname, true);
        obj = obj.createDatabase(dbname, true);
        obj.Database = dbname;
@@ -731,17 +739,26 @@ classdef cDB < cMySQL
        cellfun(@(x) obj.call(x), static_c);
        
        % Run all files in InsertStatic dir
-       findStaticFiles_ch = [obj.InsertStaticDir, '\*.m'];
-       allFiles_st = dir(findStaticFiles_ch);
-       allFilesNames = cellfun(@(x) fullfile(obj.InsertStaticDir, x), ...
-           {allFiles_st.name}, 'Uni', 0);
-       for fi = 1:numel(allFilesNames)
+       if obj.InsertStatic
            
-           run(allFilesNames{fi});
+           findStaticFiles_ch = [obj.InsertStaticDir, '\*.m'];
+           allFiles_st = dir(findStaticFiles_ch);
+           allFilesNames = cellfun(@(x) fullfile(obj.InsertStaticDir, x), ...
+               {allFiles_st.name}, 'Uni', 0);
+           for fi = 1:numel(allFilesNames)
+
+               run(allFilesNames{fi});
+           end
+       end
        end
        
-       end
+       function createTestStatic(obj)
+       % createTestStatic Create Test Static DB
        
+       dbname = 'TestStatic';
+       obj.createStatic(dbname);
+           
+       end
     end
     
     methods(Static)

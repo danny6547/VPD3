@@ -1,36 +1,27 @@
-classdef cVesselDryDockDates < cMySQL
+classdef cVesselDryDockDates < cMySQL & cDateConvert
     %CVESSELDRYDOCKDATES Summary of this class goes here
     %   Detailed explanation goes here
     
     properties
         
         IMO_Vessel_Number = [];
+        StartDate
+        EndDate
         Vertical_Bottom_Surface_Prep
         Vertical_Bottom_Coating
         Flat_Bottom_Surface_Prep
         Flat_Bottom_Coating
     end
     
-    properties(Dependent)
-        
-        StartDate char = '';
-        EndDate char = '';
-    end
-    
-    properties
-        
-        DateStrFormat char = 'yyyy-mm-dd';
-    end
-    
-    properties(Hidden)
-        
-        StartDateNum = [];
-        EndDateNum = [];
-    end
-    
     properties(Hidden, Constant)
         
         DBTable = 'DryDockDates';
+    end
+    
+    properties(Constant, Hidden)
+        
+        StartDateProp = 'StartDate';
+        EndDateProp = 'EndDate';
     end
     
     methods
@@ -39,20 +30,6 @@ classdef cVesselDryDockDates < cMySQL
     
        end
        
-       function obj = assignDates(obj, startdate, enddate, varargin)
-           
-           for oi = 1:numel(obj)
-                
-                dateform = obj(oi).DateStrFormat;
-                if nargin > 3
-                    dateform = varargin{1};
-                end
-
-                obj(oi).StartDateNum = obj(oi).setDate(startdate, dateform);
-                obj(oi).EndDateNum = obj(oi).setDate(enddate, dateform);
-           end
-        end
-        
        function obj = readFile(obj, filename, dateform)
         % readFile Assign dry dock dates from file to obj
         
@@ -314,46 +291,7 @@ classdef cVesselDryDockDates < cMySQL
         end
     end
     
-    methods(Hidden, Static)
-        
-        function datenumeric = setDate(date, stringformat)
-            
-            if isnumeric(date)
-                
-                datenumeric = date;
-                
-            elseif ischar(date) || iscellstr(date)
-                
-                datenumeric = datenum(date, stringformat);
-            end
-        end
-    end
-    
     methods
-        
-        function date = get.StartDate(obj)
-            
-            date = datestr(obj.StartDateNum, obj.DateStrFormat);
-        end
-        
-        function date = get.EndDate(obj)
-            
-            date = datestr(obj.EndDateNum, obj.DateStrFormat);
-        end
-        
-        function obj = set.StartDate(obj, date)
-        % Set method for start date, converting date string to number
-            
-            daten = datenum(date, obj.DateStrFormat);
-            obj.StartDateNum = daten;
-        end
-        
-        function obj = set.EndDate(obj, date)
-        % Set method for end date, converting date string to number
-            
-            daten = datenum(date, obj.DateStrFormat);
-            obj.EndDateNum = daten;
-        end
         
         function obj = set.Vertical_Bottom_Surface_Prep(obj, val)
             

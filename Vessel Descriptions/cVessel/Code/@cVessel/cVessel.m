@@ -257,15 +257,18 @@ classdef cVessel < cTableObject
                insertIntoTable@cTableObject(currObj, 'Vessel');
                currObj = currObj.checkModel('Vessel', 'IMO', currObj.IMO);
                
+               currObj.Configuration.DateStrFormat = 'yyyy-mm-dd';
                insertIntoTable@cTableObject(currObj.Configuration, ...
                    'VesselConfiguration', [], 'Vessel_Id', currObj.Vessel_Id);
                
 %                insertIntoTable@cMySQL(currObj, 'VesselGroup', [], ...
 %                    currObj.ModelField, currObj.Model_ID);
                
+               currObj.Info.DateStrFormat = 'yyyy-mm-dd';
                insertIntoTable@cTableObject(currObj.Info, ...
                    'VesselInfo', [], 'Vessel_Id', currObj.Vessel_Id);
                
+               currObj.Owner.DateStrFormat = 'yyyy-mm-dd';
                insertIntoTable@cTableObject(currObj.Owner,...
                    'VesselOwner', [], 'Vessel_Id', currObj.Vessel_Id);
            end
@@ -1433,6 +1436,7 @@ classdef cVessel < cTableObject
                 obj(oi).Engine = cVesselEngine();
             end
         end
+        
     end
     
     methods

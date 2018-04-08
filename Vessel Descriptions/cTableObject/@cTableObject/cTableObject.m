@@ -375,6 +375,9 @@ classdef cTableObject < cMySQL
                         rethrow(ee);
                     end
                 end
+                
+            else
+                
             end
         %                 % Read additional data from Models Table
         %                 try obj = obj.readFromTable(obj.ModelTable,...

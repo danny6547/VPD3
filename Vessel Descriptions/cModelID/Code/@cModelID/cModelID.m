@@ -21,6 +21,14 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
     
        function obj = cModelID(varargin)
            
+           % Assign Connection properties
+           paramValue_c = {};
+           if nargin > 2 && ~isempty(varargin{3})
+               
+               paramValue_c = varargin(3:end);
+           end
+           obj = obj@cMySQL(paramValue_c{:});
+           
            % Expand scalar into matrix if requested
            if nargin > 0
                
@@ -32,7 +40,7 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
            end
            
            % Assign model id values if input
-           if nargin > 1
+           if nargin > 1 && ~isempty(varargin{2})
                
                mid_c = varargin{2};
                cellfun(@(x) validateattributes(x, {'numeric'}, {'scalar',...
@@ -40,6 +48,7 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
                   'ModelID', 2), mid_c);
                [obj.Model_ID] = deal(mid_c{:});
            end
+           
        end
        
        function delete(obj)
@@ -65,7 +74,7 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
        if all(empty_l)
            
            % Release a reserved row in DB if no other data was input
-           obj.releaseModelID();
+%            obj.releaseModelID();
        end
        end
        

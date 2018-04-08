@@ -14,6 +14,7 @@ BEGIN
 							 Vessel_Id INT(10),
                              Valid_From DATETIME,
                              Vessel_Name TEXT,
-                             Deleted BOOL
+                             Deleted BOOL,
+                             CONSTRAINT UniqueVesselName UNIQUE(Vessel_Id, Vessel_Name(767))
 							 );
 END;

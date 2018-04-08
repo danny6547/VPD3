@@ -123,20 +123,20 @@ classdef cVesselWindCoefficient < cMySQL & cModelID
            end
        end
        
-       function insertIntoTable(obj)
-       % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs
-       
-           insertIntoTable@cModelID(obj);
-           
-           % ModelID subclass needs to write model name, description 
-           % because cModelID cannot have those properties
-           for oi = 1:numel(obj)
-               
-               currObj = obj(oi);
-               insertIntoTable@cMySQL(currObj, currObj.ModelTable, [], ...
-                   currObj.ModelField, currObj.Model_ID);
-           end
-       end
+%        function insertIntoTable(obj)
+%        % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs
+%        
+%            insertIntoTable@cModelID(obj);
+%            
+%            % ModelID subclass needs to write model name, description 
+%            % because cModelID cannot have those properties
+%            for oi = 1:numel(obj)
+%                
+%                currObj = obj(oi);
+%                insertIntoTable@cMySQL(currObj, currObj.ModelTable, [], ...
+%                    currObj.ModelField, currObj.Model_ID);
+%            end
+%        end
     end
 
     methods(Static)

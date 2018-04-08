@@ -1,4 +1,4 @@
-classdef cVesselOwner < cTableObject
+classdef cVesselOwner < cTableObject & cDateConvert
     %CVESSELOWNER Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -9,19 +9,16 @@ classdef cVesselOwner < cTableObject
         Deleted = false;
     end
     
-%     properties(Hidden, Constant)
-%        
-%         ModelTable = 'Vessel';
-%         ModelField = 'Vessel_Id';
-%         ValueTable = {'VesselOwner'};
-%     end
+    properties(Constant, Hidden)
+        
+        StartDateProp = 'Ownership_Start';
+        EndDateProp = 'Ownership_End';
+    end
     
     methods
     
        function obj = cVesselOwner()
     
        end
-    
     end
-    
 end
