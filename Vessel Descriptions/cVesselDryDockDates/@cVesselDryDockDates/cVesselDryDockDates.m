@@ -26,8 +26,9 @@ classdef cVesselDryDockDates < cMySQL & cDateConvert
     
     methods
         
-       function obj = cVesselDryDockDates()
+       function obj = cVesselDryDockDates(varargin)
     
+           obj = obj@cMySQL(varargin{:});
        end
        
        function obj = readFile(obj, filename, dateform)

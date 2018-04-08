@@ -47,8 +47,9 @@ classdef cVesselConfiguration < cMySQL & matlab.mixin.Copyable & cTableObject & 
     
     methods
     
-       function obj = cVesselConfiguration()
+       function obj = cVesselConfiguration(varargin)
        
+           obj = obj@cTableObject(varargin{:});
        end
        
 %        function obj = insertIntoTable(obj)

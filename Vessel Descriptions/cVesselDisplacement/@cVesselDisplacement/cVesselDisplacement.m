@@ -22,8 +22,9 @@ classdef cVesselDisplacement < cMySQL & cModelID & cVesselDisplacementConversion
     
     methods
        
-       function obj = cVesselDisplacement()
+       function obj = cVesselDisplacement(varargin)
            
+           obj = obj@cModelID(varargin{:});
        end
        
        function empty = isempty(obj)

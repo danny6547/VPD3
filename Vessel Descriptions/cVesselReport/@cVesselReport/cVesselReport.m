@@ -47,8 +47,9 @@ classdef cVesselReport < cMySQL
     
     methods
     
-       function obj = cVesselReport()
+       function obj = cVesselReport(varargin)
             
+        obj = obj@cMySQL(varargin{:});
        end
     end
 end

@@ -22,27 +22,35 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
        function obj = cModelID(varargin)
            
            % Assign Connection properties
-           paramValue_c = {};
-           if nargin > 2 && ~isempty(varargin{3})
-               
-               paramValue_c = varargin(3:end);
-           end
-           obj = obj@cMySQL(paramValue_c{:});
+%            paramValue_c = {};
+%            if nargin > 2 && ~isempty(varargin{3})
+%                
+%                paramValue_c = varargin(3:end);
+%            end
+           obj = obj@cMySQL(varargin{:});
+           
+           p = inputParser();
+            p.addParameter('Size', []);
+            p.addParameter('ModelID', []);
+            p.KeepUnmatched = true;
+            p.parse(varargin{:});
+            res = p.Results;
            
            % Expand scalar into matrix if requested
-           if nargin > 0
+           if ~ismember('Size', p.UsingDefaults) %  nargin > 0 && ~isempty(varargin{1})
                
-               sizeVect_v = varargin{1};
-               nRows = sizeVect_v(1);
-               nCols = sizeVect_v(2);
+               sizeVect_v = res.Size; % varargin{1};
+               size_c = num2cell(sizeVect_v);
+%                nRows = sizeVect_v(1);
+%                nCols = sizeVect_v(2);
                class_ch = class(obj);
-               obj(nRows, nCols) = eval(class_ch);
+               obj(size_c{:}) = eval(class_ch);
            end
            
            % Assign model id values if input
-           if nargin > 1 && ~isempty(varargin{2})
+           if ~ismember('ModelID', p.UsingDefaults) % nargin > 1 && ~isempty(varargin{2})
                
-               mid_c = varargin{2};
+               mid_c = res.ModelID; % varargin{2};
                cellfun(@(x) validateattributes(x, {'numeric'}, {'scalar',...
                   'real', 'integer', 'positive'}, 'cModelID.cModelID',...
                   'ModelID', 2), mid_c);

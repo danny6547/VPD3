@@ -17,8 +17,9 @@ classdef cVesselOwner < cTableObject & cDateConvert
     
     methods
     
-       function obj = cVesselOwner()
-    
+       function obj = cVesselOwner(varargin)
+           
+           obj = obj@cTableObject(varargin{:});
        end
     end
 end

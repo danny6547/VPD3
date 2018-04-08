@@ -47,7 +47,7 @@ methods
         vessel.Engine.Name = 'Test Engine';
         
         % Speed Power
-        sp = cVesselSpeedPower([1, 2], [], 'Database', testDB);
+        sp = cVesselSpeedPower('Size', [1, 2], 'Database', testDB);
         sp(1).Speed = [10, 15];
         sp(1).Power = [10, 15]*1e4;
         sp(1).Trim = 1;

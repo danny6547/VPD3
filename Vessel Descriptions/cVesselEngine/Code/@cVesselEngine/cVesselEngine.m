@@ -1,4 +1,4 @@
-classdef cVesselEngine < handle
+classdef cVesselEngine < cTableObject
     %CVESSELENGINE Ship Engine details and SFOC curve.
     %   Detailed explanation goes here
     
@@ -14,15 +14,13 @@ classdef cVesselEngine < handle
         Minimum_FOC_ph double = [];
         Lowest_Given_Brake_Power double = [];
         Highest_Given_Brake_Power double = [];
-        
     end
     
     methods
     
-       function obj = cVesselEngine()
+       function obj = cVesselEngine(varargin)
            
-           
-           
+           obj = obj@cTableObject(varargin{:});
        end
        
        function obj = fitData2Quadratic(obj, mcr, sfoc, powerPCT)

@@ -7,14 +7,15 @@ classdef cVessel < cTableObject
         IMO double = [];
         Name char = '';
         Vessel_Id double = [];
+        DatabaseName char = '';
         
-        Configuration = cVesselConfiguration;
+        Configuration = [];
         SpeedPower = [];
         DryDockDates = [];
         WindCoefficient = [];
         Displacement = [];
         Engine = [];
-        Owner = cVesselOwner;
+        Owner = [];
         FuelType = 'HFO';
         
         Variable = 'speed_index';
@@ -66,28 +67,30 @@ classdef cVessel < cTableObject
        function obj = cVessel(varargin)
        % Class constructor. Construct new object, assign array of IMO.
        
-       % Initialise
+       % Initialise Connections
+       obj = obj@cTableObject(varargin{:});
        
-        if nargin == 0
-
-           obj = obj.assignDefaults();
-           return
-        end
+%         if nargin == 0
+% 
+%            obj = obj.assignDefaults();
+%            return
+%         end
 
         % Inputs
         p = inputParser();
         p.addParameter('IMO', []);
         p.addParameter('FileName', '');
         p.addParameter('ShipData', []);
-        p.addParameter('Database', '');
+        p.KeepUnmatched = true;
+%         p.addParameter('Database', '');
         p.parse(varargin{:});
         res = p.Results;
         
-        % Re-assign DB
-        if ~isempty(res.Database)
-            
-            obj.Database = res.Database;
-        end
+%         % Re-assign DB
+%         if ~isempty(res.Database)
+%             
+%             obj.Database = res.Database;
+%         end
 
         imo = res.IMO;
         shipDataInput = res.ShipData;
@@ -95,6 +98,12 @@ classdef cVessel < cTableObject
         imo_l = ~isempty(imo);
         shipData_l = ~isempty(shipDataInput);
         readInputs_c = {imo};
+        
+        obj = obj.assignDefaults(varargin{:});
+        if ~imo_l && ~shipData_l
+            
+            return
+        end
 
         % Data reading procedures must read all DD intervals
         if shipData_l
@@ -1422,25 +1431,50 @@ classdef cVessel < cTableObject
            tbl.datetime_utc = datenum(tbl.datetime_utc);
         end
         
-        function obj = assignDefaults(obj)
+        function obj = assignDefaults(obj, varargin)
             
             % Iterate and assign
             for oi = 1:numel(obj)
                 
-                obj(oi).DryDockDates = cVesselDryDockDates();
-                obj(oi).Configuration = cVesselConfiguration();
-                obj(oi).SpeedPower = cVesselSpeedPower();
-                obj(oi).Report = cVesselReport();
-                obj(oi).WindCoefficient = cVesselWindCoefficient();
-                obj(oi).Displacement = cVesselDisplacement();
-                obj(oi).Engine = cVesselEngine();
+                obj(oi).DryDockDates = cVesselDryDockDates(varargin{:});
+                obj(oi).Configuration = cVesselConfiguration(varargin{:});
+                obj(oi).SpeedPower = cVesselSpeedPower(varargin{:});
+                obj(oi).Report = cVesselReport(varargin{:});
+                obj(oi).WindCoefficient = cVesselWindCoefficient(varargin{:});
+                obj(oi).Displacement = cVesselDisplacement(varargin{:});
+                obj(oi).Engine = cVesselEngine(varargin{:});
+                obj(oi).Owner = cVesselOwner(varargin{:});
             end
         end
-        
     end
     
     methods
+        
+        function obj = set.DatabaseName(obj, dbname)
+        % Change database of object and all nested objects
+        
+        % Change DB connection for object and nested objects
+        obj.Database = dbname;
+        obj.DryDockDates.Database = dbname;
+        obj.Configuration.Database = dbname;
+        obj.SpeedPower.Database = dbname;
+        obj.Report.Database = dbname;
+        obj.WindCoefficient.Database = dbname;
+        obj.Displacement.Database = dbname;
+        obj.Engine.Database = dbname;
+        obj.Owner.Database = dbname;
+        obj.Configuration.Database = dbname;
+        
+        % Assign
+        obj.DatabaseName = dbname;
+        end
        
+        function dbname = get.DatabaseName(obj)
+        % Take name of Database
+            
+            dbname = obj.Database;
+        end
+        
        function obj = set.IMO(obj, IMO)
            
            if ~isempty(IMO(~isnan(IMO)))

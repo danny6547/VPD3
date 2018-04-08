@@ -7,8 +7,9 @@ classdef cTableObject < cMySQL
     
     methods
     
-        function obj = cTableObject()
+        function obj = cTableObject(varargin)
 
+           obj = obj@cMySQL(varargin{:});
         end
 
         function insertIntoTable(obj, table, varargin)
