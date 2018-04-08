@@ -16,6 +16,7 @@ classdef cVesselWindCoefficient < cMySQL & cModelID
         ModelTable = 'WindCoefficientModel';
         ValueTable = {'WindCoefficientModelvalue'};
         ModelField = 'Wind_Coefficient_Model_Id';
+        DataProperty = {'Direction', 'Coefficient'}
     end
     
     methods

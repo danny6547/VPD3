@@ -13,6 +13,7 @@ classdef cVesselInfo < cTableObject & cDateConvert
         
         StartDateProp = 'Valid_From';
         EndDateProp = 'Valid_To';
+        DataProperty = {'Valid_From', 'Vessel_Name', 'Deleted'};
     end
     
     properties(Hidden)
@@ -30,8 +31,9 @@ classdef cVesselInfo < cTableObject & cDateConvert
     
     methods
     
-       function obj = cVesselInfo()
+       function obj = cVesselInfo(varargin)
             
+           obj@cTableObject(varargin{:});
            obj.DateStrFormat = 'yyyy-mm-dd';
            obj.Valid_From = '2000-01-01';
        end

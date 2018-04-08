@@ -16,9 +16,8 @@ methods
     
     function vessel = testVesselInsert(testcase)
         
-        vessel = cVessel();
         testDB = testcase.TestDatabase;
-        vessel.Database = testDB;
+        vessel = cVessel('Database', testDB);
         
         % Configuration
         vessel.Configuration.Transverse_Projected_Area_Design = 1000;
@@ -44,7 +43,13 @@ methods
         vessel.Owner.Ownership_End = '2018-01-01 00:00:00';
         
         % Engine
-        vessel.Engine.Name = 'Test Engine';
+        vessel.Engine.Engine_Model = 'Test Engine';
+        vessel.Engine.X0 = 3;
+        vessel.Engine.X1 = 2;
+        vessel.Engine.X2 = 1;
+        vessel.Engine.Minimum_FOC_ph = 4;
+        vessel.Engine.Lowest_Given_Brake_Power = 5;
+        vessel.Engine.Highest_Given_Brake_Power = 6;
         
         % Speed Power
         sp = cVesselSpeedPower('Size', [1, 2], 'Database', testDB);
@@ -64,22 +69,32 @@ methods
         sp(2).Description = 'the second one';
         vessel.SpeedPower = sp;
         
+        % Dry Dock
+        vessel.DryDock.assignDates('2000-01-01', '2000-01-14');
+        
         % Displacement
         vessel.Displacement.Model_ID = 1;
+        vessel.Displacement.Draft_Mean = [10, 12];
+        vessel.Displacement.Trim = [0, 1];
+        vessel.Displacement.Displacement = [1e5, 1.5e5];
         
         % Wind
         vessel.WindCoefficient.Model_ID = 1;
+        vessel.WindCoefficient.Direction = [10, 45];
+        vessel.WindCoefficient.Coefficient = [0.5, 1];
+        
+        % Identity
         vessel.IMO = 1234567;
         vessel.Vessel_Id = 1;
         
         % Assign where SQL
         vid = vessel.Vessel_Id;
-        spid = vessel.SpeedPower.Model_ID;
+        spid = [vessel.SpeedPower.Model_ID];
         did = vessel.Displacement.Model_ID;
         wid = vessel.WindCoefficient.Model_ID;
         where_sql = ['Vessel_Id = ', num2str(vid)];
-        whereEngine_sql = ['Engine_Model = ', vessel.Engine.Name];
-        whereSP_sql = ['Speed_Power_Id IN (', sprintf('%u, %u', spid), ')'];
+        whereEngine_sql = ['Engine_Model = ''', vessel.Engine.Engine_Model, ''''];
+        whereSP_sql = ['Speed_Power_Coefficient_Model_Id IN (', sprintf('%u, %u', spid), ')'];
         whereDisp_sql = ['Displacement_Model_Id = ', num2str(did)];
         whereWind_sql = ['Wind_Coefficient_Model_Id = ', num2str(wid)];
         
@@ -88,13 +103,11 @@ methods
         testcase.SQLWhereSpeedPower = whereSP_sql;
         testcase.SQLWhereDisplacement = whereDisp_sql;
         testcase.SQLWhereWind = whereWind_sql;
-        
     end
-    
 end
 
 methods(TestClassSetup)
-%     
+
 %     function connect(testcase)
 %     % Create connection object to test DB
 %     
@@ -119,17 +132,23 @@ methods(TestClassSetup)
     
     vessel = testcase.testVesselInsert;
     
-    % Remove from each table which could contain data for vessel
-    vid = vessel.Vessel_Id;
-    spid = [vessel.SpeedPower.Model_ID];
-    did = vessel.Displacement.Model_ID;
-    wid = vessel.WindCoefficient.Model_ID;
-    where_sql = ['Vessel_Id = ', num2str(vid)];
-    whereEngine_sql = ['Engine_Model = ''', vessel.Engine.Name, ''''];
-    whereSP_sql = ['Speed_Power_Coefficient_Model_Id IN (', sprintf('%u, %u', spid), ')'];
-    whereDisp_sql = ['Displacement_Model_Id = ', num2str(did)];
-    whereWind_sql = ['Wind_Coefficient_Model_Id = ', num2str(wid)];
+%     % Remove from each table which could contain data for vessel
+%     vid = vessel.Vessel_Id;
+%     spid = [vessel.SpeedPower.Model_ID];
+%     did = vessel.Displacement.Model_ID;
+%     wid = vessel.WindCoefficient.Model_ID;
+%     where_sql = ['Vessel_Id = ', num2str(vid)];
+%     whereEngine_sql = ['Engine_Model = ''', vessel.Engine.Name, ''''];
+%     whereSP_sql = ['Speed_Power_Coefficient_Model_Id IN (', sprintf('%u, %u', spid), ')'];
+%     whereDisp_sql = ['Displacement_Model_Id = ', num2str(did)];
+%     whereWind_sql = ['Wind_Coefficient_Model_Id = ', num2str(wid)];
     
+    where_sql = testcase.SQLWhereVessel;
+    whereEngine_sql = testcase.SQLWhereEngine;
+    whereSP_sql = testcase.SQLWhereSpeedPower;
+    whereDisp_sql = testcase.SQLWhereDisplacement;
+    whereWind_sql = testcase.SQLWhereWind;
+
     vessel.deleteSQL('EngineModel', whereEngine_sql);
     vessel.deleteSQL('SpeedPower', whereSP_sql);
     vessel.deleteSQL('SpeedPowerCoefficientModel', whereSP_sql);
@@ -154,7 +173,6 @@ methods(TestClassSetup)
     vessel = testcase.testVesselInsert;
     vessel.insertIntoTable();
     end
-    
 end
 
 methods(TestMethodSetup)
@@ -202,6 +220,192 @@ methods(Test)
     testcase.verifyNotEmpty(actId, msgId);
     end
     
+    function insertVesselInfo(testcase)
+    % Test that method will insert the relevant object data into table
+    % "VesselInfo".
+    % 1. Test that each input OBJ will have its property data assigned to 
+    % the similarly-named field of table "VesselInfo".
+    
+    % 1.
+    % Input
+    input_obj = testcase.testVesselInsert();
+    whereVessel_sql = testcase.SQLWhereVessel;
+    
+    % Verify
+    [~, actId] = input_obj.select('VesselInfo', '*', whereVessel_sql);
+    msgId = 'Object expected to have appropriate Vessel_Id after method call';
+    testcase.verifyNotEmpty(actId, msgId);
+    end
+    
+    function insertVesselOwner(testcase)
+    % Test that method will insert the relevant object data into table
+    % "VesselOwner".
+    % 1. Test that each input OBJ will have its property data assigned to 
+    % the similarly-named field of table "VesselOwner".
+    
+    % 1.
+    % Input
+    input_obj = testcase.testVesselInsert();
+    whereVessel_sql = testcase.SQLWhereVessel;
+    
+    % Verify
+    [~, actId] = input_obj.select('VesselOwner', '*', whereVessel_sql);
+    msgId = 'Object expected to have appropriate Vessel_Id after method call';
+    testcase.verifyNotEmpty(actId, msgId);
+    end
+    
+    function insertSpeedPower(testcase)
+    % Test that method will insert the relevant object data into table
+    % "SpeedPower".
+    % 1. Test that each input OBJ will have its property data assigned to 
+    % the similarly-named field of table "SpeedPower".
+    
+    % 1.
+    % Input
+    input_obj = testcase.testVesselInsert();
+    where_sql = testcase.SQLWhereSpeedPower;
+    
+    % Verify
+    [~, actId] = input_obj.select('SpeedPower', '*', where_sql);
+    msgId = 'Object expected to have appropriate Vessel_Id after method call';
+    testcase.verifyNotEmpty(actId, msgId);
+    end
+        
+    function insertSpeedPowerCoefficientModel(testcase)
+    % Test that method will insert the relevant object data into table
+    % "SpeedPowerCoefficientModel".
+    % 1. Test that each input OBJ will have its property data assigned to 
+    % the similarly-named field of table "SpeedPowerCoefficientModel".
+    
+    % 1.
+    % Input
+    input_obj = testcase.testVesselInsert();
+    where_sql = testcase.SQLWhereSpeedPower;
+    
+    % Verify
+    [~, actId] = input_obj.select('SpeedPowerCoefficientModel', '*', where_sql);
+    msgId = 'Object expected to have appropriate Vessel_Id after method call';
+    testcase.verifyNotEmpty(actId, msgId);
+    end
+      
+    function insertSpeedPowerCoefficientModelValue(testcase)
+    % Test that method will insert the relevant object data into table
+    % "SpeedPowerCoefficientModelValue".
+    % 1. Test that each input OBJ will have its property data assigned to 
+    % the similarly-named field of table "SpeedPowerCoefficientModelValue".
+    
+    % 1.
+    % Input
+    input_obj = testcase.testVesselInsert();
+    where_sql = testcase.SQLWhereSpeedPower;
+    
+    % Verify
+    [~, actId] = input_obj.select('SpeedPowerCoefficientModelValue', '*', where_sql);
+    msgId = 'Object expected to have appropriate Vessel_Id after method call';
+    testcase.verifyNotEmpty(actId, msgId);
+    end
+          
+    function insertDryDock(testcase)
+    % Test that method will insert the relevant object data into table
+    % "DryDock".
+    % 1. Test that each input OBJ will have its property data assigned to 
+    % the similarly-named field of table "DryDock".
+    
+    % 1.
+    % Input
+    input_obj = testcase.testVesselInsert();
+    whereVessel_sql = testcase.SQLWhereVessel;
+    
+    % Verify
+    [~, actId] = input_obj.select('DryDock', '*', whereVessel_sql);
+    msgId = 'Object expected to have appropriate Vessel_Id after method call';
+    testcase.verifyNotEmpty(actId, msgId);
+    end
+    
+    function insertWindCoefficientModel(testcase)
+    % Test that method will insert the relevant object data into table
+    % "WindCoefficientModel".
+    % 1. Test that each input OBJ will have its property data assigned to 
+    % the similarly-named field of table "WindCoefficientModel".
+    
+    % 1.
+    % Input
+    input_obj = testcase.testVesselInsert();
+    where_sql = testcase.SQLWhereWind;
+    
+    % Verify
+    [~, actId] = input_obj.select('WindCoefficientModel', '*', where_sql);
+    msgId = 'Object expected to have appropriate Vessel_Id after method call';
+    testcase.verifyNotEmpty(actId, msgId);
+    end
+    
+    function insertWindCoefficientModelValue(testcase)
+    % Test that method will insert the relevant object data into table
+    % "WindCoefficientModelValue".
+    % 1. Test that each input OBJ will have its property data assigned to 
+    % the similarly-named field of table "WindCoefficientModelValue".
+    
+    % 1.
+    % Input
+    input_obj = testcase.testVesselInsert();
+    where_sql = testcase.SQLWhereWind;
+    
+    % Verify
+    [~, actId] = input_obj.select('WindCoefficientModelValue', '*', where_sql);
+    msgId = 'Object expected to have appropriate Vessel_Id after method call';
+    testcase.verifyNotEmpty(actId, msgId);
+    end
+    
+    function insertDisplacementModel(testcase)
+    % Test that method will insert the relevant object data into table
+    % "DisplacementModel".
+    % 1. Test that each input OBJ will have its property data assigned to 
+    % the similarly-named field of table "DisplacementModel".
+    
+    % 1.
+    % Input
+    input_obj = testcase.testVesselInsert();
+    where_sql = testcase.SQLWhereDisplacement;
+    
+    % Verify
+    [~, actId] = input_obj.select('DisplacementModel', '*', where_sql);
+    msgId = 'Object expected to have appropriate Vessel_Id after method call';
+    testcase.verifyNotEmpty(actId, msgId);
+    end
+    
+    function insertDisplacementModelValue(testcase)
+    % Test that method will insert the relevant object data into table
+    % "DisplacementModelValue".
+    % 1. Test that each input OBJ will have its property data assigned to 
+    % the similarly-named field of table "DisplacementModelValue".
+    
+    % 1.
+    % Input
+    input_obj = testcase.testVesselInsert();
+    where_sql = testcase.SQLWhereDisplacement;
+    
+    % Verify
+    [~, actId] = input_obj.select('DisplacementModelValue', '*', where_sql);
+    msgId = 'Object expected to have appropriate Vessel_Id after method call';
+    testcase.verifyNotEmpty(actId, msgId);
+    end
+    
+    function insertEngineModel(testcase)
+    % Test that method will insert the relevant object data into table
+    % "EngineModel".
+    % 1. Test that each input OBJ will have its property data assigned to 
+    % the similarly-named field of table "EngineModel".
+    
+    % 1.
+    % Input
+    input_obj = testcase.testVesselInsert();
+    where_sql = testcase.SQLWhereEngine;
+    
+    % Verify
+    [~, actId] = input_obj.select('EngineModel', '*', where_sql);
+    msgId = 'Object expected to have appropriate Vessel_Id after method call';
+    testcase.verifyNotEmpty(actId, msgId);
+    end
 %     function selectVesselConfiguration(testcase)
 %     % Test that method will insert the relevant object data into table
 %     % "VesselConfiguration".

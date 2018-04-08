@@ -11,7 +11,7 @@ classdef cVessel < cTableObject
         
         Configuration = [];
         SpeedPower = [];
-        DryDockDates = [];
+        DryDock = [];
         WindCoefficient = [];
         Displacement = [];
         Engine = [];
@@ -60,6 +60,7 @@ classdef cVessel < cTableObject
         ModelTable = 'Vessel';
         ValueTable = {'VesselConfiguration', 'VesselInfo', 'BunkerDeliveryNote'};
         ModelField = 'Vessel_Id';
+        DataProperty = {'IMO', 'Vessel_Id'};
     end
     
     methods
@@ -280,7 +281,30 @@ classdef cVessel < cTableObject
                currObj.Owner.DateStrFormat = 'yyyy-mm-dd';
                insertIntoTable@cTableObject(currObj.Owner,...
                    'VesselOwner', [], 'Vessel_Id', currObj.Vessel_Id);
+               
+               currObj.DryDock.DateStrFormat = 'yyyy-mm-dd';
+               insertIntoTable@cTableObject(currObj.DryDock,...
+                   currObj.DryDock.DBTable, [], 'Vessel_Id', currObj.Vessel_Id);
+               
+               if ~isempty(currObj.Engine)
+                   
+                   insertIntoTable@cTableObject(currObj.Engine,...
+                       currObj.Engine.DBTable, [], 'Engine_Model', currObj.Engine.Engine_Model);
+               end
            end
+           
+           if ~isempty(obj.SpeedPower)
+            obj.SpeedPower.insertModel();
+           end
+           
+           if ~isempty(obj.WindCoefficient)
+            obj.WindCoefficient.insertModel();
+           end
+           
+           if ~isempty(obj.Displacement)
+            obj.Displacement.insertModel();
+           end
+%            obj.DryDock.insertIntoTable(obj.DryDock.DBTable);
            
 %            % SpeedPower
 %            obj = obj.insertIntoSpeedPower();
@@ -334,31 +358,31 @@ classdef cVessel < cTableObject
            end
        end
        
-       function obj = insertIntoSpeedPower(obj)
-       % insertIntoSpeedPower Insert speed, power, draft, trim data.
-       
-       % Insert into speedPower, speedPowerCoefficients, Models unless
-       % empty
-       sp = [obj.SpeedPower];
-       if isempty(sp)
-           
-           return
-       end
-       
-       sp(isempty(sp)) = [];
-       sp.insertIntoTable;
-       
-       % Insert into vesselspeedpowermodel
-       nsp = arrayfun(@(x) numel(x.SpeedPower), obj);
-       imo_c = arrayfun(@(x, y) repmat(x.IMO_Vessel_Number, 1, y), ...
-           obj, nsp, 'Uni', 0);
-       imo_v = [imo_c{:}];
-       obj.insertIntoTable(...
-           'vesselspeedpowermodel', sp, ...
-           'IMO_Vessel_Number', imo_v,...
-           'Speed_Power_Model', [sp.Models_id]);
-       
-       end
+%        function obj = insertIntoSpeedPower(obj)
+%        % insertIntoSpeedPower Insert speed, power, draft, trim data.
+%        
+%        % Insert into speedPower, speedPowerCoefficients, Models unless
+%        % empty
+%        sp = [obj.SpeedPower];
+%        if isempty(sp)
+%            
+%            return
+%        end
+%        
+%        sp(isempty(sp)) = [];
+%        sp.insertIntoTable;
+%        
+%        % Insert into vesselspeedpowermodel
+%        nsp = arrayfun(@(x) numel(x.SpeedPower), obj);
+%        imo_c = arrayfun(@(x, y) repmat(x.IMO_Vessel_Number, 1, y), ...
+%            obj, nsp, 'Uni', 0);
+%        imo_v = [imo_c{:}];
+%        obj.insertIntoTable(...
+%            'vesselspeedpowermodel', sp, ...
+%            'IMO_Vessel_Number', imo_v,...
+%            'Speed_Power_Model', [sp.Models_id]);
+%        
+%        end
        
        function obj = insertBunkerDeliveryNote(obj)
        % insertBunkerDeliveryNote Insert data from bunker delivery note.
@@ -1436,7 +1460,7 @@ classdef cVessel < cTableObject
             % Iterate and assign
             for oi = 1:numel(obj)
                 
-                obj(oi).DryDockDates = cVesselDryDockDates(varargin{:});
+                obj(oi).DryDock = cVesselDryDock(varargin{:});
                 obj(oi).Configuration = cVesselConfiguration(varargin{:});
                 obj(oi).SpeedPower = cVesselSpeedPower(varargin{:});
                 obj(oi).Report = cVesselReport(varargin{:});
@@ -1444,6 +1468,7 @@ classdef cVessel < cTableObject
                 obj(oi).Displacement = cVesselDisplacement(varargin{:});
                 obj(oi).Engine = cVesselEngine(varargin{:});
                 obj(oi).Owner = cVesselOwner(varargin{:});
+                obj(oi).Info = cVesselInfo(varargin{:});
             end
         end
     end
@@ -1510,6 +1535,7 @@ classdef cVessel < cTableObject
            obj.Configuration = obj.Configuration.checkModel('VesselConfiguration', field, vid);
            obj.Owner = obj.Owner.checkModel('VesselOwner', field, vid);
            obj.Info = obj.Info.checkModel('VesselInfo', field, vid);
+           obj.DryDock = obj.DryDock.checkModel('DryDock', field, vid);
            
 %            obj.Particulars.IMO_Vessel_Number = IMO;
            
@@ -1523,7 +1549,7 @@ classdef cVessel < cTableObject
            
 %            if ~isempty(obj.DryDockDates)
             
-           [obj.DryDockDates(:).IMO_Vessel_Number] = deal(IMO);
+%            [obj.DryDock(:).IMO_Vessel_Number] = deal(IMO);
 %            end
        end
        
@@ -1625,20 +1651,20 @@ classdef cVessel < cTableObject
            end
        end
        
-       function obj = set.DryDockDates(obj, ddd)
+       function obj = set.DryDock(obj, ddd)
        % 
        
        % Input
-       validateattributes(ddd, {'cVesselDryDockDates'}, {});
+       validateattributes(ddd, {'cVesselDryDock'}, {});
        
-       % Assign IMO
-       imo = obj.IMO;
-       if ~isempty(imo)
-           [ddd.IMO_Vessel_Number] = deal(imo);
-       end
+%        % Assign IMO
+%        imo = obj.IMO;
+%        if ~isempty(imo)
+%            [ddd.IMO_Vessel_Number] = deal(imo);
+%        end
        
        % Assign object
-       obj.DryDockDates = ddd;
+       obj.DryDock = ddd;
        
        end
        

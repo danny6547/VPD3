@@ -4,7 +4,7 @@ classdef cVesselEngine < cTableObject
     
     properties
         
-        Name char = '';
+        Engine_Model char = '';
         MCR double = [];
         Power double = [];
         SFOC double = [];
@@ -14,6 +14,19 @@ classdef cVesselEngine < cTableObject
         Minimum_FOC_ph double = [];
         Lowest_Given_Brake_Power double = [];
         Highest_Given_Brake_Power double = [];
+    end
+    
+    properties(Hidden, Constant)
+        
+        DBTable = 'EngineModel';
+        DataProperty = {'Engine_Model',...
+                        'MCR',...
+                        'X0',...
+                        'X1',...
+                        'X2',...
+                        'Minimum_FOC_ph',...
+                        'Lowest_Given_Brake_Power',...
+                        'Highest_Given_Brake_Power'};
     end
     
     methods

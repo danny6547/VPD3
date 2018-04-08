@@ -2,7 +2,9 @@ classdef cTableObject < cMySQL
     %CTABLEOBJECT Relate MATLAB object to Database tables
     %   Detailed explanation goes here
     
-    properties
+    properties(Abstract, Hidden, Constant)
+        
+        DataProperty;
     end
     
     methods
@@ -400,6 +402,26 @@ classdef cTableObject < cMySQL
             % Assign
             obj(oi) = currObj;
         end
+        end
+        
+        function empty = isempty(obj)
+        % isempty True if object data properties are all empty
+        
+            if any(size(obj) == 0)
+                empty = true;
+                return
+            end
+            
+            props = obj.DataProperty;
+            empty = false(numel(props), numel(obj));
+            for oi = 1:numel(obj)
+                for pi = 1:numel(props)
+                    
+                    prop = props{pi};
+                    empty(pi, oi) = isempty(obj(oi).(prop));
+                end
+            end
+            empty = all(all(empty));
         end
     end
     

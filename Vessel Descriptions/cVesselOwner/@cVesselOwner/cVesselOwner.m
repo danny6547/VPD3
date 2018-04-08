@@ -13,6 +13,9 @@ classdef cVesselOwner < cTableObject & cDateConvert
         
         StartDateProp = 'Ownership_Start';
         EndDateProp = 'Ownership_End';
+        DataProperty = {'Ownership_Start',...
+                        'Ownership_End',...
+                        'Deleted'};
     end
     
     methods
