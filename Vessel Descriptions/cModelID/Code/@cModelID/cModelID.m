@@ -43,7 +43,22 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
                size_c = num2cell(sizeVect_v);
 %                nRows = sizeVect_v(1);
 %                nCols = sizeVect_v(2);
-               class_ch = class(obj);
+               otherInputs_st = p.Unmatched;
+               otherInputsValues_c = struct2cell(otherInputs_st);
+               if isempty(otherInputsValues_c)
+                   
+                   otherInput_ch = '';
+               else
+                   
+                   otherInputsNames_c = fieldnames(otherInputs_st);
+                   otherInputs_c = cell(1, length(otherInputsNames_c)*2);
+                   otherInputs_c(1:2:end) = otherInputsNames_c;
+                   otherInputs_c(2:2:end) = otherInputsValues_c;
+                   otherInputs_c = strcat('''', otherInputs_c, '''');
+                   otherInput_ch = strjoin(otherInputs_c, ', ');
+               end
+               
+               class_ch = [class(obj), '(', otherInput_ch, ')'];
                obj(size_c{:}) = eval(class_ch);
            end
            

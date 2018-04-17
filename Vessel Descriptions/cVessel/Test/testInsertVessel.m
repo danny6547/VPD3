@@ -148,7 +148,7 @@ methods(TestClassSetup)
     whereSP_sql = testcase.SQLWhereSpeedPower;
     whereDisp_sql = testcase.SQLWhereDisplacement;
     whereWind_sql = testcase.SQLWhereWind;
-
+    
     vessel.deleteSQL('EngineModel', whereEngine_sql);
     vessel.deleteSQL('SpeedPower', whereSP_sql);
     vessel.deleteSQL('SpeedPowerCoefficientModel', whereSP_sql);

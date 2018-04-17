@@ -736,7 +736,7 @@ classdef cDB < cMySQL
            createStatic_c, 'Uni', 0);
        obj = obj.source(createStaticFullpath_c);
        static_c = strrep(createStatic_c, '.sql', '');
-       cellfun(@(x) obj.call(x), static_c);
+       cellfun(@(x) obj.call(x), static_c, 'Uni', 0);
        
        % Run all files in InsertStatic dir
        if obj.InsertStatic
