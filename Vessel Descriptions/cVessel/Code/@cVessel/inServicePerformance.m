@@ -4,7 +4,10 @@ function [obj, inserv, dur ] = inServicePerformance(obj, varargin)
 
 % Outputs
 servStruct = struct('InservicePerformance', [], 'ReferenceDuration', [],...
-    'ReferenceValue', [], 'EvaluationDuration', [], 'EvaluationValue', []);
+    'ReferenceValue', [], 'EvaluationDuration', [], 'EvaluationValue', [],...
+    'ReferenceDates', [], 'ReferenceValues', [],...
+    'EvaluationDates', [], 'EvaluationValues', []...
+    );
 inserv = struct('DryDockInterval', servStruct);
 dur = struct('Average', [], 'StartDate', [], 'EndDate', [],...
     'StdOfMean', [], 'Count', []);
@@ -107,6 +110,12 @@ while obj.iterateDD
         servStruct.EvaluationDuration = Duration_st(2).EndDate - Duration_st(2).StartDate;
         servStruct.EvaluationValue = Duration_st(2).Average;
         servStruct.InservicePerformance = servStruct.ReferenceValue - servStruct.EvaluationValue;
+        
+        servStruct.ReferenceDates = currDate(firstYear_l);
+        servStruct.ReferenceValues = currPerf(firstYear_l);
+        servStruct.EvaluationDates = currDate(remainingYears_l);
+        servStruct.EvaluationValues = currPerf(remainingYears_l);
+        
         inserv(ddi).DryDockInterval = servStruct;
         currVessel.Report.InServicePerformance(ddi) = servStruct;
 %         
