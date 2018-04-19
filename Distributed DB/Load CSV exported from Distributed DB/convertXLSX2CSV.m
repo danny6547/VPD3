@@ -1,13 +1,15 @@
-function convertXLSX2CSV(imo, infile, sheet, firstRow, fileColID, fileColName, outfile, setsql, dateCols_c)
+function convertXLSX2CSV(imo, infile, sheet, firstRow, fileColID, fileColName, outfile, setsql, varargin)
 %convertXLSX2CSV Summary of this function goes here
 %   Detailed explanation goes here
     
+% Input
     obj = cVessel();
+    obj.Database = 'hull_performance';
     obj.IMO_Vessel_Number = imo;
     
 %     dateCols_c = {'DateTime_UTC', 'yyyy-mm-dd HH:MM:SS.000'};
     obj = loadXLSX(obj, infile, sheet, firstRow, fileColID, fileColName, ...
-        '', setsql, dateCols_c);
+        '', setsql, varargin{:});
     cols = {'DateTime_UTC' ...
       ,'Relative_Wind_Speed' ...
       ,'Relative_Wind_Direction' ...
@@ -35,7 +37,8 @@ function convertXLSX2CSV(imo, infile, sheet, firstRow, fileColID, fileColName, o
     
     tab = 'RawData';
     where_sql = ['IMO_Vessel_Number = ', num2str(imo),' '...
-        'AND Speed_Through_Water IS NOT NULL '];
+        'AND Speed_Through_Water IS NOT NULL ',...
+        'AND ((Static_Draught_Fore IS NOT NULL AND Static_Draught_Aft IS NOT NULL) OR Displacement IS NOT NULL) '];
     [~, ~, sel_sql] = obj.select(tab, ifnullCols_c, where_sql);
     [~, sel_sql] = obj.determinateSQL(sel_sql);
     
