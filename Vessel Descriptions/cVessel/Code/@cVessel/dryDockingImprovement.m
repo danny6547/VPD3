@@ -12,7 +12,8 @@ function [ obj, ddImprove ] = dryDockingImprovement( obj, varargin )
 % Output
 ddImp = struct('AvgPerPrior', [], 'AvgPerAfter', [], ...
     'AbsDDImprovement', [], 'RelDDImprovement', [], 'ReferenceCount', [],...
-    'EvaluationCount', []);
+    'EvaluationCount', [], 'ReferenceStartDate', [], 'ReferenceEndDate', [],...
+    'EvaluationStartDate', [], 'EvaluationEndDate', []);
 ddImprove = struct('DryDockingInterval', ddImp);
 % [obj.Report.DryDockingImprovement] = deal(ddImp);
 % szIn = size(obj);
@@ -24,8 +25,8 @@ ddImprove = struct('DryDockingInterval', ddImp);
 %     1);
 
 % Get annual averages before and after dry-dockings
-[~, annualAvgAft] = movingAverage(obj, 365.25, false);
-[~, annualAvgBef] = movingAverage(obj, 365.25, true);
+[~, annualAvgAft] = movingAverage(obj, (365.25)/4, false);
+[~, annualAvgBef] = movingAverage(obj, (365.25)/4, true);
 
 % Iterate over guarantee struct to get averages
 
@@ -78,6 +79,12 @@ while obj.iterateDD
        ddImp(1).RelDDImprovement = ddImpRel;
        ddImp(1).ReferenceCount = annualAvgBef(vi).DryDockInterval(ddi-1).Count(end);
        ddImp(1).EvaluationCount = annualAvgAft(vi).DryDockInterval(ddi).Count(1);
+
+       ddImp(1).ReferenceStartDate = datestr(annualAvgBef(vi).DryDockInterval(ddi-1).StartDate(end));
+       ddImp(1).ReferenceEndDate = datestr(annualAvgBef(vi).DryDockInterval(ddi-1).EndDate(end));
+       ddImp(1).EvaluationStartDate = datestr(annualAvgAft(vi).DryDockInterval(ddi).StartDate(1));
+       ddImp(1).EvaluationEndDate = datestr(annualAvgAft(vi).DryDockInterval(ddi).EndDate(1));
+       
        ddImprove(vi).DryDockingInterval(ddi-1) = ddImp;
        currVessel.Report.DryDockingImprovement(ddi-1) = ddImp;
 %        obj(vi).DryDockingImprovement = ddImp(ddi);
