@@ -45,19 +45,31 @@ if nargin > 4
         'cVessel.estimatedFuelConsumption', 'siliconeCoating', 5);
 end
 
+speedLossInput_l = false;
+if nargin > 5
+    
+    speedLossInput_l = true;
+    speedLoss = varargin{5};
+    validateattributes(speedLoss, {'numeric'}, {}, ...
+        'cVessel.estimatedFuelConsumption', 'inserv', 6);
+else
+    
+    % Get in-service performance
+    obj = obj.inServicePerformance;
+end
+
+
 % Get activity
 if ~activityInput_l
     obj = obj.activity;
 end
 obj = obj.serviceInterval('days');
 
-% Get in-service performance
-obj = obj.inServicePerformance;
 
 % [obj.EstimatedFuelConsumption] = deal(savings_st);
 while obj.iterateDD
     
-    [~, currVessel, ddi] = obj.currentDD;
+    [~, currVessel, ddi, vi] = obj.currentDD;
 %     obj = obj.regressions(1);
     
     if numel(currVessel.Report.InServicePerformance) < ddi %isempty(currPerf)
@@ -81,7 +93,13 @@ while obj.iterateDD
     speedloss_ma = 0.059;
     siliconeEffect = 0.06;
     inservice = currVessel.Report.ServiceInterval(ddi).Duration;
-    speedloss_act = currVessel.Report.InServicePerformance(ddi).InservicePerformance;
+    if speedLossInput_l
+        
+        speedloss_act = speedLoss(vi, ddi);
+    else
+        
+        speedloss_act = currVessel.Report.InServicePerformance(ddi).InservicePerformance;
+    end
     fuelSavings = consumptionPerDay*activity * ((inservice - daysPerYear)*(speed2fuel*speedloss_ma - speed2fuel*speedloss_act) + siliconeCoating_l*siliconeEffect*inservice);
     fuelCons_ma = consumptionPerDay*activity*(speed2fuel*speedloss_ma*(inservice - daysPerYear) + inservice);
     fuelCons_act = consumptionPerDay*activity*(speed2fuel*speedloss_act*(inservice - daysPerYear) + inservice); % + siliconeCoating_l*siliconeEffect*inservice);
