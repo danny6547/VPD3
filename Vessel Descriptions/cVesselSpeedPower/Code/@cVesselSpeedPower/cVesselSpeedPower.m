@@ -124,39 +124,48 @@ classdef cVesselSpeedPower < cMySQL & cModelName & matlab.mixin.Copyable & cVess
        % plot
        
        for oi = 1:numel(obj)
-           if ~isempty(obj(oi).Speed) && ~isempty(obj(oi).Power)
-
+           
+           if ~isempty(obj(oi).Speed) && ~isempty(obj(oi).Power) || ...
+               ~isempty(obj(oi).Coefficient_A) && ~isempty(obj(oi).Coefficient_B)
+                
                 figure;
                 axes;
+                xlabel('Speed (m/s)')
+                ylabel('(Corrected) Power (kW)');
+                title('Comparison of Reference and Measured Speed, Power');
+           end
+           
+           leg_c = {};
+           if ~isempty(obj(oi).Speed) && ~isempty(obj(oi).Power)
 
-                h(1) = plot(obj(oi).Speed, obj(oi).Power, 'b*');
-                xlabel('Speed (knots)')
-                ylabel('Power (kW)');
-                title('Speed against Power data and fit');
-                
-                if ~isempty(obj(oi).Coefficient_A) && ~isempty(obj(oi).Coefficient_B)
-                    
-                    y = linspace(min(obj(oi).Power), max(obj(oi).Power), 1e3);
-                    coeffs = [obj(oi).Coefficient_A, obj(oi).Coefficient_B];
+                h(oi) = plot(obj(oi).Speed, obj(oi).Power, 'b*');
+                leg_c{1} = 'Measurements';
+           end
+           
+            if ~isempty(obj(oi).Coefficient_A) && ~isempty(obj(oi).Coefficient_B)
+
+                y = linspace(min(obj(oi).Power), max(obj(oi).Power), 1e3);
+                coeffs = [obj(oi).Coefficient_A, obj(oi).Coefficient_B];
 %                     x = polyval(obj(oi).Coefficients, y);
 
-                    switch obj(oi).Model
-                        
-                        case 'exponential'
-                            
-                            x = (y / exp(coeffs(2))).^(1/coeffs(1));
-                        otherwise
-                        
-                    end
-                    
-                    hold on;
-                    plot(x, y, 'r--');
-                    legend({'Speed, power data', 'Second-order polynomial fit'});
-                    text(0.1, 0.9, ['Displacement = ', ...
-                        num2str(obj(oi).Displacement), ', Trim = ', ...
-                        num2str(obj(oi).Trim)], 'Units', 'Normalized');
+                switch obj(oi).Model
+
+                    case 'exponential'
+
+                        x = (y / exp(coeffs(2))).^(1/coeffs(1));
+                    otherwise
+
                 end
-           end
+                
+                leg_c{end+1} = 'Fit';
+                hold on;
+                h(oi) = plot(x, y, 'r--');
+            end
+            
+            legend(leg_c{:});
+            text(0.1, 0.9, ['Displacement = ', ...
+                num2str(obj(oi).Displacement), 'm3, Trim = ', ...
+                num2str(obj(oi).Trim), 'm'], 'Units', 'Normalized');
        end
        end
        

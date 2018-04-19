@@ -154,7 +154,7 @@ while obj.iterateDD
         startDates = delimDates(1:end-1); 
         endDates  = delimDates(2:end);
         
-        calendarDays_l = false;
+        calendarDays_l = true;
         if calendarDays_l
             startDates = floor(startDates);
             endDates = ceil(endDates) - 1;
