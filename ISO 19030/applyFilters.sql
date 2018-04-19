@@ -64,7 +64,7 @@ END IF;
 
 IF Valid THEN
 
-	UPDATE tempRawISO SET Filter_All = TRUE WHERE Validated;
+	UPDATE tempRawISO SET Filter_All = TRUE WHERE NOT Validated;
 END IF;
 
 /* Query performance values */
