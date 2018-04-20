@@ -14,7 +14,7 @@ classdef cTableObject < cMySQL
            obj = obj@cMySQL(varargin{:});
         end
 
-        function insertIntoTable(obj, table, varargin)
+        function insert(obj, table, varargin)
         % insertIntoTable Insert object property values in table
 
         % Input
@@ -145,10 +145,38 @@ classdef cTableObject < cMySQL
 
         end
 
-        function obj = readFromTable(obj, table, identifier, varargin)
+        function empty = isempty(obj)
+        % isempty True if object data properties are all empty
+        
+            if any(size(obj) == 0)
+                empty = true;
+                return
+            end
+            
+            props = obj.DataProperty;
+            
+            % Exclude certain properties with default values
+            props = setdiff(props, 'Deleted');
+            
+            empty = false(numel(props), numel(obj));
+            for oi = 1:numel(obj)
+                for pi = 1:numel(props)
+                    
+                    prop = props{pi};
+                    empty(pi, oi) = isempty(obj(oi).(prop));
+                end
+            end
+            empty = all(all(empty));
+        end
+    end
+    
+    methods(Access=protected)
+        
+        function [obj, inDB] = select(obj, table, identifier, varargin)
         % readFromTable Assign object properties from table column values
 
-        %         % Output
+        % Output
+        inDB = false;
         %         objdiff = true;
         %         fielddiff = true;
 
@@ -209,7 +237,7 @@ classdef cTableObject < cMySQL
 
         % Error if identifier is not in both fields and properties
         if ~ismember(identifier, matchField_c)
-
+            
             errid = 'readTable:IdentifierMissing';
             errmsg = ['Input IDENTIFIER must be both a property of OBJ '...
                 'and a field of table TABLE.'];
@@ -233,7 +261,7 @@ classdef cTableObject < cMySQL
         objIDvals_ch = obj(1).colList(objID_cs);
         [obj(1), sqlWhereIn_ch] = obj(1).combineSQL('WHERE', identifier, 'IN',...
             objIDvals_ch);
-        [obj(1), ~, sqlSelect] = obj(1).select(table, '*');
+        [obj(1), ~, sqlSelect] = select@cMySQL(obj(1), table, '*');
         [obj(1), sqlSelect] = obj(1).determinateSQL(sqlSelect);
         [obj(1), sqlSelectWhereIn_ch] = obj(1).combineSQL(sqlSelect, sqlWhereIn_ch);
         %         table_st = obj(1).execute(sqlSelectWhereIn_ch);
@@ -241,13 +269,17 @@ classdef cTableObject < cMySQL
 
         [obj(1), sqlWhereIn_ch] = obj(1).combineSQL(identifier, 'IN',...
             objIDvals_ch);
-        [obj(1), table_st] = obj(1).select(table, '*', sqlWhereIn_ch);
+        [obj(1), table_st] = select@cMySQL(obj(1), table, '*', sqlWhereIn_ch);
         if isempty(table_st)
 
-            errid = 'readTable:IdentifierDataMissing';
-            errmsg = 'No data could be read for the values of IDENTIFIER.';
-            error(errid, errmsg);
+            return
+%             errid = 'readTable:IdentifierDataMissing';
+%             errmsg = 'No data could be read for the values of IDENTIFIER.';
+%             error(errid, errmsg);
         end
+        
+        % Object found in DB
+        inDB = true;
 
         % Get indices to OBJ identified in table
         lowerId_ch = lower(identifier);
@@ -312,30 +344,6 @@ classdef cTableObject < cMySQL
         %         objdiff = any(fielddiff);
         %         objDifferent_l = all(objDifferent_l);
 
-        end
-
-        function empty = isempty(obj)
-        % isempty True if object data properties are all empty
-        
-            if any(size(obj) == 0)
-                empty = true;
-                return
-            end
-            
-            props = obj.DataProperty;
-            
-            % Exclude certain properties with default values
-            props = setdiff(props, 'Deleted');
-            
-            empty = false(numel(props), numel(obj));
-            for oi = 1:numel(obj)
-                for pi = 1:numel(props)
-                    
-                    prop = props{pi};
-                    empty(pi, oi) = isempty(obj(oi).(prop));
-                end
-            end
-            empty = all(all(empty));
         end
     end
     

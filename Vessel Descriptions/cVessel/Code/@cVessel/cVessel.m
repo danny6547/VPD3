@@ -238,7 +238,7 @@ classdef cVessel < cTableObject
        
        end
        
-       function obj = insertIntoTable(obj)
+       function obj = insert(obj)
        % insert Insert all available vessel data into database
            
            % Vessels
@@ -264,31 +264,31 @@ classdef cVessel < cTableObject
 %                insertIntoTable@cMySQL(currObj, 'VesselConfiguration', ...
 %                    currObj.Configuration);
                
-               insertIntoTable@cTableObject(currObj, 'Vessel');
+               insert@cTableObject(currObj, 'Vessel');
                currObj = currObj.checkModel('Vessel', 'IMO', currObj.IMO);
                
                currObj.Configuration.DateStrFormat = 'yyyy-mm-dd';
-               insertIntoTable@cTableObject(currObj.Configuration, ...
+               insert@cTableObject(currObj.Configuration, ...
                    'VesselConfiguration', [], 'Vessel_Id', currObj.Vessel_Id);
                
-%                insertIntoTable@cMySQL(currObj, 'VesselGroup', [], ...
+%                insert@cMySQL(currObj, 'VesselGroup', [], ...
 %                    currObj.ModelField, currObj.Model_ID);
                
                currObj.Info.DateStrFormat = 'yyyy-mm-dd';
-               insertIntoTable@cTableObject(currObj.Info, ...
+               insert@cTableObject(currObj.Info, ...
                    'VesselInfo', [], 'Vessel_Id', currObj.Vessel_Id);
                
                currObj.Owner.DateStrFormat = 'yyyy-mm-dd';
-               insertIntoTable@cTableObject(currObj.Owner,...
+               insert@cTableObject(currObj.Owner,...
                    'VesselOwner', [], 'Vessel_Id', currObj.Vessel_Id);
                
                currObj.DryDock.DateStrFormat = 'yyyy-mm-dd';
-               insertIntoTable@cTableObject(currObj.DryDock,...
+               insert@cTableObject(currObj.DryDock,...
                    currObj.DryDock.DBTable, [], 'Vessel_Id', currObj.Vessel_Id);
                
                if ~isempty(currObj.Engine)
                    
-                   insertIntoTable@cTableObject(currObj.Engine,...
+                   insert@cTableObject(currObj.Engine,...
                        currObj.Engine.DBTable, [], 'Engine_Model', currObj.Engine.Engine_Model);
                end
            end

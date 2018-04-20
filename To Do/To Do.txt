@@ -651,17 +651,19 @@ SpeedPowerModelValue table has many empty rows
 	# Remove methods cMID.reserveModelID, cMID.releaseModelID, cMID.delete
 	# Move cTO.checkModel to cMID.checkModel
 	# Rename cMID.checkModel to cMID.readFromTable
-	Rename method cMID.insertModel to .insert
-	Rename cTO.insertIntoTable to insert
-	Rename cV.insertIntoTable to insert
-	cTO.readFromTable: return unmodified object if identifier value not found (also return flag indicating such)
-	cMID.insert:
-		if ModelID empty, increment
-		insert into ModelTable, ValueTables
-	cMID.set.ModelID
-		if ModelID found in DB, read obj data from ModelTable and ValueTables
+	# Rename method cMID.insertModel to .insert
+	# Rename cTO.insertIntoTable to insert
+	# Rename cV.insertIntoTable to insert
+	# cTO.readFromTable: return unmodified object if identifier value not found (also return flag indicating such)
+	# Remove method cMID.isModelInDB
+	# Rename method cTO.readFromTable to cTO.select
+	# cMID.insert:
+	#	if ModelID empty, increment
+	#	insert into ModelTable, ValueTables
+	#cMID.set.ModelID
+	#	if ModelID found in DB, read obj data from ModelTable and ValueTables
 			call cMID.readOthersIfExist(
-		else assign
+	#	else assign
 	cV < cMID
 	cV.ModelTable = 'Vessel';
 	cV.ModelField = 'IMO';
