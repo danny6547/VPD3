@@ -1,11 +1,15 @@
-classdef cVessel < cTableObject
+classdef cVessel < cModelID
     %CVESSEL Summary of this class goes here
     %   Detailed explanation goes here
+    
+    properties(Dependent)
+        
+    end
     
     properties
         
         IMO double = [];
-        Name char = '';
+%         Name char = '';
         Vessel_Id double = [];
         DatabaseName char = '';
         
@@ -58,9 +62,12 @@ classdef cVessel < cTableObject
     properties(Hidden, Constant)
         
         ModelTable = 'Vessel';
-        ValueTable = {'VesselConfiguration', 'VesselInfo', 'BunkerDeliveryNote'};
-        ModelField = 'Vessel_Id';
+        ValueTable = {'VesselConfiguration', 'VesselInfo'};
+        ValueObject = {'Configuration', 'Info'};
+        ModelField = {'IMO', 'Vessel_Id', 'Vessel_Id'};
         DataProperty = {'IMO', 'Vessel_Id'};
+        OtherTable = {};
+        OtherTableIdentifier = {};
     end
     
     methods
@@ -69,7 +76,7 @@ classdef cVessel < cTableObject
        % Class constructor. Construct new object, assign array of IMO.
        
        % Initialise Connections
-       obj = obj@cTableObject(varargin{:});
+       obj = obj@cModelID(varargin{:});
        
 %         if nargin == 0
 % 
@@ -1479,6 +1486,16 @@ classdef cVessel < cTableObject
                 obj(oi).Info = cVesselInfo(varargin{:});
             end
         end
+        
+        function [obj, vid] = vessel_Id(obj, imo)
+        % vessel_Id DB identifier for vessel, increment if necessary
+            
+            imo_ch = num2str(imo);
+            sel_sql = ['SELECT * FROM Vessel WHERE IMO = ', imo_ch, ...
+                ' LIMIT 1'];
+            vid_st = obj.execute(sel_sql);
+            vid = vid_st.vessel_id;
+        end
     end
     
     methods
@@ -1535,15 +1552,22 @@ classdef cVessel < cTableObject
 %                
 %                vid = vess_tbl.Vessel_Id;
 %            end
+
+           % Get Vessel_Id for given IMO
+           [~, vid] = obj.vessel_Id(IMO);
+%            obj.Configuration.select('VesselConfiguration', 'Vessel_Id'
+           obj.Model_ID = vid;
            
-           obj = obj.checkModel('Vessel', 'IMO', IMO);
-           vid = obj.Vessel_Id;
-           
-           field = 'Vessel_Id';
-           obj.Configuration = obj.Configuration.checkModel('VesselConfiguration', field, vid);
-           obj.Owner = obj.Owner.checkModel('VesselOwner', field, vid);
-           obj.Info = obj.Info.checkModel('VesselInfo', field, vid);
-           obj.DryDock = obj.DryDock.checkModel('DryDock', field, vid);
+           % Assign Vessel_Id to each object identified by it
+%            
+%            obj = obj.checkModel('Vessel', 'IMO', IMO);
+%            vid = obj.Vessel_Id;
+%            
+%            field = 'Vessel_Id';
+%            obj.Configuration = obj.Configuration.checkModel('VesselConfiguration', field, vid);
+%            obj.Owner = obj.Owner.checkModel('VesselOwner', field, vid);
+%            obj.Info = obj.Info.checkModel('VesselInfo', field, vid);
+%            obj.DryDock = obj.DryDock.checkModel('DryDock', field, vid);
            
 %            obj.Particulars.IMO_Vessel_Number = IMO;
            

@@ -160,8 +160,11 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
         function alias = propertyAlias(obj)
         % propertyAlias Alias to relate table fields with object properties
             
-            alias{1, 1} = 'Model_ID';
-            alias{1, 2} = obj.ModelField;
+%             alias{1, 1} = 'Model_ID';
+%             alias{1, 2} = obj.ModelField;
+            
+            alias = [repmat({'Model_ID'}, [size(obj.ModelField, 2), 1]),...
+                obj.ModelField'];
         end
         
         function id = nextUniqueID(obj)
@@ -207,11 +210,18 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
 
             alias_c = varargin{1};
         end
+        
+        obj_c = num2cell(obj);
+        if nargin > 5
+            
+            obj_c = varargin{2};
+        end
+        
 
-        validInput_l = isvector(tab) && isscalar(obj) && isscalar(field)...
+        validInput_l = isvector(tab) && isscalar(obj_c) && isscalar(field)...
             || ...
-            ~isscalar(tab) && ~isscalar(obj) && ~isscalar(field) && ...
-            isequal(size(tab), size(obj)) && isequal(size(tab), size(field));
+            ~isscalar(tab) && ~isscalar(obj_c) && ~isscalar(field) && ...
+            isequal(size(tab), size(obj_c)) && isequal(size(tab), size(field));
         if ~validInput_l
 
            errid = 'chkModel:InputSizeMismatch';
@@ -221,16 +231,26 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
         end
 
         % Repeat inputs to same size if required
-        if ~(isequal(size(tab), size(obj)) && isequal(size(tab), size(field)))
+        if ~(isequal(size(tab), size(obj_c)) && isequal(size(tab), size(field)))
 
-            obj = repmat(obj, size(tab));
+%             obj = repmat(obj, size(tab));
             field = repmat(field, size(tab));
         end
+        
+        if isequal(size(tab), size(field)) && ~isequal(size(tab), size(obj_c))
+            
+            obj_c = num2cell(repmat(obj, size(field)));
+        end
+        
+        if size(alias_c, 1) ~= size(tab, 1)
+            
+            alias_c = repmat(alias_c, [size(tab, 1), 1]);
+        end
 
-        for oi = 1:numel(obj)
+        for oi = 1:numel(obj_c)
 
             % Index
-            currObj = obj(oi);
+            currObj = obj_c{oi};
             currTab = tab{oi};
             currField = field{oi};
 
@@ -248,8 +268,9 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
 %             if inDB
 
                 % Read object data from Value Tables
-             [currObj, inDB] = select@cTableObject(currObj, currTab,...
-                        currField, '', alias_c, mid);
+             currAlias_c = alias_c(oi, :);
+             [~, inDB] = select@cTableObject(currObj, currTab,...
+                        currField, '', currAlias_c, mid);
 % 
 %                 catch ee
 % 
@@ -279,7 +300,30 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
         %             end
 
             % Assign
-            obj(oi) = currObj;
+%             obj(oi) = currObj;
+        end
+        end
+        
+        function obj = readOtherIfExist(obj)
+        % readOtherIfExist Read other tables if they exist
+        
+        for oi = 1:numel(obj)
+            for ti = 1:numel(obj.OtherTable)
+                
+                % If other tables are given and found in DB
+                currTab = obj.OtherTable{ti};
+                [~, tblExist_l] = obj(oi).isTable(currTab);
+                if ~tblExist_l
+
+                    continue
+                end
+
+                % Read from table
+                currIdName = obj(oi).OtherTableIdentifier{ti};
+                currIdVal = obj(oi).(currIdName);
+%                 alias_c = obj.propertyAlias;
+                obj(oi) = obj(oi).select(currTab, currIdName, currIdVal, {currIdName, currIdName});
+            end
         end
         end
     end
@@ -300,8 +344,15 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
             tab = [cellstr(obj.ModelTable), obj.ValueTable];
             field = obj.ModelField;
             alias_c = obj.propertyAlias;
-            obj.select(tab, field, mid, alias_c);
             
+            % Get nested objects, if available
+            obj2Name_c = obj.ValueObject;
+            obj2_c = [num2cell(obj); ...
+                cellfun(@(x) obj.(x), obj2Name_c, 'Uni', 0)'];
+            
+            obj.select(tab, field, mid, alias_c, obj2_c);
+            
+            obj.readOtherIfExist();
 %             if ~inDB
 %                 
 %                 % If model not in DB, reserve Name in Model table

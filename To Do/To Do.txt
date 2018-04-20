@@ -664,27 +664,33 @@ SpeedPowerModelValue table has many empty rows
 	#	if ModelID found in DB, read obj data from ModelTable and ValueTables
 			call cMID.readOthersIfExist(
 	#	else assign
-	cV < cMID
-	cV.ModelTable = 'Vessel';
-	cV.ModelField = 'IMO';
-	cV.ValueTable = {'VesselConfiguration', 'VesselOwner', 'VesselInfo', 'BunkerDelivery'};
-	cV.insert:
-		Check IMO not empty
-		call cMID.insert
-	cV.set.IMO: (reads any and all data for all related objects)
-		cV.vessel_ID
-		cV.Model_ID = cV.Vessel_ID;
-		cVC.Model_ID = cV.Vessel_ID;
-		cVI.Model_ID = cV.Vessel_ID;
-		...
-	Test with cVessel
-	cMID.OtherTable
-	cMID.OtherTableIdentifier
-	cMID.readOthersIfExist(obj)
-		call obj.readFromTable on .OtherTable with .OtherTableIdentifier iff .OtherTable exists
-	Test with cVSP
-	
-%% To prevent need for co-ordinating modelID's outside DB
-	Make windcoefficientmodelvalue.windcoefficientmodelID a foreign key of windcoefficientmodel.windcoefficientmodelID
-		Will ensure that any values added to windcoefficientmodelvalue must have a corresponding modelID in ModelTable
-		Still need code that knows to add data for model (name, desc.) along with data (direction, coefficient). But, constraint would keep values from being added/deleted by any code that breaks the relationship.
+	# cV < cMID
+	# cV.ModelTable = 'Vessel';
+	# cV.ModelField = 'Vessel_Id';
+	# cV.ValueTable = {'VesselConfiguration', 'VesselInfo', 'BunkerDelivery'};
+	#Test with cVessel
+	#cMID.OtherTable
+	#cMID.OtherTableIdentifier
+	#cMID.readOthersIfExist(obj)
+	#	call obj.readFromTable on .OtherTable with .OtherTableIdentifier iff .OtherTable exists
+	#Test with cVSP
+Remove Vessel_Id field from VesselOwner table
+Implement VesselOwner select/insert.
+%% How to ensure Speed_Power_Coefficient_Model_Id in VesselConfiguration is never NULL?
+	Make is non NULL in DB
+
+User creates cV
+	cV.cVC has empty Speed_Power_Coefficient_Model_Id
+	cVC.insert will error because Speed_Power_Coefficient_Model_Id cannot be NULL in DB
+User assigns data to cV.SP props
+	User calls cV.insert
+		cVSP inserts into all tables (otherTable)
+		cTO.insert returns object with all data read out from DB (including any auto-incremented values)
+		cVSP has new Speed_Power_Coefficient_Model_Id value
+		cV assigns cVSP.Speed_Power_Coefficient_Model_Id into cVC.Speed_Power_Coefficient_Model_Id
+cVC.Vessel (Hidden): prop storing corresponding vessel handle
+User assigns cV.Configuration.Speed_Power_Coefficient_Model_Id = id
+	cVC.set.Speed_Power_Coefficient_Model_Id:
+		cheap SQL hack to get all [Speed_Power_Coefficient_Model_Value_Id] for this id
+		create cVSP vector with input ModelID found from above
+		assign vector into cV.cVSP

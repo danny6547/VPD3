@@ -1,4 +1,4 @@
-classdef cVesselInfo < cTableObject & cDateConvert
+classdef cVesselInfo < cModelID & cDateConvert
     %CVESSELINFO Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -6,7 +6,8 @@ classdef cVesselInfo < cTableObject & cDateConvert
         
         Valid_From;
         Vessel_Name;
-        Deleted = false;
+%         Deleted = false;
+%         Vessel_Id;
     end
     
     properties(Constant, Hidden)
@@ -14,6 +15,11 @@ classdef cVesselInfo < cTableObject & cDateConvert
         StartDateProp = 'Valid_From';
         EndDateProp = 'Valid_To';
         DataProperty = {'Valid_From', 'Vessel_Name', 'Deleted'};
+        
+        ModelTable = '';
+        ValueTable = {};
+        ValueObject = {};
+        ModelField = {};
     end
     
     properties(Hidden)
@@ -33,7 +39,7 @@ classdef cVesselInfo < cTableObject & cDateConvert
     
        function obj = cVesselInfo(varargin)
             
-           obj@cTableObject(varargin{:});
+           obj@cModelID(varargin{:});
            obj.DateStrFormat = 'yyyy-mm-dd';
            obj.Valid_From = '2000-01-01';
        end

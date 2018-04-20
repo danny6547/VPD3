@@ -17,6 +17,7 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
         R_Squared double = [];
         Maximum_Power = [];
         Minimum_Power = [];
+        Speed_Power_Coefficient_Model_Id;
     end
     
     properties(Dependent, Hidden)
@@ -33,9 +34,10 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
     
     properties(Hidden, Constant)
        
-        ModelTable = 'SpeedPowerCoefficientModel';
-        ValueTable = {'SpeedPowerCoefficientModelValue', 'speedpower'};
-        ModelField = 'Speed_Power_Coefficient_Model_Id';
+        ModelTable = 'SpeedPowerCoefficientModelValue';
+        ValueTable = {'SpeedPower'};
+        ModelField = {'Speed_Power_Coefficient_Model_Value_Id'};
+        ValueObject = {};
         DataProperty = {'Speed',...
                         'Power',...
                         'Trim',...
@@ -49,6 +51,8 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
                         'Speed_Power_Source',...
                         'Maximum_Power',...
                         'Minimum_Power'};
+        OtherTable = {'SpeedPowerCoefficientModel'};
+        OtherTableIdentifier = {'Speed_Power_Coefficient_Model_Id'};
     end
     
     methods

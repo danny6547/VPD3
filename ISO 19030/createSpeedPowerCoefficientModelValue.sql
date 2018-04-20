@@ -12,8 +12,8 @@ CREATE PROCEDURE createSpeedPowerCoefficientModelValue()
 
 BEGIN
 
-	CREATE TABLE speedPowerCoefficientModelValue (id INT PRIMARY KEY AUTO_INCREMENT,
-											 Speed_Power_Coefficient_Model_Id INT(10) NOT NULL UNIQUE,
+	CREATE TABLE speedPowerCoefficientModelValue (Speed_Power_Coefficient_Model_Value_Id INT PRIMARY KEY AUTO_INCREMENT,
+											 Speed_Power_Coefficient_Model_Id INT(10) NOT NULL,
 											 Displacement FLOAT(15, 3) NOT NULL,
 											 Trim FLOAT(15, 8) NOT NULL,
 											 Coefficient_A FLOAT(15, 10) NOT NULL,

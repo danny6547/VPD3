@@ -1,4 +1,4 @@
-classdef cVesselConfiguration < cMySQL & matlab.mixin.Copyable & cTableObject & cDateConvert
+classdef cVesselConfiguration < cMySQL & matlab.mixin.Copyable & cModelID & cDateConvert
     %CVESSELPARTICULARS Data relating to vessel particulars
     %   Detailed explanation goes here
     
@@ -23,7 +23,7 @@ classdef cVesselConfiguration < cMySQL & matlab.mixin.Copyable & cTableObject & 
         Vessel_Configuration_Description char = '';
         Apply_Wind_Calculations logical;
         Fuel_Type char = '';
-        Deleted = false;
+%         Deleted = false;
     end
     
     properties(Hidden)
@@ -54,6 +54,11 @@ classdef cVesselConfiguration < cMySQL & matlab.mixin.Copyable & cTableObject & 
                         'Apply_Wind_Calculations',...
                         'Fuel_Type',...
                         'Deleted'};
+                    
+        ModelTable = 'VesselConfiguration';
+        ValueTable = {};
+        ValueObject = {};
+        ModelField = {'Vessel_Id'};
     end
     
     
@@ -68,7 +73,7 @@ classdef cVesselConfiguration < cMySQL & matlab.mixin.Copyable & cTableObject & 
     
        function obj = cVesselConfiguration(varargin)
        
-           obj = obj@cTableObject(varargin{:});
+           obj = obj@cModelID(varargin{:});
        end
        
 %        function obj = insertIntoTable(obj)
