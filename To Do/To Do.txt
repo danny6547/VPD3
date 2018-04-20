@@ -624,3 +624,65 @@ cDateConvert: find how to have subclasses Start, End properties reflect DateForm
 # cV.cV: call assignDefaults after connection made
 cTO.isempty: ignore properties in Props2Ignore, pass to cMYSQL.isempty
 cDDD.Props2Ignore = 'DateStrFormat'
+
+SpeedPowerModelValue table has many empty rows
+	
+%% What if we remove reserving/releasing?
+	cTO are assigned to, inserted on insert command.
+	cMID.set.ModelID: reads out data if ModelID found in ModelTable
+	cVSP.insert:
+		inserts into SpeedPowerCoefficientModel
+					SpeedPowerCoefficientModelValue
+					SpeedPowerModel				(if table exists)
+					SpeedPowerModelValue		(if table exists)
+					(cVSP could have new properties to describe SpeedPowerModel)
+	cVSP.set.ModelID:
+		checks SpeedPowerCoefficientModel
+			if found, read out [Speed_Power_Coefficient_Model_Id] as ModelID
+				read obj data from SpeedPowerCoefficientModel
+				select all Model_Value_ID where ModelID
+				read obj data from SpeedPower where Model_Value_ID
+				
+	cVWC.set.ModelID:
+		read out data if ModelID found in ModelTable
+	cVWC.insert: insert into ModelTable and ValueTable
+	
+	ACTIONS
+	# Remove methods cMID.reserveModelID, cMID.releaseModelID, cMID.delete
+	# Move cTO.checkModel to cMID.checkModel
+	# Rename cMID.checkModel to cMID.readFromTable
+	Rename method cMID.insertModel to .insert
+	Rename cTO.insertIntoTable to insert
+	Rename cV.insertIntoTable to insert
+	cTO.readFromTable: return unmodified object if identifier value not found (also return flag indicating such)
+	cMID.insert:
+		if ModelID empty, increment
+		insert into ModelTable, ValueTables
+	cMID.set.ModelID
+		if ModelID found in DB, read obj data from ModelTable and ValueTables
+			call cMID.readOthersIfExist(
+		else assign
+	cV < cMID
+	cV.ModelTable = 'Vessel';
+	cV.ModelField = 'IMO';
+	cV.ValueTable = {'VesselConfiguration', 'VesselOwner', 'VesselInfo', 'BunkerDelivery'};
+	cV.insert:
+		Check IMO not empty
+		call cMID.insert
+	cV.set.IMO: (reads any and all data for all related objects)
+		cV.vessel_ID
+		cV.Model_ID = cV.Vessel_ID;
+		cVC.Model_ID = cV.Vessel_ID;
+		cVI.Model_ID = cV.Vessel_ID;
+		...
+	Test with cVessel
+	cMID.OtherTable
+	cMID.OtherTableIdentifier
+	cMID.readOthersIfExist(obj)
+		call obj.readFromTable on .OtherTable with .OtherTableIdentifier iff .OtherTable exists
+	Test with cVSP
+	
+%% To prevent need for co-ordinating modelID's outside DB
+	Make windcoefficientmodelvalue.windcoefficientmodelID a foreign key of windcoefficientmodel.windcoefficientmodelID
+		Will ensure that any values added to windcoefficientmodelvalue must have a corresponding modelID in ModelTable
+		Still need code that knows to add data for model (name, desc.) along with data (direction, coefficient). But, constraint would keep values from being added/deleted by any code that breaks the relationship.

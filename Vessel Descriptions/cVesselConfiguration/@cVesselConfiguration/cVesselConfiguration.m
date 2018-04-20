@@ -21,7 +21,7 @@ classdef cVesselConfiguration < cMySQL & matlab.mixin.Copyable & cTableObject & 
         Speed_Power_Coefficient_Model_ID double = [];
         Wind_Coefficient_Model_ID double = [];
         Vessel_Configuration_Description char = '';
-        Apply_Wind_Calculations logical = true;
+        Apply_Wind_Calculations logical;
         Fuel_Type char = '';
         Deleted = false;
     end

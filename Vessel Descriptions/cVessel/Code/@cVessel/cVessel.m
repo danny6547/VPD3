@@ -56,7 +56,7 @@ classdef cVessel < cTableObject
     end
     
     properties(Hidden, Constant)
-       
+        
         ModelTable = 'Vessel';
         ValueTable = {'VesselConfiguration', 'VesselInfo', 'BunkerDeliveryNote'};
         ModelField = 'Vessel_Id';
@@ -159,8 +159,8 @@ classdef cVessel < cTableObject
            imo_c = num2cell(imo);
            [obj.IMO] = deal(imo_c{:});
            
-           parts = [obj.Particulars];
-           [parts.IMO_Vessel_Number] = deal(imo_c{:});
+%            parts = [obj.Particulars];
+%            [parts.IMO_Vessel_Number] = deal(imo_c{:});
         else
             
             % Remove from array any without data
@@ -177,40 +177,40 @@ classdef cVessel < cTableObject
         % Expand array to size of input data and assign known values
 %         numOuts = numel(shipData(:, indb));
 %         obj(numOuts) = cVessel;
-        for ii = 1:numel(obj)
-%             for fi = 1:numel(fields2read)
-% 
-%                 currField = fields2read{fi};
-%                 obj(ii).(currField) = shipData(ii).(currField);
-                obj(ii).IMO_Vessel_Number = imo(ii);
-                obj(ii).Particulars.IMO_Vessel_Number = imo(ii);
-%             end
-        end
+%         for ii = 1:numel(obj)
+% %             for fi = 1:numel(fields2read)
+% % 
+% %                 currField = fields2read{fi};
+% %                 obj(ii).(currField) = shipData(ii).(currField);
+%                 obj(ii).IMO_Vessel_Number = imo(ii);
+%                 obj(ii).Particulars.IMO_Vessel_Number = imo(ii);
+% %             end
+%         end
         
 
         % Error when inputs not recognised
 
 
-        % Read Vessel static data from DB
-        try
-            obj = obj.readFromTable('Vessels', 'IMO_Vessel_Number');
-            parts = obj.Particulars;
-            parts.readFromTable('Vessels', 'IMO_Vessel_Number');
-        catch ee
-            
-            if ~strcmp(ee.identifier, 'readTable:IdentifierDataMissing')
-                
-                rethrow(ee);
-            end
-        end
-        
-        for vi = 1:numel(obj)
-
-            dd_v = cVesselDryDockDates();
-            dd_v.IMO_Vessel_Number = obj(vi).IMO_Vessel_Number;
-            dd_v = dd_v.readFromTable;
-            obj(vi).DryDockDates = dd_v;
-        end
+%         % Read Vessel static data from DB
+%         try
+%             obj = obj.readFromTable('Vessels', 'IMO_Vessel_Number');
+%             parts = obj.Particulars;
+%             parts.readFromTable('Vessels', 'IMO_Vessel_Number');
+%         catch ee
+%             
+%             if ~strcmp(ee.identifier, 'readTable:IdentifierDataMissing')
+%                 
+%                 rethrow(ee);
+%             end
+%         end
+%         
+%         for vi = 1:numel(obj)
+% 
+%             dd_v = cVesselDryDock();
+%             dd_v.IMO_Vessel_Number = obj(vi).IMO_Vessel_Number;
+%             dd_v = dd_v.readFromTable;
+%             obj(vi).DryDockDates = dd_v;
+%         end
 
         % Read SpeedPower
        
@@ -1457,6 +1457,14 @@ classdef cVessel < cTableObject
         
         function obj = assignDefaults(obj, varargin)
             
+%             if nargin == 1
+%                 
+%                 for oi = 1:numel(obj)
+% 
+%                     obj(oi).SpeedPower = cVesselSpeedPower.empty();
+%                 end
+%             end
+            
             % Iterate and assign
             for oi = 1:numel(obj)
                 
@@ -1553,6 +1561,10 @@ classdef cVessel < cTableObject
 %            end
        end
        
+       function obj = set.SpeedPower(obj, sp)
+           
+           obj.SpeedPower = sp;
+       end
 %        function obj = set.DateTime_UTC(obj, dates)
 %         % Set property method for DateTime_UTC
 %         

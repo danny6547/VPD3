@@ -314,96 +314,6 @@ classdef cTableObject < cMySQL
 
         end
 
-        function [obj, inDB] = checkModel(obj, tab, field, mid, varargin)
-        % checkModel Check if model in DB and read, otherwise create
-
-        % Input
-        tab = validateCellStr(tab, 'cTableObject.checkModel', 'tab', 2);
-        field = validateCellStr(field, 'cTableObject.checkModel', 'field', 3);
-        tab = tab(:);
-        field = field(:);
-
-        alias_c = {};
-        if nargin > 4
-
-            alias_c = varargin{1};
-        end
-
-        validInput_l = isvector(tab) && isscalar(obj) && isscalar(field)...
-            || ...
-            ~isscalar(tab) && ~isscalar(obj) && ~isscalar(field) && ...
-            isequal(size(tab), size(obj)) && isequal(size(tab), size(field));
-        if ~validInput_l
-
-           errid = 'chkModel:InputSizeMismatch';
-           errmsg = ['Inputs OBJ, TAB and FIELD can all be the same size '...
-               'or TAB can be a vector while OBJ and FIELD are scalar.'];
-           error(errid, errmsg);
-        end
-
-        % Repeat inputs to same size if required
-        if ~(isequal(size(tab), size(obj)) && isequal(size(tab), size(field)))
-
-            obj = repmat(obj, size(tab));
-            field = repmat(field, size(tab));
-        end
-
-        for oi = 1:numel(obj)
-
-            % Index
-            currObj = obj(oi);
-            currTab = tab{oi};
-            currField = field{oi};
-
-            % Read out data, if model already in DB
-            inDB = currObj.isModelInDB(currTab, currField, mid);
-
-            % Assign now so that Models_id can be read out later
-        %             obj.Model_ID = mid;
-        % 
-        %             if inDB
-
-                % If Model already in DB, read data out
-        %                 for ti = 1:numel(obj.ValueTable)
-
-            if inDB
-
-                % Read object data from Value Tables
-                try currObj = currObj.readFromTable(currTab,...
-                        currField, '', alias_c, mid);
-
-                catch ee
-
-                    if ~strcmp(ee.identifier, 'readTable:IdentifierDataMissing')
-                        rethrow(ee);
-                    end
-                end
-                
-            else
-                
-            end
-        %                 % Read additional data from Models Table
-        %                 try obj = obj.readFromTable(obj.ModelTable,...
-        %                         obj.ModelField, '', alias_c);
-        % 
-        %                 catch ee
-        % 
-        %                     if ~strcmp(ee.identifier, 'readTable:IdentifierDataMissing')
-        %                         rethrow(ee);
-        %                     end
-        %                 end
-        %                 end
-        %             else
-        % 
-        %                 % If model not in DB, reserve Name in Model table
-        %                 currObj.reserveModelID(currTab, currField);
-        %             end
-
-            % Assign
-            obj(oi) = currObj;
-        end
-        end
-        
         function empty = isempty(obj)
         % isempty True if object data properties are all empty
         
@@ -413,6 +323,10 @@ classdef cTableObject < cMySQL
             end
             
             props = obj.DataProperty;
+            
+            % Exclude certain properties with default values
+            props = setdiff(props, 'Deleted');
+            
             empty = false(numel(props), numel(obj));
             for oi = 1:numel(obj)
                 for pi = 1:numel(props)
