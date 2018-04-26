@@ -1,4 +1,4 @@
-classdef cVesselDryDock < cTableObject & cDateConvert
+classdef cVesselDryDock < cModelID & cDateConvert
     %CVESSELDRYDOCK Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -10,21 +10,47 @@ classdef cVesselDryDock < cTableObject & cDateConvert
         Vertical_Bottom_Coating
         Flat_Bottom_Surface_Prep
         Flat_Bottom_Coating
-        Deleted = false;
+        Bot_Top_Surface_Prep
+        Bot_Top_Coating
+        Average_Speed_Expected
+        Activity_Expected
+        Longest_Idle_Period_Expected
+%         Deleted = false;
     end
     
     properties(Hidden, Constant)
         
         DBTable = 'DryDock';
-        Vessel_Id = [];
         DataProperty = {'StartDate',...
                         'EndDate',...
                         'Vertical_Bottom_Surface_Prep',...
                         'Vertical_Bottom_Coating',...
                         'Flat_Bottom_Surface_Prep',...
                         'Flat_Bottom_Coating',...
+                        'Bot_Top_Surface_Prep',...
+                        'Bot_Top_Coating',...
+                        'Average_Speed_Expected',...
+                        'Activity_Expected',...
+                        'Longest_Idle_Period_Expected',...
+                        'Model_ID',...
+                        'Name',...
+                        'Description',...
                         'Deleted'};
+        TableIdentifier = 'Vessel_Id';
+    end
+    
+    properties(Hidden, Constant)
         
+        ModelTable = 'DryDock';
+        ValueTable = {};
+        ModelField = {'Vessel_Id'};
+        ValueObject = {};
+        OtherTable = {};
+    end
+    
+    properties(Hidden)
+        
+        Vessel_Id = [];
     end
     
     properties(Constant, Hidden)
@@ -34,10 +60,10 @@ classdef cVesselDryDock < cTableObject & cDateConvert
     end
     
     methods
-        
+       
        function obj = cVesselDryDock(varargin)
     
-           obj = obj@cTableObject(varargin{:});
+           obj = obj@cModelID(varargin{:});
        end
        
        function obj = readFile(obj, filename, dateform)
@@ -325,6 +351,26 @@ classdef cVesselDryDock < cTableObject & cDateConvert
             
             val = obj.oneCellToString(val);
             obj.Flat_Bottom_Coating = val;
+        end
+        
+        function obj = set.StartDate(obj, start)
+            
+            obj.Valid_From = start;
+        end
+        
+        function start = get.StartDate(obj)
+            
+            start = obj.Valid_From;
+        end
+        
+        function obj = set.EndDate(obj, endd)
+            
+            obj.Valid_To = endd;
+        end
+        
+        function endd = get.EndDate(obj)
+            
+            endd = obj.Valid_To;
         end
     end
 end
