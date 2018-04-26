@@ -2,10 +2,10 @@ classdef cDateConvert < handle
     %CDATECONVERT Convert dates
     %   Detailed explanation goes here
     
-    properties(Abstract, Constant, Hidden)
+    properties
         
-        StartDateProp;
-        EndDateProp;
+        Valid_From;
+        Valid_To;
     end
     
 %     properties(Dependent)
@@ -14,7 +14,7 @@ classdef cDateConvert < handle
 %         EndDate char = '';
 %     end
     
-    properties
+    properties(Hidden, Constant)
         
         DateStrFormat char = 'yyyy-mm-dd';
     end
@@ -31,60 +31,39 @@ classdef cDateConvert < handle
     
        end
     
-       function obj = assignDates(obj, startdate, enddate, varargin)
-           
-           for oi = 1:numel(obj)
-                
-                dateform = obj(oi).DateStrFormat;
-                if nargin > 3
-                    dateform = varargin{1};
-                end
-
-                startProp = obj.StartDateProp;
-                endProp = obj.EndDateProp;
-                
-                % Validate abstracted properties implemented correctly
-%                 validateattributes(startProp, 
-                
-                obj(oi).StartDateNum = obj(oi).setDate(startdate, dateform);
-                obj(oi).EndDateNum = obj(oi).setDate(enddate, dateform);
-                
-                obj(oi).(startProp) = datestr(obj(oi).StartDateNum, obj.DateStrFormat);
-                obj(oi).(endProp) = datestr(obj(oi).EndDateNum, obj.DateStrFormat);
-           end
-       end
     end
     
     methods(Hidden, Static)
         
-        function datenumeric = setDate(date, stringformat)
+        function newdate = setDate(olddate, stringformat)
             
-            if isnumeric(date)
+            % Trim excess whitespace sometimes read from DB
+            olddate(olddate == 0) = [];
+            newdatenum = datenum(olddate, 'yyyy-mm-dd');
+            
+            if newdatenum < datenum('1900-01-01', 'yyyy-mm-dd')
                 
-                datenumeric = date;
-                
-            elseif ischar(date) || iscellstr(date)
-                
-                datenumeric = datenum(date, stringformat);
+                newdatenum = datenum(olddate, 'dd-mm-yyyy');
             end
+
+            newdate = datestr(newdatenum, stringformat);
         end
     end
     
     methods
         
-        function set.DateStrFormat(obj, str)
+        function set.Valid_From(obj, olddate)
             
-            startProp = obj.StartDateProp;
-            endProp = obj.EndDateProp;
-            
-            obj.DateStrFormat = str;
-            obj.(startProp) = datestr(obj.StartDateNum, obj.DateStrFormat);
-            obj.(endProp) = datestr(obj.EndDateNum, obj.DateStrFormat);
+            stringformat = obj.DateStrFormat;
+            newdate = obj.setDate(olddate, stringformat);
+            obj.Valid_From = newdate;
         end
         
-%         function obj = get.DateStrFormat(obj)
-%             
-% %              str = obj.DateStrFormat;
-%         end
+        function set.Valid_To(obj, olddate)
+            
+            stringformat = obj.DateStrFormat;
+            newdate = obj.setDate(olddate, stringformat);
+            obj.Valid_To = newdate;
+        end
     end
 end
