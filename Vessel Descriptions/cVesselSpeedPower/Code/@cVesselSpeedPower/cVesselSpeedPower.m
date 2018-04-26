@@ -17,12 +17,12 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
         R_Squared double = [];
         Maximum_Power = [];
         Minimum_Power = [];
-        Speed_Power_Coefficient_Model_Id;
     end
     
     properties(Dependent, Hidden)
         
         SpeedPowerDraftTrim double = [];
+        Speed_Power_Coefficient_Model_Value_Id
     end
     
     properties(Hidden)
@@ -30,13 +30,15 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
         Model = 'exponential';
         Draft_Fore = [];
         Draft_Aft = [];
+        Speed_Power_Coefficient_Model_Id;
     end
     
     properties(Hidden, Constant)
-       
+        
         ModelTable = 'SpeedPowerCoefficientModelValue';
         ValueTable = {'SpeedPower'};
-        ModelField = {'Speed_Power_Coefficient_Model_Value_Id'};
+        ModelField = {'Speed_Power_Coefficient_Model_Value_Id',...
+                      'Speed_Power_Coefficient_Model_Value_Id'};
         ValueObject = {};
         DataProperty = {'Speed',...
                         'Power',...
@@ -50,9 +52,15 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
                         'R_Squared',...
                         'Speed_Power_Source',...
                         'Maximum_Power',...
-                        'Minimum_Power'};
+                        'Minimum_Power',...
+                        'Model_ID',...
+                        'Name',...
+                        'Description',...
+                        'Deleted',...
+                        'Speed_Power_Coefficient_Model_Id'};
         OtherTable = {'SpeedPowerCoefficientModel'};
         OtherTableIdentifier = {'Speed_Power_Coefficient_Model_Id'};
+        TableIdentifier = 'Speed_Power_Coefficient_Model_Value_Id';
     end
     
     methods
@@ -132,15 +140,37 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
        end
        end
        
-       function insertModel(obj)
+       function insert(obj)
        % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs
        
            obj = obj.fit;
            obj = obj.powerExtents;
            
 %            obj.insertModel;
-           insertModel@cModelID(obj);
+%            obj = obj.incrementSpeedPowerModel;
+           % Init MID
+%            mid = [obj.Model_ID];
+
+           % Check model name, description are same throughout array
+           name = {obj.Name};
+           desc = {obj.Description};
+           firstName = name(find(~cellfun(@isempty, name), 1, 'first'));
+           firstDesc = desc(find(~cellfun(@isempty, desc), 1, 'first'));
+           [obj.Name] = deal(firstName{:});
+           [obj.Description] = deal(firstDesc{:});
            
+           % Insert into super-model table, get super-ID
+           insert@cTableObject(obj(1), 'SpeedPowerCoefficientModel', {}, ...
+               'Speed_Power_Coefficient_Model_Id', {});
+           superID = obj(1).Speed_Power_Coefficient_Model_Id;
+%            superID = repmat(superID, size(obj));
+           [obj.Speed_Power_Coefficient_Model_Id] = deal(superID);
+%            [obj.Model_ID] = deal(mid);
+
+           % Insert into models
+           insert@cModelID(obj);
+           
+%            obj.insertSpeedPowerModel();
 %            insertIntoTable@cModelID(obj);
 %            
 %            % ModelID subclass needs to write model name, description 
@@ -240,6 +270,11 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
        % isequal True if object data and array are numerically equal.
        
        log = true;
+       if isempty(obj)
+           
+           log = false;
+           return
+       end
        
        eqf = @(x, y, tol) (numel(x) == numel(y)) && all(abs(x(:) - y(:)) < tol);
        tolerance = 1e-15;
@@ -349,6 +384,7 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
            obj(oi).Minimum_Power = min(obj(oi).Power);
        end
        end
+       
     end
     
     methods
@@ -538,6 +574,15 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
             validateattributes(d, {'numeric'}, ...
                 {'real', 'scalar', 'positive', 'nonnan'});
             obj.Draft_Aft = d;
+        end
+        
+        function val = get.Speed_Power_Coefficient_Model_Value_Id(obj)
+            
+            val = obj.Model_ID;
+        end
+        
+        function obj = set.Speed_Power_Coefficient_Model_Value_Id(obj, ~)
+            
         end
     end
 end
