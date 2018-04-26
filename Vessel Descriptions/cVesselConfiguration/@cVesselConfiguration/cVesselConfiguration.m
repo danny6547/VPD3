@@ -12,8 +12,8 @@ classdef cVesselConfiguration < cMySQL & matlab.mixin.Copyable & cModelID & cDat
         Anemometer_Height = [];
         
         Engine_Model_Id double = [];
-        Valid_From char = '';
-        Valid_To char = '';
+%         Valid_From char = '';
+%         Valid_To char = '';
         Default_Configuration logical = [];
         Speed_Power_Source char = [];
         Wind_Reference_Height_Design double = [];
@@ -29,6 +29,7 @@ classdef cVesselConfiguration < cMySQL & matlab.mixin.Copyable & cModelID & cDat
     properties(Hidden)
         
         Wind_Model_ID;
+        Vessel_Configuration_Id;
     end
     
     properties(Constant, Hidden)
@@ -53,12 +54,16 @@ classdef cVesselConfiguration < cMySQL & matlab.mixin.Copyable & cModelID & cDat
                         'Vessel_Configuration_Description',...
                         'Apply_Wind_Calculations',...
                         'Fuel_Type',...
+                        'Vessel_Configuration_Id',...
+                        'Model_ID',...
                         'Deleted'};
-                    
         ModelTable = 'VesselConfiguration';
         ValueTable = {};
         ValueObject = {};
-        ModelField = {'Vessel_Id'};
+        ModelField = {'Vessel_Configuration_Id'};
+        OtherTable = {};
+        OtherTableIdentifier = {};
+        TableIdentifier = 'Vessel_Configuration_Id';
     end
     
     
@@ -76,6 +81,11 @@ classdef cVesselConfiguration < cMySQL & matlab.mixin.Copyable & cModelID & cDat
            obj = obj@cModelID(varargin{:});
        end
        
+       function obj = insert(obj, varargin)
+           
+           obj.DateStrFormat = 'yyyy-mm-dd';
+           obj = insert@cModelID(obj, varargin{:});
+       end
 %        function obj = insertIntoTable(obj)
 %            
 %            tab = 'Vessels';

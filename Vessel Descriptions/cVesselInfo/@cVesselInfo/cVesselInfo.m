@@ -4,7 +4,7 @@ classdef cVesselInfo < cModelID & cDateConvert
     
     properties
         
-        Valid_From;
+%         Valid_From;
         Vessel_Name;
 %         Deleted = false;
 %         Vessel_Id;
@@ -14,18 +14,22 @@ classdef cVesselInfo < cModelID & cDateConvert
         
         StartDateProp = 'Valid_From';
         EndDateProp = 'Valid_To';
-        DataProperty = {'Valid_From', 'Vessel_Name', 'Deleted'};
+        DataProperty = {'Valid_From', 'Vessel_Name', 'Deleted',...
+                        'Model_ID', 'Vessel_Info_Id'};
         
         ModelTable = '';
         ValueTable = {};
         ValueObject = {};
         ModelField = {};
+        TableIdentifier = 'Vessel_Info_Id';
     end
     
     properties(Hidden)
         
-        Valid_To; % All cDateConvert subclasses must implement two 
-        % properties which will be assigned to, even if they don't use them
+%         Valid_To; % All cDateConvert subclasses must implement two 
+%         % properties which will be assigned to, even if they don't use them
+        
+        Vessel_Info_Id;
     end
     
 %     properties(Hidden, Constant)
@@ -40,15 +44,16 @@ classdef cVesselInfo < cModelID & cDateConvert
        function obj = cVesselInfo(varargin)
             
            obj@cModelID(varargin{:});
-           obj.DateStrFormat = 'yyyy-mm-dd';
+%            obj.DateStrFormat = 'yyyy-mm-dd';
            obj.Valid_From = '2000-01-01';
        end
        
-       function obj = assignDates(obj, varargin)
-           
-          assignDates@cDateConvert(obj, varargin{:});
-           
-          obj.Valid_From = obj.StartDate;
-       end
+%        function obj = assignDates(obj, varargin)
+%            
+%           assignDates@cDateConvert(obj, varargin{:});
+%            
+%           obj.Valid_From = obj.StartDate;
+%        end
+       
     end
 end
