@@ -58,13 +58,6 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
                class_ch = class(obj);
                constructor_ch = [class_ch, '(', input_ch, ');'];
                obj(size_c{:}) = eval(constructor_ch);
-                   otherInputs_c(1:2:end) = otherInputsNames_c;
-                   otherInputs_c(2:2:end) = otherInputsValues_c;
-                   otherInputs_c = strcat('''', otherInputs_c, '''');
-                   otherInput_ch = strjoin(otherInputs_c, ', ');
-               end
-               
-               class_ch = [class(obj), '(', otherInput_ch, ')'];
            end
            
            % Assign model id values if input
