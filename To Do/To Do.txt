@@ -676,8 +676,6 @@ SpeedPowerModelValue table has many empty rows
 	#Test with cVSP
 Remove Vessel_Id field from VesselOwner table
 Implement VesselOwner select/insert.
-%% How to ensure Speed_Power_Coefficient_Model_Id in VesselConfiguration is never NULL?
-	Make is non NULL in DB
 
 User creates cV
 	cV.cVC has empty Speed_Power_Coefficient_Model_Id
@@ -686,6 +684,7 @@ User assigns data to cV.SP props
 	User calls cV.insert
 		cVSP inserts into all tables (otherTable)
 		cTO.insert returns object with all data read out from DB (including any auto-incremented values)
+			(rename to cTO.sync ?)
 		cVSP has new Speed_Power_Coefficient_Model_Id value
 		cV assigns cVSP.Speed_Power_Coefficient_Model_Id into cVC.Speed_Power_Coefficient_Model_Id
 cVC.Vessel (Hidden): prop storing corresponding vessel handle
@@ -694,3 +693,28 @@ User assigns cV.Configuration.Speed_Power_Coefficient_Model_Id = id
 		cheap SQL hack to get all [Speed_Power_Coefficient_Model_Value_Id] for this id
 		create cVSP vector with input ModelID found from above
 		assign vector into cV.cVSP
+
+# Make Speed_Power_Coefficient_Model_Id in VesselConfiguration non NULL
+cTO.TableIdentifier: char that would be passed to cTO.select as IDENTIFIER
+Write cTO.select call into cTO.insert
+	both apply only to DataProperty of object
+	THIS REQUIRES cTO.SELECT TO RETURN OBJ (NO ERROR) WHEN IDENTIFIER DATA NOT FOUND
+cV.insert: assign cVSP.Speed_Power_Coefficient_Model_Id into cVC.Speed_Power_Coefficient_Model_Id after acquiring value from DB
+# cVSP.incrementSPModel: add 1 to maximum value of Speed_Power_Coefficient_Model_Id in DB table and assign to all elements of array
+# cVSP.insert: call cVSP.incrementSPModel if property empty
+# cMID.ModelField: if scalar, cMID.insert will repeat to length of ValueTable plus one
+cTO.PropertyAlias: DB field names corresponding to DataProperty names
+cVC.VesselConfigurationDescription: make property alias to Description (or Name)
+DB.SpeedPower: remove Disp, Trim
+DB.VesselConfig: make all model_id fields required non null
+testcVessel: test cases where nested objects are empty
+cV.set: set access methods for all nested objects
+cTableObject.lastInsertID: return the last auto-incremented identifier value
+# cTO.insert:
+#	if obj.Identifier is empty
+#		call id = cTableObject.lastInsertID;
+#		insert id into additionalInputs
+#	call obj.select
+testcVessel: Test both cases where modelID is either given or not
+While Model_ID is only identifying value for any cMID, and Model_ID can be input empty, Model_ID must be specified explicitly in scripts
+cTO.isequal(a, b): iterate over DataProperty and compare, true if all equal

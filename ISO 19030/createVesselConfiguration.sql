@@ -10,8 +10,8 @@ CREATE PROCEDURE createVesselConfiguration()
 
 BEGIN
 
-	CREATE TABLE VesselConfiguration (Vessel_Configuration_Id INT PRIMARY KEY AUTO_INCREMENT,
-							 Vessel_Id INT(10) UNIQUE NOT NULL,
+	CREATE TABLE VesselConfiguration (Vessel_Configuration_Id INT PRIMARY KEY UNIQUE AUTO_INCREMENT,
+							 Vessel_Id INT(10) NOT NULL,
 							 Engine_Model_Id INT(10),
 							 Valid_From DateTime,
 							 Valid_To DateTime,
@@ -25,13 +25,14 @@ BEGIN
                              Wind_Reference_Height_Design FLOAT(15, 5),
                              Anemometer_Height FLOAT(15, 5),
 							 Displacement_Model_ID INT(10),
-							 Speed_Power_Coefficient_Model_ID INT(10),
+							 Speed_Power_Coefficient_Model_ID INT(10) NOT NULL,
 							 Wind_Coefficient_Model_ID INT,
                              VesselConfigurationDescription TEXT,
 							 LBP FLOAT(15, 5),
                              Deleted BOOL NOT NULL,
                              ApplyWindCalculations BOOL,
-                             FuelType TEXT
+                             FuelType TEXT,
+                             CONSTRAINT onePerVessel UNIQUE(Vessel_Id, Valid_From, Valid_To)
 							 );
 						 
 END;
