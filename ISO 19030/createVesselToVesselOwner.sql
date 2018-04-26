@@ -10,8 +10,10 @@ CREATE PROCEDURE createVesselToVesselOwner()
 
 BEGIN
 
-	CREATE TABLE VesselToVesselOwner (id INT PRIMARY KEY AUTO_INCREMENT,
-							 Vessel_Owner_Name NVARCHAR(100),
-							 Deleted BOOL NOT NULL
+	CREATE TABLE VesselToVesselOwner (Vessel_To_Vessel_Owner_Id INT PRIMARY KEY AUTO_INCREMENT,
+							 Vessel_Owner_Id INT,
+							 Vessel_Id INT,
+							 Ownership_Start DATETIME,
+							 Ownership_End DATETIME
 							 );
 END;

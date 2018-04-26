@@ -5,6 +5,7 @@ classdef cTableObject < cMySQL
     properties(Abstract, Hidden, Constant)
         
         DataProperty;
+        TableIdentifier;
     end
     
     methods
@@ -14,7 +15,7 @@ classdef cTableObject < cMySQL
            obj = obj@cMySQL(varargin{:});
         end
 
-        function insertIntoTable(obj, table, varargin)
+        function obj = insert(obj, table, varargin)
         % insertIntoTable Insert object property values in table
 
         % Input
@@ -26,44 +27,68 @@ classdef cTableObject < cMySQL
                 dataObj = obj;
             end
         end
+        
+        identifier = obj(1).TableIdentifier;
+        if nargin > 3 && ~isempty(varargin{2})
 
+            identifier = varargin{2};
+            validateattributes(identifier, {'char'}, {'vector'}, ....
+                'cTableObject.insert', 'identifier', 4);
+        end
+
+        alias_c = obj.propertyAlias;
+        if nargin > 4 
+
+            alias_c = varargin{3};
+            if isempty(alias_c) && isnumeric(alias_c)
+                
+                alias_c = {};
+            end
+%             validateattributes(alias_c, {'cell'}, {}, ....
+%                 'cTableObject.insert', 'alias', 5);
+        end
+        
         additionalFields_c = {};
-        additionalData_c = cell(numel(dataObj), 1);
+        additionalData_c = arrayfun(@(x) {}, dataObj, 'Uni', 0)';
+%         additionalData_c = cell(numel(dataObj), 1);
         additionalData_cc = {};
         numAdditional = 0;
-        if nargin > 3
+        additionalInputs = {};
+        if nargin > 5
 
-            paramValues = varargin(2:end);
-            p = inputParser();
-            p.KeepUnmatched = true;
-            p.parse(paramValues{:});
-            results = p.Unmatched;
-
-            additionalFields_c = fieldnames(results);
+            additionalInputs = varargin(4:end);
+            [additionalFields_c, additionalData_c] = obj.parseAdditional(additionalInputs{:});
+%             paramValues = varargin(2:end);
+%             p = inputParser();
+%             p.KeepUnmatched = true;
+%             p.parse(paramValues{:});
+%             results = p.Unmatched;
+% 
+%             additionalFields_c = fieldnames(results);
             numAdditional = numel(additionalFields_c);
-
-        %             additionalData_c = struct2cell(results')';
-
-        %             numericCols_l = all(cellfun(@isnumeric, additionalData_c));
-        %             additionalData_cc = mat2cell(additionalData_c, nRows, ones(1, nCols));
-        %             additionalData_cc(numericCols_l) = cellfun(...
-        %                 @(x) [x{:}], additionalData_cc(numericCols_l), 'Uni', 0);
-
-            resData_st = structfun(@cellstr, results, 'Uni', 0, ...
-                'Err', @(x, y) num2cell(y));
-            resData_c = struct2cell(resData_st);
-            resData_c = cellfun(@(x) x(:), resData_c, 'Uni', 0);
-            additionalData_c = [resData_c{:}];
-            [nRows, nCols] = size(additionalData_c);
-            additionalData_c = mat2cell(additionalData_c, ones(1, nRows),...
-                nCols);
+% 
+%         %             additionalData_c = struct2cell(results')';
+% 
+%         %             numericCols_l = all(cellfun(@isnumeric, additionalData_c));
+%         %             additionalData_cc = mat2cell(additionalData_c, nRows, ones(1, nCols));
+%         %             additionalData_cc(numericCols_l) = cellfun(...
+%         %                 @(x) [x{:}], additionalData_cc(numericCols_l), 'Uni', 0);
+% 
+%             resData_st = structfun(@cellstr, results, 'Uni', 0, ...
+%                 'Err', @(x, y) num2cell(y));
+%             resData_c = struct2cell(resData_st);
+%             resData_c = cellfun(@(x) x(:), resData_c, 'Uni', 0);
+%             additionalData_c = [resData_c{:}];
+%             [nRows, nCols] = size(additionalData_c);
+%             additionalData_c = mat2cell(additionalData_c, ones(1, nRows),...
+%                 nCols);
         %             additionalData_c = cellfun(@num2cell, additionalData_c, 'Uni', 0);
 
         %             resData_c = struct2cell(results);
         %             resData_c = cellfun(@(x) x(:), resData_c, 'Uni', 0);
         %             additionalData_c = num2cell(cell2mat(resData_c));
         end
-
+        
         % Get matching field names
         matchFields_c = matchingFields(obj, table, dataObj);
 
@@ -143,12 +168,57 @@ classdef cTableObject < cMySQL
         %         data_c = [data_c, additionalData_c];
         obj(1).insertValuesDuplicate(table, matchFields_c, data_c);
 
+        % Select out data for vessel, to synchronise with DB
+        emptyID_l = cellfun(@isempty, {obj.(identifier)});
+        
+        % Assume at this point that if one OBJ has empty id, they all do
+        if all(emptyID_l)
+            
+            id_v = obj.lastInsertID;
+            
+            if id_v ~= 0
+                
+                additionalInputs = [additionalInputs, {identifier}, {id_v}];
+            end
+        end
+        
+        obj = obj.select(table, identifier, [], alias_c, [], additionalInputs{:});
+        
         end
 
-        function obj = readFromTable(obj, table, identifier, varargin)
+        function empty = isempty(obj)
+        % isempty True if object data properties are all empty
+        
+            if any(size(obj) == 0)
+                empty = true;
+                return
+            end
+            
+            props = obj.DataProperty;
+            
+            % Exclude certain properties with default values
+            props = setdiff(props, 'Deleted');
+            
+            empty = false(numel(props), numel(obj));
+            for oi = 1:numel(obj)
+                for pi = 1:numel(props)
+                    
+                    prop = props{pi};
+                    empty(pi, oi) = isempty(obj(oi).(prop));
+                end
+            end
+            empty = all(all(empty));
+        end
+    end
+    
+    methods(Hidden)
+        
+        function [obj, inDB, inOBJ] = select(obj, table, identifier, varargin)
         % readFromTable Assign object properties from table column values
 
-        %         % Output
+        % Output
+        inDB = false;
+        inOBJ = false;
         %         objdiff = true;
         %         fielddiff = true;
 
@@ -158,16 +228,19 @@ classdef cTableObject < cMySQL
         validateattributes(identifier, {'char'}, {'vector'}, ...
             'cVessel.readFromTable', 'identifier', 3);
 
-        cols2write = properties(obj);
-        if nargin > 3 && ~isempty(varargin{1})
+        cols2write = {}; %properties(obj);
+%         if nargin > 3 && ~isempty(varargin{1})
+% 
+%             cols2write = varargin{1};
+%             validateCellStr(cols2write, 'cMySQL.readFromTable',...
+%                 'cols2write', 1);
+%         end
 
-            cols2write = varargin{1};
-            validateCellStr(cols2write, 'cMySQL.readFromTable',...
-                'cols2write', 1);
-        end
-
-        prop_c = properties(obj);
+        prop_c = obj.DataProperty; % properties(obj);
+        prop_c = prop_c(:);
         identifierProp_ch = identifier;
+        identifierValue = {};
+        aliasProp_ch = '';
         if nargin > 4 && ~isempty(varargin{2})
 
             alias_c = varargin{2};
@@ -188,28 +261,59 @@ classdef cTableObject < cMySQL
                 error(errid, errmsg);
             end
             prop_c(propi) = alias_c(:, 2);
-
+            identifierValue = {obj.(identifierProp_ch)};
+            aliasProp_ch = alias_c{identifier_l, 2};
         end
         
         identifierValueInput = false;
         if nargin > 5 && ~isempty(varargin{3})
             
             identifierValueInput = true;
-            identifierValue = varargin{3};
+            identifierValue = varargin(3);
             
             % Append to properties and values
             prop_c = [prop_c; cellstr(identifier)];
         end
-
+        
+        additionalFields_c = {};
+        additionalCondition_ch = '';
+        if nargin > 6 && ~isempty(varargin{4})
+            
+            additionalInputs_c = varargin(4:end);
+            [additionalFields_c, additionalData_c] = ...
+                obj.parseAdditional(additionalInputs_c{:});
+            
+            % Enclose any char values 
+            
+            additionalData_c = [additionalData_c{:}];
+            additionalData_c = cellfun(@num2str, additionalData_c, 'Uni', 0);
+            additionalData_c = additionalData_c(:);
+            eq_c = repmat({' = '}, size(additionalFields_c));
+            addAll = strcat(additionalFields_c, eq_c, additionalData_c);
+            additionalCondition_ch = strjoin(addAll, ' AND ');
+            
+            if isempty(identifierValue) || any(cellfun(@isempty, identifierValue))
+                
+                identifierValueInput = true;
+                identifierValue = additionalData_c(1);
+            end
+            identifier = additionalFields_c{1};
+        end
+        
+        if ~iscell(identifierValue)
+            identifierValue = {identifierValue};
+        end
+        
         % Get matching field names and object properties
         temp_st = obj(1).execute(['DESCRIBE ', table]);
         fields_c = temp_st.field;
         %         prop_c = properties(obj);
         matchField_c = intersect(fields_c, prop_c);
+        matchField_c = union(matchField_c, additionalFields_c);
 
         % Error if identifier is not in both fields and properties
         if ~ismember(identifier, matchField_c)
-
+            
             errid = 'readTable:IdentifierMissing';
             errmsg = ['Input IDENTIFIER must be both a property of OBJ '...
                 'and a field of table TABLE.'];
@@ -217,52 +321,87 @@ classdef cTableObject < cMySQL
         end
 
         % No need to read data for identifier, given in input
-        matchField_c = intersect(prop_c, cols2write);
+%         matchField_c = intersect(prop_c, cols2write);
         matchField_c = intersect(matchField_c, fields_c);
-        matchField_c = setdiff(matchField_c, identifier);
+%         matchField_c = setdiff(matchField_c, identifier);
 
         % Select table where rows match identifier values in object
         if identifierValueInput
             
-            objID_c = repmat({identifierValue}, size(obj));
+            identifierValue = repmat(identifierValue, size(obj));
         else
             
-            objID_c = {obj.(identifierProp_ch)};
+            identifierValue = {obj.(identifierProp_ch)};
         end
-        objID_cs = cellfun(@num2str, objID_c, 'Uni', 0);
+        
+        % Return if no identifier data in OBJ...
+        objIdentifierMissing = all(cellfun(@isempty, identifierValue)) && ...
+            isempty(additionalCondition_ch);
+        if objIdentifierMissing
+            
+            return
+        end
+        inOBJ = true;
+        
+        objID_cs = cellfun(@num2str, identifierValue, 'Uni', 0);
+        objID_cs = obj(1).encloseStringQuotes(objID_cs);
         objIDvals_ch = obj(1).colList(objID_cs);
-        [obj(1), sqlWhereIn_ch] = obj(1).combineSQL('WHERE', identifier, 'IN',...
+        
+        [obj(1), sqlWhereID_ch] = obj(1).combineSQL('WHERE', identifier, 'IN',...
             objIDvals_ch);
-        [obj(1), ~, sqlSelect] = obj(1).select(table, '*');
+%         sqlWhereAnd_ch = additionalCondition_ch;
+%         
+%         if isequal(objIDvals_ch, '()')
+%             
+%             sqlWhere_ch = ['WHERE ', sqlWhereAnd_ch];
+%         else
+%             
+%             if ~isempty(sqlWhereAnd_ch)
+%                 
+%                 sqlWhereAnd_ch = ['AND ', sqlWhereAnd_ch];
+%             end
+%             [obj(1), sqlWhere_ch] = obj(1).combineSQL('WHERE', identifier, 'IN',...
+%                 objIDvals_ch, sqlWhereAnd_ch);
+%         end
+        
+%         [obj(1), sqlWhereIn_ch] = obj(1).combineSQL('WHERE', identifier, 'IN',...
+%             objIDvals_ch, additionalCondition_ch);
+        
+        [obj(1), ~, sqlSelect] = select@cMySQL(obj(1), table, '*');
         [obj(1), sqlSelect] = obj(1).determinateSQL(sqlSelect);
-        [obj(1), sqlSelectWhereIn_ch] = obj(1).combineSQL(sqlSelect, sqlWhereIn_ch);
+        [obj(1), sqlSelectWhereIn_ch] = obj(1).combineSQL(sqlSelect, sqlWhereID_ch);
         %         table_st = obj(1).execute(sqlSelectWhereIn_ch);
-        [~, ~, q] = obj(1).executeIfOneOutput(1, sqlSelectWhereIn_ch);
+%         [~, ~, q] = obj(1).executeIfOneOutput(1, sqlSelectWhereIn_ch);
+        [~, ~, table_st] = obj(1).executeIfOneOutput(1, sqlSelectWhereIn_ch);
 
-        [obj(1), sqlWhereIn_ch] = obj(1).combineSQL(identifier, 'IN',...
-            objIDvals_ch);
-        [obj(1), table_st] = obj(1).select(table, '*', sqlWhereIn_ch);
+%         [obj(1), sqlWhere_ch] = obj(1).combineSQL(identifier, 'IN',...
+%             objIDvals_ch);
+%         [obj(1), table_st] = select@cMySQL(obj(1), table, '*', sqlWhere_ch);
         if isempty(table_st)
 
-            errid = 'readTable:IdentifierDataMissing';
-            errmsg = 'No data could be read for the values of IDENTIFIER.';
-            error(errid, errmsg);
+            return
+%             errid = 'readTable:IdentifierDataMissing';
+%             errmsg = 'No data could be read for the values of IDENTIFIER.';
+%             error(errid, errmsg);
         end
+        
+        % Object found in DB
+        inDB = true;
 
         % Get indices to OBJ identified in table
         lowerId_ch = lower(identifier);
-        tableID_c = table_st.(lowerId_ch);
-        if iscell(tableID_c)
-        %             [obj_l, obj_i] = ismember([tableID_c{:}], [objID_c{:}]);
-            [~, obj_i] = ismember([objID_c{:}], [tableID_c{:}]);
-
-        %             nID = sum(obj_l);
-        else
-        %             nID = 1;
-            [~, obj_i] = ismember([objID_c{:}], tableID_c);
-        %             obj_i = 1;
-        %             obj_l = true;
-        end
+%         tableID_c = table_st.(lowerId_ch);
+%         if iscell(tableID_c)
+%         %             [obj_l, obj_i] = ismember([tableID_c{:}], [objID_c{:}]);
+%             [~, obj_i] = ismember([objID_c{:}], [tableID_c{:}]);
+% 
+%         %             nID = sum(obj_l);
+%         else
+%         %             nID = 1;
+%             [~, obj_i] = ismember([objID_c{:}], tableID_c);
+%         %             obj_i = 1;
+%         %             obj_l = true;
+%         end
 
         % Create arrays to track whether object data has changed by read
         %         fielddiff = true(length(matchField_c), numel(obj));
@@ -277,19 +416,24 @@ classdef cTableObject < cMySQL
         %                 currData = {currData};
                 currData = num2cell(currData);
             end
-
+            
+            if strcmp(currField, aliasProp_ch)
+                
+                currField = identifierProp_ch;
+            end
+            
             for oi = 1:numel(obj)
 
-                if obj_i(oi) == 0
-                    continue
-                end
+%                 if obj_i(oi) == 0
+%                     continue
+%                 end
         %                 currObji = obj_i(oi);
 %                 currTablei = obj_i(oi);
                 
-                if ~identifierValueInput
-                    identifierValue = obj(oi).(identifierProp_ch);
-                end
-                currData_l = q.(lowerId_ch) == identifierValue; %obj(oi).(identifierProp_ch);
+%                 if ~identifierValueInput
+%                     identifierValue = obj(oi).(identifierProp_ch);
+%                 end
+%                 currData_l = table_st.(lowerId_ch) == identifierValue{oi}; %obj(oi).(identifierProp_ch);
 
                 % Check if different
         %                 fielddiff(ii, oi) = ...
@@ -299,7 +443,7 @@ classdef cTableObject < cMySQL
 
                 try
         %                     obj(oi).(currField) = currData{currTablei};
-                    obj(oi).(currField) = [currData{currData_l}];
+                    obj(oi).(currField) = [currData{:}]; %[currData{currData_l}];
                 catch e
                     % Write some code here later...
                     % Error is attempt to write to dependent property
@@ -312,116 +456,6 @@ classdef cTableObject < cMySQL
         %         objdiff = any(fielddiff);
         %         objDifferent_l = all(objDifferent_l);
 
-        end
-
-        function [obj, inDB] = checkModel(obj, tab, field, mid, varargin)
-        % checkModel Check if model in DB and read, otherwise create
-
-        % Input
-        tab = validateCellStr(tab, 'cTableObject.checkModel', 'tab', 2);
-        field = validateCellStr(field, 'cTableObject.checkModel', 'field', 3);
-        tab = tab(:);
-        field = field(:);
-
-        alias_c = {};
-        if nargin > 4
-
-            alias_c = varargin{1};
-        end
-
-        validInput_l = isvector(tab) && isscalar(obj) && isscalar(field)...
-            || ...
-            ~isscalar(tab) && ~isscalar(obj) && ~isscalar(field) && ...
-            isequal(size(tab), size(obj)) && isequal(size(tab), size(field));
-        if ~validInput_l
-
-           errid = 'chkModel:InputSizeMismatch';
-           errmsg = ['Inputs OBJ, TAB and FIELD can all be the same size '...
-               'or TAB can be a vector while OBJ and FIELD are scalar.'];
-           error(errid, errmsg);
-        end
-
-        % Repeat inputs to same size if required
-        if ~(isequal(size(tab), size(obj)) && isequal(size(tab), size(field)))
-
-            obj = repmat(obj, size(tab));
-            field = repmat(field, size(tab));
-        end
-
-        for oi = 1:numel(obj)
-
-            % Index
-            currObj = obj(oi);
-            currTab = tab{oi};
-            currField = field{oi};
-
-            % Read out data, if model already in DB
-            inDB = currObj.isModelInDB(currTab, currField, mid);
-
-            % Assign now so that Models_id can be read out later
-        %             obj.Model_ID = mid;
-        % 
-        %             if inDB
-
-                % If Model already in DB, read data out
-        %                 for ti = 1:numel(obj.ValueTable)
-
-            if inDB
-
-                % Read object data from Value Tables
-                try currObj = currObj.readFromTable(currTab,...
-                        currField, '', alias_c, mid);
-
-                catch ee
-
-                    if ~strcmp(ee.identifier, 'readTable:IdentifierDataMissing')
-                        rethrow(ee);
-                    end
-                end
-                
-            else
-                
-            end
-        %                 % Read additional data from Models Table
-        %                 try obj = obj.readFromTable(obj.ModelTable,...
-        %                         obj.ModelField, '', alias_c);
-        % 
-        %                 catch ee
-        % 
-        %                     if ~strcmp(ee.identifier, 'readTable:IdentifierDataMissing')
-        %                         rethrow(ee);
-        %                     end
-        %                 end
-        %                 end
-        %             else
-        % 
-        %                 % If model not in DB, reserve Name in Model table
-        %                 currObj.reserveModelID(currTab, currField);
-        %             end
-
-            % Assign
-            obj(oi) = currObj;
-        end
-        end
-        
-        function empty = isempty(obj)
-        % isempty True if object data properties are all empty
-        
-            if any(size(obj) == 0)
-                empty = true;
-                return
-            end
-            
-            props = obj.DataProperty;
-            empty = false(numel(props), numel(obj));
-            for oi = 1:numel(obj)
-                for pi = 1:numel(props)
-                    
-                    prop = props{pi};
-                    empty(pi, oi) = isempty(obj(oi).(prop));
-                end
-            end
-            empty = all(all(empty));
         end
     end
     
@@ -448,6 +482,46 @@ classdef cTableObject < cMySQL
             where_sql = [field, ' = ', mid_ch];
             [~, tbl] = obj.select(tab, field, where_sql);
             inDB = ~isempty(tbl);
+        end
+        
+        function id = lastInsertID(obj)
+        % lastInsertID Return the last auto-incremented identifier value
+        
+        [~, id_c] = obj(1).execute('SELECT LAST_INSERT_ID()');
+        id = str2double([id_c{:}]);
+            
+        end
+    end
+    
+    methods(Hidden, Static)
+        
+        function [fields, data] = parseAdditional(varargin)
+        % parseAdditional
+            
+            paramValues = varargin;
+            p = inputParser();
+            p.KeepUnmatched = true;
+            p.parse(paramValues{:});
+            results = p.Unmatched;
+
+            additionalFields_c = fieldnames(results);
+        %             additionalData_c = struct2cell(results')';
+
+        %             numericCols_l = all(cellfun(@isnumeric, additionalData_c));
+        %             additionalData_cc = mat2cell(additionalData_c, nRows, ones(1, nCols));
+        %             additionalData_cc(numericCols_l) = cellfun(...
+        %                 @(x) [x{:}], additionalData_cc(numericCols_l), 'Uni', 0);
+
+            resData_st = structfun(@cellstr, results, 'Uni', 0, ...
+                'Err', @(x, y) num2cell(y));
+            resData_c = struct2cell(resData_st);
+            resData_c = cellfun(@(x) x(:), resData_c, 'Uni', 0);
+            additionalData_c = [resData_c{:}];
+            [nRows, nCols] = size(additionalData_c);
+            additionalData_c = mat2cell(additionalData_c, ones(1, nRows),...
+                nCols);
+            fields = additionalFields_c;
+            data = additionalData_c;
         end
     end
 end

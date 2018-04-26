@@ -1,25 +1,35 @@
-classdef cVesselInfo < cTableObject & cDateConvert
+classdef cVesselInfo < cModelID & cDateConvert
     %CVESSELINFO Summary of this class goes here
     %   Detailed explanation goes here
     
     properties
         
-        Valid_From;
+%         Valid_From;
         Vessel_Name;
-        Deleted = false;
+%         Deleted = false;
+%         Vessel_Id;
     end
     
     properties(Constant, Hidden)
         
         StartDateProp = 'Valid_From';
         EndDateProp = 'Valid_To';
-        DataProperty = {'Valid_From', 'Vessel_Name', 'Deleted'};
+        DataProperty = {'Valid_From', 'Vessel_Name', 'Deleted',...
+                        'Model_ID', 'Vessel_Info_Id'};
+        
+        ModelTable = '';
+        ValueTable = {};
+        ValueObject = {};
+        ModelField = {};
+        TableIdentifier = 'Vessel_Info_Id';
     end
     
     properties(Hidden)
         
-        Valid_To; % All cDateConvert subclasses must implement two 
-        % properties which will be assigned to, even if they don't use them
+%         Valid_To; % All cDateConvert subclasses must implement two 
+%         % properties which will be assigned to, even if they don't use them
+        
+        Vessel_Info_Id;
     end
     
 %     properties(Hidden, Constant)
@@ -33,16 +43,17 @@ classdef cVesselInfo < cTableObject & cDateConvert
     
        function obj = cVesselInfo(varargin)
             
-           obj@cTableObject(varargin{:});
-           obj.DateStrFormat = 'yyyy-mm-dd';
+           obj@cModelID(varargin{:});
+%            obj.DateStrFormat = 'yyyy-mm-dd';
            obj.Valid_From = '2000-01-01';
        end
        
-       function obj = assignDates(obj, varargin)
-           
-          assignDates@cDateConvert(obj, varargin{:});
-           
-          obj.Valid_From = obj.StartDate;
-       end
+%        function obj = assignDates(obj, varargin)
+%            
+%           assignDates@cDateConvert(obj, varargin{:});
+%            
+%           obj.Valid_From = obj.StartDate;
+%        end
+       
     end
 end

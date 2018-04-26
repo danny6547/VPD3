@@ -10,7 +10,7 @@ CREATE PROCEDURE createEngineModel()
 
 BEGIN
 
-	CREATE TABLE EngineModel (id INT PRIMARY KEY AUTO_INCREMENT, 
+	CREATE TABLE EngineModel (Engine_Model_Id INT PRIMARY KEY AUTO_INCREMENT, 
 									Engine_Model NVARCHAR(100) UNIQUE, 
 									X0 FLOAT(15) NOT NULL, 
 									X1 FLOAT(15) NOT NULL,  

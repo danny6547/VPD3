@@ -1,4 +1,4 @@
-classdef cVesselEngine < cTableObject
+classdef cVesselEngine < cModelID
     %CVESSELENGINE Ship Engine details and SFOC curve.
     %   Detailed explanation goes here
     
@@ -19,6 +19,9 @@ classdef cVesselEngine < cTableObject
     properties(Hidden, Constant)
         
         DBTable = 'EngineModel';
+        ModelTable = 'EngineModel';
+        ValueTable = {};
+        ModelField = {'Engine_Model_Id'};
         DataProperty = {'Engine_Model',...
                         'MCR',...
                         'X0',...
@@ -26,14 +29,27 @@ classdef cVesselEngine < cTableObject
                         'X2',...
                         'Minimum_FOC_ph',...
                         'Lowest_Given_Brake_Power',...
-                        'Highest_Given_Brake_Power'};
+                        'Highest_Given_Brake_Power',...
+                        'Name',...
+                        'Description',...
+                        'Engine_Model_Id', ...
+                        'Model_ID', ...
+                        'Deleted'};
+        OtherTable = {};
+        OtherTableIdentifier = {};
+        TableIdentifier = 'Engine_Model_Id';
+    end
+    
+    properties(Hidden)
+        
+        Engine_Model_Id;
     end
     
     methods
     
        function obj = cVesselEngine(varargin)
            
-           obj = obj@cTableObject(varargin{:});
+           obj = obj@cModelID(varargin{:});
        end
        
        function obj = fitData2Quadratic(obj, mcr, sfoc, powerPCT)

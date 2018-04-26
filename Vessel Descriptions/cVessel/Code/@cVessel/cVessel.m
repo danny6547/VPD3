@@ -1,11 +1,15 @@
-classdef cVessel < cTableObject
+classdef cVessel < cModelID
     %CVESSEL Summary of this class goes here
     %   Detailed explanation goes here
+    
+    properties(Dependent)
+        
+    end
     
     properties
         
         IMO double = [];
-        Name char = '';
+%         Name char = '';
         Vessel_Id double = [];
         DatabaseName char = '';
         
@@ -56,11 +60,15 @@ classdef cVessel < cTableObject
     end
     
     properties(Hidden, Constant)
-       
+        
         ModelTable = 'Vessel';
-        ValueTable = {'VesselConfiguration', 'VesselInfo', 'BunkerDeliveryNote'};
-        ModelField = 'Vessel_Id';
-        DataProperty = {'IMO', 'Vessel_Id'};
+        ValueTable = {'VesselConfiguration', 'VesselInfo',  'DryDock'};
+        ModelField = {'IMO', 'Vessel_Id', 'Vessel_Id', 'Vessel_Id'};
+        ValueObject = {'Configuration', 'Info', 'DryDock'};
+        DataProperty = {'IMO', 'Vessel_Id', 'Deleted', 'Model_ID'};
+        OtherTable = {};
+        OtherTableIdentifier = {};
+        TableIdentifier = 'IMO';
     end
     
     methods
@@ -69,7 +77,7 @@ classdef cVessel < cTableObject
        % Class constructor. Construct new object, assign array of IMO.
        
        % Initialise Connections
-       obj = obj@cTableObject(varargin{:});
+       obj = obj@cModelID(varargin{:});
        
 %         if nargin == 0
 % 
@@ -159,8 +167,8 @@ classdef cVessel < cTableObject
            imo_c = num2cell(imo);
            [obj.IMO] = deal(imo_c{:});
            
-           parts = [obj.Particulars];
-           [parts.IMO_Vessel_Number] = deal(imo_c{:});
+%            parts = [obj.Particulars];
+%            [parts.IMO_Vessel_Number] = deal(imo_c{:});
         else
             
             % Remove from array any without data
@@ -177,40 +185,40 @@ classdef cVessel < cTableObject
         % Expand array to size of input data and assign known values
 %         numOuts = numel(shipData(:, indb));
 %         obj(numOuts) = cVessel;
-        for ii = 1:numel(obj)
-%             for fi = 1:numel(fields2read)
-% 
-%                 currField = fields2read{fi};
-%                 obj(ii).(currField) = shipData(ii).(currField);
-                obj(ii).IMO_Vessel_Number = imo(ii);
-                obj(ii).Particulars.IMO_Vessel_Number = imo(ii);
-%             end
-        end
+%         for ii = 1:numel(obj)
+% %             for fi = 1:numel(fields2read)
+% % 
+% %                 currField = fields2read{fi};
+% %                 obj(ii).(currField) = shipData(ii).(currField);
+%                 obj(ii).IMO_Vessel_Number = imo(ii);
+%                 obj(ii).Particulars.IMO_Vessel_Number = imo(ii);
+% %             end
+%         end
         
 
         % Error when inputs not recognised
 
 
-        % Read Vessel static data from DB
-        try
-            obj = obj.readFromTable('Vessels', 'IMO_Vessel_Number');
-            parts = obj.Particulars;
-            parts.readFromTable('Vessels', 'IMO_Vessel_Number');
-        catch ee
-            
-            if ~strcmp(ee.identifier, 'readTable:IdentifierDataMissing')
-                
-                rethrow(ee);
-            end
-        end
-        
-        for vi = 1:numel(obj)
-
-            dd_v = cVesselDryDockDates();
-            dd_v.IMO_Vessel_Number = obj(vi).IMO_Vessel_Number;
-            dd_v = dd_v.readFromTable;
-            obj(vi).DryDockDates = dd_v;
-        end
+%         % Read Vessel static data from DB
+%         try
+%             obj = obj.readFromTable('Vessels', 'IMO_Vessel_Number');
+%             parts = obj.Particulars;
+%             parts.readFromTable('Vessels', 'IMO_Vessel_Number');
+%         catch ee
+%             
+%             if ~strcmp(ee.identifier, 'readTable:IdentifierDataMissing')
+%                 
+%                 rethrow(ee);
+%             end
+%         end
+%         
+%         for vi = 1:numel(obj)
+% 
+%             dd_v = cVesselDryDock();
+%             dd_v.IMO_Vessel_Number = obj(vi).IMO_Vessel_Number;
+%             dd_v = dd_v.readFromTable;
+%             obj(vi).DryDockDates = dd_v;
+%         end
 
         % Read SpeedPower
        
@@ -238,14 +246,38 @@ classdef cVessel < cTableObject
        
        end
        
-       function obj = insertIntoTable(obj)
+       function obj = insert(obj)
        % insert Insert all available vessel data into database
            
            % Vessels
 %            obj = obj.insertIntoVessels();
+           if any(isempty([obj.IMO]))
+               
+               errid = 'cV:EmptyIMO';
+               errmsg = 'Vessel cannot be inserted without an IMO number';
+               error(errid, errmsg);
+           end
 
            % Vessels
 %            insertIntoTable@cModelID(obj);
+           if ~isempty(obj.SpeedPower)
+               obj.SpeedPower.insert();
+           end
+           
+           if ~isempty(obj.Engine)
+               
+%                engineName_ch = obj.Engine.Engine_Model;
+               obj.Engine.insert();
+%                obj.Engine.insert('Engine_Model', engineName_ch);
+           end
+           
+           if ~isempty(obj.WindCoefficient)
+               obj.WindCoefficient.insert();
+           end
+           
+           if ~isempty(obj.Displacement)
+               obj.Displacement.insert();
+           end
            
            for oi = 1:numel(obj)
                
@@ -263,46 +295,61 @@ classdef cVessel < cTableObject
 %                    currObj);
 %                insertIntoTable@cMySQL(currObj, 'VesselConfiguration', ...
 %                    currObj.Configuration);
+
+               % Assign Vessel identifier to objects not directly
+               % identified by it
+               spcMID = unique([obj(oi).SpeedPower.Speed_Power_Coefficient_Model_Id]);
+               obj.Configuration.Speed_Power_Coefficient_Model_ID = spcMID;
                
-               insertIntoTable@cTableObject(currObj, 'Vessel');
-               currObj = currObj.checkModel('Vessel', 'IMO', currObj.IMO);
+               engMID = obj(oi).Engine.Model_ID;
+               obj.Configuration.Engine_Model_Id = engMID;
                
-               currObj.Configuration.DateStrFormat = 'yyyy-mm-dd';
-               insertIntoTable@cTableObject(currObj.Configuration, ...
-                   'VesselConfiguration', [], 'Vessel_Id', currObj.Vessel_Id);
+               winMID = obj(oi).WindCoefficient.Model_ID;
+               obj.Configuration.Wind_Coefficient_Model_ID = winMID;
                
-%                insertIntoTable@cMySQL(currObj, 'VesselGroup', [], ...
+               disMID = obj(oi).Displacement.Model_ID;
+               obj.Configuration.Displacement_Model_ID = disMID;
+%                % Make dates compatible
+%                obj(oi).Configuration.DateStrFormat = 'yyyy-mm-dd';
+%                obj(oi).Info.DateStrFormat = 'yyyy-mm-dd';
+%                [obj(oi).DryDock.DateStrFormat] = deal('yyyy-mm-dd');
+%                [obj(oi).Owner.DateStrFormat] = deal('yyyy-mm-dd');
+               
+               insert@cModelID(currObj);
+               
+               vid = obj.Vessel_Id;
+               [obj.Owner.Vessel_Id] = deal(vid);
+%                ownerNames_c = strcat('''', {obj.Owner.Vessel_Owner_Name}, '''');
+%                ownerNames_c = {obj.Owner.Vessel_Owner_Name};
+               obj.Owner.insert();
+               
+%                insert@cTableObject(currObj, 'Vessel');
+%                currObj = currObj.checkModel('Vessel', 'IMO', currObj.IMO);
+%                
+%                currObj.Configuration.DateStrFormat = 'yyyy-mm-dd';
+%                insert@cTableObject(currObj.Configuration, ...
+%                    'VesselConfiguration', [], 'Vessel_Id', currObj.Vessel_Id);
+               
+%                insert@cMySQL(currObj, 'VesselGroup', [], ...
 %                    currObj.ModelField, currObj.Model_ID);
                
-               currObj.Info.DateStrFormat = 'yyyy-mm-dd';
-               insertIntoTable@cTableObject(currObj.Info, ...
-                   'VesselInfo', [], 'Vessel_Id', currObj.Vessel_Id);
-               
-               currObj.Owner.DateStrFormat = 'yyyy-mm-dd';
-               insertIntoTable@cTableObject(currObj.Owner,...
-                   'VesselOwner', [], 'Vessel_Id', currObj.Vessel_Id);
-               
-               currObj.DryDock.DateStrFormat = 'yyyy-mm-dd';
-               insertIntoTable@cTableObject(currObj.DryDock,...
-                   currObj.DryDock.DBTable, [], 'Vessel_Id', currObj.Vessel_Id);
-               
-               if ~isempty(currObj.Engine)
-                   
-                   insertIntoTable@cTableObject(currObj.Engine,...
-                       currObj.Engine.DBTable, [], 'Engine_Model', currObj.Engine.Engine_Model);
-               end
-           end
-           
-           if ~isempty(obj.SpeedPower)
-            obj.SpeedPower.insertModel();
-           end
-           
-           if ~isempty(obj.WindCoefficient)
-            obj.WindCoefficient.insertModel();
-           end
-           
-           if ~isempty(obj.Displacement)
-            obj.Displacement.insertModel();
+%                currObj.Info.DateStrFormat = 'yyyy-mm-dd';
+%                insert@cTableObject(currObj.Info, ...
+%                    'VesselInfo', [], 'Vessel_Id', currObj.Vessel_Id);
+%                
+%                currObj.Owner.DateStrFormat = 'yyyy-mm-dd';
+%                insert@cTableObject(currObj.Owner,...
+%                    'VesselOwner', [], 'Vessel_Id', currObj.Vessel_Id);
+%                
+%                currObj.DryDock.DateStrFormat = 'yyyy-mm-dd';
+%                insert@cTableObject(currObj.DryDock,...
+%                    currObj.DryDock.DBTable, [], 'Vessel_Id', currObj.Vessel_Id);
+%                
+%                if ~isempty(currObj.Engine)
+%                    
+%                    insert@cTableObject(currObj.Engine,...
+%                        currObj.Engine.DBTable, [], 'Engine_Model', currObj.Engine.Engine_Model);
+%                end
            end
 %            obj.DryDock.insertIntoTable(obj.DryDock.DBTable);
            
@@ -1457,6 +1504,14 @@ classdef cVessel < cTableObject
         
         function obj = assignDefaults(obj, varargin)
             
+%             if nargin == 1
+%                 
+%                 for oi = 1:numel(obj)
+% 
+%                     obj(oi).SpeedPower = cVesselSpeedPower.empty();
+%                 end
+%             end
+            
             % Iterate and assign
             for oi = 1:numel(obj)
                 
@@ -1469,6 +1524,22 @@ classdef cVessel < cTableObject
                 obj(oi).Engine = cVesselEngine(varargin{:});
                 obj(oi).Owner = cVesselOwner(varargin{:});
                 obj(oi).Info = cVesselInfo(varargin{:});
+            end
+        end
+        
+        function [obj, vid] = vessel_Id(obj, imo)
+        % vessel_Id DB identifier for vessel, increment if necessary
+            
+            imo_ch = num2str(imo);
+            sel_sql = ['SELECT * FROM Vessel WHERE IMO = ', imo_ch, ...
+                ' LIMIT 1'];
+            vid_st = obj.execute(sel_sql);
+            
+            % Vessel not found in DB
+            if isempty(vid_st)
+                vid = []; 
+            else
+                vid = vid_st.vessel_id;
             end
         end
     end
@@ -1527,15 +1598,23 @@ classdef cVessel < cTableObject
 %                
 %                vid = vess_tbl.Vessel_Id;
 %            end
+
+           % Get Vessel_Id for given IMO
+           [~, vid] = obj.vessel_Id(IMO);
+%            obj.Configuration.select('VesselConfiguration', 'Vessel_Id'
+           obj.Model_ID = vid;
+           obj.Vessel_Id = vid;
            
-           obj = obj.checkModel('Vessel', 'IMO', IMO);
-           vid = obj.Vessel_Id;
-           
-           field = 'Vessel_Id';
-           obj.Configuration = obj.Configuration.checkModel('VesselConfiguration', field, vid);
-           obj.Owner = obj.Owner.checkModel('VesselOwner', field, vid);
-           obj.Info = obj.Info.checkModel('VesselInfo', field, vid);
-           obj.DryDock = obj.DryDock.checkModel('DryDock', field, vid);
+           % Assign Vessel_Id to each object identified by it
+%            
+%            obj = obj.checkModel('Vessel', 'IMO', IMO);
+%            vid = obj.Vessel_Id;
+%            
+%            field = 'Vessel_Id';
+%            obj.Configuration = obj.Configuration.checkModel('VesselConfiguration', field, vid);
+%            obj.Owner = obj.Owner.checkModel('VesselOwner', field, vid);
+%            obj.Info = obj.Info.checkModel('VesselInfo', field, vid);
+%            obj.DryDock = obj.DryDock.checkModel('DryDock', field, vid);
            
 %            obj.Particulars.IMO_Vessel_Number = IMO;
            
@@ -1553,6 +1632,10 @@ classdef cVessel < cTableObject
 %            end
        end
        
+       function obj = set.SpeedPower(obj, sp)
+           
+           obj.SpeedPower = sp;
+       end
 %        function obj = set.DateTime_UTC(obj, dates)
 %         % Set property method for DateTime_UTC
 %         
