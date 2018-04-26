@@ -62,12 +62,13 @@ classdef cVessel < cModelID
     properties(Hidden, Constant)
         
         ModelTable = 'Vessel';
-        ValueTable = {'VesselConfiguration', 'VesselInfo'};
-        ValueObject = {'Configuration', 'Info'};
-        ModelField = {'IMO', 'Vessel_Id', 'Vessel_Id'};
-        DataProperty = {'IMO', 'Vessel_Id'};
+        ValueTable = {'VesselConfiguration', 'VesselInfo',  'DryDock'};
+        ModelField = {'IMO', 'Vessel_Id', 'Vessel_Id', 'Vessel_Id'};
+        ValueObject = {'Configuration', 'Info', 'DryDock'};
+        DataProperty = {'IMO', 'Vessel_Id', 'Deleted', 'Model_ID'};
         OtherTable = {};
         OtherTableIdentifier = {};
+        TableIdentifier = 'IMO';
     end
     
     methods
@@ -250,9 +251,33 @@ classdef cVessel < cModelID
            
            % Vessels
 %            obj = obj.insertIntoVessels();
+           if any(isempty([obj.IMO]))
+               
+               errid = 'cV:EmptyIMO';
+               errmsg = 'Vessel cannot be inserted without an IMO number';
+               error(errid, errmsg);
+           end
 
            % Vessels
 %            insertIntoTable@cModelID(obj);
+           if ~isempty(obj.SpeedPower)
+               obj.SpeedPower.insert();
+           end
+           
+           if ~isempty(obj.Engine)
+               
+%                engineName_ch = obj.Engine.Engine_Model;
+               obj.Engine.insert();
+%                obj.Engine.insert('Engine_Model', engineName_ch);
+           end
+           
+           if ~isempty(obj.WindCoefficient)
+               obj.WindCoefficient.insert();
+           end
+           
+           if ~isempty(obj.Displacement)
+               obj.Displacement.insert();
+           end
            
            for oi = 1:numel(obj)
                
@@ -270,46 +295,61 @@ classdef cVessel < cModelID
 %                    currObj);
 %                insertIntoTable@cMySQL(currObj, 'VesselConfiguration', ...
 %                    currObj.Configuration);
+
+               % Assign Vessel identifier to objects not directly
+               % identified by it
+               spcMID = unique([obj(oi).SpeedPower.Speed_Power_Coefficient_Model_Id]);
+               obj.Configuration.Speed_Power_Coefficient_Model_ID = spcMID;
                
-               insert@cTableObject(currObj, 'Vessel');
-               currObj = currObj.checkModel('Vessel', 'IMO', currObj.IMO);
+               engMID = obj(oi).Engine.Model_ID;
+               obj.Configuration.Engine_Model_Id = engMID;
                
-               currObj.Configuration.DateStrFormat = 'yyyy-mm-dd';
-               insert@cTableObject(currObj.Configuration, ...
-                   'VesselConfiguration', [], 'Vessel_Id', currObj.Vessel_Id);
+               winMID = obj(oi).WindCoefficient.Model_ID;
+               obj.Configuration.Wind_Coefficient_Model_ID = winMID;
+               
+               disMID = obj(oi).Displacement.Model_ID;
+               obj.Configuration.Displacement_Model_ID = disMID;
+%                % Make dates compatible
+%                obj(oi).Configuration.DateStrFormat = 'yyyy-mm-dd';
+%                obj(oi).Info.DateStrFormat = 'yyyy-mm-dd';
+%                [obj(oi).DryDock.DateStrFormat] = deal('yyyy-mm-dd');
+%                [obj(oi).Owner.DateStrFormat] = deal('yyyy-mm-dd');
+               
+               insert@cModelID(currObj);
+               
+               vid = obj.Vessel_Id;
+               [obj.Owner.Vessel_Id] = deal(vid);
+%                ownerNames_c = strcat('''', {obj.Owner.Vessel_Owner_Name}, '''');
+%                ownerNames_c = {obj.Owner.Vessel_Owner_Name};
+               obj.Owner.insert();
+               
+%                insert@cTableObject(currObj, 'Vessel');
+%                currObj = currObj.checkModel('Vessel', 'IMO', currObj.IMO);
+%                
+%                currObj.Configuration.DateStrFormat = 'yyyy-mm-dd';
+%                insert@cTableObject(currObj.Configuration, ...
+%                    'VesselConfiguration', [], 'Vessel_Id', currObj.Vessel_Id);
                
 %                insert@cMySQL(currObj, 'VesselGroup', [], ...
 %                    currObj.ModelField, currObj.Model_ID);
                
-               currObj.Info.DateStrFormat = 'yyyy-mm-dd';
-               insert@cTableObject(currObj.Info, ...
-                   'VesselInfo', [], 'Vessel_Id', currObj.Vessel_Id);
-               
-               currObj.Owner.DateStrFormat = 'yyyy-mm-dd';
-               insert@cTableObject(currObj.Owner,...
-                   'VesselOwner', [], 'Vessel_Id', currObj.Vessel_Id);
-               
-               currObj.DryDock.DateStrFormat = 'yyyy-mm-dd';
-               insert@cTableObject(currObj.DryDock,...
-                   currObj.DryDock.DBTable, [], 'Vessel_Id', currObj.Vessel_Id);
-               
-               if ~isempty(currObj.Engine)
-                   
-                   insert@cTableObject(currObj.Engine,...
-                       currObj.Engine.DBTable, [], 'Engine_Model', currObj.Engine.Engine_Model);
-               end
-           end
-           
-           if ~isempty(obj.SpeedPower)
-            obj.SpeedPower.insertModel();
-           end
-           
-           if ~isempty(obj.WindCoefficient)
-            obj.WindCoefficient.insertModel();
-           end
-           
-           if ~isempty(obj.Displacement)
-            obj.Displacement.insertModel();
+%                currObj.Info.DateStrFormat = 'yyyy-mm-dd';
+%                insert@cTableObject(currObj.Info, ...
+%                    'VesselInfo', [], 'Vessel_Id', currObj.Vessel_Id);
+%                
+%                currObj.Owner.DateStrFormat = 'yyyy-mm-dd';
+%                insert@cTableObject(currObj.Owner,...
+%                    'VesselOwner', [], 'Vessel_Id', currObj.Vessel_Id);
+%                
+%                currObj.DryDock.DateStrFormat = 'yyyy-mm-dd';
+%                insert@cTableObject(currObj.DryDock,...
+%                    currObj.DryDock.DBTable, [], 'Vessel_Id', currObj.Vessel_Id);
+%                
+%                if ~isempty(currObj.Engine)
+%                    
+%                    insert@cTableObject(currObj.Engine,...
+%                        currObj.Engine.DBTable, [], 'Engine_Model', currObj.Engine.Engine_Model);
+%                end
            end
 %            obj.DryDock.insertIntoTable(obj.DryDock.DBTable);
            
@@ -1494,7 +1534,13 @@ classdef cVessel < cModelID
             sel_sql = ['SELECT * FROM Vessel WHERE IMO = ', imo_ch, ...
                 ' LIMIT 1'];
             vid_st = obj.execute(sel_sql);
-            vid = vid_st.vessel_id;
+            
+            % Vessel not found in DB
+            if isempty(vid_st)
+                vid = []; 
+            else
+                vid = vid_st.vessel_id;
+            end
         end
     end
     
@@ -1557,6 +1603,7 @@ classdef cVessel < cModelID
            [~, vid] = obj.vessel_Id(IMO);
 %            obj.Configuration.select('VesselConfiguration', 'Vessel_Id'
            obj.Model_ID = vid;
+           obj.Vessel_Id = vid;
            
            % Assign Vessel_Id to each object identified by it
 %            
