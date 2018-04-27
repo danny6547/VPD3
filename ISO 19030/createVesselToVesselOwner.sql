@@ -14,6 +14,7 @@ BEGIN
 							 Vessel_Owner_Id INT,
 							 Vessel_Id INT,
 							 Ownership_Start DATETIME,
-							 Ownership_End DATETIME
+							 Ownership_End DATETIME,
+                             UNIQUE OneVesselAtATime (Vessel_Id, Ownership_Start, Ownership_End)
 							 );
 END;

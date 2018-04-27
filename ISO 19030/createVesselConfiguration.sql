@@ -32,7 +32,7 @@ BEGIN
                              Deleted BOOL NOT NULL,
                              ApplyWindCalculations BOOL,
                              FuelType TEXT,
-                             CONSTRAINT onePerVessel UNIQUE(Vessel_Id, Valid_From, Valid_To)
+                             CONSTRAINT onePerVessel UNIQUE(Vessel_Id, Valid_From)
 							 );
 						 
 END;
