@@ -265,34 +265,34 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
             end
        end
        end
-       
-       function log = isequal(obj, spdt)
-       % isequal True if object data and array are numerically equal.
-       
-       log = true;
-       if isempty(obj)
-           
-           log = false;
-           return
-       end
-       
-       eqf = @(x, y, tol) (numel(x) == numel(y)) && all(abs(x(:) - y(:)) < tol);
-       tolerance = 1e-15;
-       
-       if ~eqf(obj.Speed, spdt(:, 1), tolerance)
-           log = false;
-       end
-       if ~eqf(obj.Power, spdt(:, 2), tolerance)
-           log = false;
-       end
-       if ~eqf(obj.Displacement, unique(spdt(:, 3)), tolerance)
-           log = false;
-       end
-       if ~eqf(obj.Trim, unique(spdt(:, 4)), tolerance)
-           log = false;
-       end
-       
-       end
+%        
+%        function log = isequal(obj, spdt)
+%        % isequal True if object data and array are numerically equal.
+%        
+%        log = true;
+%        if isempty(obj)
+%            
+%            log = false;
+%            return
+%        end
+%        
+%        eqf = @(x, y, tol) (numel(x) == numel(y)) && all(abs(x(:) - y(:)) < tol);
+%        tolerance = 1e-15;
+%        
+%        if ~eqf(obj.Speed, spdt(:, 1), tolerance)
+%            log = false;
+%        end
+%        if ~eqf(obj.Power, spdt(:, 2), tolerance)
+%            log = false;
+%        end
+%        if ~eqf(obj.Displacement, unique(spdt(:, 3)), tolerance)
+%            log = false;
+%        end
+%        if ~eqf(obj.Trim, unique(spdt(:, 4)), tolerance)
+%            log = false;
+%        end
+%        
+%        end
 
 %        function empty = isempty(obj)
 %            

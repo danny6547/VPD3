@@ -457,6 +457,50 @@ classdef cTableObject < cMySQL
         %         objDifferent_l = all(objDifferent_l);
 
         end
+        
+       
+       function log = isequal(obj, obj2)
+       % isequal True if object data and array are numerically equal.
+       
+           log = true;
+           if isempty(obj)
+
+               log = false;
+               return
+           end
+           
+           if ~isa(obj2, 'cTableObject')
+               
+               log = false;
+               return
+           end
+           
+           if ~isscalar(obj2)
+               
+               log = false;
+               return
+           end
+           
+           sDP = sort(obj.DataProperty);
+           sDP2 = sort(obj2.DataProperty);
+           if ~isequal(sDP, sDP2)
+               
+               log = false;
+               return
+           end
+
+           eqf = @(x, y, tol) (numel(x) == numel(y)) && all(abs(x(:) - y(:)) < tol);
+           tolerance = 1e-15;
+           
+           % Iterate data properties and compare
+           for pi = 1:numel(sDP)
+               
+               currProp = sDP{pi};
+               if ~eqf(obj.(currProp), obj2.(currProp), tolerance)
+                   log = false;
+               end
+           end
+       end
     end
     
     methods(Hidden)
