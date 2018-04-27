@@ -149,7 +149,7 @@ methods(Test)
     function selectVesselConfiguration(testcase)
     % Test that method will select the relevant object data from table
     % "VesselConfiguration".
-        
+    
     % 1.
     % Input
     exp_obj = testcase.SelectedVessel;
@@ -173,26 +173,38 @@ methods(Test)
         
     % 1.
     % Input
-    testObj = testcase.SelectedVessel;
+    exp_obj = testcase.SelectedVessel;
+    input_obj = cVessel('Database', testcase.TestDatabase);
+    
+    % Execute
+    input_obj.IMO = testcase.TestIMO;
     
     % Verify
-    actObj = testObj.Info;
-    msgId = 'Object expected to have appropriate Vessel_Id after method call';
-    testcase.verifyNotEmpty(actObj, msgId);
+    exp_obj = exp_obj.Info;
+    input_obj = input_obj.Info;
+    msgObj = ['cVesselInfo object returned with model identifier '...
+        'is expected to match that inserted with the same identifier.'];
+    testcase.verifyEqual(input_obj, exp_obj, msgObj);
     end
     
     function selectVesselOwner(testcase)
     % Test that method will select the relevant object data from table
     % "VesselOwner".
-        
+    
     % 1.
     % Input
-    testObj = testcase.SelectedVessel;
+    exp_obj = testcase.SelectedVessel;
+    input_obj = cVessel('Database', testcase.TestDatabase);
+    
+    % Execute
+    input_obj.IMO = testcase.TestIMO;
     
     % Verify
-    actObj = testObj.Info;
-    msgId = 'Object expected to have appropriate Vessel_Id after method call';
-    testcase.verifyNotEmpty(actObj, msgId);
+    exp_obj = exp_obj.Owner;
+    input_obj = input_obj.Owner;
+    msgObj = ['cVesselOwner object returned with model identifier '...
+        'is expected to match that inserted with the same identifier.'];
+    testcase.verifyEqual(input_obj, exp_obj, msgObj);
     end
     
     function selectSpeedPower(testcase)

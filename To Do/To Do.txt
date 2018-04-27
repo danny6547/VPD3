@@ -719,3 +719,6 @@ testcVessel: Test both cases where modelID is either given or not
 While Model_ID is only identifying value for any cMID, and Model_ID can be input empty, Model_ID must be specified explicitly in scripts
 cTO.isequal(a, b): iterate over DataProperty and compare, true if all equal
 cV.cV: rename input property Database to DatabaseName 
+cV.insert is reading IMO into Model_ID because the alias is Model_ID:IMO
+	need cTO.select to read Vessel.Vessel_ID into cV.Model_ID, Vessel.IMO into cV.IMO
+	need cTO.select to read cVWC.WCMID into cVWC.Model_ID

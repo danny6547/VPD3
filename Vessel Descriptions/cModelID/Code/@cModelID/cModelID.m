@@ -19,7 +19,7 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
     
     properties(Hidden)
         
-        Sync logical;
+        Sync logical = true;
     end
     
     methods
@@ -130,7 +130,8 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
 %            end
            alias_c = obj(oi).propertyAlias;
 %            idFieldValue_c = [idFieldValue_c, masterModelFieldVal_c];
-           insert@cTableObject(obj(oi), obj(oi).ModelTable, '', [], alias_c); %, idFieldValue_c{:});
+           insert@cTableObject(obj(oi), obj(oi).ModelTable);
+%            insert@cTableObject(obj(oi), obj(oi).ModelTable, '', [], alias_c); %, idFieldValue_c{:});
            
            tables = obj(oi).ValueTable;
            
@@ -304,6 +305,8 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
         if nargin > 5 && ~isempty(varargin{3})
             
             dataObj_c = varargin{3};
+            validateattributes(dataObj_c, {'cell'}, {}, ...
+                'cModelID.select', 'dataObj_c', 6);
         end
         dataObj_c = dataObj_c(:)';
         
@@ -417,8 +420,10 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
 %             end
 %              mid = currObj.Model_ID;
             midi = mid{oi};
+            currObj.Sync = false;
             [~, inDB] = select@cTableObject(currObj, currTab,...
                         currField, '', currAlias_c, midi, additional{:});
+            currObj.Sync = true;
 % 
 %                 catch ee
 % 

@@ -212,7 +212,7 @@ classdef cTableObject < cMySQL
     end
     
     methods(Hidden)
-        
+       
        function [obj, inDB, inOBJ] = select(obj, table, identifier, varargin)
         % readFromTable Assign object properties from table column values
 
@@ -331,7 +331,7 @@ classdef cTableObject < cMySQL
             identifierValue = repmat(identifierValue, size(obj));
         else
             
-            identifierValue = {obj.(identifierProp_ch)};
+            identifierValue = {obj.(identifier)};
         end
         
         % Return if no identifier data in OBJ...
@@ -457,11 +457,11 @@ classdef cTableObject < cMySQL
         %         objDifferent_l = all(objDifferent_l);
 
         end
-        
-       function log = isequal(obj, obj2)
+       
+       function [log, propDiff] = isequal(obj, obj2)
        % isequal True if object data and array are numerically equal.
        
-           log = true;
+           propDiff = sort(obj.DataProperty);
            if isempty(obj)
 
                log = false;
@@ -488,17 +488,21 @@ classdef cTableObject < cMySQL
                return
            end
 
-           eqf = @(x, y, tol) (numel(x) == numel(y)) && all(abs(x(:) - y(:)) < tol);
+           eqf = @(x, y, tol) (isscalar(x) && isscalar(y) && isnan(x) && isnan(y))...
+               || ((numel(x) == numel(y)) && all(abs(x(:) - y(:)) < tol));
            tolerance = 1e-15;
            
            % Iterate data properties and compare
+           log = true(1, numel(sDP));
            for pi = 1:numel(sDP)
                
                currProp = sDP{pi};
                if ~eqf(obj.(currProp), obj2.(currProp), tolerance)
-                   log = false;
+                   log(pi) = false;
                end
            end
+           propDiff(log) = [];
+           log = all(log);
        end
     end
     

@@ -68,7 +68,7 @@ classdef cVessel < cModelID
         DataProperty = {'IMO', 'Vessel_Id', 'Deleted', 'Model_ID'};
         OtherTable = {};
         OtherTableIdentifier = {};
-        TableIdentifier = 'IMO';
+        TableIdentifier = 'Vessel_Id';
     end
     
     methods
@@ -250,7 +250,6 @@ classdef cVessel < cModelID
        % insert Insert all available vessel data into database
            
            % Vessels
-%            obj = obj.insertIntoVessels();
            if any(isempty([obj.IMO]))
                
                errid = 'cV:EmptyIMO';
@@ -258,17 +257,14 @@ classdef cVessel < cModelID
                error(errid, errmsg);
            end
 
-           % Vessels
-%            insertIntoTable@cModelID(obj);
+           % Insert models that may need to get identifier from DB first
            if ~isempty(obj.SpeedPower)
                obj.SpeedPower.insert();
            end
            
            if ~isempty(obj.Engine)
                
-%                engineName_ch = obj.Engine.Engine_Model;
                obj.Engine.insert();
-%                obj.Engine.insert('Engine_Model', engineName_ch);
            end
            
            if ~isempty(obj.WindCoefficient)
@@ -281,22 +277,9 @@ classdef cVessel < cModelID
            
            for oi = 1:numel(obj)
                
-               % ModelID subclass needs to write model name, description 
-               % because cModelID cannot have those properties
                currObj = obj(oi);
                
-%                if isempty(currObj.Model_ID)
-%                    
-%                    id = nextUniqueID(obj);
-%                    obj.Model_ID = id;
-%                end
-               
-%                insertIntoTable@cMySQL(currObj, currObj.ModelTable, ...
-%                    currObj);
-%                insertIntoTable@cMySQL(currObj, 'VesselConfiguration', ...
-%                    currObj.Configuration);
-
-               % Assign Vessel identifier to objects not directly
+               % Assign model identifiers to objects not directly
                % identified by it
                spcMID = unique([obj(oi).SpeedPower.Speed_Power_Coefficient_Model_Id]);
                obj.Configuration.Speed_Power_Coefficient_Model_ID = spcMID;
@@ -309,67 +292,15 @@ classdef cVessel < cModelID
                
                disMID = obj(oi).Displacement.Model_ID;
                obj.Configuration.Displacement_Model_ID = disMID;
-%                % Make dates compatible
-%                obj(oi).Configuration.DateStrFormat = 'yyyy-mm-dd';
-%                obj(oi).Info.DateStrFormat = 'yyyy-mm-dd';
-%                [obj(oi).DryDock.DateStrFormat] = deal('yyyy-mm-dd');
-%                [obj(oi).Owner.DateStrFormat] = deal('yyyy-mm-dd');
                
+               % Insert vessel
                insert@cModelID(currObj);
                
+               % Insert owner
                vid = obj.Vessel_Id;
                [obj.Owner.Vessel_Id] = deal(vid);
-%                ownerNames_c = strcat('''', {obj.Owner.Vessel_Owner_Name}, '''');
-%                ownerNames_c = {obj.Owner.Vessel_Owner_Name};
                obj.Owner.insert();
-               
-%                insert@cTableObject(currObj, 'Vessel');
-%                currObj = currObj.checkModel('Vessel', 'IMO', currObj.IMO);
-%                
-%                currObj.Configuration.DateStrFormat = 'yyyy-mm-dd';
-%                insert@cTableObject(currObj.Configuration, ...
-%                    'VesselConfiguration', [], 'Vessel_Id', currObj.Vessel_Id);
-               
-%                insert@cMySQL(currObj, 'VesselGroup', [], ...
-%                    currObj.ModelField, currObj.Model_ID);
-               
-%                currObj.Info.DateStrFormat = 'yyyy-mm-dd';
-%                insert@cTableObject(currObj.Info, ...
-%                    'VesselInfo', [], 'Vessel_Id', currObj.Vessel_Id);
-%                
-%                currObj.Owner.DateStrFormat = 'yyyy-mm-dd';
-%                insert@cTableObject(currObj.Owner,...
-%                    'VesselOwner', [], 'Vessel_Id', currObj.Vessel_Id);
-%                
-%                currObj.DryDock.DateStrFormat = 'yyyy-mm-dd';
-%                insert@cTableObject(currObj.DryDock,...
-%                    currObj.DryDock.DBTable, [], 'Vessel_Id', currObj.Vessel_Id);
-%                
-%                if ~isempty(currObj.Engine)
-%                    
-%                    insert@cTableObject(currObj.Engine,...
-%                        currObj.Engine.DBTable, [], 'Engine_Model', currObj.Engine.Engine_Model);
-%                end
            end
-%            obj.DryDock.insertIntoTable(obj.DryDock.DBTable);
-           
-%            % SpeedPower
-%            obj = obj.insertIntoSpeedPower();
-%            
-%            % Wind
-%            obj = insertIntoWindCoefficients(obj);
-%            
-%            % Dry Dock Dates
-%            obj = insertIntoDryDockDates(obj);
-%            
-%            % SFOC
-%            obj = insertIntoSFOCCoefficients(obj);
-%            
-%            % Bunker delivery notes
-%            obj = insertBunkerDeliveryNote(obj);
-%            
-%            % Displacement
-%            obj = insertIntoDisplacement(obj);
        end
        
        function obj = insertIntoVessels(obj)
@@ -1605,6 +1536,17 @@ classdef cVessel < cModelID
            obj.Model_ID = vid;
            obj.Vessel_Id = vid;
            
+           % Read Owner
+           if ~isempty(vid)
+               
+               tab = 'VesselToVesselOwner';
+               field = {'Vessel_Owner_Id'};
+               obj.select(tab, field, [], [], {obj.Owner}, 'Vessel_Id', vid);
+
+               tab = 'VesselOwner';
+               field = {'Vessel_Owner_Id'};
+               obj.select(tab, field, [], [], {obj.Owner});
+           end
            % Assign Vessel_Id to each object identified by it
 %            
 %            obj = obj.checkModel('Vessel', 'IMO', IMO);
