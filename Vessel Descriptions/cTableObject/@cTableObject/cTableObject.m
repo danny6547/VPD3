@@ -213,7 +213,7 @@ classdef cTableObject < cMySQL
     
     methods(Hidden)
         
-        function [obj, inDB, inOBJ] = select(obj, table, identifier, varargin)
+       function [obj, inDB, inOBJ] = select(obj, table, identifier, varargin)
         % readFromTable Assign object properties from table column values
 
         % Output
@@ -458,7 +458,6 @@ classdef cTableObject < cMySQL
 
         end
         
-       
        function log = isequal(obj, obj2)
        % isequal True if object data and array are numerically equal.
        
