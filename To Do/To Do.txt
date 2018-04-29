@@ -719,6 +719,63 @@ testcVessel: Test both cases where modelID is either given or not
 While Model_ID is only identifying value for any cMID, and Model_ID can be input empty, Model_ID must be specified explicitly in scripts
 cTO.isequal(a, b): iterate over DataProperty and compare, true if all equal
 cV.cV: rename input property Database to DatabaseName 
-cV.insert is reading IMO into Model_ID because the alias is Model_ID:IMO
-	need cTO.select to read Vessel.Vessel_ID into cV.Model_ID, Vessel.IMO into cV.IMO
-	need cTO.select to read cVWC.WCMID into cVWC.Model_ID
+cVSP can insert, but how to read?
+	Needs spmID before mID. Must come from cVC.
+	cVSP.readSuper(spmID)
+		call cTO.select on super table, get spmvID
+		if cVSP empty, expand array to number of spmvID found
+		elseif cVSP same size as spmvID found, assign
+		else error
+	Acquire spmID from current cMID select call inputs ?
+		cVSP requires spmID before it can get Model_ID
+		
+cVSP.insert:
+	calls cTO.insert into super-table
+		cTO calls select, 
+		could work if cModelID.select reached
+cVSP.selectSuper:
+	needs to call cVSP.select, not cTO.select
+	needs spmID, from somewhere.
+		If not in prop, return
+cVSP.insert:
+	needs to insert into super first
+		then into model and value
+	needs cTO.insert calls to call select, to get all incremented values
+	needs cVSP.select to select from all tables at identifiers used to insert
+cVSP.select:
+	if spmid empty, return
+	select from all tables at identifiers input from insert call
+		select from super table if spmid non-empty
+		select from model table if spmvid non-empty
+		select from value table if spmvid non-empty
+		
+	Process:
+		cVSP.insert:
+			inserts into super
+				gets id from last_inserted_id
+				calls select with last_inserted_id
+			selects from super
+				returns
+			inserts into model
+				calls select with last_inserted_id
+			selects from model AND value
+			inserts into value
+				calls select with last_inserted_id
+			selects from model AND value
+			
+		cV.set.IMO:
+		CASE 1: cV.SP empty before
+			 if cVC.spmID non-empty
+				assign smpID into cVSP
+				assign fieldname, smpID into appropriate elements of inputs
+				call cVSP.select(inputs) (expand array to size, assign super values)
+				call cVSP.select(inputs) again (assign model values)
+		CASE 2: cV.SP non-empty before
+				assign smpID into cVSP
+				assign fieldname, smpID into appropriate elements of inputs
+				call cVSP.select(inputs) (expand array to size, assign super values)
+				call cVSP.select(inputs) again (assign model values)
+		
+include cMID.incrementModelID in cMID.insert
+cTO.select(..., identifier, ...: make an optional input indicating rows of any found table identifying each object for which data is assigned
+cTO.select(..., whereField_c,...: optional parameter value pairs to indicate part of table where object data found

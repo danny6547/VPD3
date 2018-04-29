@@ -130,7 +130,11 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
 %            end
            alias_c = obj(oi).propertyAlias;
 %            idFieldValue_c = [idFieldValue_c, masterModelFieldVal_c];
-           insert@cTableObject(obj(oi), obj(oi).ModelTable);
+           model = obj(oi).ModelTable;
+           modelValue = obj(oi).ModelField{1};
+           id = obj.incrementID(model, modelValue);
+           obj(oi).Model_ID = id;
+           insert@cTableObject(obj(oi), model);
 %            insert@cTableObject(obj(oi), obj(oi).ModelTable, '', [], alias_c); %, idFieldValue_c{:});
            
            tables = obj(oi).ValueTable;
@@ -142,6 +146,7 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
                modelField = repmat(modelField, [1, numValTable + 1]);
            end
            
+           alias_c = obj.propertyAlias;
            for ti = 1:numel(tables)
                
                % Insert into "data table"
@@ -158,8 +163,7 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
                    inObjName = obj(oi).ValueObject{ti};
                    inObj = obj(oi).(inObjName);
                end
-               
-               insert@cTableObject(inObj, tab, '',  [], [], currField, currFieldVal);
+               insert@cTableObject(inObj, tab, '',  [], alias_c, currField, currFieldVal);
 %                insertIntoTable@cMySQL(obj(oi), tab, '', modelFieldVal_c{:});
            end
        end
@@ -211,36 +215,36 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
 %            end
 %         end
 %         
-%         function id = nextUniqueID(obj, varargin)
-%         % nextUniqueID Get the next unique ID in DB
-%         
-%         % Input
-%         tableName = obj.ModelTable;
-%         if nargin > 1 && ~isempty(varargin{1})
-%             
-%             tableName = varargin{1};
-%             validateattributes(tableName, {'char'}, {'vector'}, ...
-%                 'cModelID.nextUniqueID', 'tableName', 1);
-%         end
-%         
-%         fieldName = obj.ModelField;
-%         if nargin > 2
-%             
-%             fieldName = varargin{2};
-%             validateattributes(fieldName, {'char'}, {'vector'}, ...
-%                 'cModelID.nextUniqueID', 'fieldName', 2);
-%         end
-%         
-%         sql = ['SELECT MAX(', fieldName, ')+1 FROM ', tableName];
-%         [~, id_c] = obj(1).execute(sql);
-%         id_ch = id_c{1};
-%         id = str2double(id_ch);
-%         
-%            % Account for case where table was empty or column was all null
-%            if isnan(id)
-%                id = 1;
-%            end
-%         end
+        function id = incrementID(obj, varargin)
+        % nextUniqueID Get the next unique ID in DB
+        
+        % Input
+        tableName = obj.ModelTable;
+        if nargin > 1 && ~isempty(varargin{1})
+            
+            tableName = varargin{1};
+            validateattributes(tableName, {'char'}, {'vector'}, ...
+                'cModelID.nextUniqueID', 'tableName', 1);
+        end
+        
+        fieldName = obj.ModelField;
+        if nargin > 2
+            
+            fieldName = varargin{2};
+            validateattributes(fieldName, {'char'}, {'vector'}, ...
+                'cModelID.nextUniqueID', 'fieldName', 2);
+        end
+        
+        sql = ['SELECT MAX(', fieldName, ')+1 FROM ', tableName];
+        [~, id_c] = obj(1).execute(sql);
+        id_ch = id_c{1};
+        id = str2double(id_ch);
+        
+           % Account for case where table was empty or column was all null
+           if isnan(id)
+               id = 1;
+           end
+        end
         
     end
     
@@ -252,8 +256,8 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
 %             alias{1, 1} = 'Model_ID';
 %             alias{1, 2} = obj.ModelField;
             
-            alias = [repmat({'Model_ID'}, [size(obj.ModelField, 2), 1]),...
-                obj.ModelField'];
+            alias = [repmat({'Model_ID'}, [size(obj(1).ModelField, 2), 1]),...
+                obj(1).ModelField'];
         end
         
     end
@@ -495,16 +499,23 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
                 obj.Model_ID = [];
                 return
             end
+            
+            if ~isscalar(mid) && numel(unique(mid)) == 1
+                
+                mid = unique(mid);
+            end
         
             % Input
             validateattributes(mid, {'numeric'}, {'scalar', 'positive',...
-                'real', 'integer'}, 'cModelID.Name', 'Name', 1);
+                'real', 'integer'}, 'cModelID.Model_ID', 'Model_ID', 1);
             
             % Assign now so that Models_id can be read out later
             obj.Model_ID = mid;
             
             if obj.Sync
             
+%                 obj.readOtherIfExist();
+                
                 % Check model
                 tab = [cellstr(obj.ModelTable), obj.ValueTable];
                 field = obj.ModelField;
@@ -516,7 +527,6 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
 
                 obj.select(tab, field, mid, alias_c, obj2_c);
 
-                obj.readOtherIfExist();
             end
 %             if ~inDB
 %                 

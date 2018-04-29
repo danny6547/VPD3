@@ -17,9 +17,9 @@ classdef cVesselConfiguration < cMySQL & matlab.mixin.Copyable & cModelID & cDat
         Default_Configuration logical = [];
         Speed_Power_Source char = [];
         Wind_Reference_Height_Design double = [];
-        Displacement_Model_ID double = [];
-        Speed_Power_Coefficient_Model_ID double = [];
-        Wind_Coefficient_Model_ID double = [];
+        Displacement_Model_Id double = [];
+        Speed_Power_Coefficient_Model_Id double = [];
+        Wind_Coefficient_Model_Id double = [];
         Vessel_Configuration_Description char = '';
         Apply_Wind_Calculations logical;
         Fuel_Type char = '';
@@ -28,8 +28,9 @@ classdef cVesselConfiguration < cMySQL & matlab.mixin.Copyable & cModelID & cDat
     
     properties(Hidden)
         
-        Wind_Model_ID;
+        Wind_Model_Id;
         Vessel_Configuration_Id;
+        Vessel_Id;
     end
     
     properties(Constant, Hidden)
@@ -48,9 +49,9 @@ classdef cVesselConfiguration < cMySQL & matlab.mixin.Copyable & cModelID & cDat
                         'Default_Configuration',...
                         'Speed_Power_Source',...
                         'Wind_Reference_Height_Design',...
-                        'Displacement_Model_ID',...
-                        'Speed_Power_Coefficient_Model_ID',...
-                        'Wind_Coefficient_Model_ID',...
+                        'Displacement_Model_Id',...
+                        'Speed_Power_Coefficient_Model_Id',...
+                        'Wind_Coefficient_Model_Id',...
                         'Vessel_Configuration_Description',...
                         'Apply_Wind_Calculations',...
                         'Fuel_Type',...
@@ -63,7 +64,7 @@ classdef cVesselConfiguration < cMySQL & matlab.mixin.Copyable & cModelID & cDat
         ModelField = {'Vessel_Configuration_Id'};
         OtherTable = {};
         OtherTableIdentifier = {};
-        TableIdentifier = 'Vessel_Configuration_Id';
+        TableIdentifier = 'Vessel_Id';
     end
     
     

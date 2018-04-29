@@ -215,14 +215,18 @@ methods(Test)
     
     % 1.
     % Input
-%     input_obj = testcase.testVesselInsert();
-%     where_sql = testcase.SQLWhereSpeedPower;
-    testObj = testcase.SelectedVessel;
+    exp_obj = testcase.TestVessel;
+    input_obj = cVessel('Database', testcase.TestDatabase);
+    
+    % Execute
+    input_obj.IMO = testcase.TestIMO;
     
     % Verify
-    actObj = testObj.SpeedPower;
-    msgId = 'Object expected to have appropriate Vessel_Id after method call';
-    testcase.verifyNotEmpty(actObj, msgId);
+    exp_obj = exp_obj.SpeedPower;
+    input_obj = input_obj.SpeedPower;
+    msgObj = ['cVesselSpeedPower object returned with model identifier '...
+        'is expected to match that inserted with the same identifier.'];
+    testcase.verifyEqual(input_obj, exp_obj, msgObj);
     end
 end
 end

@@ -38,7 +38,7 @@ methods
         vessel.Configuration.Vessel_Configuration_Description = 'Test Config';
         vessel.Configuration.Apply_Wind_Calculations = true;
         vessel.Configuration.Fuel_Type = 'HFO';
-        vessel.Configuration.Speed_Power_Coefficient_Model_ID = 1;
+%         vessel.Configuration.Speed_Power_Coefficient_Model_Id = 1;
         
         % Vessel Info
         vessel.Info.Vessel_Name = 'Test vessel'; 
@@ -172,7 +172,7 @@ methods(TestClassSetup)
     spid = [vessel.SpeedPower.Model_ID];
     did = vessel.Displacement.Model_ID;
     wid = vessel.WindCoefficient.Model_ID;
-    spmid = vessel.Configuration.Speed_Power_Coefficient_Model_ID;
+    spmid = vessel.Configuration.Speed_Power_Coefficient_Model_Id;
     where_sql = ['Vessel_Id = ', num2str(vid)];
     whereEngine_sql = ['Engine_Model = ''', vessel.Engine.Engine_Model, ''''];
     whereSP_sql = ['Speed_Power_Coefficient_Model_Value_Id IN (', sprintf('%u, %u', spid), ')'];

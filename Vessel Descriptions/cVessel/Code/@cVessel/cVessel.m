@@ -282,16 +282,16 @@ classdef cVessel < cModelID
                % Assign model identifiers to objects not directly
                % identified by it
                spcMID = unique([obj(oi).SpeedPower.Speed_Power_Coefficient_Model_Id]);
-               obj.Configuration.Speed_Power_Coefficient_Model_ID = spcMID;
+               obj.Configuration.Speed_Power_Coefficient_Model_Id = spcMID;
                
                engMID = obj(oi).Engine.Model_ID;
                obj.Configuration.Engine_Model_Id = engMID;
                
                winMID = obj(oi).WindCoefficient.Model_ID;
-               obj.Configuration.Wind_Coefficient_Model_ID = winMID;
+               obj.Configuration.Wind_Coefficient_Model_Id = winMID;
                
                disMID = obj(oi).Displacement.Model_ID;
-               obj.Configuration.Displacement_Model_ID = disMID;
+               obj.Configuration.Displacement_Model_Id = disMID;
                
                % Insert vessel
                insert@cModelID(currObj);
@@ -1547,6 +1547,44 @@ classdef cVessel < cModelID
                field = {'Vessel_Owner_Id'};
                obj.select(tab, field, [], [], {obj.Owner});
            end
+           
+           % Read SpeedPower
+           spmID = obj.Configuration.Speed_Power_Coefficient_Model_Id;
+           sp = [obj.SpeedPower];
+%            [sp.Speed_Power_Coefficient_Model_Id] = deal(spmID);
+           if ~isempty(spmID)
+               
+               if isempty([sp.Speed_Power_Coefficient_Model_Id])
+
+                   input_c = {sp(1).OtherTable, 'Speed_Power_Coefficient_Model_Id',... %sp(1).OtherTableIdentifier, ...
+                       [], {}, [], sp(1).OtherTableIdentifier{1}, spmID};
+                   sp = sp.select(input_c{:});
+               end
+               
+               alias_c = sp.propertyAlias;
+               [sp.Sync] = deal(false);
+               input_c = {sp(1).ModelTable, sp(1).ModelField{1}, ...
+                   [], alias_c, [], sp(1).OtherTableIdentifier{1}, spmID};
+               sp.select(input_c{:});
+               
+               input_c = {sp(1).ValueTable{1}, sp(1).ModelField{2}, [], ...
+                   alias_c};
+               sp.select(input_c{:});
+               [sp.Sync] = deal(true);
+               [obj.SpeedPower] = deal(sp);
+           end
+           
+%            sp = [obj.SpeedPower];
+%            [~, spvmid] = sp.select([], [], spmID);
+%            if ~isempty(spvmid)
+% 
+%                for spi = 1:numel(sp)
+%                    
+%                    sp(spi).Model_ID = spvmid(spi);
+%                end
+%                [obj.SpeedPower] = deal(sp);
+%            end
+           
            % Assign Vessel_Id to each object identified by it
 %            
 %            obj = obj.checkModel('Vessel', 'IMO', IMO);

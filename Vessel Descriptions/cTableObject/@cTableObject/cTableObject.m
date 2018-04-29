@@ -181,9 +181,8 @@ classdef cTableObject < cMySQL
                 additionalInputs = [additionalInputs, {identifier}, {id_v}];
             end
         end
-        
+            
         obj = obj.select(table, identifier, [], alias_c, [], additionalInputs{:});
-        
         end
 
         function empty = isempty(obj)
@@ -235,11 +234,13 @@ classdef cTableObject < cMySQL
 %             validateCellStr(cols2write, 'cMySQL.readFromTable',...
 %                 'cols2write', 1);
 %         end
+        whereField = identifier;
+        idValInObj_l = true;
 
         prop_c = obj.DataProperty; % properties(obj);
         prop_c = prop_c(:);
         identifierProp_ch = identifier;
-        identifierValue = {};
+        whereValue = {};
         aliasProp_ch = '';
         if nargin > 4 && ~isempty(varargin{2})
 
@@ -261,15 +262,16 @@ classdef cTableObject < cMySQL
                 error(errid, errmsg);
             end
             prop_c(propi) = alias_c(:, 2);
-            identifierValue = {obj.(identifierProp_ch)};
+            whereValue = {obj.(identifierProp_ch)};
             aliasProp_ch = alias_c{identifier_l, 2};
         end
         
-        identifierValueInput = false;
+        whereValueInput = false;
         if nargin > 5 && ~isempty(varargin{3})
             
-            identifierValueInput = true;
-            identifierValue = varargin(3);
+            whereValueInput = true;
+            idValInObj_l = false;
+            whereValue = varargin(3);
             
             % Append to properties and values
             prop_c = [prop_c; cellstr(identifier)];
@@ -286,22 +288,28 @@ classdef cTableObject < cMySQL
             % Enclose any char values 
             
             additionalData_c = [additionalData_c{:}];
-            additionalData_c = cellfun(@num2str, additionalData_c, 'Uni', 0);
-            additionalData_c = additionalData_c(:);
+            additionalDataStr_c = cellfun(@num2str, additionalData_c, 'Uni', 0);
+            additionalDataStr_c = additionalDataStr_c(:);
             eq_c = repmat({' = '}, size(additionalFields_c));
-            addAll = strcat(additionalFields_c, eq_c, additionalData_c);
+            addAll = strcat(additionalFields_c, eq_c, additionalDataStr_c);
             additionalCondition_ch = strjoin(addAll, ' AND ');
             
-            if isempty(identifierValue) || any(cellfun(@isempty, identifierValue))
+            if isempty(whereValue) || any(cellfun(@isempty, whereValue))
                 
-                identifierValueInput = true;
-                identifierValue = additionalData_c(1);
+                whereValueInput = true;
+                whereValue = additionalData_c(1);
             end
-            identifier = additionalFields_c{1};
+%             identifier = additionalFields_c{1};
+            whereField = additionalFields_c{1};
+            whereValue = additionalData_c(1);
+            
+            idValInObj_l = false;
+%             whereField_c{1} = additionalFields_c{1};
+%             whereField_c{2} = additionalDataStr_c{1};
         end
         
-        if ~iscell(identifierValue)
-            identifierValue = {identifierValue};
+        if ~iscell(whereValue)
+            whereValue = {whereValue};
         end
         
         % Get matching field names and object properties
@@ -326,28 +334,38 @@ classdef cTableObject < cMySQL
 %         matchField_c = setdiff(matchField_c, identifier);
 
         % Select table where rows match identifier values in object
-        if identifierValueInput
+        if whereValueInput
             
-            identifierValue = repmat(identifierValue, size(obj));
+            whereValue = repmat(whereValue, size(obj));
         else
             
-            identifierValue = {obj.(identifier)};
+            whereValue = {obj.(identifier)};
+        end
+        
+        % Get indices to OBJ identified in table
+        if ~isempty(identifier)
+            
+            lowerId_ch = lower(identifier);
+        else
+            
+            lowerId_ch = lower(obj(1).TableIdentifier);
         end
         
         % Return if no identifier data in OBJ...
-        objIdentifierMissing = all(cellfun(@isempty, identifierValue)) && ...
+        objIdentifierMissing = all(cellfun(@isempty, whereValue)) && ...
             isempty(additionalCondition_ch);
         if objIdentifierMissing
             
             return
         end
+        
         inOBJ = true;
         
-        objID_cs = cellfun(@num2str, identifierValue, 'Uni', 0);
+        objID_cs = cellfun(@num2str, whereValue, 'Uni', 0);
         objID_cs = obj(1).encloseStringQuotes(objID_cs);
         objIDvals_ch = obj(1).colList(objID_cs);
         
-        [obj(1), sqlWhereID_ch] = obj(1).combineSQL('WHERE', identifier, 'IN',...
+        [obj(1), sqlWhereID_ch] = obj(1).combineSQL('WHERE', whereField, 'IN',...
             objIDvals_ch);
 %         sqlWhereAnd_ch = additionalCondition_ch;
 %         
@@ -388,8 +406,6 @@ classdef cTableObject < cMySQL
         % Object found in DB
         inDB = true;
 
-        % Get indices to OBJ identified in table
-        lowerId_ch = lower(identifier);
 %         tableID_c = table_st.(lowerId_ch);
 %         if iscell(tableID_c)
 %         %             [obj_l, obj_i] = ismember([tableID_c{:}], [objID_c{:}]);
@@ -405,6 +421,23 @@ classdef cTableObject < cMySQL
 
         % Create arrays to track whether object data has changed by read
         %         fielddiff = true(length(matchField_c), numel(obj));
+        if idValInObj_l
+            
+            tabId = obj(1).TableIdentifier;
+            idVal_c = unique([obj.(tabId)]);
+        else
+            
+            idVal_c = unique(table_st.(lowerId_ch));
+            if isscalar(idVal_c) && ~isscalar(obj)
+                
+                idVal_c = repmat(idVal_c, size(obj));
+            end
+        end
+        
+        if ~iscell(idVal_c)
+            
+            idVal_c = arrayfun(@(x) x, idVal_c, 'Uni', 0);
+        end
 
         % Iterate over properties of matching obj and assign values
         for ii = 1:length(matchField_c)
@@ -433,7 +466,7 @@ classdef cTableObject < cMySQL
 %                 if ~identifierValueInput
 %                     identifierValue = obj(oi).(identifierProp_ch);
 %                 end
-%                 currData_l = table_st.(lowerId_ch) == identifierValue{oi}; %obj(oi).(identifierProp_ch);
+                currData_l = table_st.(lowerId_ch) == idVal_c{oi}; %obj(oi).(identifierProp_ch);
 
                 % Check if different
         %                 fielddiff(ii, oi) = ...
@@ -443,7 +476,7 @@ classdef cTableObject < cMySQL
 
                 try
         %                     obj(oi).(currField) = currData{currTablei};
-                    obj(oi).(currField) = [currData{:}]; %[currData{currData_l}];
+                    obj(oi).(currField) = [currData{currData_l}]; %[currData{currData_l}];
                 catch e
                     % Write some code here later...
                     % Error is attempt to write to dependent property
@@ -461,7 +494,7 @@ classdef cTableObject < cMySQL
        function [log, propDiff] = isequal(obj, obj2)
        % isequal True if object data and array are numerically equal.
        
-           propDiff = sort(obj.DataProperty);
+       propDiff = {};
            if isempty(obj)
 
                log = false;
@@ -474,35 +507,48 @@ classdef cTableObject < cMySQL
                return
            end
            
-           if ~isscalar(obj2)
+%            if ~isscalar(obj2)
+%                
+%                log = false;
+%                return
+%            end
+           
+           if ~isequal(size(obj), size(obj2))
                
                log = false;
                return
            end
            
-           sDP = sort(obj.DataProperty);
-           sDP2 = sort(obj2.DataProperty);
-           if ~isequal(sDP, sDP2)
-               
-               log = false;
-               return
-           end
+           props_c = sort(obj(1).DataProperty);
+           props_c = props_c(:)';
+           
+           log = true(numel(obj), numel(obj(1).DataProperty));
+           propDiff = repmat(props_c, [numel(obj), 1]);
+           for oi = 1:numel(obj)
+           
+               sDP = props_c;
+               sDP2 = sort(obj2(oi).DataProperty);
+               if ~isequal(sDP, sDP2)
 
-           eqf = @(x, y, tol) (isscalar(x) && isscalar(y) && isnan(x) && isnan(y))...
-               || ((numel(x) == numel(y)) && all(abs(x(:) - y(:)) < tol));
-           tolerance = 1e-15;
-           
-           % Iterate data properties and compare
-           log = true(1, numel(sDP));
-           for pi = 1:numel(sDP)
-               
-               currProp = sDP{pi};
-               if ~eqf(obj.(currProp), obj2.(currProp), tolerance)
-                   log(pi) = false;
+                   log = false;
+                   return
+               end
+
+               eqf = @(x, y, tol) (isequal(size(x), size(y)) && all(isnan(x)) && all(isnan(y))) ... (isscalar(x) && isscalar(y) && isnan(x) && isnan(y))...
+                   || ((numel(x) == numel(y)) && all(abs(x(:) - y(:)) < tol));
+               tolerance = 1e-15;
+
+               % Iterate data properties and compare
+               for pi = 1:numel(sDP)
+
+                   currProp = sDP{pi};
+                   if ~eqf(obj(oi).(currProp), obj2(oi).(currProp), tolerance)
+                       log(pi) = false;
+                   end
                end
            end
-           propDiff(log) = [];
-           log = all(log);
+           propDiff(log) = {[]};
+           log = all(all(log));
        end
     end
     

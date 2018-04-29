@@ -22,5 +22,6 @@ BEGIN
 											 R_Squared FLOAT(15, 14) NOT NULL,
 											 Maximum_Power FLOAT(15, 3) NOT NULL,
 											 Minimum_Power FLOAT(15, 3) NOT NULL
+                                             /*UNIQUE UniqueCurvesProbably (Speed_Power_Coefficient_Model_Id, Displacement, Trim, Coefficient_A, Coefficient_B, Maximum_Power, Minimum_Power)*/
 											 );
 END;

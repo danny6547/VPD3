@@ -160,13 +160,14 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
            [obj.Description] = deal(firstDesc{:});
            
            % Insert into super-model table, get super-ID
-           insert@cTableObject(obj(1), 'SpeedPowerCoefficientModel', {}, ...
-               'Speed_Power_Coefficient_Model_Id', {});
-           superID = obj(1).Speed_Power_Coefficient_Model_Id;
-%            superID = repmat(superID, size(obj));
+           superID = obj(1).incrementID('SpeedPowerCoefficientModel', ...
+               'Speed_Power_Coefficient_Model_Id');
+%            superID = obj(1).Speed_Power_Coefficient_Model_Id;
            [obj.Speed_Power_Coefficient_Model_Id] = deal(superID);
+           insert@cTableObject(obj(1), 'SpeedPowerCoefficientModel', {}, ...
+               'Speed_Power_Coefficient_Model_Id', {}, 'Speed_Power_Coefficient_Model_Id', superID);
 %            [obj.Model_ID] = deal(mid);
-
+           
            % Insert into models
            insert@cModelID(obj);
            
@@ -265,40 +266,6 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
             end
        end
        end
-%        
-%        function log = isequal(obj, spdt)
-%        % isequal True if object data and array are numerically equal.
-%        
-%        log = true;
-%        if isempty(obj)
-%            
-%            log = false;
-%            return
-%        end
-%        
-%        eqf = @(x, y, tol) (numel(x) == numel(y)) && all(abs(x(:) - y(:)) < tol);
-%        tolerance = 1e-15;
-%        
-%        if ~eqf(obj.Speed, spdt(:, 1), tolerance)
-%            log = false;
-%        end
-%        if ~eqf(obj.Power, spdt(:, 2), tolerance)
-%            log = false;
-%        end
-%        if ~eqf(obj.Displacement, unique(spdt(:, 3)), tolerance)
-%            log = false;
-%        end
-%        if ~eqf(obj.Trim, unique(spdt(:, 4)), tolerance)
-%            log = false;
-%        end
-%        
-%        end
-
-%        function empty = isempty(obj)
-%            
-%            
-%           empty = isempty(obj.speedPowerDraftTrim); 
-%        end
        
        function obj = print(obj)
        % print Print data into formatted columns
@@ -385,6 +352,95 @@ classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVessel
        end
        end
        
+       function [obj, spvmid] = select(obj, varargin)
+       % select Select data from super table, model table and value table
+       
+           % Input WILL BE GIVEN BY cMID.set.MID, and will include all of 
+           % tab, field, mid, alias_c, obj2_c
+           readSuper_l = isempty([obj.Speed_Power_Coefficient_Model_Id]);
+           
+           % Check size of OBJ against number of models found
+           if readSuper_l
+
+               % Read Super
+               superTable_ch = [obj(1).OtherTable{:}];
+               superTableID_ch = [obj(1).OtherTableIdentifier{:}];
+               obj = select@cTableObject(obj, superTable_ch, superTableID_ch,...
+                   varargin{3:end});
+               
+               modelTable_ch = obj.ModelTable;
+               spmid = unique([obj.Speed_Power_Coefficient_Model_Id]);
+               spmvID_sql = 'Speed_Power_Coefficient_Model_Value_Id';
+               where_sql = [obj(1).OtherTableIdentifier{1}, ' = ', num2str(spmid)];
+               [~, count_tbl] = select@cMySQL(obj(1), modelTable_ch, spmvID_sql, where_sql);
+               if isempty(count_tbl)
+
+                   spvmid = [];
+                   return
+               else
+
+                   spvmid = count_tbl.speed_power_coefficient_model_value_id;
+               end
+
+               countSpmid = height(count_tbl);
+               if isempty(obj) || isscalar(obj)
+
+                   otherObj = cVesselSpeedPower('Size', [1, countSpmid-1]);
+                   
+                   obj = [obj, otherObj];
+                   [obj.Name] = deal(obj(1).Name);
+                   [obj.Description] = deal(obj(1).Description);
+                   [obj.Deleted] = deal(obj(1).Deleted);
+
+               elseif numel(obj) ~= countSpmid
+
+                   errid = 'cVSP:SelectIntoExisting';
+                   errmsg = ['If OBJ is non-scalar, OBJ must have as many '...
+                       'elements as speed power curves in the selected model.'];
+                   error(errid, errmsg);
+               end
+               return
+           end
+           
+%            readModel_l = strcmpi(tab, obj(1).ModelTable);
+%            readValue_l = strcmpi(tab, obj(1).ValueTable{1});
+%            
+%            if readModel_l
+%                
+%            % Read Model, Value tables
+% %            [obj.Sync] = deal(false);
+%            cMidInput_c = varargin;
+%            cMidInput_c{1} = obj(1).ModelTable;
+%            cMidInput_c{2} = 'Speed_Power_Coefficient_Model_Value_Id'; %[varargin{2}] {1};
+%            cMidInput_c{3} = spmid;
+%            cMidInput_c{4} = {'Model_ID', 'Speed_Power_Coefficient_Model_Value_Id'}; %varargin{4}(1, :);
+%            if numel(cMidInput_c) == 5
+% 
+%                cMidInput_c(5) = [];
+%            end
+           obj = select@cTableObject(obj, varargin{:});
+
+%            % Read Model, Value tables
+%            cMidInput_c{1} = obj(1).ValueTable{1};
+% %            cMidInput_c{2} = varargin{2}{2};
+% %            cMidInput_c{4} = varargin{4}(2, :);
+%            obj = select@cTableObject(obj, cMidInput_c{:});
+               
+    %            [obj.Sync] = deal(true);
+%            end
+%            % Assign model ID, this time with Sync on
+%            [obj.Sync] = deal(false);
+%                spvmid = [obj.Model_ID];
+%                [obj.Model_ID] = deal(spvmid(1));
+%            [obj.Sync] = deal(true);
+%            obj.select(tab, field, mid, alias_c, obj2_c);
+           
+%            % To actually get all spm
+%            spmvid = [obj.Speed_Power_Coefficient_Model_Id];
+%            
+%            
+           
+       end
     end
     
     methods

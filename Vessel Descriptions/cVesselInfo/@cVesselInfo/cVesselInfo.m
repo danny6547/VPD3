@@ -21,7 +21,7 @@ classdef cVesselInfo < cModelID & cDateConvert
         ValueTable = {};
         ValueObject = {};
         ModelField = {};
-        TableIdentifier = 'Vessel_Info_Id';
+        TableIdentifier = 'Vessel_Id';
     end
     
     properties(Hidden)
@@ -30,6 +30,7 @@ classdef cVesselInfo < cModelID & cDateConvert
 %         % properties which will be assigned to, even if they don't use them
         
         Vessel_Info_Id;
+        Vessel_Id;
     end
     
 %     properties(Hidden, Constant)
