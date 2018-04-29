@@ -281,25 +281,26 @@ classdef cVessel < cModelID
                
                % Assign model identifiers to objects not directly
                % identified by it
-               spcMID = unique([obj(oi).SpeedPower.Speed_Power_Coefficient_Model_Id]);
-               obj.Configuration.Speed_Power_Coefficient_Model_Id = spcMID;
+               spcMID = unique([currObj.SpeedPower.Speed_Power_Coefficient_Model_Id]);
+               currObj.Configuration.Speed_Power_Coefficient_Model_Id = spcMID;
                
-               engMID = obj(oi).Engine.Model_ID;
-               obj.Configuration.Engine_Model_Id = engMID;
+               engMID = currObj.Engine.Model_ID;
+               currObj.Configuration.Engine_Model_Id = engMID;
                
-               winMID = obj(oi).WindCoefficient.Model_ID;
-               obj.Configuration.Wind_Coefficient_Model_Id = winMID;
+               winMID = currObj.WindCoefficient.Model_ID;
+               currObj.Configuration.Wind_Coefficient_Model_Id = winMID;
                
-               disMID = obj(oi).Displacement.Model_ID;
-               obj.Configuration.Displacement_Model_Id = disMID;
+               disMID = currObj.Displacement.Model_ID;
+               currObj.Configuration.Displacement_Model_Id = disMID;
                
                % Insert vessel
-               insert@cModelID(currObj);
+               currObj = insert@cModelID(currObj);
                
                % Insert owner
-               vid = obj.Vessel_Id;
-               [obj.Owner.Vessel_Id] = deal(vid);
-               obj.Owner.insert();
+               vid = currObj.Model_ID;
+               [currObj.Owner.Model_ID] = deal(vid);
+               [currObj.Owner.Vessel_Id] = deal(vid);
+               currObj.Owner.insert();
            end
        end
        
@@ -1541,11 +1542,13 @@ classdef cVessel < cModelID
                
                tab = 'VesselToVesselOwner';
                field = {'Vessel_Owner_Id'};
-               obj.select(tab, field, [], [], {obj.Owner}, 'Vessel_Id', vid);
+               alias_c = obj.Owner.propertyAlias;
+               obj.select(tab, field, [], alias_c, {obj.Owner}, 'Vessel_Id', vid);
 
                tab = 'VesselOwner';
                field = {'Vessel_Owner_Id'};
-               obj.select(tab, field, [], [], {obj.Owner});
+%                obj.select(tab, field, [], alias_c, {obj.Owner}, 'Vessel_Owner_Id', obj.Owner.Model_ID);
+               obj.select(tab, field, obj.Owner.Model_ID, alias_c, {obj.Owner});
            end
            
            % Read SpeedPower

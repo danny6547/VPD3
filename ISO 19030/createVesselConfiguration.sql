@@ -15,7 +15,7 @@ BEGIN
 							 Engine_Model_Id INT(10),
 							 Valid_From DateTime,
 							 Valid_To DateTime,
-                             DefaultConfiguration BOOL,
+                             Default_Configuration BOOL,
 							 Transverse_Projected_Area_Design FLOAT(15, 5),
 							 Block_Coefficient FLOAT(15, 5),
 							 Breadth_Moulded FLOAT(15, 5),
@@ -27,11 +27,11 @@ BEGIN
 							 Displacement_Model_Id INT(10),
 							 Speed_Power_Coefficient_Model_Id INT(10) NOT NULL,
 							 Wind_Coefficient_Model_Id INT,
-                             VesselConfigurationDescription TEXT,
+                             Vessel_Configuration_Description TEXT,
 							 LBP FLOAT(15, 5),
                              Deleted BOOL NOT NULL,
-                             ApplyWindCalculations BOOL,
-                             FuelType TEXT,
+                             Apply_Wind_Calculations BOOL,
+                             Fuel_Type TEXT,
                              CONSTRAINT onePerVessel UNIQUE(Vessel_Id, Valid_From)
 							 );
 						 

@@ -135,10 +135,7 @@ methods(Test)
     % 1.
     % Input
     exp_obj = testcase.SelectedVessel;
-    input_obj = cVessel('Database', testcase.TestDatabase);
-    
-    % Execute
-    input_obj.IMO = testcase.TestIMO;
+    input_obj = testcase.SelectedVessel;
     
     % Verify
     msgObj = ['cVessel object returned with model identifier is expected '...
@@ -152,15 +149,10 @@ methods(Test)
     
     % 1.
     % Input
-    exp_obj = testcase.SelectedVessel;
-    input_obj = cVessel('Database', testcase.TestDatabase);
-    
-    % Execute
-    input_obj.IMO = testcase.TestIMO;
+    exp_obj = testcase.TestVessel.Configuration;
+    input_obj = testcase.SelectedVessel.Configuration;
     
     % Verify
-    exp_obj = exp_obj.Configuration;
-    input_obj = input_obj.Configuration;
     msgObj = ['cVesselConfiguration object returned with model identifier '...
         'is expected to match that inserted with the same identifier.'];
     testcase.verifyEqual(input_obj, exp_obj, msgObj);
@@ -173,15 +165,10 @@ methods(Test)
         
     % 1.
     % Input
-    exp_obj = testcase.SelectedVessel;
-    input_obj = cVessel('Database', testcase.TestDatabase);
-    
-    % Execute
-    input_obj.IMO = testcase.TestIMO;
+    exp_obj = testcase.TestVessel.Info;
+    input_obj = testcase.SelectedVessel.Info;
     
     % Verify
-    exp_obj = exp_obj.Info;
-    input_obj = input_obj.Info;
     msgObj = ['cVesselInfo object returned with model identifier '...
         'is expected to match that inserted with the same identifier.'];
     testcase.verifyEqual(input_obj, exp_obj, msgObj);
@@ -193,15 +180,10 @@ methods(Test)
     
     % 1.
     % Input
-    exp_obj = testcase.SelectedVessel;
-    input_obj = cVessel('Database', testcase.TestDatabase);
-    
-    % Execute
-    input_obj.IMO = testcase.TestIMO;
+    exp_obj = testcase.TestVessel.Owner;
+    input_obj = testcase.SelectedVessel.Owner;
     
     % Verify
-    exp_obj = exp_obj.Owner;
-    input_obj = input_obj.Owner;
     msgObj = ['cVesselOwner object returned with model identifier '...
         'is expected to match that inserted with the same identifier.'];
     testcase.verifyEqual(input_obj, exp_obj, msgObj);
@@ -215,15 +197,10 @@ methods(Test)
     
     % 1.
     % Input
-    exp_obj = testcase.TestVessel;
-    input_obj = cVessel('Database', testcase.TestDatabase);
-    
-    % Execute
-    input_obj.IMO = testcase.TestIMO;
+    exp_obj = testcase.TestVessel.SpeedPower;
+    input_obj = testcase.SelectedVessel.SpeedPower;
     
     % Verify
-    exp_obj = exp_obj.SpeedPower;
-    input_obj = input_obj.SpeedPower;
     msgObj = ['cVesselSpeedPower object returned with model identifier '...
         'is expected to match that inserted with the same identifier.'];
     testcase.verifyEqual(input_obj, exp_obj, msgObj);

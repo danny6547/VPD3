@@ -99,7 +99,7 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
 %        end
 %        end
        
-       function insert(obj, varargin)
+       function obj = insert(obj, varargin)
        % insertIntoTable Insert object data into specified DB tables
        
        [obj.Sync] = deal(false);
@@ -631,13 +631,20 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
 %         end
 %     end
 %     
-%     methods
-%        
-%         function set.Deleted(obj, del)
-%             
-%             validateattributes(del, {'numeric'}, {'scalar', 'real', ...
-%                 'integer', '>=', 0, '<=', 1});
-%             obj.Deleted = del;
-%         end
-%     end
+    methods
+       
+        function set.Deleted(obj, del)
+            
+            if isnumeric(del)
+                
+                validateattributes(del, {'numeric', 'logical'}, ...
+                    {'scalar', 'real', 'integer', '>=', 0, '<=', 1});
+                del = logical(del);
+            else
+                
+                validateattributes(del, {'logical'}, {'scalar'});
+            end
+            obj.Deleted = del;
+        end
+    end
 end
