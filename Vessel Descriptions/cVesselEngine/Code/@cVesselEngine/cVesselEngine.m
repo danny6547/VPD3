@@ -35,6 +35,7 @@ classdef cVesselEngine < cModelID
                         'Engine_Model_Id', ...
                         'Model_ID', ...
                         'Deleted'};
+        ValueObject = {};
         OtherTable = {};
         OtherTableIdentifier = {};
         TableIdentifier = 'Engine_Model_Id';

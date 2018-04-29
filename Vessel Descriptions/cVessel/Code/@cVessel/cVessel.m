@@ -1542,17 +1542,19 @@ classdef cVessel < cModelID
                
                tab = 'VesselToVesselOwner';
                field = {'Vessel_Owner_Id'};
-               alias_c = obj.Owner.propertyAlias;
-               obj.select(tab, field, [], alias_c, {obj.Owner}, 'Vessel_Id', vid);
+               owner = obj.Owner;
+               alias_c = owner.propertyAlias;
+               obj.select(tab, field, [], alias_c, {owner}, 'Vessel_Id', vid);
 
                tab = 'VesselOwner';
                field = {'Vessel_Owner_Id'};
 %                obj.select(tab, field, [], alias_c, {obj.Owner}, 'Vessel_Owner_Id', obj.Owner.Model_ID);
-               obj.select(tab, field, obj.Owner.Model_ID, alias_c, {obj.Owner});
+               obj.select(tab, field, owner.Model_ID, alias_c, {owner});
            end
            
            % Read SpeedPower
-           spmID = obj.Configuration.Speed_Power_Coefficient_Model_Id;
+           config = obj.Configuration;
+           spmID = config.Speed_Power_Coefficient_Model_Id;
            sp = [obj.SpeedPower];
 %            [sp.Speed_Power_Coefficient_Model_Id] = deal(spmID);
            if ~isempty(spmID)
@@ -1576,6 +1578,18 @@ classdef cVessel < cModelID
                [sp.Sync] = deal(true);
                [obj.SpeedPower] = deal(sp);
            end
+           
+           % Read Displacement
+           dispID = config.Displacement_Model_Id;
+           obj.Displacement.Model_ID = dispID;
+           
+           % Read Engine
+           engID = config.Engine_Model_Id;
+           obj.Engine.Model_ID = engID;
+           
+           % Read Wind
+           windID = config.Engine_Model_Id;
+           obj.WindCoefficient.Model_ID = windID;
            
 %            sp = [obj.SpeedPower];
 %            [~, spvmid] = sp.select([], [], spmID);

@@ -190,7 +190,7 @@ methods(Test)
     end
     
     function selectSpeedPower(testcase)
-    % Test that method will select the relevant object data into table
+    % Test that method will select the relevant object data from table
     % "SpeedPower".
     % 1. Test that each input OBJ will have its property data assigned from 
     % the similarly-named field of table "SpeedPower".
@@ -202,6 +202,74 @@ methods(Test)
     
     % Verify
     msgObj = ['cVesselSpeedPower object returned with model identifier '...
+        'is expected to match that inserted with the same identifier.'];
+    testcase.verifyEqual(input_obj, exp_obj, msgObj);
+    end
+    
+    function selectDisplacement(testcase)
+    % Test that method will select the relevant object data from table
+    % "Displacement".
+    % 1. Test that each input OBJ will have its property data assigned from 
+    % the similarly-named field of table "Displacement".
+    
+    % 1.
+    % Input
+    exp_obj = testcase.TestVessel.Displacement;
+    input_obj = testcase.SelectedVessel.Displacement;
+    
+    % Verify
+    msgObj = ['cVesselDisplacement object returned with model identifier '...
+        'is expected to match that inserted with the same identifier.'];
+    testcase.verifyEqual(input_obj, exp_obj, msgObj);
+    end
+    
+    function selectEngine(testcase)
+    % Test that method will select the relevant object data from table
+    % "EngineModel".
+    % 1. Test that each input OBJ will have its property data assigned from 
+    % the similarly-named field of table "EngineModel".
+    
+    % 1.
+    % Input
+    exp_obj = testcase.TestVessel.Engine;
+    input_obj = testcase.SelectedVessel.Engine;
+    
+    % Verify
+    msgObj = ['cVesselEngine object returned with model identifier '...
+        'is expected to match that inserted with the same identifier.'];
+    testcase.verifyEqual(input_obj, exp_obj, msgObj);
+    end
+    
+    function selectWind(testcase)
+    % Test that method will select the relevant object data from table
+    % "WindCoefficient".
+    % 1. Test that each input OBJ will have its property data assigned from 
+    % the similarly-named field of table "WindCoefficient".
+    
+    % 1.
+    % Input
+    exp_obj = testcase.TestVessel.WindCoefficient;
+    input_obj = testcase.SelectedVessel.WindCoefficient;
+    
+    % Verify
+    msgObj = ['cVesselWindCoefficient object returned with model identifier '...
+        'is expected to match that inserted with the same identifier.'];
+    testcase.verifyEqual(input_obj, exp_obj, msgObj);
+    end
+    
+    function selectDryDock(testcase)
+    % Test that method will select the relevant object data from table
+    % "DryDock".
+    % 1. Test that each input OBJ will have its property data assigned from 
+    % the similarly-named field of table "DryDock".
+    
+    % 1.
+    % Input
+    exp_obj = testcase.TestVessel.DryDock;
+    input_obj = testcase.SelectedVessel.DryDock;
+    
+    % Verify
+    msgObj = ['cVesselDryDock object returned with model identifier '...
         'is expected to match that inserted with the same identifier.'];
     testcase.verifyEqual(input_obj, exp_obj, msgObj);
     end
