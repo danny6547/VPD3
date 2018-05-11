@@ -1,12 +1,8 @@
-function [ obj ] = loadMarorkaRaw( obj, filename )
+function [ obj ] = loadMarorkaRaw( obj, filename, varargin )
 %loadMarorka Load data from Marorka file into table RawData
 %   Detailed explanation goes here
 
-% Call create temp table proc
-obj = obj.call('createTempMarorkaRaw');
-
-% Load into temp (convert time)
-tempTab = 'tempMarorkaRaw';
+% Default
 cols_c = [
     {'ShipName'                                             }
     {'IMONo'                                                }
@@ -102,12 +98,31 @@ cols_c = [
     {'DG Group 1 No. Running Recommended [-]'               }
     {'DG Potential Savings [%]'                             }
     {'ME Power [KW]'                                        }];
+
+% Input
+p = inputParser();
+p.addParameter('set', 'SET DateTime_UTC = STR_TO_DATE(@TimeStamp, ''%d.%m.%Y %H:%i'')',...
+    @ischar);
+p.addParameter('cols', cols_c, @iscell);
+p.addParameter('setCols2Skip', {''}, @iscell);
+p.parse(varargin{:});
+res = p.Results;
+set_s = res.set;
+cols_c = res.cols;
+setColsSkip_c = res.setCols2Skip;
+
+% Call create temp table proc
+obj = obj.call('createTempMarorkaRaw');
+
+% Load into temp (convert time)
+tempTab = 'tempMarorkaRaw';
+
 delimiter_s = ',';
 ignore_s = 1;
-set_s = 'SET DateTime_UTC = STR_TO_DATE(@TimeStamp, ''%d.%m.%Y %H:%i'')';
+% set_s = 'SET DateTime_UTC = STR_TO_DATE(@TimeStamp, ''%d.%m.%Y %H:%i'')';
 setnull_c = 'all';
 [obj] = obj.loadInFile(filename, tempTab, cols_c, delimiter_s, ignore_s, ...
-    set_s, setnull_c);
+    set_s, setnull_c, '', setColsSkip_c);
 
 % Update/insert into final table
 obj = obj.call('insertFromMarorkaRawIntoRaw');
