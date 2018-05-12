@@ -1,4 +1,4 @@
-classdef cVesselSpeedPower < cMySQL & cModelID & matlab.mixin.Copyable & cVesselDisplacementConversion
+classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacementConversion
     %CVESSELSPEEDPOWER Vessel speed and power data
     %   Detailed explanation goes here
     

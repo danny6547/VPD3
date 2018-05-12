@@ -1,4 +1,4 @@
-classdef cVesselDisplacement < cMySQL & cModelID & cVesselDisplacementConversion
+classdef cVesselDisplacement < cModelID & cVesselDisplacementConversion
     %CVESSELDISPLACEMENT Summary of this class goes here
     %   Detailed explanation goes here
     

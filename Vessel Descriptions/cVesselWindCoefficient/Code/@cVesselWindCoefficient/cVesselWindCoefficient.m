@@ -1,4 +1,4 @@
-classdef cVesselWindCoefficient < cMySQL & cModelID
+classdef cVesselWindCoefficient < cModelID
     %CVESSELWINDCOEFFICIENT Wind resistance coefficents for ships.
     %   Detailed explanation goes here
     

@@ -1463,15 +1463,17 @@ classdef cVessel < cModelID
         % vessel_Id DB identifier for vessel, increment if necessary
             
             imo_ch = num2str(imo);
-            sel_sql = ['SELECT * FROM Vessel WHERE IMO = ', imo_ch, ...
-                ' LIMIT 1'];
-            vid_st = obj.execute(sel_sql);
+%             sel_sql = ['SELECT * FROM Vessel WHERE IMO = ', imo_ch, ...
+%                 ' LIMIT 1'];
+%             vid_st = obj.execute(sel_sql);
+            [~, vid_tbl] = obj.SQL.select('Vessel', '*', ...
+                ['IMO = ', imo_ch], 1);
             
             % Vessel not found in DB
-            if isempty(vid_st)
+            if isempty(vid_tbl)
                 vid = []; 
             else
-                vid = vid_st.vessel_id;
+                vid = vid_tbl.vessel_id;
             end
         end
     end
@@ -1842,5 +1844,6 @@ classdef cVessel < cModelID
             ins = sortrows(ins);
             obj.InService = ins;
         end
+        
     end
 end

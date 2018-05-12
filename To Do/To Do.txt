@@ -779,3 +779,70 @@ cVSP.select:
 include cMID.incrementModelID in cMID.insert
 cTO.select(..., identifier, ...: make an optional input indicating rows of any found table identifying each object for which data is assigned
 cTO.select(..., whereField_c,...: optional parameter value pairs to indicate part of table where object data found
+# cTSQL: class to generate t-sql statements inherites from cSQL
+# cSQL: abstract class for generating SQL statements with abstract methods select, ...
+# cMySQL: inherit from cSQL
+# cVessel: new (hidden) property SQL containing a cSQL, replaces all former calls to cMySQL methods from OBJ
+#	cTO doesn't know which SQL to create from inputs yet
+#	Can have standard set of credentials (no password), together with SQL implementation?
+#		conn = savedConnections('Database', 'hullperformance') returns in conn inputs 
+#		needed to connect with cCMYSQLDB. Data stored in script.
+#	savedConnections called by cMID constructor, returning cSQL sub-class
+#	cTO assigns cSQL to property SQL
+#cCMYSQLDB.savedConnections: return input cell and cSQL from database name
+#SavedConnections: script with saved connnections
+	Error "Field 'Speed_Power_Coefficient_Model_Id' doesn't have a default value" at testVessel.insert;
+	Seems that cModelID.insert or matchingFields isn't writing in the additional data required by the table, which was happening on the work laptop.
+$ Attempt connection to hullperformance through cVessel again
+$ Verify read only mode working on hullperformance
+Write testcVessel.testselectRaw:
+	test that all raw data read when called without inputs
+	test that multiple calls with smae inputs do not generate duplicate columns or rows
+	test with input dateFrom, dateTo
+	test with input Cols
+EXTRACT METHODS FROM CVESSEL TO CVESSELANALYSIS
+WRITE MATLAB WRAPPERS TO MYSQL ISO19030 PROCEDURES
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
