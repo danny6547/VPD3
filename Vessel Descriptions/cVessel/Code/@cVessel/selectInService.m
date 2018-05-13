@@ -6,14 +6,14 @@ function [ obj ] = selectInService(obj, varargin)
 
 
 % Data identified by Vessel Configuration
-vcid = [obj.VesselConfiguration.ModelID];
+vcid = [obj.Configuration.Vessel_Configuration_Id];
 vcid_ch = num2str(vcid);
 
 % Select data and assign
 tab = 'CalculatedData c JOIN RawData r ON c.Raw_Data_Id = r.Raw_Data_Id';
 cols = '*';
 where = ['c.Vessel_Configuration_Id = ', vcid_ch];
-[obj, tbl] = obj.select(tab, cols, where);
+[~, tbl] = obj.SQL.select(tab, cols, where);
 obj.InService = tbl;
 
 end
