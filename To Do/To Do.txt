@@ -793,7 +793,7 @@ cTO.select(..., whereField_c,...: optional parameter value pairs to indicate par
 #SavedConnections: script with saved connnections
 	Error "Field 'Speed_Power_Coefficient_Model_Id' doesn't have a default value" at testVessel.insert;
 	Seems that cModelID.insert or matchingFields isn't writing in the additional data required by the table, which was happening on the work laptop.
-$ Attempt connection to hullperformance through cVessel again
+# $ Attempt connection to hullperformance through cVessel again (Works! apart from DryDock property)
 $ Verify read only mode working on hullperformance
 Write testcVessel.testselectRaw:
 	test that all raw data read when called without inputs
@@ -802,10 +802,11 @@ Write testcVessel.testselectRaw:
 	test with input Cols
 EXTRACT METHODS FROM CVESSEL TO CVESSELANALYSIS
 WRITE MATLAB WRAPPERS TO MYSQL ISO19030 PROCEDURES
-
-
-
-
+cVSP: make ValueTable SpeedPower optional part of inserting, selecting data
+cV.selectInService: method currently uses different datestring format than obj.DateFormStr. Need way to make adodb return desired format.
+cSQL.tableFromQueryResult: convert cell cols to numerical columns where possible
+cV.set.IMO: check if multiplie cVSP being read from hullperformance
+cV.set.IMO: cVDD not being read from hullpeformance 
 
 
 

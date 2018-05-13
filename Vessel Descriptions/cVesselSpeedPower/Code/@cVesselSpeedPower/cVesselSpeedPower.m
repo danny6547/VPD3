@@ -372,7 +372,7 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
                spmid = unique([obj.Speed_Power_Coefficient_Model_Id]);
                spmvID_sql = 'Speed_Power_Coefficient_Model_Value_Id';
                where_sql = [obj(1).OtherTableIdentifier{1}, ' = ', num2str(spmid)];
-               [~, count_tbl] = select@cMySQL(obj(1), modelTable_ch, spmvID_sql, where_sql);
+               [~, count_tbl] = obj(1).SQL.select(modelTable_ch, spmvID_sql, where_sql);
                if isempty(count_tbl)
 
                    spvmid = [];
