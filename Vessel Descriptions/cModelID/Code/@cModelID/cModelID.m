@@ -646,5 +646,12 @@ classdef (Abstract) cModelID < cTableObject & handle
             end
             obj.Deleted = del;
         end
+        
+        function set.Sync(obj, sync)
+           
+            validateattributes(sync, {'logical'}, {'scalar'});
+            obj.Sync = sync;
+            
+        end
     end
 end
