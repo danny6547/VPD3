@@ -1574,9 +1574,15 @@ classdef cVessel < cModelID
                    [], alias_c, [], sp(1).OtherTableIdentifier{1}, spmID};
                sp.select(input_c{:});
                
-               input_c = {sp(1).ValueTable{1}, sp(1).ModelField{2}, [], ...
-                   alias_c};
-               sp.select(input_c{:});
+               % Check if ValueTable exists, currently doesn't in
+               % hullperformance DB
+               [~, isValueTable] = sp(1).SQL.isTable(sp(1).ValueTable{1});
+               if isValueTable
+                   
+                   input_c = {sp(1).ValueTable{1}, sp(1).ModelField{2}, [], ...
+                       alias_c};
+                   sp.select(input_c{:});
+               end
                [sp.Sync] = deal(true);
                [obj.SpeedPower] = deal(sp);
            end
@@ -1833,10 +1839,20 @@ classdef cVessel < cModelID
         
         function obj = set.InService(obj, ins)
             
+            if isempty(ins)
+                
+                ins = timetable();
+                obj.InService = ins;
+                return
+            end
+            
             if isa(ins, 'table')
                 
-                ins.datetime_utc = datetime(ins.datetime_utc, 'ConvertFrom', 'datenum');
-                ins = table2timetable(ins, 'RowTimes', 'datetime_utc');
+                ins.timestamp = datetime(ins.timestamp,'InputFormat',...
+                    'yyyy-MM-dd HH:mm:ss.SSSSSSS');
+                
+%                 ins.timestamp = datetime(ins.timestamp, 'ConvertFrom', 'datenum');
+                ins = table2timetable(ins, 'RowTimes', 'timestamp');
             end
             
             validateattributes(ins, {'timetable'}, {}, ...
