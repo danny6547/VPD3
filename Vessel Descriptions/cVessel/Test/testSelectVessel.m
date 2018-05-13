@@ -273,5 +273,60 @@ methods(Test)
         'is expected to match that inserted with the same identifier.'];
     testcase.verifyEqual(input_obj, exp_obj, msgObj);
     end
+    
+    function selectInService(testcase)
+    % Test that method will synchronise data from CalculatedData and
+    % RawData tables to InService table if exists, and will assign table
+    % there otherwise.
+    % 1. Test that, with empty InService property, table will be assigned
+    % into property
+    % 2. Test that, with non-empty InService property, table will be
+    % synchronised with existing table and only expected columns will be
+    % found.
+    % 3. Test input DATEFROM and DATETO work as expected.
+    % 4. Test input COLS work as expected.
+    % 5. Test input CONFIGS work as expected.
+    
+    % 1
+    % Input
+    % Extract this code to insertTestVessel method later
+    times_v = now:now+1;
+    times_dt = datetime(times_v, 'ConvertFrom', 'datenum');
+    expRawCols_c = {'Timestamp', 'Raw_Data_Id', 'Relative_Wind_Speed', 'Speed_Through_Water'};
+    expRawData_m = [times_v; 1, 1; randn(1, 2)*5; randn(1, 2)*10]';
+    expCalcCols_c = {'Raw_Data_Id', 'Vessel_Configuration_Id', 'Speed_Loss'};
+    expCalcData_m = [1, 1; 1, 1; randn(1, 2)*100]';
+    obj = testcase.TestVessel;
+    
+    tab = 'RawData';
+    obj.SQL.insertValuesDuplicate(tab, expRawCols_c, expRawData_m);
+    
+    tab = 'CalculatedData';
+    obj.SQL.insertValuesDuplicate(tab, expCalcCols_c, expCalcData_m);
+    
+    expRaw_tbl = array2timetable(expRawData_m(:, 2:end), 'RowTimes', times_dt);
+    expCalc_tbl = array2timetable(expCalcData_m, 'RowTimes', times_dt);
+    exp_tbl = expRaw_tbl.synchronize(expCalc_tbl);
+    
+    % Execute
+    obj = obj.selectInService();
+    
+    % Verify
+    act_tbl = obj.InService;
+    msg_tbl = ['In-Service table should have all RawData and CalculatedData '...
+        'for this vessel configuration when called with no inputs.'];
+    testcase.verifyEqual(act_tbl, exp_tbl, msg_tbl);
+    
+    % 2
+    % Execute
+    obj = obj.selectInService();
+    
+    % Verify
+    act_tbl = obj.InService;
+    msg_tbl = ['In-Service table should have all RawData and CalculatedData '...
+        'for this vessel configuration when called with no inputs.'];
+    testcase.verifyEqual(act_tbl, exp_tbl, msg_tbl);
+    
+    end
 end
 end
