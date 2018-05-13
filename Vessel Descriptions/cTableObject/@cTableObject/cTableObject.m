@@ -341,7 +341,10 @@ classdef cTableObject < handle
         end
         
         % Get matching field names and object properties
-        temp_st = obj.SQL.execute(['DESCRIBE ', table]);
+%         temp_st = obj.SQL.execute(['DESCRIBE ', table]);
+        [~, temp_st] = obj(1).SQL.describe(table);
+        
+        
         fields_c = temp_st.field;
         %         prop_c = properties(obj);
         matchField_c = intersect(fields_c, prop_c);
@@ -390,8 +393,8 @@ classdef cTableObject < handle
         inOBJ = true;
         
         objID_cs = cellfun(@num2str, whereValue, 'Uni', 0);
-        objID_cs = obj.SQL.encloseStringQuotes(objID_cs);
-        objIDvals_ch = obj.SQL.colList(objID_cs);
+        objID_cs = obj(1).SQL.encloseStringQuotes(objID_cs);
+        objIDvals_ch = obj(1).SQL.colList(objID_cs);
         
         [~, sqlWhereID_ch] = obj.SQL.combineSQL('WHERE', whereField, 'IN',...
             objIDvals_ch);
@@ -466,6 +469,9 @@ classdef cTableObject < handle
             
             idVal_c = arrayfun(@(x) x, idVal_c, 'Uni', 0);
         end
+        
+        % Expand array to match results of SELECT query
+%         obj = obj.expandArrayToFitSelect(objCol, tbl);
 
         % Iterate over properties of matching obj and assign values
         for ii = 1:length(matchField_c)
