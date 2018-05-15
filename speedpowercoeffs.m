@@ -1,4 +1,4 @@
-function speedpowercoeffs(speed, power, varargin)
+function obj = speedpowercoeffs(speed, power, varargin)
 %speedpowercoeffs Print speed, power coefficients from vectors
 %   speedpowercoeffs(speed, power) will print the coefficients, maximum and
 %   minimum power and R-Squared value of the linear fit of the logarithm of
@@ -24,7 +24,7 @@ end
 
 % Pre-allocate
 nCurves = size(speed, 1);
-obj = cVesselSpeedPower([1, nCurves]);
+obj = cVesselSpeedPower('Size', [1, nCurves]);
 
 for ci = 1:nCurves
 
