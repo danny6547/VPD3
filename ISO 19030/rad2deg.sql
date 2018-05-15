@@ -10,7 +10,7 @@ BEGIN
 	DECLARE angle_deg DOUBLE;
     DECLARE rad_conv DOUBLE;
     
-    SET rad_conv = PI() / 180;
+    SET rad_conv = 180 / PI();
 
 	SET angle_deg = rad * rad_conv;
 
