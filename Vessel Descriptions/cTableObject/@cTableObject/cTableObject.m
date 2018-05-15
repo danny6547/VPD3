@@ -1,4 +1,4 @@
-classdef cTableObject < cMySQL
+classdef cTableObject < handle
     %CTABLEOBJECT Relate MATLAB object to Database tables
     %   Detailed explanation goes here
     
@@ -8,11 +8,39 @@ classdef cTableObject < cMySQL
         TableIdentifier;
     end
     
+    properties(Hidden)
+        
+        SQL;
+    end
+    
     methods
     
         function obj = cTableObject(varargin)
 
-           obj = obj@cMySQL(varargin{:});
+           % Check if input identifies a saved connection, or gives all
+           % connection details
+           if nargin == 1
+               
+               [connInput_c, conn_s] = cConnectSQLDB.savedConnection(...
+                   varargin{:});
+           else
+               
+               temp = cConnectSQLDB(varargin{:});
+               conn_s = temp.connectionStruct;
+               connInput_c = varargin;
+           end
+           
+           % Determine which cSQL sub-class to instantiate
+           if strcmp(conn_s.UserID, 'hullperformancematlab')
+                
+               csql = cTSQL(connInput_c{:});
+           else
+                
+               csql = cMySQL(connInput_c{:});
+           end
+           
+           obj.SQL = csql;
+%            obj = obj@cMySQL(varargin{:});
         end
 
         function obj = insert(obj, table, varargin)
@@ -90,7 +118,7 @@ classdef cTableObject < cMySQL
         end
         
         % Get matching field names
-        matchFields_c = matchingFields(obj, table, dataObj);
+        matchFields_c = obj.SQL.matchingFields(table, dataObj);
 
         duplicates_l = ismember(matchFields_c, additionalFields_c);
         matchFields_c(duplicates_l) = [];
@@ -166,7 +194,7 @@ classdef cTableObject < cMySQL
         % Insert matrix of data into table
         matchFields_c = [matchFields_c(:); additionalFields_c(:)];
         %         data_c = [data_c, additionalData_c];
-        obj(1).insertValuesDuplicate(table, matchFields_c, data_c);
+        obj.SQL.insertValuesDuplicate(table, matchFields_c, data_c);
 
         % Select out data for vessel, to synchronise with DB
         emptyID_l = cellfun(@isempty, {obj.(identifier)});
@@ -313,7 +341,10 @@ classdef cTableObject < cMySQL
         end
         
         % Get matching field names and object properties
-        temp_st = obj(1).execute(['DESCRIBE ', table]);
+%         temp_st = obj.SQL.execute(['DESCRIBE ', table]);
+        [~, temp_st] = obj(1).SQL.describe(table);
+        
+        
         fields_c = temp_st.field;
         %         prop_c = properties(obj);
         matchField_c = intersect(fields_c, prop_c);
@@ -362,10 +393,10 @@ classdef cTableObject < cMySQL
         inOBJ = true;
         
         objID_cs = cellfun(@num2str, whereValue, 'Uni', 0);
-        objID_cs = obj(1).encloseStringQuotes(objID_cs);
-        objIDvals_ch = obj(1).colList(objID_cs);
+        objID_cs = obj(1).SQL.encloseStringQuotes(objID_cs);
+        objIDvals_ch = obj(1).SQL.colList(objID_cs);
         
-        [obj(1), sqlWhereID_ch] = obj(1).combineSQL('WHERE', whereField, 'IN',...
+        [~, sqlWhereID_ch] = obj.SQL.combineSQL('WHERE', whereField, 'IN',...
             objIDvals_ch);
 %         sqlWhereAnd_ch = additionalCondition_ch;
 %         
@@ -385,12 +416,12 @@ classdef cTableObject < cMySQL
 %         [obj(1), sqlWhereIn_ch] = obj(1).combineSQL('WHERE', identifier, 'IN',...
 %             objIDvals_ch, additionalCondition_ch);
         
-        [obj(1), ~, sqlSelect] = select@cMySQL(obj(1), table, '*');
-        [obj(1), sqlSelect] = obj(1).determinateSQL(sqlSelect);
-        [obj(1), sqlSelectWhereIn_ch] = obj(1).combineSQL(sqlSelect, sqlWhereID_ch);
+        [~, ~, sqlSelect] = obj.SQL.select(table, '*');
+        [~, sqlSelect] = obj.SQL.determinateSQL(sqlSelect);
+        [~, sqlSelectWhereIn_ch] = obj.SQL.combineSQL(sqlSelect, sqlWhereID_ch);
         %         table_st = obj(1).execute(sqlSelectWhereIn_ch);
 %         [~, ~, q] = obj(1).executeIfOneOutput(1, sqlSelectWhereIn_ch);
-        [~, ~, table_st] = obj(1).executeIfOneOutput(1, sqlSelectWhereIn_ch);
+        [~, ~, table_st] = obj.SQL.executeIfOneOutput(1, sqlSelectWhereIn_ch);
 
 %         [obj(1), sqlWhere_ch] = obj(1).combineSQL(identifier, 'IN',...
 %             objIDvals_ch);
@@ -438,6 +469,9 @@ classdef cTableObject < cMySQL
             
             idVal_c = arrayfun(@(x) x, idVal_c, 'Uni', 0);
         end
+        
+        % Expand array to match results of SELECT query
+%         obj = obj.expandArrayToFitSelect(objCol, tbl);
 
         % Iterate over properties of matching obj and assign values
         for ii = 1:length(matchField_c)
@@ -615,6 +649,23 @@ classdef cTableObject < cMySQL
                 nCols);
             fields = additionalFields_c;
             data = additionalData_c;
+        end
+    end
+    
+    methods
+        
+        function set.SQL(obj, sql)
+        % 
+%             if ~isa(sql, 'cSQL')
+%                 
+%                 errid = 'cV:NotAnSQL';
+%                 errmsg = ['Value assigned to property SQL must be a sub-class',...
+%                     ' of cSQL'];
+%                 error(errid, errmsg);
+%             end
+            
+            validateattributes(sql, {'cSQL'}, {'scalar'});
+            obj.SQL = sql;
         end
     end
 end

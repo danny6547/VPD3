@@ -1,4 +1,4 @@
-classdef (Abstract) cModelID < cTableObject & cMySQL & handle
+classdef (Abstract) cModelID < cTableObject & handle
     %CMODELID Read from database all data for rows matching the model ID
     %   Detailed explanation goes here
     
@@ -32,7 +32,7 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
 %                
 %                paramValue_c = varargin(3:end);
 %            end
-           obj = obj@cMySQL(varargin{:});
+           obj = obj@cTableObject(varargin{:});
            
            p = inputParser();
             p.addParameter('Size', []);
@@ -236,7 +236,7 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
         end
         
         sql = ['SELECT MAX(', fieldName, ')+1 FROM ', tableName];
-        [~, id_c] = obj(1).execute(sql);
+        [~, id_c] = obj(1).SQL.execute(sql);
         id_ch = id_c{1};
         id = str2double(id_ch);
         
@@ -645,6 +645,13 @@ classdef (Abstract) cModelID < cTableObject & cMySQL & handle
                 validateattributes(del, {'logical'}, {'scalar'});
             end
             obj.Deleted = del;
+        end
+        
+        function set.Sync(obj, sync)
+           
+            validateattributes(sync, {'logical'}, {'scalar'});
+            obj.Sync = sync;
+            
         end
     end
 end

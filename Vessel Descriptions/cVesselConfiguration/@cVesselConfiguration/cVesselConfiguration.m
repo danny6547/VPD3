@@ -1,4 +1,4 @@
-classdef cVesselConfiguration < cMySQL & matlab.mixin.Copyable & cModelID & cDateConvert
+classdef cVesselConfiguration < matlab.mixin.Copyable & cModelID & cDateConvert
     %CVESSELPARTICULARS Data relating to vessel particulars
     %   Detailed explanation goes here
     
