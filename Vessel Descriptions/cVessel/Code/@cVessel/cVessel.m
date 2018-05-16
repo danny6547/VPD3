@@ -217,7 +217,7 @@ classdef cVessel < cModelID
 %             dd_v = cVesselDryDock();
 %             dd_v.IMO_Vessel_Number = obj(vi).IMO_Vessel_Number;
 %             dd_v = dd_v.readFromTable;
-%             obj(vi).DryDockDates = dd_v;
+%             obj(vi).DryDock = dd_v;
 %         end
 
         % Read SpeedPower
@@ -372,7 +372,7 @@ classdef cVessel < cModelID
        function obj = insertIntoDryDockDates(obj)
        % insertIntoDryDocking Insert data into table "DryDockDates"
 
-           ddd = [obj.DryDockDates];
+           ddd = [obj.DryDock];
            ddd.insertIntoTable();
        end
        
@@ -1270,9 +1270,9 @@ classdef cVessel < cModelID
         for oi = 1:numel(obj)
             
             % Check whether dry-dock data given, pre-allocate arrays
-%             nDDi = obj(oi).numDDIntervals; % numel(obj(oi).DryDockDates) + 1;
-            nDDi = numel(obj(oi).DryDockDates) + 1;
-            if isempty(obj(oi).DryDockDates)
+%             nDDi = obj(oi).numDDIntervals; % numel(obj(oi).DryDock) + 1;
+            nDDi = numel(obj(oi).DryDock) + 1;
+            if isempty(obj(oi).DryDock)
                 mat = true(numel(obj(oi).InService.datetime_utc), 1);
                 continue
             end
@@ -1285,24 +1285,24 @@ classdef cVessel < cModelID
                 if di == 1
                     
                     currIntEnd = datetime(...
-                        obj(oi).DryDockDates(di).StartDateNum,...
+                        obj(oi).DryDock(di).StartDateNum,...
                         'ConvertFrom', 'datenum');
                     currInt_l = currDates <= currIntEnd;
                     
                 elseif di == nDDi
                     
                     currIntEnd = datetime(...
-                        obj(oi).DryDockDates(di-1).EndDateNum,...
+                        obj(oi).DryDock(di-1).EndDateNum,...
                         'ConvertFrom', 'datenum');
                     currInt_l = currDates >= currIntEnd;
                     
                 else
                     
                     currIntStart = datetime(...
-                        obj(oi).DryDockDates(di - 1).EndDateNum,...
+                        obj(oi).DryDock(di - 1).EndDateNum,...
                         'ConvertFrom', 'datenum');
                     currIntEnd = datetime(...
-                        obj(oi).DryDockDates(di).StartDateNum,...
+                        obj(oi).DryDock(di).StartDateNum,...
                         'ConvertFrom', 'datenum');
                     currInt_l = currDates >= currIntStart & ...
                         currDates <= currIntEnd;
@@ -1485,7 +1485,7 @@ classdef cVessel < cModelID
         
         % Change DB connection for object and nested objects
         obj.Database = dbname;
-        obj.DryDockDates.Database = dbname;
+        obj.DryDock.Database = dbname;
         obj.Configuration.Database = dbname;
         obj.SpeedPower.Database = dbname;
         obj.Report.Database = dbname;
@@ -1631,7 +1631,7 @@ classdef cVessel < cModelID
 %                obj.SpeedPower = sp;
 %            end
            
-%            if ~isempty(obj.DryDockDates)
+%            if ~isempty(obj.DryDock)
             
 %            [obj.DryDock(:).IMO_Vessel_Number] = deal(IMO);
 %            end
@@ -1806,14 +1806,14 @@ classdef cVessel < cModelID
         function ndd = get.numDDIntervals(obj)
         % Get method for DDIntervals returns matrix based on data, DD
         
-        if isempty(obj.DryDockDates)
+        if isempty(obj.DryDock)
             
             ndd = 1;
         else
             
             mat = obj.DDIntervalsFromDates;
             ndd = sum(any(mat));
-%             ndd = numel(obj.DryDockDates) + 1;
+%             ndd = numel(obj.DryDock) + 1;
         end
         
         end
@@ -1848,11 +1848,11 @@ classdef cVessel < cModelID
             
             if isa(ins, 'table')
                 
-                ins.timestamp = datetime(ins.timestamp,'InputFormat',...
+                ins.datetime_utc = datetime(ins.timestamp,'InputFormat',...
                     'yyyy-MM-dd HH:mm:ss.SSSSSSS');
                 
 %                 ins.timestamp = datetime(ins.timestamp, 'ConvertFrom', 'datenum');
-                ins = table2timetable(ins, 'RowTimes', 'timestamp');
+                ins = table2timetable(ins, 'RowTimes', 'datetime_utc');
             end
             
             validateattributes(ins, {'timetable'}, {}, ...
