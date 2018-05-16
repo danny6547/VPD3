@@ -110,12 +110,12 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
     readCols_l = iscellstr(fileColID);
     
     % Append set SQL
-    [~, tabColNames] = obj.colNames('RawData');
+    [~, tabColNames] = obj.SQL.colNames('RawData');
     if ~isequal(set_c, {''})
 
         % Generate default set statement
         tabColNames = setdiff(tabColNames, 'id');
-        [~, ~, defSet_c] = obj.setNullIfEmpty(tabColNames);
+        [~, ~, defSet_c] = obj.SQL.setNullIfEmpty(tabColNames);
         cutAtEquals_f = @(x) x(1:strfind(x, ' = ')-1);
         inDefaultNames_c = cellfun(cutAtEquals_f, defSet_c, 'Uni', 0);
 
@@ -134,7 +134,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
 %         nanSet_c(cols2replace_l) = [];
 %         set_c = [defSet_c(:)', set_c(~x_l), nanSet_c(:)'];
         set_c = [defSet_c(:)', set_c(~x_l)];
-        set_ch = ['SET ', obj.colSepList(set_c)];
+        set_ch = ['SET ', obj.SQL.colSepList(set_c)];
         
         % Get IMO number for insertion into RawData
         imo_ch = '';
@@ -232,7 +232,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
                 'QuoteStrings',false);
         
         % Load in CSV file
-        try obj = obj.loadInFileDuplicate(tempFile, fileColName, tempTab, tab,...
+        try [obj(1).SQL] = obj(1).SQL.loadInFileDuplicate(tempFile, fileColName, tempTab, tab,...
                 ',', 1, set_ch, tabColNames, '', {'none'});
            
 		   % Get warnings from load infile statement
@@ -241,10 +241,10 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
 % 		   [obj, warn_tbl] = obj.warnings(false, 0, 10);
 % 		   warnings = warn_tbl;
 		   
-           [obj, numWarnings] = obj.warnings;
+           [obj(1).SQL, numWarnings] = obj(1).SQL.warnings;
            warnings = struct();
            if numWarnings ~= 0
-               [obj, warn_st] = obj.warnings(false, 0, 10);
+               [obj(1), warn_st] = obj(1).warnings(false, 0, 10);
                warnings = warn_st;
            end
            
