@@ -240,7 +240,7 @@ for vi = 1:nFigs
    vesselName_ch = obj(vi).Name;
 %    vesselName_ch = []; % vesselName(vesselNum);
    if isempty(vesselName_ch)
-       vesselNum = obj(vi).IMO_Vessel_Number;
+       vesselNum = obj(vi).IMO; %_Vessel_Number;
        vesselName_ch = ['Vessel ', num2str(vesselNum)];
    end
    
