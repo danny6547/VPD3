@@ -1596,7 +1596,7 @@ classdef cVessel < cModelID
            obj.Engine.Model_ID = engID;
            
            % Read Wind
-           windID = config.Engine_Model_Id;
+           windID = config.Wind_Coefficient_Model_Id;
            obj.WindCoefficient.Model_ID = windID;
            
 %            sp = [obj.SpeedPower];

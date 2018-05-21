@@ -396,7 +396,7 @@ classdef cTableObject < handle
         objID_cs = obj(1).SQL.encloseStringQuotes(objID_cs);
         objIDvals_ch = obj(1).SQL.colList(objID_cs);
         
-        [~, sqlWhereID_ch] = obj.SQL.combineSQL('WHERE', whereField, 'IN',...
+        [~, sqlWhereID_ch] = obj(1).SQL.combineSQL('WHERE', whereField, 'IN',...
             objIDvals_ch);
 %         sqlWhereAnd_ch = additionalCondition_ch;
 %         
@@ -416,12 +416,12 @@ classdef cTableObject < handle
 %         [obj(1), sqlWhereIn_ch] = obj(1).combineSQL('WHERE', identifier, 'IN',...
 %             objIDvals_ch, additionalCondition_ch);
         
-        [~, ~, sqlSelect] = obj.SQL.select(table, '*');
-        [~, sqlSelect] = obj.SQL.determinateSQL(sqlSelect);
-        [~, sqlSelectWhereIn_ch] = obj.SQL.combineSQL(sqlSelect, sqlWhereID_ch);
+        [~, ~, sqlSelect] = obj(1).SQL.select(table, '*');
+        [~, sqlSelect] = obj(1).SQL.determinateSQL(sqlSelect);
+        [~, sqlSelectWhereIn_ch] = obj(1).SQL.combineSQL(sqlSelect, sqlWhereID_ch);
         %         table_st = obj(1).execute(sqlSelectWhereIn_ch);
 %         [~, ~, q] = obj(1).executeIfOneOutput(1, sqlSelectWhereIn_ch);
-        [~, ~, table_st] = obj.SQL.executeIfOneOutput(1, sqlSelectWhereIn_ch);
+        [~, ~, table_st] = obj(1).SQL.executeIfOneOutput(1, sqlSelectWhereIn_ch);
 
 %         [obj(1), sqlWhere_ch] = obj(1).combineSQL(identifier, 'IN',...
 %             objIDvals_ch);
@@ -614,7 +614,7 @@ classdef cTableObject < handle
         function id = lastInsertID(obj)
         % lastInsertID Return the last auto-incremented identifier value
         
-        [~, id_c] = obj(1).execute('SELECT LAST_INSERT_ID()');
+        [~, id_c] = obj(1).SQL.execute('SELECT LAST_INSERT_ID()');
         id = str2double([id_c{:}]);
             
         end
