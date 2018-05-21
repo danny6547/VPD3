@@ -3,6 +3,7 @@ function [ obj ] = selectInService(obj, varargin)
 %   Detailed explanation goes here
 
 % Input
+cols = '*';
 if nargin > 1 && ~isempty(varargin{1})
     
     cols = varargin{1};
