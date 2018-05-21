@@ -296,8 +296,13 @@ classdef cVessel < cModelID
                % Insert vessel
                currObj = insert@cModelID(currObj);
                
-               % Insert owner
+               % Insert DD
                vid = currObj.Model_ID;
+               [currObj.DryDock.Model_ID] = deal(vid);
+               [currObj.DryDock.Vessel_Id] = deal(vid);
+               currObj.DryDock.insert();
+               
+               % Insert owner
                [currObj.Owner.Model_ID] = deal(vid);
                [currObj.Owner.Vessel_Id] = deal(vid);
                currObj.Owner.insert();

@@ -4,8 +4,8 @@ classdef cVesselDryDock < cModelID & cDateConvert
     
     properties
         
-        StartDate
-        EndDate
+        Start_Date
+        End_Date
         Vertical_Bottom_Surface_Prep
         Vertical_Bottom_Coating
         Flat_Bottom_Surface_Prep
@@ -21,8 +21,8 @@ classdef cVesselDryDock < cModelID & cDateConvert
     properties(Hidden, Constant)
         
         DBTable = 'DryDock';
-        DataProperty = {'StartDate',...
-                        'EndDate',...
+        DataProperty = {'Start_Date',...
+                        'End_Date',...
                         'Vertical_Bottom_Surface_Prep',...
                         'Vertical_Bottom_Coating',...
                         'Flat_Bottom_Surface_Prep',...
@@ -33,6 +33,7 @@ classdef cVesselDryDock < cModelID & cDateConvert
                         'Activity_Expected',...
                         'Longest_Idle_Period_Expected',...
                         'Model_ID',...
+                        'Vessel_Id',...
                         'Name',...
                         'Description',...
                         'Deleted'};
@@ -57,8 +58,8 @@ classdef cVesselDryDock < cModelID & cDateConvert
     
     properties(Constant, Hidden)
         
-        StartDateProp = 'StartDate';
-        EndDateProp = 'EndDate';
+        StartDateProp = 'Start_Date';
+        EndDateProp = 'End_Date';
     end
     
     methods
@@ -355,22 +356,22 @@ classdef cVesselDryDock < cModelID & cDateConvert
             obj.Flat_Bottom_Coating = val;
         end
         
-        function obj = set.StartDate(obj, start)
+        function obj = set.Start_Date(obj, start)
             
             obj.Valid_From = start;
         end
         
-        function start = get.StartDate(obj)
+        function start = get.Start_Date(obj)
             
             start = obj.Valid_From;
         end
         
-        function obj = set.EndDate(obj, endd)
+        function obj = set.End_Date(obj, endd)
             
             obj.Valid_To = endd;
         end
         
-        function endd = get.EndDate(obj)
+        function endd = get.End_Date(obj)
             
             endd = obj.Valid_To;
         end

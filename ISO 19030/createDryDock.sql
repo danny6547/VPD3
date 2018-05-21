@@ -12,8 +12,8 @@ BEGIN
 
 	CREATE TABLE DryDock (Dry_Dock_Id INTEGER AUTO_INCREMENT PRIMARY KEY,
 								Vessel_Id INT(10) NOT NULL,
-								StartDate DATE NOT NULL,
-								EndDate DATE NOT NULL,
+								Start_Date DATE NOT NULL,
+								End_Date DATE NOT NULL,
 								Bot_Top_Surface_Prep NVARCHAR(255),
 								Bot_Top_Coating NVARCHAR(255),
 								Vertical_Bottom_Surface_Prep NVARCHAR(255),
@@ -24,7 +24,7 @@ BEGIN
 								Activity_Expected FLOAT(15, 3),
 								Longest_Idle_Period_Expected FLOAT(15, 3),
 								Deleted BOOL NOT NULL,
-								constraint UniRows UNIQUE(Vessel_Id, StartDate, EndDate)
+								constraint UniRows UNIQUE(Vessel_Id, Start_Date, End_Date)
 								);
 
 END

@@ -81,10 +81,10 @@ methods
         
         % Dry Dock
         ddd = cVesselDryDock('Size', [1, 2]);
-        ddd(1).StartDate = '2000-01-01';
-        ddd(1).EndDate = '2000-01-14';
-        ddd(2).StartDate = '2001-01-01';
-        ddd(2).EndDate = '2001-01-14';
+        ddd(1).Start_Date = '2000-01-01';
+        ddd(1).End_Date = '2000-01-14';
+        ddd(2).Start_Date = '2001-01-01';
+        ddd(2).End_Date = '2001-01-14';
         vessel.DryDock = ddd;
         
         % Displacement
