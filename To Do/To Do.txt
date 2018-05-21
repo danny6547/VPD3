@@ -807,7 +807,24 @@ cV.selectInService: method currently uses different datestring format than obj.D
 cSQL.tableFromQueryResult: convert cell cols to numerical columns where possible
 cV.set.IMO: check if multiplie cVSP being read from hullperformance
 cV.set.IMO: cVDD not being read from hullpeformance 
-
+cTO: try removing TableIdentifier
+cTO: try removing ModelField
+cTO.select(tab, objID, alias, whereFields, whereVals)
+	objID: property/field name identifying all data in query belonging to this OBJ
+	alias: cell of property alias names
+	whereFields, whereVals: property/field name and values identifying data in DB belonging to this OBJ array
+	
+Can "additionalFields" just be used to identify obj array data in DB?
+	Assume that any additionalFields identify the array
+	Make whereValueInput redundant
+	Have objID and whereFields by "select table" step
+		If additionalFields input, whereFields = additionalFields
+		else whereFields = objID
+	Use whereFields in select statement
+	Use objID to identify each OBJ within query results
+	
+		
+	
 
 
 

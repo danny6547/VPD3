@@ -6,6 +6,7 @@ classdef cTableObject < handle
         
         DataProperty;
         TableIdentifier;
+%         ObjectIdentifier;
     end
     
     properties(Hidden)
@@ -86,6 +87,13 @@ classdef cTableObject < handle
 
             additionalInputs = varargin(4:end);
             [additionalFields_c, additionalData_c] = obj.parseAdditional(additionalInputs{:});
+            
+            % Put this into parseAdditional later?
+            if size(additionalData_c, 1) == 1 && numel(dataObj) > 1
+                
+                additionalData_c = repmat(additionalData_c, [numel(dataObj), 1]);
+            end
+            
 %             paramValues = varargin(2:end);
 %             p = inputParser();
 %             p.KeepUnmatched = true;
@@ -118,7 +126,7 @@ classdef cTableObject < handle
         end
         
         % Get matching field names
-        matchFields_c = obj.SQL.matchingFields(table, dataObj);
+        matchFields_c = obj(1).SQL.matchingFields(table, dataObj);
 
         duplicates_l = ismember(matchFields_c, additionalFields_c);
         matchFields_c(duplicates_l) = [];
@@ -194,7 +202,7 @@ classdef cTableObject < handle
         % Insert matrix of data into table
         matchFields_c = [matchFields_c(:); additionalFields_c(:)];
         %         data_c = [data_c, additionalData_c];
-        obj.SQL.insertValuesDuplicate(table, matchFields_c, data_c);
+        obj(1).SQL.insertValuesDuplicate(table, matchFields_c, data_c);
 
         % Select out data for vessel, to synchronise with DB
         emptyID_l = cellfun(@isempty, {obj.(identifier)});
@@ -262,15 +270,27 @@ classdef cTableObject < handle
 %             validateCellStr(cols2write, 'cMySQL.readFromTable',...
 %                 'cols2write', 1);
 %         end
-        whereField = identifier;
-        idValInObj_l = true;
 
+%         % Input
+%         p = inputParser();
+%         p.addParameter('alias', {}, @iscell);
+%         p.addParameter('whereField', false, @islogical);
+%         p.addParameter('whereField', '', @ischar);
+%         p.KeepUnmatched = true;
+%         p.parse(varargin{:});
+%         res = p.Results;
+%         additionalInputs_c = res.Unmatched;
+        
+        whereField = identifier; % obj(1).TableIdentifier;
+        idValInObj_l = true;
+        
         prop_c = obj.DataProperty; % properties(obj);
         prop_c = prop_c(:);
         identifierProp_ch = identifier;
         whereValue = {};
         aliasProp_ch = '';
         if nargin > 4 && ~isempty(varargin{2})
+%         if isfield(res, 'alias')
 
             alias_c = varargin{2};
             validateattributes(alias_c, {'cell'}, {'2d', 'ncols', 2}, ...
@@ -283,7 +303,7 @@ classdef cTableObject < handle
             % Replace property names with aliases
             [isprop, propi] = ismember(alias_c(:, 1), prop_c);
             if any(~isprop)
-
+                
                 errid = 'readTable:AliasMissing';
                 errmsg = ['The first column of input ALIAS must all be '...
                     'properties of OBJ'];
@@ -322,11 +342,18 @@ classdef cTableObject < handle
             addAll = strcat(additionalFields_c, eq_c, additionalDataStr_c);
             additionalCondition_ch = strjoin(addAll, ' AND ');
             
-            if isempty(whereValue) || any(cellfun(@isempty, whereValue))
+            if any(~cellfun(@isempty, additionalData_c))
                 
                 whereValueInput = true;
-                whereValue = additionalData_c(1);
             end
+            
+%             if isempty(whereValue) || any(cellfun(@isempty, whereValue))
+%                 
+%                 whereValueInput = false;
+%                 whereValue = additionalData_c(1);
+%             else
+%                 whereValueInput = true;
+%             end
 %             identifier = additionalFields_c{1};
             whereField = additionalFields_c{1};
             whereValue = additionalData_c(1);
@@ -450,28 +477,32 @@ classdef cTableObject < handle
 %         %             obj_l = true;
 %         end
 
+        % Expand array to match results of SELECT query
+%         tblCol = lower(obj(1).TableIdentifier);
+%         objID_ch = lower(objID);
+        obj = obj.matchArraySizeToSelect(lowerId_ch, table_st);
+        
         % Create arrays to track whether object data has changed by read
         %         fielddiff = true(length(matchField_c), numel(obj));
-        if idValInObj_l
-            
-            tabId = obj(1).TableIdentifier;
-            idVal_c = unique([obj.(tabId)]);
-        else
-            
-            idVal_c = unique(table_st.(lowerId_ch));
-            if isscalar(idVal_c) && ~isscalar(obj)
-                
-                idVal_c = repmat(idVal_c, size(obj));
-            end
-        end
+        idVal_c = unique(table_st.(lowerId_ch));
+        
+%         if idValInObj_l
+%             
+%             tabId = obj(1).TableIdentifier;
+%             idVal_c = unique([obj.(tabId)]);
+%         else
+%             
+%             idVal_c = unique(table_st.(lowerId_ch));
+%             if isscalar(idVal_c) && ~isscalar(obj)
+%                 
+%                 idVal_c = repmat(idVal_c, size(obj));
+%             end
+%         end
         
         if ~iscell(idVal_c)
             
             idVal_c = arrayfun(@(x) x, idVal_c, 'Uni', 0);
         end
-        
-        % Expand array to match results of SELECT query
-%         obj = obj.expandArrayToFitSelect(objCol, tbl);
 
         % Iterate over properties of matching obj and assign values
         for ii = 1:length(matchField_c)

@@ -24,6 +24,9 @@ methods
         testDB = testcase.TestDatabase;
         vessel = cVessel('Database', testDB);
         
+        % Identity
+        vessel.IMO = testcase.TestIMO;
+        
         % Configuration
         vessel.Configuration.Transverse_Projected_Area_Design = 1000;
         vessel.Configuration.Length_Overall = 300;
@@ -77,9 +80,12 @@ methods
         vessel.SpeedPower = sp;
         
         % Dry Dock
-%         vessel.DryDock.assignDates('2000-01-01', '2000-01-14');
-        vessel.DryDock.StartDate = '2000-01-01';
-        vessel.DryDock.EndDate = '2000-01-14';
+        ddd = cVesselDryDock('Size', [1, 2]);
+        ddd(1).StartDate = '2000-01-01';
+        ddd(1).EndDate = '2000-01-14';
+        ddd(2).StartDate = '2001-01-01';
+        ddd(2).EndDate = '2001-01-14';
+        vessel.DryDock = ddd;
         
         % Displacement
 %         vessel.Displacement.Model_ID = 1;
@@ -92,8 +98,6 @@ methods
         vessel.WindCoefficient.Direction = [10, 45];
         vessel.WindCoefficient.Coefficient = [0.5, 1];
         
-        % Identity
-        vessel.IMO = testcase.TestIMO;
 %         vessel.Vessel_Id = 1;
     end
 end

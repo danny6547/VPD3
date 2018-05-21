@@ -36,14 +36,15 @@ classdef cVesselDryDock < cModelID & cDateConvert
                         'Name',...
                         'Description',...
                         'Deleted'};
-        TableIdentifier = 'Vessel_Id';
+        TableIdentifier = 'Dry_Dock_Id';
+        ObjectIdentifier = 'Dry_Dock_Id';
     end
     
     properties(Hidden, Constant)
         
         ModelTable = 'DryDock';
         ValueTable = {};
-        ModelField = {'Vessel_Id'};
+        ModelField = {'Dry_Dock_Id'};
         ValueObject = {};
         OtherTable = {};
     end
@@ -51,6 +52,7 @@ classdef cVesselDryDock < cModelID & cDateConvert
     properties(Hidden)
         
         Vessel_Id = [];
+        Dry_Dock_Id = [];
     end
     
     properties(Constant, Hidden)

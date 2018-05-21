@@ -305,12 +305,14 @@ classdef (Abstract) cModelID < cTableObject & handle
             alias_c = varargin{2};
         end
         
+        assignOut_l = true;
         dataObj_c = num2cell(obj);
         if nargin > 5 && ~isempty(varargin{3})
             
             dataObj_c = varargin{3};
             validateattributes(dataObj_c, {'cell'}, {}, ...
                 'cModelID.select', 'dataObj_c', 6);
+            assignOut_l = false;
         end
         dataObj_c = dataObj_c(:)';
         
@@ -424,10 +426,10 @@ classdef (Abstract) cModelID < cTableObject & handle
 %             end
 %              mid = currObj.Model_ID;
             midi = mid{oi};
-            currObj.Sync = false;
-            [~, inDB] = select@cTableObject(currObj, currTab,...
+            [currObj.Sync] = deal(false);
+            [currObj, inDB] = select@cTableObject(currObj, currTab,...
                         currField, '', currAlias_c, midi, additional{:});
-            currObj.Sync = true;
+            [currObj.Sync] = deal(true);
 % 
 %                 catch ee
 % 
@@ -458,6 +460,12 @@ classdef (Abstract) cModelID < cTableObject & handle
 
             % Assign
 %             obj(oi) = currObj;
+        end
+        
+        % Assign
+        if assignOut_l
+           
+            obj = currObj;
         end
         end
     end

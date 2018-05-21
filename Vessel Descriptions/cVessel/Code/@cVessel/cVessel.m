@@ -62,9 +62,9 @@ classdef cVessel < cModelID
     properties(Hidden, Constant)
         
         ModelTable = 'Vessel';
-        ValueTable = {'VesselConfiguration', 'VesselInfo',  'DryDock'};
-        ModelField = {'IMO', 'Vessel_Id', 'Vessel_Id', 'Vessel_Id'};
-        ValueObject = {'Configuration', 'Info', 'DryDock'};
+        ValueTable = {'VesselConfiguration', 'VesselInfo'};
+        ModelField = {'IMO', 'Vessel_Id', 'Vessel_Id'};
+        ValueObject = {'Configuration', 'Info'};
         DataProperty = {'IMO', 'Vessel_Id', 'Deleted', 'Model_ID'};
         OtherTable = {};
         OtherTableIdentifier = {};
@@ -1539,6 +1539,18 @@ classdef cVessel < cModelID
            obj.Model_ID = vid;
            obj.Vessel_Id = vid;
            
+           % Read DD
+           if ~isempty(vid)
+               
+               ddd = obj.DryDock();
+               tab = ddd.DBTable;
+               field = ddd.TableIdentifier;
+               alias_c = ddd.propertyAlias;
+               ddd = ddd.select(tab, field, [], alias_c,...
+                   [], 'Vessel_Id', vid);
+               obj.DryDock = ddd;
+           end
+           
            % Read Owner
            if ~isempty(vid)
                
@@ -1572,7 +1584,7 @@ classdef cVessel < cModelID
                [sp.Sync] = deal(false);
                input_c = {sp(1).ModelTable, sp(1).ModelField{1}, ...
                    [], alias_c, [], sp(1).OtherTableIdentifier{1}, spmID};
-               sp.select(input_c{:});
+               sp = sp.select(input_c{:});
                
                % Check if ValueTable exists, currently doesn't in
                % hullperformance DB
@@ -1581,7 +1593,7 @@ classdef cVessel < cModelID
                    
                    input_c = {sp(1).ValueTable{1}, sp(1).ModelField{2}, [], ...
                        alias_c};
-                   sp.select(input_c{:});
+                   sp = sp.select(input_c{:});
                end
                [sp.Sync] = deal(true);
                [obj.SpeedPower] = deal(sp);
