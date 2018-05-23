@@ -22,7 +22,7 @@ classdef cVessel < cModelID
         Owner = [];
         FuelType = 'HFO';
         
-        Variable = 'speed_index';
+        Variable = 'speed_loss';
 %         Performance_Index
 %         Speed_Index
 %         DateTime_UTC
@@ -1615,6 +1615,9 @@ classdef cVessel < cModelID
            % Read Wind
            windID = config.Wind_Coefficient_Model_Id;
            obj.WindCoefficient.Model_ID = windID;
+           
+           % In-service
+           obj = obj.selectInService;
            
 %            sp = [obj.SpeedPower];
 %            [~, spvmid] = sp.select([], [], spmID);
