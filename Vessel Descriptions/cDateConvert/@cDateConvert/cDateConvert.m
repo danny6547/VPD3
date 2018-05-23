@@ -57,6 +57,7 @@ classdef cDateConvert < handle
             stringformat = obj.DateStrFormat;
             newdate = obj.setDate(olddate, stringformat);
             obj.Valid_From = newdate;
+            obj.StartDateNum = datenum(newdate, stringformat);
         end
         
         function set.Valid_To(obj, olddate)
@@ -64,6 +65,7 @@ classdef cDateConvert < handle
             stringformat = obj.DateStrFormat;
             newdate = obj.setDate(olddate, stringformat);
             obj.Valid_To = newdate;
+            obj.EndDateNum = datenum(newdate, stringformat);
         end
     end
 end

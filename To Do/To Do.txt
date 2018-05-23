@@ -822,6 +822,8 @@ Can "additionalFields" just be used to identify obj array data in DB?
 		else whereFields = objID
 	Use whereFields in select statement
 	Use objID to identify each OBJ within query results
+Make order of cV.DD irrelevant? (currently DDIntervalsFromDates needs chronological)
+cV.Configuration: currently allows more than one configuration. Need solution for "previous configurations" to be kept in some property. cV code currently expects one Config.
 	
 		
 	
