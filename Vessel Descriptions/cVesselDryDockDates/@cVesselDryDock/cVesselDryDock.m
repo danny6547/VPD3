@@ -150,7 +150,7 @@ classdef cVesselDryDock < cModelID & cDateConvert
         end
         
        end
-        
+       
        function obj = readDatesFromIndex(obj, intervalI)
        % readDatesFromIndex Read from DB dry-docking dates from interval
        % obj = readDatesFromIndex(obj, intervalI) will return in the

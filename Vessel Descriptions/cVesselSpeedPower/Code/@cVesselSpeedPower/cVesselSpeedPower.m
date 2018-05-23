@@ -289,16 +289,19 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
        obj = obj.displacementInVolume('Displacement'); 
        diM3 = arrayfun(@(x) mean(x.Displacement), obj)';
        obj = obj.displacementInMass('Displacement'); 
+       names = {obj.Name}';
        
        % Concat
        mat = [a, b, r2, minP, maxP, tr, diM3];
+       mat_c = num2cell(mat);
+       mat_c = [mat_c, names]';
        
        % Output
        fprintf(1, '%c\n', '');
-       fprintf(1, '%s\t%s\t%s\t  %s\t  %s\t      %s\t%s\n',...
+       fprintf(1, '%s\t%s\t%s\t  %s\t  %s\t      %s\t%s\t%s\n',...
            'Coefficient A', 'Coefficient B', 'R Squared', 'MinPower',...
-           'MaxPower', 'Trim', 'Displacement (m^3)');
-       fprintf(1, '%11.10f\t%11.10f\t%9f\t%10.3f\t%10.3f\t%10f\t%10.3f\n', mat');
+           'MaxPower', 'Trim', 'Displacement (m^3)', 'Name');
+       fprintf(1, '%11.10f\t%11.10f\t%9f\t%10.3f\t%10.3f\t%10f\t%10.3f\t\t\t%s\n', mat_c{:});
        
        end
     end
