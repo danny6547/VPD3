@@ -40,8 +40,8 @@ SetSQL = {'DateTime_UTC = DATE_ADD(STR_TO_DATE(@Date, ''%d-%m-%Y''), INTERVAL @T
 
 obj.execute('DELETE FROM RawData WHERE IMO_Vessel_Number = 9500728 AND Relative_Wind_Direction IS NULL;');
 obj.execute('DELETE FROM RawData WHERE IMO_Vessel_Number = 9500728 AND DateTime_UTC < ''2016-11-20 00:00:00.000'';');
-obj.execute('UPDATE RawData SET Displacement = 1e5 WHERE IMO_Vessel_Number = 9500728 AND (Static_Draught_Fore + Static_Draught_Aft)/2 <= 10;');
-obj.execute('UPDATE RawData SET Displacement = 2e5 WHERE IMO_Vessel_Number = 9500728 AND (Static_Draught_Fore + Static_Draught_Aft)/2 > 10;');
+% obj.execute('UPDATE RawData SET Displacement = 1e5 WHERE IMO_Vessel_Number = 9500728 AND (Static_Draught_Fore + Static_Draught_Aft)/2 <= 10;');
+% obj.execute('UPDATE RawData SET Displacement = 2e5 WHERE IMO_Vessel_Number = 9500728 AND (Static_Draught_Fore + Static_Draught_Aft)/2 > 10;');
 
 
 end

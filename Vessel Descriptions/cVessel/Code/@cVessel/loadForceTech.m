@@ -1,13 +1,14 @@
-function obj = loadForceTech(obj, filename, varargin)
+function obj = loadForceTech(obj, filename, imo, varargin)
 %loadForceTech Load file downloaded from Force Technologies SeaTrend 
 %   Detailed explanation goes here
 
 % Inputs
 filename = validateCellStr(filename);
+imo_ch = num2str(imo);
 
 acceptableTables_c = {'forceraw', 'performanceData'};
 tab_c = acceptableTables_c;
-if nargin > 2
+if nargin > 3
     
     % Tables
     if ~isempty(varargin{1})
@@ -490,6 +491,9 @@ setnull_c = {...
     };
 
 obj = obj.loadInFile(filename, tab, cols, delimiter_ch, ignore_ch, set_ch, setnull_c);
+
+% Insert into RawData table
+obj.call('insertFromForceRawIntoRaw', imo_ch);
 
     function [success, message] = replaceCommaWithPoint(filename)
         
