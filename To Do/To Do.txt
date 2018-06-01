@@ -825,8 +825,17 @@ Can "additionalFields" just be used to identify obj array data in DB?
 Make order of cV.DD irrelevant? (currently DDIntervalsFromDates needs chronological)
 cV.Configuration: currently allows more than one configuration. Need solution for "previous configurations" to be kept in some property. cV code currently expects one Config.
 	
-		
-	
+1.TESTCVESSEL
+2.TEST AND WRAP ISO19030 PROCEDURES
+3.WRITE INSERT SCRIPT TEMPLATE AND EXAMPLES
+4.
+CVESSEL.STATICDB, .INSERVICEDB
+CISO19030.FILTER
+EXTRACT METHODS FROM CVESSEL TO CVESSELANALYSIS
+IMPLEMENT ENCRYPTED PASSWORD DIALOG
+WRITE STATIC CLASS CVESSELLOADINSERVICE (loadOman, loadForce etc)
+
+
 
 
 
