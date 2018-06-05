@@ -11,7 +11,7 @@ classdef cVessel < cModelID
         IMO double = [];
 %         Name char = '';
         Vessel_Id double = [];
-        DatabaseName char = '';
+        Database char = '';
         
         Configuration = [];
         SpeedPower = [];
@@ -39,6 +39,8 @@ classdef cVessel < cModelID
         DryDockIndexDB = [];
         DDIterator = [0, 1, 0];
         Info = cVesselInfo;
+        StaticDB char = '';
+        InServiceDB char = '';
     end
     
     properties(Dependent)
@@ -52,6 +54,8 @@ classdef cVessel < cModelID
         
         DDIntervals;
         numDDIntervals;
+        StaticSQLDB = [];
+        InServiceSQLDB = [];
     end
     
     properties(Access = private)
@@ -109,6 +113,7 @@ classdef cVessel < cModelID
         readInputs_c = {imo};
         
         obj = obj.assignDefaults(varargin{:});
+        obj.Database = obj.SQL.Database;
         if ~imo_l && ~shipData_l
             
             return
@@ -1481,34 +1486,61 @@ classdef cVessel < cModelID
                 vid = vid_tbl.vessel_id;
             end
         end
+        
+        function [dbconn, dbname] = validateSavedDB(obj, db, varargin)
+        % validateSavedDB 
+        
+        % Check type and size
+        if ischar(db)
+            
+            validateattributes(db, {'char', 'cConnectSQLDB'},...
+                {'vector'}, varargin{:});
+            dbconn_c = obj.SQL.savedConnection(db);
+            dbconn = cSQL.instantiateChildObj(dbconn_c{:});
+            dbname = db;
+            
+        elseif isa(db, 'cConnectSQLDB')
+            
+            validateattributes(db, {'cConnectSQLDB'},...
+                {'scalar'}, varargin{:});
+            dbconn = db;
+            dbname = db.Database;
+        else
+            
+            validateattributes(db, {'char', 'cConnectSQLDB'},...
+                {}, varargin{:});
+        end
+        end
     end
     
     methods
         
-        function obj = set.DatabaseName(obj, dbname)
+        function obj = set.Database(obj, dbname)
         % Change database of object and all nested objects
         
         % Change DB connection for object and nested objects
-        obj.Database = dbname;
-        obj.DryDock.Database = dbname;
-        obj.Configuration.Database = dbname;
-        obj.SpeedPower.Database = dbname;
-        obj.Report.Database = dbname;
-        obj.WindCoefficient.Database = dbname;
-        obj.Displacement.Database = dbname;
-        obj.Engine.Database = dbname;
-        obj.Owner.Database = dbname;
-        obj.Configuration.Database = dbname;
+%         obj.Database = dbname;
+        obj.DryDock.SQL.Database = dbname;
+        obj.Configuration.SQL.Database = dbname;
+        obj.SpeedPower.SQL.Database = dbname;
+%         obj.Report.SQL.Database = dbname;
+        obj.WindCoefficient.SQL.Database = dbname;
+        obj.Displacement.SQL.Database = dbname;
+        obj.Engine.SQL.Database = dbname;
+        obj.Owner.SQL.Database = dbname;
+        obj.Configuration.SQL.Database = dbname;
         
         % Assign
-        obj.DatabaseName = dbname;
+        obj.Database = dbname;
+        obj.StaticDB = dbname;
+        obj.InServiceDB = dbname;
         end
        
-        function dbname = get.DatabaseName(obj)
-        % Take name of Database
-            
-            dbname = obj.Database;
-        end
+%         function dbname = get.DatabaseName(obj)
+%         % Take name of Database
+%             
+%             dbname = obj.Database;
+%         end
         
        function obj = set.IMO(obj, IMO)
            
@@ -1868,11 +1900,11 @@ classdef cVessel < cModelID
             
             if isa(ins, 'table')
                 
-                ins.datetime_utc = datetime(ins.timestamp,'InputFormat',...
-                    'yyyy-MM-dd HH:mm:ss.SSSSSSS');
+                ins.timestamp = datetime(ins.timestamp,'InputFormat',...
+                    obj.DateFormStr);
                 
 %                 ins.timestamp = datetime(ins.timestamp, 'ConvertFrom', 'datenum');
-                ins = table2timetable(ins, 'RowTimes', 'datetime_utc');
+                ins = table2timetable(ins, 'RowTimes', 'timestamp');
             end
             
             validateattributes(ins, {'timetable'}, {}, ...
@@ -1881,5 +1913,54 @@ classdef cVessel < cModelID
             obj.InService = ins;
         end
         
+%         function obj = set.SQL(obj, sql)
+%             
+%             obj.SQL = sql;
+%             obj.StaticDB = sql;
+%         end
+%         
+%         function obj = set.StaticDB(obj, db)
+%             
+%             dbconn = validateSavedDB(db, 'cVessel.StaticDB', 'StaticDB', 1);
+%             obj.StaticSQLDB = dbconn;
+%         end
+        
+        function sql = get.StaticSQLDB(obj)
+            
+            sql = obj.SQL;
+        end
+        
+        function obj = set.StaticSQLDB(obj, sql)
+            
+            obj.SQL = sql;
+        end
+        
+        function obj = set.InServiceDB(obj, db)
+            
+            validateattributes(db, {'char'}, {'vector'});
+            obj.InServiceDB = db;
+        end
+        
+        function db = get.InServiceSQLDB(obj)
+            
+            dbname = obj.InServiceDB;
+            dbconn = obj.validateSavedDB(dbname, 'cVessel.StaticDB',...
+                'StaticDB', 1);
+            db = dbconn;
+        end
+        
+        function str = get.DateFormStr(obj)
+            
+            switch class(obj.SQL)
+                
+                case 'cTSQL'
+                    
+                    str = 'yyyy-MM-dd HH:mm:ss.SSSSSSS';
+                    
+                case 'cMySQL'
+                    
+                    str = 'dd-MM-yyyy HH:mm:ss';
+            end
+        end
     end
 end

@@ -5,6 +5,7 @@ classdef testcVessel < matlab.unittest.TestCase
 properties
     
     TestDatabase = 'TestStatic';
+    TestInServiceDB = 'TestInService';
     TestIMO = 1234567;
     TestVessel_Id = 1;
     TestVessel;
@@ -23,6 +24,7 @@ methods
         
         testDB = testcase.TestDatabase;
         vessel = cVessel('Database', testDB);
+        vessel.InServiceDB = 'TestInService';
         
         % Identity
         vessel.IMO = testcase.TestIMO;
@@ -80,7 +82,7 @@ methods
         vessel.SpeedPower = sp;
         
         % Dry Dock
-        ddd = cVesselDryDock('Size', [1, 2]);
+        ddd = cVesselDryDock('Size', [1, 2], 'Database', testDB);
         ddd(1).Start_Date = '2000-01-01';
         ddd(1).End_Date = '2000-01-14';
         ddd(2).Start_Date = '2001-01-01';
@@ -191,6 +193,18 @@ methods(TestClassSetup)
     testcase.SQLWhereDisplacement = whereDisp_sql;
     testcase.SQLWhereWind = whereWind_sql;
     
+    end
+    
+    function deleteRaw(testcase)
+        
+        sql = ['DELETE FROM `', testcase.TestInServiceDB, '`.RawData'];
+        testcase.TestcMySQL.execute(sql);
+    end
+    
+    function deleteCalculated(testcase)
+        
+        sql = ['DELETE FROM `', testcase.TestInServiceDB, '`.CalculatedData'];
+        testcase.TestcMySQL.execute(sql);
     end
 end
 

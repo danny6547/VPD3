@@ -17,28 +17,29 @@ classdef cTableObject < handle
     methods
     
         function obj = cTableObject(varargin)
-
-           % Check if input identifies a saved connection, or gives all
-           % connection details
-           if nargin == 1
-               
-               [connInput_c, conn_s] = cConnectSQLDB.savedConnection(...
-                   varargin{:});
-           else
-               
-               temp = cConnectSQLDB(varargin{:});
-               conn_s = temp.connectionStruct;
-               connInput_c = varargin;
-           end
+% 
+%            % Check if input identifies a saved connection, or gives all
+%            % connection details
+%            if nargin == 1
+%                
+%                [connInput_c, conn_s] = cConnectSQLDB.savedConnection(...
+%                    varargin{:});
+%            else
+%                
+%                temp = cConnectSQLDB(varargin{:});
+%                conn_s = temp.connectionStruct;
+%                connInput_c = varargin;
+%            end
            
            % Determine which cSQL sub-class to instantiate
-           if strcmp(conn_s.UserID, 'hullperformancematlab')
-                
-               csql = cTSQL(connInput_c{:});
-           else
-                
-               csql = cMySQL(connInput_c{:});
-           end
+           csql = cSQL.instantiateChildObj(varargin{:});
+%            if strcmp(conn_s.UserID, 'hullperformancematlab')
+%                 
+%                csql = cTSQL(connInput_c{:});
+%            else
+%                 
+%                csql = cMySQL(connInput_c{:});
+%            end
            
            obj.SQL = csql;
 %            obj = obj@cMySQL(varargin{:});

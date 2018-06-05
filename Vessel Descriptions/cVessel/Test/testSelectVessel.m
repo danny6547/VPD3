@@ -115,6 +115,7 @@ methods(TestClassSetup)
         imo = testcase.TestIMO;
         dbname = testcase.TestDatabase;
         vessel = cVessel('Database', dbname);
+        vessel.InServiceDB = 'TestInService';
         vessel.IMO = imo;
         testcase.SelectedVessel = vessel;
     end
@@ -292,30 +293,42 @@ methods(Test)
     % Extract this code to insertTestVessel method later
     times_v = now:now+1;
     times_dt = datetime(times_v, 'ConvertFrom', 'datenum');
-    expRawCols_c = {'Timestamp', 'Raw_Data_Id', 'Relative_Wind_Speed', 'Speed_Through_Water'};
-    expRawData_m = [times_v; 1, 1; randn(1, 2)*5; randn(1, 2)*10]';
+    expRawCols_c = {'Timestamp', 'Vessel_Id', 'Raw_Data_Id', 'Relative_Wind_Speed', 'Speed_Through_Water'};
+    expRawData_m = [times_v; 1, 1; 1, 2; randn(1, 2)*5; randn(1, 2)*10]';
+    expRawData_c = num2cell(expRawData_m);
+    expRawData_c(:, 1) = cellstr(datestr([expRawData_c{:, 1}], 'yyyy-mm-dd HH:MM:SS'));
     expCalcCols_c = {'Raw_Data_Id', 'Vessel_Configuration_Id', 'Speed_Loss'};
-    expCalcData_m = [1, 1; 1, 1; randn(1, 2)*100]';
+    expCalcData_m = [1, 2; 1, 1; randn(1, 2)*100]';
     obj = testcase.TestVessel;
     
     tab = 'RawData';
-    obj.SQL.insertValuesDuplicate(tab, expRawCols_c, expRawData_m);
+    obj.InServiceSQLDB.insertValuesDuplicate(tab, expRawCols_c, expRawData_c);
     
     tab = 'CalculatedData';
-    obj.SQL.insertValuesDuplicate(tab, expCalcCols_c, expCalcData_m);
+    obj.InServiceSQLDB.insertValuesDuplicate(tab, expCalcCols_c, expCalcData_m);
     
-    expRaw_tbl = array2timetable(expRawData_m(:, 2:end), 'RowTimes', times_dt);
-    expCalc_tbl = array2timetable(expCalcData_m, 'RowTimes', times_dt);
-    exp_tbl = expRaw_tbl.synchronize(expCalc_tbl);
+    expRaw_tbl = array2timetable(expRawData_m(:, 2:end),...
+        'RowTimes', times_dt, 'VariableNames', expRawCols_c(2:end));
+    expRaw_tbl.Properties.DimensionNames{1} = 'Timestamp';
+    expCalc_tbl = array2timetable(expCalcData_m, ...
+        'RowTimes', times_dt, 'VariableNames', expCalcCols_c);
+    expCalc_tbl.Properties.DimensionNames{1} = 'Timestamp';
+    expAll_tbl = join(expRaw_tbl, expCalc_tbl, 'Keys', 'Raw_Data_Id');
     
     % Execute
     obj = obj.selectInService();
     
     % Verify
+    expCols = {'Speed_Loss'};
+    [~, coli] = ismember(expCols, expAll_tbl.Properties.VariableNames);
+    exp_tbl = expAll_tbl(:, coli);
+    exp_m = single(table2array(exp_tbl));
+    
     act_tbl = obj.InService;
+    act_m = table2array(act_tbl);
     msg_tbl = ['In-Service table should have all RawData and CalculatedData '...
         'for this vessel configuration when called with no inputs.'];
-    testcase.verifyEqual(act_tbl, exp_tbl, msg_tbl);
+    testcase.verifyEqual(act_m, exp_m, 'RelTol', 0.001, msg_tbl);
     
     % 2
     % Execute
@@ -323,9 +336,10 @@ methods(Test)
     
     % Verify
     act_tbl = obj.InService;
+    act_m = table2array(act_tbl);
     msg_tbl = ['In-Service table should have all RawData and CalculatedData '...
         'for this vessel configuration when called with no inputs.'];
-    testcase.verifyEqual(act_tbl, exp_tbl, msg_tbl);
+    testcase.verifyEqual(act_m, exp_m, 'RelTol', 0.001, msg_tbl);
     
     end
 end

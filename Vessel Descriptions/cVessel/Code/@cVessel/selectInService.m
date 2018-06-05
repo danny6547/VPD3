@@ -21,6 +21,6 @@ for oi = 1:numel(obj)
     tab = 'CalculatedData c JOIN RawData r ON c.Raw_Data_Id = r.Raw_Data_Id';
     % cols = '*';
     where = ['c.Vessel_Configuration_Id = ', vcid_ch];
-    [~, tbl] = obj(oi).SQL.select(tab, cols, where);
+    [~, tbl] = obj(oi).InServiceSQLDB.select(tab, cols, where);
     obj(oi).InService = tbl;
 end

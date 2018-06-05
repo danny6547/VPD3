@@ -829,14 +829,24 @@ cV.Configuration: currently allows more than one configuration. Need solution fo
 2.TEST AND WRAP ISO19030 PROCEDURES
 3.WRITE INSERT SCRIPT TEMPLATE AND EXAMPLES
 4.
-CVESSEL.STATICDB, .INSERVICEDB
+# CVESSEL.STATICDB, .INSERVICEDB
 CISO19030.FILTER
 EXTRACT METHODS FROM CVESSEL TO CVESSELANALYSIS
 IMPLEMENT ENCRYPTED PASSWORD DIALOG
 WRITE STATIC CLASS CVESSELLOADINSERVICE (loadOman, loadForce etc)
 
-
-
+# CVESSEL.STATICDB, .INSERVICEDB
+# 	cV.set.StaticDB: assigns connection object to cV.StaticSQLDB
+# 		if value is cConnectSQLDB, assign to StaticSQLDB
+# 		if value is char, try to load from savedConnections
+#	cV.set.InserviceDB: assigns connection object to cV.InserviceSQLDB
+# cConnectSQLDB.cConnectSQLDB:
+# 	new input parameter 'Saved', indicating saved connection is to be loaded
+# 	if 'Saved' given, load instead of create
+# Append 'testInService' to savedConnections.m
+# testcVessel.insertVessel:
+# 	cV.InserviceDB = 'testInService';
+# cV.selectInService: call cV.InServiceSQLDB instead of cV.SQL
 
 
 

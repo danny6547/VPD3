@@ -10,7 +10,7 @@ CREATE PROCEDURE createRawData()
 
 BEGIN
 
-CREATE TABLE rawdata (id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+CREATE TABLE rawdata (Raw_Data_Id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
 						 Timestamp DATETIME NOT NULL,
                          Vessel_Id INT(10) NOT NULL,
                          Latitude FLOAT(15, 5),
