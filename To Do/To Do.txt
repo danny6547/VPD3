@@ -846,9 +846,28 @@ WRITE STATIC CLASS CVESSELLOADINSERVICE (loadOman, loadForce etc)
 # Append 'testInService' to savedConnections.m
 # testcVessel.insertVessel:
 # 	cV.InserviceDB = 'testInService';
-# cV.selectInService: call cV.InServiceSQLDB instead of cV.SQL
 
-
+# cDB.insertStaticScripts: find all *.m files under TOPDIR whose names start with "Insert_Static_"
+# cDB.createStatic:
+#	create DB named 'static' (vessel, configs, models...)
+# cDB.createInService:
+#	create DB named 'inservice' (raw, calculated)
+# cDB.loadStatic: load insert static scripts into Static DB
+# 	extract from cDB.createStatic
+# cDB.loadInService: load insert inservice scripts into InService DB
+# cDB.createForce:
+# cDB.createDNVGL:	
+# cDB.loadForce: run scripts to insert Force inservice files into Force DB
+#	extract from createForce
+# cDB.loadDNVGL: run scripts to insert DNVGL inservice files into DNVGL DB
+# 	extract from createDNVGL
+cDB.runISO: run ISO analyses to fill CalculatedData table of InService DB
+# cDB.createTestStatic:
+# cDB.createTestInService:
+cDB.createExternal: create Force, DNVGL and load
+cDB.createInternal: create Static, InService, test DB's and load
+cDB.createAll: create external and internal and load
+Remove folder "\Database Generation\Insert_Static" from repo since insert static scripts found in cDB.VesselLibrary
 
 
 
