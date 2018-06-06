@@ -360,49 +360,113 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
        
            % Input WILL BE GIVEN BY cMID.set.MID, and will include all of 
            % tab, field, mid, alias_c, obj2_c
-           readSuper_l = isempty([obj.Speed_Power_Coefficient_Model_Id]);
+           callBaseOnly_l = nargin > 6;
+           readSuperFirst_l = ~isempty([obj.Speed_Power_Coefficient_Model_Id])...
+               && ~callBaseOnly_l;
            
            % Check size of OBJ against number of models found
-           if readSuper_l
+           if readSuperFirst_l
 
                % Read Super
-               superTable_ch = [obj(1).OtherTable{:}];
-               superTableID_ch = [obj(1).OtherTableIdentifier{:}];
-               obj = select@cTableObject(obj, superTable_ch, superTableID_ch,...
-                   varargin{3:end});
+%                superTable_ch = [obj(1).OtherTable{:}];
+%                superTableID_ch = [obj(1).OtherTableIdentifier{:}];
+%                obj = select@cTableObject(obj, superTable_ch, superTableID_ch,...
+%                    varargin{3:end});
+               spmID = [obj.Speed_Power_Coefficient_Model_Id];
+               tab = cVesselSpeedPower.OtherTable{1};
+               ident = cVesselSpeedPower.OtherTableIdentifier{1};
+               expand_l = false;
+               [obj.Sync] = deal(false);
+               obj = select@cTableObject(obj, tab, ident, [], {}, [], expand_l,...
+                   ident, spmID);
                
-               modelTable_ch = obj.ModelTable;
-               spmid = unique([obj.Speed_Power_Coefficient_Model_Id]);
-               spmvID_sql = 'Speed_Power_Coefficient_Model_Value_Id';
-               where_sql = [obj(1).OtherTableIdentifier{1}, ' = ', num2str(spmid)];
-               [~, count_tbl] = obj(1).SQL.select(modelTable_ch, spmvID_sql, where_sql);
-               if isempty(count_tbl)
-
-                   spvmid = [];
-                   return
-               else
-
-                   spvmid = count_tbl.speed_power_coefficient_model_value_id;
-               end
-
-               countSpmid = height(count_tbl);
-               if isempty(obj) || isscalar(obj)
-
-                   otherObj = cVesselSpeedPower('Size', [1, countSpmid-1]);
+               % Read Model
+               tab = cVesselSpeedPower.ModelTable;
+               ident = cVesselSpeedPower.ModelField{1};
+               oident = cVesselSpeedPower.OtherTableIdentifier{1};
+               alias_c = obj.propertyAlias;
+               expand_l = true;
+               obj = select@cTableObject(obj, tab, ident, [], alias_c, [], expand_l,...
+                   oident, spmID);
+               
+               % Check if ValueTable exists, currently doesn't in
+               % hullperformance DB
+               [~, isValueTable] = obj(1).SQL.isTable(obj(1).ValueTable{1});
+               if isValueTable
                    
-                   obj = [obj, otherObj];
-                   [obj.Name] = deal(obj(1).Name);
-                   [obj.Description] = deal(obj(1).Description);
-                   [obj.Deleted] = deal(obj(1).Deleted);
-
-               elseif numel(obj) ~= countSpmid
-
-                   errid = 'cVSP:SelectIntoExisting';
-                   errmsg = ['If OBJ is non-scalar, OBJ must have as many '...
-                       'elements as speed power curves in the selected model.'];
-                   error(errid, errmsg);
+                   tab = cVesselSpeedPower.ValueTable{1};
+                   ident = cVesselSpeedPower.ModelField{1};
+                   expand_l = false;
+                   obj = select@cTableObject(obj, tab, ident, [], alias_c, [], expand_l);
                end
-               return
+               [obj.Sync] = deal(true);
+               
+%                modelTable_ch = obj.ModelTable;
+%                spmid = unique([obj.Speed_Power_Coefficient_Model_Id]);
+%                spmvID_sql = 'Speed_Power_Coefficient_Model_Value_Id';
+%                where_sql = [obj(1).OtherTableIdentifier{1}, ' = ', num2str(spmid)];
+%                [~, count_tbl] = obj(1).SQL.select(modelTable_ch, spmvID_sql, where_sql);
+%                if isempty(count_tbl)
+% 
+%                    spvmid = [];
+%                    return
+%                else
+% 
+%                    spvmid = count_tbl.speed_power_coefficient_model_value_id;
+%                end
+% 
+%                countSpmid = height(count_tbl);
+%                if isempty(obj) || isscalar(obj)
+% 
+%                    otherObj = cVesselSpeedPower('Size', [1, countSpmid-1]);
+%                    
+%                    obj = [obj, otherObj];
+%                    [obj.Name] = deal(obj(1).Name);
+%                    [obj.Description] = deal(obj(1).Description);
+%                    [obj.Deleted] = deal(obj(1).Deleted);
+% 
+%                elseif numel(obj) ~= countSpmid
+% 
+%                    errid = 'cVSP:SelectIntoExisting';
+%                    errmsg = ['If OBJ is non-scalar, OBJ must have as many '...
+%                        'elements as speed power curves in the selected model.'];
+%                    error(errid, errmsg);
+%                end
+%                return
+               
+           elseif ~readSuperFirst_l && ~callBaseOnly_l
+               
+               tab = obj(1).ModelTable;
+               identifier = obj(1).TableIdentifier;
+%                alias_c = varargin{4};
+               alias_c = obj.propertyAlias;
+%                whereVal = varargin{3};
+               whereVal = [obj.Model_ID];
+               [obj.Sync] = deal(false);
+               obj = select@cTableObject(obj, tab, identifier, [], alias_c,  whereVal);
+
+               tab = cVesselSpeedPower.ValueTable{1};
+               identifier = obj(1).TableIdentifier;
+               whereVal = [obj.Model_ID];
+%                if ~isempty([obj.Speed])
+%                    [obj.Speed] = deal([]);
+%                    [obj.Power] = deal([]);
+%                end
+               obj = select@cTableObject(obj, tab, identifier, [], alias_c,  whereVal);
+               [obj.Sync] = deal(true);
+
+               tab = cVesselSpeedPower.OtherTable{1};
+               identifier = cVesselSpeedPower.OtherTableIdentifier{1};
+               whereVal = [obj.Speed_Power_Coefficient_Model_Id];
+               expand_l = false;
+               obj = select@cTableObject(obj, tab, identifier, [], [], whereVal, expand_l);
+
+               spvmid = [obj.Speed_Power_Coefficient_Model_Value_Id];
+               [obj.Speed_Power_Coefficient_Model_Id] = deal([]);
+               
+           else
+               
+               obj = select@cTableObject(obj, varargin{:});
            end
            
 %            readModel_l = strcmpi(tab, obj(1).ModelTable);
@@ -421,8 +485,6 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
 % 
 %                cMidInput_c(5) = [];
 %            end
-           obj = select@cTableObject(obj, varargin{:});
-
 %            % Read Model, Value tables
 %            cMidInput_c{1} = obj(1).ValueTable{1};
 % %            cMidInput_c{2} = varargin{2}{2};
@@ -463,6 +525,9 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
         
         if ~isempty(speed)
             validateattributes(speed, {'numeric'}, {'real', 'vector'});
+        else
+            obj.Speed = [];
+            return
         end
         
         speed(isnan(speed)) = [];
@@ -476,13 +541,13 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
         power = obj.Power;
         speed = speed(:)';
         power = power(:)';
-        if ~isempty(power) && (~isempty(speed) && ~isempty(power))...
-                && ~isequal(size(power), size(speed))
-            
-            errID = 'cSP:SPSizeMismatch';
-            errMsg = 'Speed vector length must match that of Power';
-            error(errID, errMsg);
-        end
+%         if ~isempty(power) && (~isempty(speed) && ~isempty(power))...
+%                 && ~isequal(size(power), size(speed))
+%             
+%             errID = 'cSP:SPSizeMismatch';
+%             errMsg = 'Speed vector length must match that of Power';
+%             error(errID, errMsg);
+%         end
         
         if ~isempty(speed)
 %             obj = obj.incrementModelID;
@@ -496,6 +561,9 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
         
         if ~isempty(power)
             validateattributes(power, {'numeric'}, {'real', 'vector'});
+        else
+            obj.Power = [];
+            return
         end
         
         power(isnan(power)) = [];
@@ -509,13 +577,13 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
         speed = obj.Speed;
         speed = speed(:)';
         power = power(:)';
-        if ~isempty(power) && (~isempty(speed) && ~isempty(power))...
-                && ~isequal(size(power), size(speed))
-            
-            errID = 'cSP:SPSizeMismatch';
-            errMsg = 'Power vector length must match that of Speed';
-            error(errID, errMsg);
-        end
+%         if ~isempty(power) && (~isempty(speed) && ~isempty(power))...
+%                 && ~isequal(size(power), size(speed))
+%             
+%             errID = 'cSP:SPSizeMismatch';
+%             errMsg = 'Power vector length must match that of Speed';
+%             error(errID, errMsg);
+%         end
         
         obj.Power = power;
             

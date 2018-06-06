@@ -15,6 +15,10 @@ for oi = 1:numel(obj)
     
     % Data identified by Vessel Configuration
     vcid = [obj(oi).Configuration.Vessel_Configuration_Id];
+    if isempty(vcid)
+        
+        continue
+    end
     vcid_ch = num2str(vcid);
     
     % Select data and assign

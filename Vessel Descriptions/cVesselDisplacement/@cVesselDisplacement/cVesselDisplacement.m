@@ -164,8 +164,11 @@ classdef cVesselDisplacement < cModelID & cVesselDisplacementConversion
        function obj = set.Draft_Mean(obj, draft)
        % Ensure vector is of equal length to other properties
            
-           validateattributes(draft, {'numeric'}, {'vector', 'positive', 'real'},...
+           if ~isnumeric(draft) && ~isempty(draft)
+               
+               validateattributes(draft, {'numeric'}, {'vector', 'positive', 'real'},...
                'cVesselDisplacement.set.Draft_Mean', 'Draft_Mean');
+           end
            obj.Draft_Mean = draft;
        end 
     end

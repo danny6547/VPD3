@@ -41,7 +41,7 @@ classdef cVesselEngine < cModelID
         TableIdentifier = 'Engine_Model_Id';
     end
     
-    properties(Hidden)
+    properties(Hidden, Dependent)
         
         Engine_Model_Id;
     end
@@ -151,5 +151,18 @@ classdef cVesselEngine < cModelID
            FOC = SFOC .* Power;
        end
        
+    end
+
+    methods
+        
+        function eid = get.Engine_Model_Id(obj)
+
+            eid = obj.Model_ID;
+        end
+        
+        function obj = set.Engine_Model_Id(obj, eid)
+            
+%             obj.Engine_Model_Id = eid;
+        end
     end
 end

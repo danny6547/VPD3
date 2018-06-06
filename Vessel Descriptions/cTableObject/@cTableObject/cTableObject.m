@@ -12,6 +12,7 @@ classdef cTableObject < handle
     properties(Hidden)
         
         SQL;
+        Last_Update_Id = false;
     end
     
     methods
@@ -203,7 +204,11 @@ classdef cTableObject < handle
         % Insert matrix of data into table
         matchFields_c = [matchFields_c(:); additionalFields_c(:)];
         %         data_c = [data_c, additionalData_c];
-        obj(1).SQL.insertValuesDuplicate(table, matchFields_c, data_c);
+        lastUpdateColName = [];
+        if obj(1).Last_Update_Id
+            lastUpdateColName = identifier;
+        end
+        obj(1).SQL.insertValuesDuplicate(table, matchFields_c, data_c, [], lastUpdateColName);
 
         % Select out data for vessel, to synchronise with DB
         emptyID_l = cellfun(@isempty, {obj.(identifier)});
@@ -219,7 +224,7 @@ classdef cTableObject < handle
             end
         end
             
-        obj = obj.select(table, identifier, [], alias_c, [], additionalInputs{:});
+        obj = obj.select(table, identifier, [], alias_c, [], false, additionalInputs{:});
         end
 
         function empty = isempty(obj)
@@ -326,11 +331,19 @@ classdef cTableObject < handle
             prop_c = [prop_c; cellstr(identifier)];
         end
         
-        additionalFields_c = {};
-        additionalCondition_ch = '';
+        expandArray_l = true;
         if nargin > 6 && ~isempty(varargin{4})
             
-            additionalInputs_c = varargin(4:end);
+            expandArray_l = varargin{4};
+            validateattributes(expandArray_l, {'logical'}, {'scalar'},...
+                'cTableObject.select', 'expandArray', 8);
+        end
+        
+        additionalFields_c = {};
+        additionalCondition_ch = '';
+        if nargin > 7 && ~isempty(varargin{5})
+            
+            additionalInputs_c = varargin(5:end);
             [additionalFields_c, additionalData_c] = ...
                 obj.parseAdditional(additionalInputs_c{:});
             
@@ -481,7 +494,17 @@ classdef cTableObject < handle
         % Expand array to match results of SELECT query
 %         tblCol = lower(obj(1).TableIdentifier);
 %         objID_ch = lower(objID);
-        obj = obj.matchArraySizeToSelect(lowerId_ch, table_st);
+
+        % Repeat table to match number of objects
+        if ~isscalar(obj) && height(table_st) == 1
+
+            table_st = repmat(table_st, numel(obj), 1);
+        end
+
+        if expandArray_l
+            
+            obj = obj.matchArraySizeToSelect(lowerId_ch, table_st);
+        end
         
         % Create arrays to track whether object data has changed by read
         %         fielddiff = true(length(matchField_c), numel(obj));

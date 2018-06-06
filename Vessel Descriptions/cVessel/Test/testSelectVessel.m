@@ -322,10 +322,10 @@ methods(Test)
     expCols = {'Speed_Loss'};
     [~, coli] = ismember(expCols, expAll_tbl.Properties.VariableNames);
     exp_tbl = expAll_tbl(:, coli);
-    exp_m = single(table2array(exp_tbl));
+    exp_m = table2array(exp_tbl);
     
     act_tbl = obj.InService;
-    act_m = table2array(act_tbl);
+    act_m = double(table2array(act_tbl));
     msg_tbl = ['In-Service table should have all RawData and CalculatedData '...
         'for this vessel configuration when called with no inputs.'];
     testcase.verifyEqual(act_m, exp_m, 'RelTol', 0.001, msg_tbl);
@@ -336,7 +336,7 @@ methods(Test)
     
     % Verify
     act_tbl = obj.InService;
-    act_m = table2array(act_tbl);
+    act_m = double(table2array(act_tbl));
     msg_tbl = ['In-Service table should have all RawData and CalculatedData '...
         'for this vessel configuration when called with no inputs.'];
     testcase.verifyEqual(act_m, exp_m, 'RelTol', 0.001, msg_tbl);

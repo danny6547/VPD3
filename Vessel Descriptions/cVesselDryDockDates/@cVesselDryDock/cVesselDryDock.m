@@ -67,6 +67,7 @@ classdef cVesselDryDock < cModelID & cDateConvert
        function obj = cVesselDryDock(varargin)
     
            obj = obj@cModelID(varargin{:});
+           [obj.Last_Update_Id] = deal(true(size(obj)));
        end
        
        function obj = readFile(obj, filename, dateform)

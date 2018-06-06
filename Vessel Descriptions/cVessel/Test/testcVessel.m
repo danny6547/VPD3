@@ -85,8 +85,10 @@ methods
         ddd = cVesselDryDock('Size', [1, 2], 'Database', testDB);
         ddd(1).Start_Date = '2000-01-01';
         ddd(1).End_Date = '2000-01-14';
+%         ddd(1).Model_ID = 1;
         ddd(2).Start_Date = '2001-01-01';
         ddd(2).End_Date = '2001-01-14';
+%         ddd(2).Model_ID = 2;
         vessel.DryDock = ddd;
         
         % Displacement

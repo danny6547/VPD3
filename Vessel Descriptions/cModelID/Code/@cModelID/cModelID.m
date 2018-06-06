@@ -131,10 +131,13 @@ classdef (Abstract) cModelID < cTableObject & handle
            alias_c = obj(oi).propertyAlias;
 %            idFieldValue_c = [idFieldValue_c, masterModelFieldVal_c];
            model = obj(oi).ModelTable;
-           modelValue = obj(oi).ModelField{1};
-           id = obj.incrementID(model, modelValue);
-           obj(oi).Model_ID = id;
-           insert@cTableObject(obj(oi), model);
+%            modelValue = obj(oi).ModelField{1};
+%            if isempty(obj(oi).Model_ID)
+%                
+%                id = obj.incrementID(model, modelValue);
+%                obj(oi).Model_ID = id;
+%            end
+           obj(oi) = insert@cTableObject(obj(oi), model);
 %            insert@cTableObject(obj(oi), obj(oi).ModelTable, '', [], alias_c); %, idFieldValue_c{:});
            
            tables = obj(oi).ValueTable;
@@ -316,10 +319,16 @@ classdef (Abstract) cModelID < cTableObject & handle
         end
         dataObj_c = dataObj_c(:)';
         
-        additional = {};
+        expand_l = [];
         if nargin > 6 && ~isempty(varargin{4})
             
-            additional = varargin(4:end);
+            expand_l = varargin{4};
+        end
+
+        additional = {};
+        if nargin > 7 && ~isempty(varargin{5})
+            
+            additional = varargin(5:end);
         end
         
         nMID = numel(mid);
@@ -428,7 +437,7 @@ classdef (Abstract) cModelID < cTableObject & handle
             midi = mid{oi};
             [currObj.Sync] = deal(false);
             [currObj, inDB] = select@cTableObject(currObj, currTab,...
-                        currField, '', currAlias_c, midi, additional{:});
+                        currField, '', currAlias_c, midi, expand_l, additional{:});
             [currObj.Sync] = deal(true);
 % 
 %                 catch ee
@@ -519,8 +528,19 @@ classdef (Abstract) cModelID < cTableObject & handle
             
             % Assign now so that Models_id can be read out later
             obj.Model_ID = mid;
-            
+                
             if obj.Sync
+            
+                % Get nested objects, if available
+                obj2Name_c = obj.ValueObject;
+                obj3_c = cellfun(@(x) obj.(x), obj2Name_c, 'Uni', 0)';
+                obj2_c = [num2cell(obj); obj3_c];
+                
+                % Clear object property data before assigning new data
+                obj.deleteData(obj3_c);
+
+                % Assign again after data deleted
+                obj.Model_ID = mid;
             
 %                 obj.readOtherIfExist();
                 
@@ -529,10 +549,7 @@ classdef (Abstract) cModelID < cTableObject & handle
                 field = obj.ModelField;
                 alias_c = obj.propertyAlias;
 
-                % Get nested objects, if available
-                obj2Name_c = obj.ValueObject;
-                obj2_c = [num2cell(obj); cellfun(@(x) obj.(x), obj2Name_c, 'Uni', 0)'];
-
+                % Select data matching Model ID value
                 obj.select(tab, field, mid, alias_c, obj2_c);
 
             end
@@ -642,6 +659,12 @@ classdef (Abstract) cModelID < cTableObject & handle
     methods
        
         function set.Deleted(obj, del)
+            
+            if isempty(del) && isnumeric(del)
+                
+                obj.Deleted = del;
+                return
+            end
             
             if isnumeric(del)
                 

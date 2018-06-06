@@ -37,6 +37,13 @@ classdef cDateConvert < handle
         
         function newdate = setDate(olddate, stringformat)
             
+%             % Allow empty dates?
+%             if isempty(olddate)
+%                 
+%                 newdate = '';
+%                 return
+%             end
+            
             % Trim excess whitespace sometimes read from DB
             olddate(olddate == 0) = [];
             newdatenum = datenum(olddate, 'yyyy-mm-dd');
@@ -54,6 +61,13 @@ classdef cDateConvert < handle
         
         function set.Valid_From(obj, olddate)
             
+            if isempty(olddate)
+                
+                obj.Valid_From = '';
+                obj.StartDateNum = [];
+                return
+            end
+            
             stringformat = obj.DateStrFormat;
             newdate = obj.setDate(olddate, stringformat);
             obj.Valid_From = newdate;
@@ -62,6 +76,12 @@ classdef cDateConvert < handle
         
         function set.Valid_To(obj, olddate)
             
+            if isempty(olddate)
+                
+                obj.Valid_To = '';
+                obj.EndDateNum = [];
+                return
+            end
             stringformat = obj.DateStrFormat;
             newdate = obj.setDate(olddate, stringformat);
             obj.Valid_To = newdate;

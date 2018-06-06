@@ -269,6 +269,7 @@ classdef cVessel < cModelID
            
            if ~isempty(obj.Engine)
                
+%                obj.Engine.Engine_Model_Id = obj.Engine.Model_ID;
                obj.Engine.insert();
            end
            
@@ -303,12 +304,12 @@ classdef cVessel < cModelID
                
                % Insert DD
                vid = currObj.Model_ID;
-               [currObj.DryDock.Model_ID] = deal(vid);
+%                [currObj.DryDock.Model_ID] = deal(vid);
                [currObj.DryDock.Vessel_Id] = deal(vid);
                currObj.DryDock.insert();
                
                % Insert owner
-               [currObj.Owner.Model_ID] = deal(vid);
+%                [currObj.Owner.Model_ID] = deal(vid);
                [currObj.Owner.Vessel_Id] = deal(vid);
                currObj.Owner.insert();
            end
@@ -1544,15 +1545,26 @@ classdef cVessel < cModelID
         
        function obj = set.IMO(obj, IMO)
            
+           if ~obj.Sync
+               
+               return
+           end
+           
            if ~isempty(IMO(~isnan(IMO)))
                 validateattributes(IMO, {'numeric'}, ...
                     {'scalar', 'positive', 'real', 'nonnan', 'integer'});
+                return_l = false;
            else
-                validateattributes(IMO, {'numeric'}, ...
-                    {'scalar'});
+                validateattributes(IMO, {'numeric'}, {});
                 IMO = [];
+                return_l = true;
            end
            obj.IMO = IMO;
+           
+           if return_l
+               
+               return
+           end
            
 %            obj.readFromTable('Vessel', 'IMO');
 %            
@@ -1583,8 +1595,9 @@ classdef cVessel < cModelID
                tab = ddd.DBTable;
                field = ddd.TableIdentifier;
                alias_c = ddd.propertyAlias;
+               expand_l = true;
                ddd = ddd.select(tab, field, [], alias_c,...
-                   [], 'Vessel_Id', vid);
+                   [], expand_l, 'Vessel_Id', vid);
                obj.DryDock = ddd;
            end
            
@@ -1595,7 +1608,8 @@ classdef cVessel < cModelID
                field = {'Vessel_Owner_Id'};
                owner = obj.Owner;
                alias_c = owner.propertyAlias;
-               obj.select(tab, field, [], alias_c, {owner}, 'Vessel_Id', vid);
+               expand_l = true;
+               obj.select(tab, field, [], alias_c, {owner}, expand_l, 'Vessel_Id', vid);
 
                tab = 'VesselOwner';
                field = {'Vessel_Owner_Id'};
@@ -1610,30 +1624,37 @@ classdef cVessel < cModelID
 %            [sp.Speed_Power_Coefficient_Model_Id] = deal(spmID);
            if ~isempty(spmID)
                
-               if isempty([sp.Speed_Power_Coefficient_Model_Id])
-
-                   input_c = {sp(1).OtherTable, 'Speed_Power_Coefficient_Model_Id',... %sp(1).OtherTableIdentifier, ...
-                       [], {}, [], sp(1).OtherTableIdentifier{1}, spmID};
-                   sp = sp.select(input_c{:});
-               end
-               
-               alias_c = sp.propertyAlias;
+               % Assign super-model ID to obj and select using that
+               currSPSQL = sp.SQL;
+               sp = cVesselSpeedPower();
+               sp.SQL = currSPSQL;
+               sp.Speed_Power_Coefficient_Model_Id = spmID;
                [sp.Sync] = deal(false);
-               input_c = {sp(1).ModelTable, sp(1).ModelField{1}, ...
-                   [], alias_c, [], sp(1).OtherTableIdentifier{1}, spmID};
-               sp = sp.select(input_c{:});
-               
-               % Check if ValueTable exists, currently doesn't in
-               % hullperformance DB
-               [~, isValueTable] = sp(1).SQL.isTable(sp(1).ValueTable{1});
-               if isValueTable
-                   
-                   input_c = {sp(1).ValueTable{1}, sp(1).ModelField{2}, [], ...
-                       alias_c};
-                   sp = sp.select(input_c{:});
-               end
+               sp = sp.select();
+%                if isempty([sp.Speed_Power_Coefficient_Model_Id])
+% 
+%                    input_c = {sp(1).OtherTable, 'Speed_Power_Coefficient_Model_Id',... %sp(1).OtherTableIdentifier, ...
+%                        [], {}, [], sp(1).OtherTableIdentifier{1}, spmID};
+%                    sp = sp.select(input_c{:});
+%                end
+%                
+%                alias_c = sp.propertyAlias;
+%                [sp.Sync] = deal(false);
+%                input_c = {sp(1).ModelTable, sp(1).ModelField{1}, ...
+%                    [], alias_c, [], [], sp(1).OtherTableIdentifier{1}, spmID};
+%                sp = sp.select(input_c{:});
+%                
+%                % Check if ValueTable exists, currently doesn't in
+%                % hullperformance DB
+%                [~, isValueTable] = sp(1).SQL.isTable(sp(1).ValueTable{1});
+%                if isValueTable
+%                    
+%                    input_c = {sp(1).ValueTable{1}, sp(1).ModelField{2}, [], ...
+%                        alias_c};
+%                    sp = sp.select(input_c{:});
+%                end
                [sp.Sync] = deal(true);
-               [obj.SpeedPower] = deal(sp);
+               obj.SpeedPower = sp;
            end
            
            % Read Displacement
