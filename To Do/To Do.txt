@@ -574,3 +574,7 @@ write sql script: ImportJob.rpt                      '
 # write sql script: VesselToVesselOwner.rpt            '
 # write sql script: WindCoefficientModel.rpt           '
 # write sql script: WindCoefficientModelValue.rpt  	 '
+
+cV.loadForceTech(... dateAutologged):
+	assign into RawData table columns from noon reports up to datetime 
+	dateAutologged, and autologged columns afterwards
