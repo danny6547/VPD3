@@ -828,7 +828,7 @@ cV.Configuration: currently allows more than one configuration. Need solution fo
 1.TESTCVESSEL
 2.TEST AND WRAP ISO19030 PROCEDURES
 3.WRITE INSERT SCRIPT TEMPLATE AND EXAMPLES
-4.
+4.GIVE CVESSELANALYSIS METHODS INPUTS SO DATA NOT NEEDED IN .INSERVICE
 # CVESSEL.STATICDB, .INSERVICEDB
 CISO19030.FILTER
 EXTRACT METHODS FROM CVESSEL TO CVESSELANALYSIS
@@ -879,19 +879,22 @@ testProject:
 	run testSelectVessel
 	run testtestISO19030
 testISO19030:
-	replace all calls to testcase.Almaviva_ property names with "Vessel_"
-	replace methods call, insert, read with those of cMySQL (read becomes select)
-	insertTestVessel: assign 'testinservice', 'teststatic' as databases
-ISO19030 procedures:
-	replace all call to tables with 'static'.'tablename'
+	remove all properties Almaviva_, replace with TestVessel
+	testVessel method returns cV obj with previous Almaviva properties, test name and IMO
+	replace calls to methods call, insert, read with those of cMySQL (read becomes select)
+	insertTestVessel: assign 'inservice', 'static' as databases
+	remove all calls to insert vessel data within test methods
+	replace calls to testcase.Connection with calls to testVessel.SQL
+#ISO19030 procedures:
+# 	replace all call to tables with 'dbname'.'tablename'
 #testSelectVessel, testInsertVessel:
 # 	change test vessel database from 'teststatic' to 'static', 'testinservice' to 'inservice'
 # 	ensure test vessel is clearly identified as not real (IMO, name)
 #	write conditional into deleteRaw and deleteCalculated so only test vessel deleted
 whats wrong with updateDisplacementFromDraftTrim.sql?
 how does ISO19030.sql get data from bunker delivery notes?
+Error when cV.IMO = imo after cV.insert with empty cV.Displacement (VesselConfiguration.Displacement_Model_ID empty, NaN returned for cV.Disp.Model_Id)
 	
-
 
 
 
