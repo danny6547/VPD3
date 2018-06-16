@@ -869,6 +869,28 @@ cDB.createInternal: create Static, InService, test DB's and load
 cDB.createAll: create external and internal and load
 Remove folder "\Database Generation\Insert_Static" from repo since insert static scripts found in cDB.VesselLibrary
 
+cDB.createInService: create procedure "createTempRawISO"
+createTempRawISO: create empty table, 
+	insert from RawData all rows for input IMO,
+	calculate all columns
+	insert update from tempRawISO into Calculated
+testProject:
+	run testInsertVessel
+	run testSelectVessel
+	run testtestISO19030
+testISO19030:
+	replace all calls to testcase.Almaviva_ property names with "Vessel_"
+	replace methods call, insert, read with those of cMySQL (read becomes select)
+	insertTestVessel: assign 'testinservice', 'teststatic' as databases
+ISO19030 procedures:
+	replace all call to tables with 'static'.'tablename'
+#testSelectVessel, testInsertVessel:
+# 	change test vessel database from 'teststatic' to 'static', 'testinservice' to 'inservice'
+# 	ensure test vessel is clearly identified as not real (IMO, name)
+#	write conditional into deleteRaw and deleteCalculated so only test vessel deleted
+	
+	
+
 
 
 

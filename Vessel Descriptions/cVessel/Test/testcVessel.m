@@ -4,10 +4,9 @@ classdef testcVessel < matlab.unittest.TestCase
 
 properties
     
-    TestDatabase = 'TestStatic';
-    TestInServiceDB = 'TestInService';
+    TestDatabase = 'Static';
+    TestInServiceDB = 'InService';
     TestIMO = 1234567;
-    TestVessel_Id = 1;
     TestVessel;
     TestcMySQL;
     SQLWhereVessel;
@@ -24,7 +23,7 @@ methods
         
         testDB = testcase.TestDatabase;
         vessel = cVessel('Database', testDB);
-        vessel.InServiceDB = 'TestInService';
+        vessel.InServiceDB = testcase.TestInServiceDB;
         
         % Identity
         vessel.IMO = testcase.TestIMO;
@@ -117,7 +116,7 @@ methods(TestClassSetup)
     if ~isDB
 
         obj.InsertStatic = false;
-        obj.createTestStatic();
+        obj.createStatic();
     end
     end
     
@@ -199,13 +198,17 @@ methods(TestClassSetup)
     
     function deleteRaw(testcase)
         
-        sql = ['DELETE FROM `', testcase.TestInServiceDB, '`.RawData'];
+        vessel = testcase.testVesselInsert();
+        vid = vessel.Vessel_Id;
+        sql = ['DELETE FROM `', testcase.TestInServiceDB, '`.RawData WHERE Vessel_Id = ' num2str(vid) ];
         testcase.TestcMySQL.execute(sql);
     end
     
     function deleteCalculated(testcase)
         
-        sql = ['DELETE FROM `', testcase.TestInServiceDB, '`.CalculatedData'];
+        vessel = testcase.testVesselInsert();
+        vid = vessel.Vessel_Id;
+        sql = ['DELETE FROM `', testcase.TestInServiceDB, '`.CalculatedData WHERE Vessel_Id = ' num2str(vid)];
         testcase.TestcMySQL.execute(sql);
     end
 end
