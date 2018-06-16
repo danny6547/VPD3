@@ -1785,10 +1785,10 @@ classdef cVessel < cModelID
            
            validateattributes(wc, {'cVesselWindCoefficient'}, {'scalar'});
            
-           if ~isempty(wc.Name)
+%            if ~isempty(wc.Name)
                
-               obj.Particulars.Wind_Model_ID = wc.Models_id;
-           end
+               obj.Configuration.Wind_Coefficient_Model_Id = wc.Model_ID;
+%            end
            
            obj.WindCoefficient = wc;
        end
