@@ -8,7 +8,7 @@ CREATE PROCEDURE createBunkerDeliveryNote()
 
 BEGIN
 
-CREATE TABLE `inservice`.BunkerDeliveryNote (id INT PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE `static`.BunkerDeliveryNote (id INT PRIMARY KEY AUTO_INCREMENT,
 								Vessel_Id INT(10),
 								BDN_Number VARCHAR(100),
 								Bunker_Delivery_Date DATETIME,
