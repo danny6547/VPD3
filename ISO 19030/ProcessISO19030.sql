@@ -12,7 +12,7 @@ CREATE PROCEDURE ProcessISO19030(imo INT(7), allFilt BOOLEAN, speedPowerFilt BOO
 BEGIN
 
 	/* Get data for compliance table for this analysis */
-	CALL ISO19030(imo);
+	CALL `inservice`.ISO19030(imo);
     
-	CALL insertIntoPerformanceData(allFilt, speedPowerFilt, SFOCFilt);
+	CALL `inservice`.insertIntoPerformanceData(allFilt, speedPowerFilt, SFOCFilt);
 END;

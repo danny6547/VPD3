@@ -888,7 +888,8 @@ ISO19030 procedures:
 # 	change test vessel database from 'teststatic' to 'static', 'testinservice' to 'inservice'
 # 	ensure test vessel is clearly identified as not real (IMO, name)
 #	write conditional into deleteRaw and deleteCalculated so only test vessel deleted
-	
+whats wrong with updateDisplacementFromDraftTrim.sql?
+how does ISO19030.sql get data from bunker delivery notes?
 	
 
 

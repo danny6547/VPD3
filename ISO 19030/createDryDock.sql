@@ -10,7 +10,7 @@ CREATE PROCEDURE createDryDock()
 
 BEGIN
 
-	CREATE TABLE DryDock (Dry_Dock_Id INTEGER AUTO_INCREMENT PRIMARY KEY,
+	CREATE TABLE `static`.DryDock (Dry_Dock_Id INTEGER AUTO_INCREMENT PRIMARY KEY,
 								Vessel_Id INT(10) NOT NULL,
 								Start_Date DATE NOT NULL,
 								End_Date DATE NOT NULL,

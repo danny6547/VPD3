@@ -27,8 +27,8 @@ proc_label:BEGIN
     
     DECLARE isShaftRequired BOOLEAN Default TRUE;
     
-    SET powerGiven := (SELECT COUNT(*) FROM tempRawISO WHERE Delivered_Power IS NOT NULL) > 0;
-    SET isShaftRequired := (SELECT COUNT(*) FROM tempRawISO WHERE Shaft_Power IS NOT NULL) = 0;
+    SET powerGiven := (SELECT COUNT(*) FROM `inservice`.tempRawISO WHERE Delivered_Power IS NOT NULL) > 0;
+    SET isShaftRequired := (SELECT COUNT(*) FROM `inservice`.tempRawISO WHERE Shaft_Power IS NOT NULL) = 0;
 	
     /* IF power already given, no need to continue updating */
     IF powerGiven THEN
@@ -40,22 +40,22 @@ proc_label:BEGIN
     
     IF NOT isShaftRequired THEN
     
-		UPDATE tempRawISO SET Delivered_Power = Shaft_Power;
+		UPDATE `inservice`.tempRawISO SET Delivered_Power = Shaft_Power;
     
     ELSEIF @isShaftAvail THEN
 		
-        CALL updateShaftPower(imo);
-        UPDATE tempRawISO SET Delivered_Power = Shaft_Power;
+        CALL `inservice`.updateShaftPower(imo);
+        UPDATE `inservice`.tempRawISO SET Delivered_Power = Shaft_Power;
 		
     /* Check if engine data available */
     ELSEIF @isBrakeAvail THEN
 		
 		IF @isMassNeeded THEN
-			CALL updateMassFuelOilConsumed(imo);
+			CALL `inservice`.updateMassFuelOilConsumed(imo);
         END IF;
 		
-		CALL updateBrakePower(imo);
-        UPDATE tempRawISO SET Delivered_Power = Brake_Power;
+		CALL `inservice`.updateBrakePower(imo);
+        UPDATE `inservice`.tempRawISO SET Delivered_Power = Brake_Power;
 		
     /* Error if value cannot be calculated */
     ELSE

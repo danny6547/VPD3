@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS mu10Mins;
 
-CREATE TABLE mu10Mins (id INT PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE `inservice`.mu10Mins (id INT PRIMARY KEY AUTO_INCREMENT,
 							 DateTime_UTC DATETIME(3),
 							 Relative_Wind_Speed DOUBLE(10, 5),
 							 Relative_Wind_Direction DOUBLE(10, 5),

@@ -14,9 +14,9 @@ BEGIN
     
     CALL log_msg('removeFOCBelowMinimum', 'starting');
     
-    SET FOCmin = (SELECT Minimum_FOC_ph FROM SFOCCoefficients WHERE Engine_Model = (SELECT Engine_Model FROM Vessels WHERE IMO_Vessel_Number = IMO)) * HoursPerTimeStep;
+    SET FOCmin = (SELECT Minimum_FOC_ph FROM `static`.SFOCCoefficients WHERE Engine_Model = (SELECT Engine_Model FROM `static`.Vessels WHERE IMO_Vessel_Number = IMO)) * HoursPerTimeStep;
     /* DELETE FROM tempRawISO WHERE Mass_Consumed_Fuel_Oil < FOCmin; */
-    UPDATE tempRawISO SET Filter_SFOC_Out_Range = TRUE WHERE Mass_Consumed_Fuel_Oil < FOCmin;
+    UPDATE `inservice`.tempRawISO SET Filter_SFOC_Out_Range = TRUE WHERE Mass_Consumed_Fuel_Oil < FOCmin;
 	
     CALL log_msg('removeFOCBelowMinimum', 'ending');
     

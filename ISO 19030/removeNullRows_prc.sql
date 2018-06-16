@@ -8,6 +8,6 @@ delimiter //
 CREATE PROCEDURE removeNullRows()
 BEGIN
 
-	DELETE FROM tempraw WHERE Date_UTC IS NULL OR Time_UTC IS NULL;
+	DELETE FROM `dnvgl`.tempraw WHERE Date_UTC IS NULL OR Time_UTC IS NULL;
 
 END;

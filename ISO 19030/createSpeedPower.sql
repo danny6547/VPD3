@@ -10,7 +10,7 @@ CREATE PROCEDURE createSpeedPower()
 
 BEGIN
 
-	CREATE TABLE SpeedPower (id INT PRIMARY KEY AUTO_INCREMENT, 
+	CREATE TABLE `static`.SpeedPower (id INT PRIMARY KEY AUTO_INCREMENT, 
 								Speed_Power_Coefficient_Model_Value_Id INT NOT NULL,
 								Draft_Fore DOUBLE(10, 5),
 								Draft_Aft DOUBLE(10, 5),

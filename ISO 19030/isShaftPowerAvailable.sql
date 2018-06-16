@@ -13,7 +13,7 @@ BEGIN
     SET isAvailable = FALSE;
     
     /* Check if torque and rpm are both not all NULL */
-    IF (SELECT COUNT(*) FROM tempRawISO WHERE Shaft_Torque IS NOT NULL AND Shaft_Revolutions IS NOT NULL) > 0 THEN
+    IF (SELECT COUNT(*) FROM `inservice`.tempRawISO WHERE Shaft_Torque IS NOT NULL AND Shaft_Revolutions IS NOT NULL) > 0 THEN
     
 		SET isAvailable = TRUE;
         

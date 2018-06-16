@@ -9,11 +9,11 @@ delimiter //
 CREATE PROCEDURE createTempRawISO(imo INT)
 BEGIN
 	
-	DROP TABLE IF EXISTS tempRawISO;
+	DROP TABLE IF EXISTS `inservice`.tempRawISO;
     
 	/* CREATE TABLE tempRawISO LIKE rawdata; */
     /* Creating table with all columns much faster than adding later */
-	CREATE TABLE tempRawISO (id INT PRIMARY KEY AUTO_INCREMENT,
+	CREATE TABLE `inservice`.tempRawISO (id INT PRIMARY KEY AUTO_INCREMENT,
 							 DateTime_UTC DATETIME(3),
 							 IMO_Vessel_Number INT(7),
 							 Relative_Wind_Speed DOUBLE(10, 5),
@@ -79,8 +79,8 @@ BEGIN
                              CONSTRAINT UniqueDates UNIQUE(DateTime_UTC)
 							 ) ENGINE = MYISAM;
 	
-	INSERT INTO tempRawISO (DateTime_UTC, IMO_Vessel_Number, Relative_Wind_Speed, Relative_Wind_Direction, Speed_Over_Ground, Ship_Heading, Shaft_Revolutions, Static_Draught_Fore, Static_Draught_Aft, Water_Depth, Rudder_Angle, Seawater_Temperature, Air_Temperature, Air_Pressure, Air_Density, Speed_Through_Water, Delivered_Power, Shaft_Power, Brake_Power, Shaft_Torque, Mass_Consumed_Fuel_Oil, Volume_Consumed_Fuel_Oil, Displacement)
+	INSERT INTO `inservice`.tempRawISO (DateTime_UTC, IMO_Vessel_Number, Relative_Wind_Speed, Relative_Wind_Direction, Speed_Over_Ground, Ship_Heading, Shaft_Revolutions, Static_Draught_Fore, Static_Draught_Aft, Water_Depth, Rudder_Angle, Seawater_Temperature, Air_Temperature, Air_Pressure, Air_Density, Speed_Through_Water, Delivered_Power, Shaft_Power, Brake_Power, Shaft_Torque, Mass_Consumed_Fuel_Oil, Volume_Consumed_Fuel_Oil, Displacement)
 		SELECT DateTime_UTC, IMO_Vessel_Number, Relative_Wind_Speed, Relative_Wind_Direction, Speed_Over_Ground, Ship_Heading, Shaft_Revolutions, Static_Draught_Fore, Static_Draught_Aft, Water_Depth, Rudder_Angle, Seawater_Temperature, Air_Temperature, Air_Pressure, Air_Density, Speed_Through_Water, Delivered_Power, Shaft_Power, Brake_Power, Shaft_Torque, Mass_Consumed_Fuel_Oil, Volume_Consumed_Fuel_Oil, Displacement
-			FROM rawdata WHERE IMO_Vessel_Number = imo;
+			FROM `inservice`.rawdata WHERE IMO_Vessel_Number = imo;
     
 END

@@ -12,7 +12,7 @@ BEGIN
 CALL createTempRaw(imo);
 CALL updateFromBunkerNote(imo);
 
-INSERT INTO rawdata (IMO_Vessel_Number,
+INSERT INTO `inservice`.rawdata (IMO_Vessel_Number,
 							Water_Depth, 
 							DateTime_UTC,
 							Relative_Wind_Speed,
@@ -45,7 +45,7 @@ SELECT IMO_Vessel_Number,
 							 Mass_Consumed_Fuel_Oil,
                              ME_1_Load,
                              Draft_Displacement_Actual
-							 FROM tempRaw
+							 FROM `dnvgl`.tempRaw
 								ON DUPLICATE KEY UPDATE 
 									IMO_Vessel_Number = VALUES(IMO_Vessel_Number),
                                     Water_Depth = VALUES(Water_Depth),

@@ -10,9 +10,9 @@ CREATE PROCEDURE createTempChauvenetFilter()
 
 	BEGIN
 
-		DROP TABLE IF EXISTS ChauvenetTempFilter;
+		DROP TABLE IF EXISTS `inservice`.ChauvenetTempFilter;
 
-		CREATE TABLE ChauvenetTempFilter (id INT PRIMARY KEY AUTO_INCREMENT,
+		CREATE TABLE `inservice`.ChauvenetTempFilter (id INT PRIMARY KEY AUTO_INCREMENT,
 										
 										Speed_Through_Water BOOLEAN, 
 										Delivered_Power BOOLEAN, 

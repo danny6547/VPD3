@@ -1,8 +1,8 @@
 /* Calculate ERFC function on 10 minute blocks */
 
-DROP TABLE IF EXISTS erfc10Mins;
+DROP TABLE IF EXISTS `inservice`.erfc10Mins;
 
-CREATE TABLE erfc10Mins (id INT PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE `inservice`.erfc10Mins (id INT PRIMARY KEY AUTO_INCREMENT,
 							 x_Relative_Wind_Speed DOUBLE(10, 5),
 							 x_Relative_Wind_Direction DOUBLE(10, 5),
 							 x_Speed_Over_Ground DOUBLE(10, 5),
@@ -29,7 +29,7 @@ CREATE TABLE erfc10Mins (id INT PRIMARY KEY AUTO_INCREMENT,
 set @p  := 0.3275911;
 SET @ROOT2 := SQRT(2);
 
-INSERT INTO erfc10Mins (x_Speed_Through_Water,
+INSERT INTO `inservice`.erfc10Mins (x_Speed_Through_Water,
 						x_Rudder_Angle,
 						x_Relative_Wind_Direction,
 						x_Ship_Heading, 
@@ -76,8 +76,8 @@ INSERT INTO erfc10Mins (x_Speed_Through_Water,
 		1 / (1 + @p* t.Seawater_Temperature / (sem.Seawater_Temperature - @ROOT2) ) AS t_Seawater_Temperature,
 		1 / (1 + @p* t.Air_Temperature / (sem.Air_Temperature - @ROOT2) ) AS t_Air_Temperature,
         mu.N
-			FROM del10Mins t
-			JOIN mu10Mins mu
+			FROM `inservice`.del10Mins t
+			JOIN `inservice`.mu10Mins mu
 				ON mu.id = FLOOR((TO_SECONDS(t.DateTime_UTC) - TO_SECONDS(@startTime))/(600)) - @firstgroup + 1
-			JOIN sem10Mins sem
+			JOIN `inservice`.sem10Mins sem
 				ON sem.id = FLOOR((TO_SECONDS(t.DateTime_UTC) - TO_SECONDS(@startTime))/(600)) - @firstgroup + 1;

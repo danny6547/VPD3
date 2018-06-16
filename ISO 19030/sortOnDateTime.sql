@@ -8,6 +8,6 @@ delimiter //
 CREATE PROCEDURE sortOnDateTime()
 BEGIN
 
-	ALTER TABLE tempRawISO ORDER BY DateTime_UTC ASC;
+	ALTER TABLE `inservice`.tempRawISO ORDER BY DateTime_UTC ASC;
     
 END

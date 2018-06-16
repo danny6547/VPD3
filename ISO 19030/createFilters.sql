@@ -10,7 +10,7 @@ CREATE PROCEDURE createFilters()
 
 	BEGIN
 	
-	CREATE TABLE Filters (id INT PRIMARY KEY AUTO_INCREMENT,
+	CREATE TABLE `static`.Filters (id INT PRIMARY KEY AUTO_INCREMENT,
                          IMO_Vessel_Number INT(7),
 						 DateTime_UTC DATETIME,
 						 Filter_SpeedPower_Below BOOLEAN,

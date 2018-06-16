@@ -271,7 +271,7 @@ BEGIN
 				;*/
 	
     /* Get valid displacement and nearest displacement */
-    UPDATE tempRawISO t
+    UPDATE `inservice`.tempRawISO t
 		JOIN (
 			SELECT z.id, z.ValidDisplacement, z.SPDisplacement AS 'Nearest_Displacement'
 				FROM
@@ -284,7 +284,7 @@ BEGIN
 						 `Upper Displacement`,
 						 (a.Displacement > `Lower Displacement` AND a.Displacement < `Upper Displacement`) AS ValidDisplacement,
 						 ABS((ABS(a.Displacement) - ABS(b.Displacement))) AS DiffDisp
-						 FROM speedpowercoefficients a
+						 FROM `static`.speedpowercoefficients a
 						 JOIN
 							(SELECT
 									id,
@@ -292,8 +292,8 @@ BEGIN
 								   Displacement,
 								  (Displacement*0.95) AS 'Lower Displacement',
 								  (Displacement*1.05) AS 'Upper Displacement'
-							FROM tempRawISO) AS b
-						WHERE a.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)) AS z
+							FROM `inservice`.tempRawISO) AS b
+						WHERE a.ModelID IN (SELECT Speed_Power_Model FROM `static`.vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)) AS z
 				INNER JOIN
 					(
 					SELECT d.id, SPDisplacement, `Actual Displacement`, `Lower Displacement`, `Upper Displacement`, ValidDisplacement, MIN(DiffDisp) AS MinDiff
@@ -306,7 +306,7 @@ BEGIN
 						 `Upper Displacement`,
 						 (a.Displacement > `Lower Displacement` AND a.Displacement < `Upper Displacement`) AS ValidDisplacement,
 						 ABS((ABS(a.Displacement) - ABS(b.Displacement))) AS DiffDisp
-						 FROM speedpowercoefficients a
+						 FROM `static`.speedpowercoefficients a
 						 JOIN
 							(SELECT
 									id,
@@ -314,8 +314,8 @@ BEGIN
 								   Displacement,
 								  (Displacement*0.95) AS 'Lower Displacement',
 								  (Displacement*1.05) AS 'Upper Displacement'
-							FROM tempRawISO) AS b
-						WHERE a.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)) AS d
+							FROM `inservice`.tempRawISO) AS b
+						WHERE a.ModelID IN (SELECT Speed_Power_Model FROM `static`.vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)) AS d
 					 GROUP BY id) AS x /* 'SPTrim', 'Actual Trim', `Lower Trim`, `Upper Trim`,  */ 
 				  ON
 					z.id= x.id AND

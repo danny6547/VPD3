@@ -8,7 +8,7 @@ CREATE PROCEDURE createVesselSpeedPowerModel()
 
 BEGIN
 
-	CREATE TABLE VesselSpeedPowerModel (id INT PRIMARY KEY AUTO_INCREMENT,
+	CREATE TABLE `static`.VesselSpeedPowerModel (id INT PRIMARY KEY AUTO_INCREMENT,
 										IMO_Vessel_Number INT(7),
                                         Speed_Power_Model INT,
 										CONSTRAINT UNIQUE `UniqueEverything` (`IMO_Vessel_Number`,`Speed_Power_Model`)

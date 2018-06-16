@@ -12,7 +12,7 @@ CREATE PROCEDURE createSpeedPowerCoefficientModel()
 
 BEGIN
 
-	CREATE TABLE speedPowerCoefficientModel (Speed_Power_Coefficient_Model_Id INT PRIMARY KEY AUTO_INCREMENT,
+	CREATE TABLE `static`.speedPowerCoefficientModel (Speed_Power_Coefficient_Model_Id INT PRIMARY KEY AUTO_INCREMENT,
 											 Name NVARCHAR(100),
 											 Description TEXT,
                                              Deleted BOOL NOT NULL,

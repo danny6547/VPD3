@@ -1,7 +1,7 @@
 /* Calculate individual errors of data from the 10-minute mean */
 
-SET @startTime := (SELECT MIN(DateTime_UTC) from tempRawISO);
-SET @firstgroup := (SELECT FLOOR((TO_SECONDS(MIN(DateTime_UTC)) - TO_SECONDS(@startTime))/(600)) FROM tempRawISO);
+SET @startTime := (SELECT MIN(DateTime_UTC) from `inservice`.tempRawISO);
+SET @firstgroup := (SELECT FLOOR((TO_SECONDS(MIN(DateTime_UTC)) - TO_SECONDS(@startTime))/(600)) FROM `inservice`.tempRawISO);
 
 INSERT INTO del10Mins (
 						Speed_Over_Ground, 
@@ -36,6 +36,6 @@ INSERT INTO del10Mins (
 				WHEN TRUE THEN 360 - mod(ABS(t.Ship_Heading - mu.Ship_Heading), 360)
 				WHEN FALSE THEN mod(ABS(t.Ship_Heading - mu.Ship_Heading), 360)
 			END AS Ship_Heading
-				FROM tempRawISO t
-					JOIN mu10Mins mu
+				FROM `inservice`.tempRawISO t
+					JOIN `inservice`.mu10Mins mu
 						ON mu.id = FLOOR((TO_SECONDS(t.DateTime_UTC) - TO_SECONDS(@startTime))/(600)) - @firstgroup + 1;

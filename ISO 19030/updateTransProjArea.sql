@@ -13,7 +13,7 @@ BEGIN
 	SET @D := (SELECT Draft_Design FROM Vessels WHERE IMO_Vessel_Number = imo);
 	SET @B := (SELECT Breadth_Moulded FROM Vessels WHERE IMO_Vessel_Number = imo);
 	
-	UPDATE tempRawISO
+	UPDATE `inservice`.tempRawISO
 	SET Transverse_Projected_Area_Current =  @T + (( @D - (Static_Draught_Fore + Static_Draught_Aft)/2) * @B );
 	
 END;

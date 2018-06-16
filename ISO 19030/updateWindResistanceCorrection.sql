@@ -15,15 +15,15 @@ BEGIN
 		Delivered_Power * (1 - (0.7 / (SELECT Propulsive_Efficiency FROM SpeedPower WHERE IMO_Vessel_Number = imo)));
 	*/
     
-	UPDATE tempRawISO e 
+	UPDATE `inservice`.tempRawISO e 
 		JOIN
-			(SELECT q.id, w.Propulsive_Efficiency, w.Speed, w.Power, q.Delivered_Power FROM tempRawISO q
-				JOIN SpeedPower w
+			(SELECT q.id, w.Propulsive_Efficiency, w.Speed, w.Power, q.Delivered_Power FROM `inservice`.tempRawISO q
+				JOIN `static`.SpeedPower w
 					ON 
 						/* q.IMO_Vessel_Number = w.IMO_Vessel_Number AND */
 						q.NearestDisplacement = w.Displacement AND
 						q.NearestTrim = w.Trim
-                        WHERE w.ModelID IN (SELECT Speed_Power_Model FROM VesselSpeedPowerModel)
+                        WHERE w.ModelID IN (SELECT Speed_Power_Model FROM `static`.VesselSpeedPowerModel)
 				GROUP BY id) r
 		ON e.id = r.id
 		SET e.Wind_Resistance_Correction = 

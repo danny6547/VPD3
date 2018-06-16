@@ -8,17 +8,17 @@ CREATE PROCEDURE updateNearestTrim(imo INT)
 BEGIN
 	
     /* Get valid trim and nearest trim */
-    UPDATE tempRawISO q
+    UPDATE `inservice`.tempRawISO q
 	JOIN 
-		(SELECT a.id, b.Trim, NOT( a.NearestTrim >= (a.Trim - 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AND
-				a.NearestTrim <= (a.Trim + 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) ) AS 'FT'
-			FROM tempRawISO a
+		(SELECT a.id, b.Trim, NOT( a.NearestTrim >= (a.Trim - 0.002*(SELECT LBP FROM `static`.Vessels WHERE IMO_Vessel_Number = imo)) AND
+				a.NearestTrim <= (a.Trim + 0.002*(SELECT LBP FROM `static`.Vessels WHERE IMO_Vessel_Number = imo)) ) AS 'FT'
+			FROM `inservice`.tempRawISO a
 			JOIN
 			(
 				SELECT t.id, s.Trim, s.Displacement FROM speedpowercoefficients s
-					JOIN tempRawISO t
+					JOIN `inservice`.tempRawISO t
 						ON s.Displacement = t.NearestDisplacement
-							WHERE s.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)
+							WHERE s.ModelID IN (SELECT Speed_Power_Model FROM `static`.vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)
 						  ) b
 					ON a.id = b.id) w
 						ON q.id = w.id

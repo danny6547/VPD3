@@ -17,7 +17,7 @@ CREATE PROCEDURE createDisplacementModelValue()
 
 	BEGIN
 	
-	CREATE TABLE DisplacementModelValue (id INT PRIMARY KEY AUTO_INCREMENT,
+	CREATE TABLE `static`.DisplacementModelValue (id INT PRIMARY KEY AUTO_INCREMENT,
 								 Displacement_Model_Id INT NOT NULL,
 								 Draft_Mean FLOAT(15, 3),
 								 LCF FLOAT(15, 5),

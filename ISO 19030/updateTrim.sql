@@ -10,6 +10,6 @@ CREATE PROCEDURE updateTrim()
 
 BEGIN
 
-	UPDATE tempRawISO SET Trim = Static_Draught_Fore - Static_Draught_Aft;
+	UPDATE `inservice`.tempRawISO SET Trim = Static_Draught_Fore - Static_Draught_Aft;
 
 END;

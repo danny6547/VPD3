@@ -10,7 +10,7 @@ CREATE PROCEDURE createVesselOwner()
 
 BEGIN
 
-	CREATE TABLE VesselOwner (Vessel_Owner_Id INT PRIMARY KEY AUTO_INCREMENT,
+	CREATE TABLE `static`.VesselOwner (Vessel_Owner_Id INT PRIMARY KEY AUTO_INCREMENT,
 							 Vessel_Owner_Name TEXT,
 							 Deleted BOOL
 							 );

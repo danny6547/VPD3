@@ -8,9 +8,9 @@ CREATE PROCEDURE updateValidated()
 
 BEGIN
 	
-SET @startTime := (SELECT TO_SECONDS(MIN(DateTime_UTC)) FROM tempRawISO);
+SET @startTime := (SELECT TO_SECONDS(MIN(DateTime_UTC)) FROM `inservice`.tempRawISO);
 
-UPDATE tempRawISO t7
+UPDATE `inservice`.tempRawISO t7
 JOIN
 (SELECT t6.id, t6.DateTime_UTC,
 			Std_Shaft_Revolutions,
@@ -20,7 +20,7 @@ JOIN
 			@lasti := IFNULL(Std_Shaft_Revolutions > 3, @lasti) AS InvalidRPM,
 			@lastj := IFNULL(Std_Speed_Through_Water > 0.5, @lastj) AS InvalidSTW,
 			@lastk := IFNULL(Std_Speed_Over_Ground > 0.5, @lastk) AS InvalidSOG
-	FROM tempRawISO t6
+	FROM `inservice`.tempRawISO t6
 	LEFT JOIN
 	(SELECT id, DateTime_UTC, 
 			SQRT(AVG(POWER(Delta_Rudder_Angle, 2))) AS Std_Rudder_Angle,
@@ -64,9 +64,9 @@ JOIN
 						 STD(Shaft_Revolutions)   AS Std_Shaft_Revolutions,
 						 STD(Speed_Through_Water) AS Std_Speed_Through_Water,
 						 STD(Speed_Over_Ground)   AS Std_Speed_Over_Ground
-					FROM tempRawISO
+					FROM `inservice`.tempRawISO
 						GROUP BY FLOOR((TO_SECONDS(DateTime_UTC) - @startTime)/(600))) t0
-					RIGHT JOIN tempRawISO t1
+					RIGHT JOIN `inservice`.tempRawISO t1
 						ON t0.id = t1.id
 							CROSS JOIN (SELECT @lasta := 0) AS var_a
 							CROSS JOIN (SELECT @lastb := 0) AS var_b
@@ -89,18 +89,18 @@ JOIN
 																	;
 
 /* Mark analysis as Validated */
-SET @timeStep := (SELECT (SELECT to_seconds(DateTime_UTC) FROM tempRawISO WHERE Speed_Over_Ground IS NOT NULL LIMIT 1, 1) - 
-	(SELECT to_seconds(DateTime_UTC) FROM tempRawISO WHERE Speed_Over_Ground IS NOT NULL LIMIT 0, 1) );
+SET @timeStep := (SELECT (SELECT to_seconds(DateTime_UTC) FROM `inservice`.tempRawISO WHERE Speed_Over_Ground IS NOT NULL LIMIT 1, 1) - 
+	(SELECT to_seconds(DateTime_UTC) FROM `inservice`.tempRawISO WHERE Speed_Over_Ground IS NOT NULL LIMIT 0, 1) );
 IF @timeStep < 600 THEN
 	SET @Validated := TRUE;
 ELSE
 	SET @Validated := FALSE;
-    UPDATE tempRawISO SET Validated = FALSE;
+    UPDATE `inservice`.tempRawISO SET Validated = FALSE;
 END IF;
 
 CALL IMOStartEnd(@imo, @startd, @endd);
 IF @imo IS NOT NULL AND @startd IS NOT NULL AND @endd IS NOT NULL THEN
-	INSERT INTO Analysis (IMO_Vessel_Number, StartDate, EndDate, Validated)
+	INSERT INTO `inservice`.Analysis (IMO_Vessel_Number, StartDate, EndDate, Validated)
 	VALUES (@imo, @startd, @endd, @Validated) ON DUPLICATE KEY UPDATE Validated = VALUES(Validated);
 END IF;
 

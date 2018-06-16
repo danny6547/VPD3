@@ -8,5 +8,5 @@ CREATE PROCEDURE cleanData()
 BEGIN
 	
 	/* Remove empty draft values */
-    DELETE FROM tempRawISO WHERE Static_Draught_Fore IS NULL OR Static_Draught_Aft IS NULL;
+    DELETE FROM `inservice`.tempRawISO WHERE Static_Draught_Fore IS NULL OR Static_Draught_Aft IS NULL;
 END;
