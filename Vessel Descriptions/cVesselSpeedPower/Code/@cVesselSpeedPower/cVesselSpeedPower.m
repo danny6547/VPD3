@@ -14,7 +14,7 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
         Coefficient_A double = [];
         Coefficient_B double = [];
         Coefficient_Q double = [];
-        R_Squared double = [];
+        R_Squared double = 0;
         Maximum_Power = [];
         Minimum_Power = [];
     end
@@ -143,8 +143,10 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
        function insert(obj)
        % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs
        
-           obj = obj.fit;
-           obj = obj.powerExtents;
+           hasSpeedPower = arrayfun(...
+                @(x) ~isempty(x.Speed) && ~isempty(x.Power), obj);
+           obj(hasSpeedPower) = obj(hasSpeedPower).fit;
+           obj(hasSpeedPower) = obj(hasSpeedPower).powerExtents;
            
 %            obj.insertModel;
 %            obj = obj.incrementSpeedPowerModel;
@@ -155,9 +157,15 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
            name = {obj.Name};
            desc = {obj.Description};
            firstName = name(find(~cellfun(@isempty, name), 1, 'first'));
+           if ~isempty(firstName)
+               
+               [obj.Name] = deal(firstName{:});
+           end
            firstDesc = desc(find(~cellfun(@isempty, desc), 1, 'first'));
-           [obj.Name] = deal(firstName{:});
-           [obj.Description] = deal(firstDesc{:});
+           if ~isempty(firstDesc)
+               
+               [obj.Description] = deal(firstDesc{:});
+           end
            
            % Insert into super-model table, get super-ID
            superID = obj(1).incrementID('SpeedPowerCoefficientModel', ...
