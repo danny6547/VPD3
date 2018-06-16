@@ -9,9 +9,11 @@ classdef testISO19030 < matlab.unittest.TestCase
 
 properties
     
-    Connection = [];
     TableName = 'tempRawISO';
-    
+    TestStaticDatabase = 'static';
+    TestInServiceDatabase = 'inservice';
+    TestIMO = 1234567;
+    TestVessel = [];
 end
 
 properties(Hidden)
@@ -20,94 +22,89 @@ properties(Hidden)
     Database = 'test';
     Uid = 'root';
     Pwd = 'HullPerf2016';
-    
 end
 
 properties(Constant, Hidden)
     
     DateTimeFormSQL = 'yyyy-mm-dd HH:MM:SS';
     DateTimeFormAdodb = 'dd-mm-yyyy HH:MM:SS';
-    SFOCCoefficients = [-6949.127353, 7.918354135, -0.000132468];
-    InvalidIMO = sprintf('%u', [1:6, 8]);
-    AlmavivaIMO = sprintf('%u', 9450648);
-    AlmavivaBreadth = 42.8;
-    AlmavivaLength = 334;
-    AlmavivaBlockCoefficient = 0.643;
-    AlmavivaSpeedPowerCoefficients = [7.07170	-50.54008]; % 6.037644473511698, -40.659732310548080
-    AlmavivaSpeedPowerDispTrim = [114050, 0];
-    AlmavivaTransProjArea = 1330;
-    AlmavivaWindResistCoeffHead = -0.67766500;
-    AlmavivaWindResistCoeff = [-0.67766500
-                                -0.74222815
-                                -0.77252740
-                                -0.73429870
-                                -0.66942290
-                                -0.40641463
-                                -0.25761423
-                                -0.22303768
-                                -0.27221212
-                                -0.06631846
-                                0.34516430
-                                0.67289070
-                                0.88259417
-                                0.83342505
-                                0.64720550];
-    AlmavivaDesignDraft = 15;
-    AlmavivaPropulsiveEfficiency = 0.71;
-    MinimumFOCph = 3989.96;
+%     InvalidIMO = sprintf('%u', [1:6, 8]);
     minTemp = 2;
     MinWind = 0;
     MaxWind = 7.9;
     GravitationalAcceleration = 9.80665;
     MaxRudder = 5;
-    LBP = 319;
-    LowestPower = 28534;
-    SPTrim = 5.1; % 3.3-9.56;
-    EngineMinPower = 22840.84;
-    EngineMaxPower = 67544.40;
-    Wind_Reference_Height_Design = 15;
-    AlmavivaAnemometerHeight = 40;
+%     LowestPower = 28534;
+%     SPTrim = 5.1; % 3.3-9.56;
+%     EngineMinPower = 22840.84;
+%     EngineMaxPower = 67544.40;
+%     SFOCCoefficients = [-6949.127353, 7.918354135, -0.000132468];
+%     LBP = 319;
+%     Wind_Reference_Height_Design = 15;
+%     AlmavivaIMO = sprintf('%u', 9450648);
+%     AlmavivaBreadth = 42.8;
+%     AlmavivaLength = 334;
+%     AlmavivaBlockCoefficient = 0.643;
+%     AlmavivaSpeedPowerCoefficients = [7.07170	-50.54008]; % 6.037644473511698, -40.659732310548080
+%     AlmavivaSpeedPowerDispTrim = [114050, 0];
+%     AlmavivaTransProjArea = 1330;
+%     AlmavivaWindResistCoeffHead = -0.67766500;
+%     AlmavivaWindResistCoeff = [-0.67766500
+%                                 -0.74222815
+%                                 -0.77252740
+%                                 -0.73429870
+%                                 -0.66942290
+%                                 -0.40641463
+%                                 -0.25761423
+%                                 -0.22303768
+%                                 -0.27221212
+%                                 -0.06631846
+%                                 0.34516430
+%                                 0.67289070
+%                                 0.88259417
+%                                 0.83342505
+%                                 0.64720550];
+%     AlmavivaDesignDraft = 15;
+%     AlmavivaPropulsiveEfficiency = 0.71;
+%     AlmavivaAnemometerHeight = 40;
     
 end
 
 methods(TestClassSetup)
     
-    function establishConnection(obj)
-    % establishConnection Create connection to database if none exists
-        
-        if isempty(obj.Connection)
-            
-            conn_ch = ['driver=MySQL ODBC 5.3 ANSI Driver;', ...
-                        'Server=' obj.Server ';',  ...
-                        'Database=', obj.Database, ';',  ...
-                        'Uid=' obj.Uid ';',  ...
-                        'Pwd=' obj.Pwd ';'];
-            obj.Connection = adodb_connect(conn_ch);
-            
-        end
-    end
+%     function establishConnection(obj)
+%     % establishConnection Create connection to database if none exists
+%         
+%         if isempty(obj.Connection)
+%             
+%             conn_ch = ['driver=MySQL ODBC 5.3 ANSI Driver;', ...
+%                         'Server=' obj.Server ';',  ...
+%                         'Database=', obj.Database, ';',  ...
+%                         'Uid=' obj.Uid ';',  ...
+%                         'Pwd=' obj.Pwd ';'];
+%             obj.Connection = adodb_connect(conn_ch);
+%             
+%         end
+%     end
     
-    function createTable(testcase)
-    % createTable Creates test table in database if none exists
-    
-    testcase.establishConnection;
-    call(testcase, 'createTempRawISO', testcase.InvalidIMO);
-    
-    end
-    
-    function insertTestVessel(testcase)
+    function vessel = insertTestVessel(testcase)
     % insertTestVessel Insert data for test vessel into table "Vessels"
     
-    obj = cVessel();
-    obj.Database = 'test';
-    obj.IMO_Vessel_Number = 9450648;
-    obj.Breadth_Moulded = 42.8;
-    obj.Length_Overall = 334;
-    obj.Block_Coefficient = 0.643;
-    obj.Transverse_Projected_Area_Design = 1330;
-    obj.Draft_Design = 15;
-    obj.LBP = 319;
-    obj.Anemometer_Height = 40;
+    vessel = cVessel('Database', testcase.TestStaticDatabase);
+%     vessel.StaticDB = testcase.TestStaticDatabase;
+    vessel.InServiceDB = testcase.TestInServiceDatabase;
+    vessel.IMO = testcase.TestIMO;
+    vessel.Configuration.Breadth_Moulded = 42.8;
+    vessel.Configuration.Length_Overall = 334;
+%     vessel.Configuration.Block_Coefficient = 0.643;
+    vessel.Configuration.Transverse_Projected_Area_Design = 1330;
+    vessel.Configuration.Draft_Design = 15;
+    vessel.Configuration.LBP = 319;
+    vessel.Configuration.Anemometer_Height = 40;
+    vessel.Configuration.Wind_Reference_Height_Design = 15;
+    vessel.Configuration.Vessel_Configuration_Description = 'Test Config';
+    vessel.Configuration.Fuel_Type = 'HFO';
+    vessel.Configuration.Speed_Power_Source = 'Sea Trial';
     
     coeffs_v = [-0.67766500
                     -0.74222815
@@ -125,47 +122,92 @@ methods(TestClassSetup)
                     0.83342505
                     0.64720550];
     dirs_v = linspace(0, 180, length(coeffs_v));
-    wind_cvw = cVesselWindCoefficient();
+    wind_cvw = vessel.WindCoefficient;
     wind_cvw.Direction = dirs_v;
     wind_cvw.Coefficient = coeffs_v;
-    wind_cvw.Wind_Reference_Height_Design = 15;
-    wind_cvw.Wind_Reference_Height_Design = 15;
     wind_cvw = wind_cvw.mirrorAlong180();
-    obj.WindCoefficient = wind_cvw;
-    obj.insertIntoVessels();
-    obj.insertIntoWindCoefficients();
+    vessel.WindCoefficient = wind_cvw;
     
+    engine = vessel.Engine;
+    engine.Lowest_Given_Brake_Power = 22840.84;
+    engine.Highest_Given_Brake_Power = 67544.40;
+    SFOCCoefficients = [-6949.127353, 7.918354135, -0.000132468];
+    engine.X0 = SFOCCoefficients(1);
+    engine.X1 = SFOCCoefficients(2);
+    engine.X2 = SFOCCoefficients(3);
+    engine.Minimum_FOC_ph = 3989.96;
+    engine.Engine_Model = 'Test Vessel Engine';
+    vessel.Engine = engine;
+    
+    sp = vessel.SpeedPower;
+    sp.Coefficient_A = 7.07170;
+    sp.Coefficient_B = -50.54008;
+    sp.Displacement = 114050;
+    sp.Trim = 0;
+    sp.Minimum_Power = 28534;
+    sp.Maximum_Power = 9e4;
+    vessel.SpeedPower = sp;
+    
+    % Insert displacement so won't error
+    disp = vessel.Displacement;
+    disp.Draft_Mean = 1:5;
+    disp.Trim = zeros(1, 5);
+    disp.Displacement = 1e5:1e4:1.4e5;
+    vessel.Displacement = disp;
+    
+    % Insert dry-dock so won't error
+    dd = vessel.DryDock;
+    dd.Start_Date = '2000-01-01';
+    dd.End_Date = '2000-01-14';
+    vessel.DryDock = dd;
+    
+    vessel.insert();
+    
+    testcase.TestVessel = vessel;
+    
+    end
+    
+    function createTable(testcase)
+    % createTable Creates test table in database if none exists
+    
+    vessel = testcase.TestVessel;
+    vessel.InServiceSQLDB.call('createTempRawISO', num2str(testcase.TestIMO));
     end
     
 end
 
 methods(TestClassTeardown)
     
-    function closeConnection(obj)
-    % closeConnection Close connection to database if it exists
-        
-        if ~isempty(obj.Connection)
-            
-            obj.dropTable;
-            
-            obj.Connection.release;
-            obj.Connection = [];
-            
-        end
-    end
+%     function closeConnection(obj)
+%     % closeConnection Close connection to database if it exists
+%         
+%         if ~isempty(obj.Connection)
+%             
+%             obj.dropTable;
+%             
+%             obj.Connection.release;
+%             obj.Connection = [];
+%             
+%         end
+%     end
     
     function dropTable(obj)
     % dropTable Drops test table in database if none exists
     
-    if ~isempty(obj.Connection)
+%     if ~isempty(obj.Connection)
     
-    sql_s = ['DROP TABLE IF EXISTS ' obj.TableName ';'];
-	adodb_query(obj.Connection, sql_s);
+    vessel = obj.TestVessel;
+%     if ~isempty(vessel.InServiceDB)
+        
+        vessel.InServiceSQLDB.drop('TABLE', 'tempRawISO');
+%     end
+    
+%     sql_s = ['DROP TABLE IF EXISTS ' obj.TableName ';'];
+% 	adodb_query(obj.Connection, sql_s);
+%     
+%     end
     
     end
-    
-    end
-    
 end
 
 methods(Static)
@@ -375,19 +417,19 @@ methods(Test)
     
     date_c = cellstr(datestr(date, testcase.DateTimeFormSQL));
     input = [date_c, num2cell(x)];
-    names = {'DateTime_UTC', 'Speed_Loss'};
-    [startrow, numrows] = testcase.insert(input, names);
+    names = {'Timestamp', 'Speed_Loss'};
+    [startrow, numrows] = testcase.insert(names, input);
     
     [exp_date, datei] = sort(date, 'ascend');
     exp_date = cellstr(datestr(exp_date, testcase.DateTimeFormAdodb));
     exp_x = num2cell(x(datei));
-    exp_sorted = [exp_date, exp_x];
+    exp_sorted = cell2table([exp_date, exp_x], 'VariableNames', lower(names));
     
     % Execute
     testcase.call('sortOnDateTime');
     
     % Verify
-    act_sorted = testcase.read(names, startrow, numrows);
+    act_sorted = testcase.select(names, startrow, numrows);
     
     msg_sorted = ['All data read from table expected to be sorted based on'...
         ' the values of the "DateTime" column.'];
@@ -2031,20 +2073,26 @@ methods
     % procedure FUNCNAME with inputs given by string or cell of strings
     % INPUTS. 
     
-    conn = testcase.Connection;
-    inputs_s = '()';
-    if nargin > 2
-        v = varargin;
-        v = cellfun(@cellstr, v);
-        inputs_s = ['(' strjoin(v, ', ') ')'];
+    narginchk(2, 3)
+    
+    vessel = testcase.TestVessel;
+    msql = vessel.InServiceSQLDB;
+    msql.call(funcname, varargin{:});
+    
+%     conn = testcase.Connection;
+%     inputs_s = '()';
+%     if nargin > 2
+%         v = varargin;
+%         v = cellfun(@cellstr, v);
+%         inputs_s = ['(' strjoin(v, ', ') ')'];
+%     end
+%     
+%     sql_s = ['CALL ' funcname, inputs_s, ';'];
+%     adodb_query(conn, sql_s);
+    
     end
     
-    sql_s = ['CALL ' funcname, inputs_s, ';'];
-    adodb_query(conn, sql_s);
-    
-    end
-    
-    function [data, colnames] = read(obj, varargin)
+    function [data, colnames] = select(obj, varargin)
     % READ Reads the database with optional specified parameters
     % data = read(obj) will return in DATA a cell array containing all rows
     % for all columns in the database table specified by input object OBJ.
@@ -2056,115 +2104,164 @@ methods
     % number of rows given by COUNT. Inputting COUNT without a STARTROW 
     % will result in COUNT having no effect.
     
-        % Input
-        names_s = '*';
-        if nargin > 1
-            names_c = varargin{1};
-            names_c = cellstr(names_c);
-            names_s = strjoin(names_c, ', ');
-        end
-        
-        start_s = '';
-        if nargin > 2
-            start_row = varargin{2};
-            start_s = num2str(start_row);
-        end
-        
-        count_s = '1';
-        if nargin > 3
-            count_d = varargin{3};
-            count_s = num2str(count_d);
-        end
-        
-        order_s = '';
-        if nargin > 4
-            order_s = varargin{4};
-            if ~isempty(order_s)
-                order_s = [' ORDER BY ', order_s];
-            end
-        end
-        
-        % Establish Connection
-        sqlConn = obj.Connection;
-        
-        % Read command
-        sql_read = ['SELECT ', names_s, ' FROM ' obj.TableName, order_s];
-        if ~isempty(start_s)
-            sql_read = [sql_read, ' LIMIT ', start_s, ', ', count_s];
-        end
-        [~, out] = adodb_query(sqlConn, sql_read);
-        
-        % Output
-        colnames = names_c;
-        data = out;
+    vessel = obj.TestVessel;
+    msql = vessel.InServiceSQLDB;
+    tab = obj.TableName;
+    
+    % Input
+    names = '*';
+    if nargin > 1
+        names = varargin{1};
+    end
+    
+    [~, data] = msql.select(tab, names);
+    colnames = data.Properties.VariableNames;
+    
+    singleCols_l = varfun(@(x) isa(x, 'single'), data, 'OutputFormat', 'Uni');
+    dbl_tbl = varfun(@double, data(:, singleCols_l));
+    data(:, singleCols_l) = [];
+    data = [data, dbl_tbl];
+    data.Properties.VariableNames = colnames;
+    
+%         start_s = '';
+%         if nargin > 2
+%             start_row = varargin{2};
+%             start_s = num2str(start_row);
+%         end
+%         
+%         count_s = '1';
+%         if nargin > 3
+%             count_d = varargin{3};
+%             count_s = num2str(count_d);
+%         end
+%         
+%         order_s = '';
+%         if nargin > 4
+%             order_s = varargin{4};
+%             if ~isempty(order_s)
+%                 order_s = [' ORDER BY ', order_s];
+%             end
+%         end
+%         
+%         % Establish Connection
+%         sqlConn = obj.Connection;
+%         
+%         % Read command
+%         sql_read = ['SELECT ', names_s, ' FROM ' obj.TableName, order_s];
+%         if ~isempty(start_s)
+%             sql_read = [sql_read, ' LIMIT ', start_s, ', ', count_s];
+%         end
+%         [~, out] = adodb_query(sqlConn, sql_read);
+%         
+%         % Output
+%         colnames = names_c;
+%         data = out;
         
     end
     
-    function [startrow, numrows] = insert(testcase, data, names, varargin)
+    function [startrow, numrows] = insert(testcase, names, data, varargin)
     % INSERT Inserts data into table, returning indices to read
     % startrow = insert(testcase, data, names) will call INSERT on the data
     % in DATA with the column names given by cell array of strings NAMES
     % for the database and tables given by object TESTCASE. NAMES must have
     % as many elements as columns in DATA.
     
-    % Establish Connection
-    sqlConn = testcase.Connection;
-    
-    update_l = false;
-    if nargin > 3
-        update_l = varargin{1};
-    end
-        
-    % Insert command
-    if isnumeric(data)
-        
-        w = mat2str(data);
-        e = strrep(w, ' ', ', ');
-        r = strrep(e, ';', '),(');
-        t = strrep(r, '[', '(');
-        data_str = strrep(t, ']', ')');
-        
-        if isscalar(data)
-            data_str = ['(', data_str, ')'];
-        end
-        
-    elseif iscell(data)
-        
-        % Assume first column is date data
-        data(:, 1) = strcat('''', data(:, 1), '''');
-        
-        data(:, 2:end) = cellfun(@num2str, data(:, 2:end), 'Uni', 0);
-        for qi = 1:size(data, 1)
-            data(qi, 1) = { strjoin(data(qi, :), ', ') };
-        end
-        data(:, 2:end) = [];
-        
-        data_c = cellfun(@(x) ['(' strrep(x, '  ', ', ') '),'],...
-            data, 'Uni', 0);
-        data_c = data_c(:)';
-        data_str = [data_c{:}];
-        data_str(end) = [];
-    end
-    
-    names_str = ['(', strjoin(names, ', '), ')'];
+    tab = testcase.TableName;
+    vessel = testcase.TestVessel;
+    msql = vessel.InServiceSQLDB;
     
     sql_numrows = ['SELECT COUNT(*) FROM ' testcase.TableName];
-    [~, startrow_c] = adodb_query(sqlConn, sql_numrows);
+    [~, startrow_c] = adodb_query(msql.Connection, sql_numrows);
     startrow = str2double( [startrow_c{:}] );
     numrows = size(data, 1);
     
-    if update_l
-        nameNoBracker_str = strrep(names_str, '(', '');
-        nameNoBracker_str = strrep(nameNoBracker_str, ')', '');
-        sql_insert = ['UPDATE ' testcase.TableName ' SET ' nameNoBracker_str, ...
-            ' ', data_str, ';'];
-    else
-        sql_insert = ['INSERT INTO ' testcase.TableName ' ' names_str ' VALUES ' , ...
-            ' ', data_str, ';'];
+    % Concatenate any missing required data
+    if ~ismember('Vessel_Id', names)
+        
+        names = [names, {'Vessel_Id'}];
+        vid_c = repmat({vessel.Vessel_Id}, size(data, 1), 1);
+        data = [data, vid_c];
     end
-    sql_insert = strrep(sql_insert, 'NaN', 'NULL');
-    adodb_query(sqlConn, sql_insert);
     
+    if ~ismember('Vessel_Configuration_Id', names)
+        
+        names = [names, {'Vessel_Configuration_Id'}];
+        vid_c = repmat({vessel.Configuration.Model_ID}, size(data, 1), 1);
+        data = [data, vid_c];
+    end
+    
+    if ~ismember('Raw_Data_Id', names)
+        
+        names = [names, {'Raw_Data_Id'}];
+        vid_c = num2cell(1:size(data, 1))';
+        data = [data, vid_c];
+    end
+    
+    if ~ismember('Timestamp', names)
+        
+        names = [names, {'Timestamp'}];
+        dates = now:1:now+(size(data, 1)-1);
+        vid_c = cellstr(datestr(dates, testcase.DateTimeFormSQL));
+        data = [data, vid_c];
+    end
+    
+    
+    msql.insertValues(tab, names, data);
+    
+%     % Establish Connection
+%     sqlConn = testcase.Connection;
+%     
+%     update_l = false;
+%     if nargin > 3
+%         update_l = varargin{1};
+%     end
+%         
+%     % Insert command
+%     if isnumeric(data)
+%         
+%         w = mat2str(data);
+%         e = strrep(w, ' ', ', ');
+%         r = strrep(e, ';', '),(');
+%         t = strrep(r, '[', '(');
+%         data_str = strrep(t, ']', ')');
+%         
+%         if isscalar(data)
+%             data_str = ['(', data_str, ')'];
+%         end
+%         
+%     elseif iscell(data)
+%         
+%         % Assume first column is date data
+%         data(:, 1) = strcat('''', data(:, 1), '''');
+%         
+%         data(:, 2:end) = cellfun(@num2str, data(:, 2:end), 'Uni', 0);
+%         for qi = 1:size(data, 1)
+%             data(qi, 1) = { strjoin(data(qi, :), ', ') };
+%         end
+%         data(:, 2:end) = [];
+%         
+%         data_c = cellfun(@(x) ['(' strrep(x, '  ', ', ') '),'],...
+%             data, 'Uni', 0);
+%         data_c = data_c(:)';
+%         data_str = [data_c{:}];
+%         data_str(end) = [];
+%     end
+%     
+%     names_str = ['(', strjoin(names, ', '), ')'];
+%     
+%     
+%     if update_l
+%         nameNoBracker_str = strrep(names_str, '(', '');
+%         nameNoBracker_str = strrep(nameNoBracker_str, ')', '');
+%         sql_insert = ['UPDATE ' testcase.TableName ' SET ' nameNoBracker_str, ...
+%             ' ', data_str, ';'];
+%     else
+%         sql_insert = ['INSERT INTO ' testcase.TableName ' ' names_str ' VALUES ' , ...
+%             ' ', data_str, ';'];
+%     end
+%     sql_insert = strrep(sql_insert, 'NaN', 'NULL');
+%     adodb_query(sqlConn, sql_insert);
+%     
     end
     
 end
