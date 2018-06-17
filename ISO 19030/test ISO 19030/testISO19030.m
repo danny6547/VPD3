@@ -1496,24 +1496,25 @@ methods(Test)
     import matlab.unittest.constraints.HasSize;
     
     testSz = [1, 2];
-    lowerPower = testcase.LowestPower;
+    vessel = testcase.TestVessel;
+    lowerPower = vessel.SpeedPower.Minimum_Power;
     inPower_v = testcase.randOutThreshold(testSz, @lt, lowerPower);
     inNearTrim_v = zeros(testSz);
     inNearDisp_v = repmat(114050, testSz);
-    inIMO_v = repmat(str2double(testcase.AlmavivaIMO), testSz);
-    [startrow, count] = testcase.insert(...
-        [inPower_v', inNearTrim_v', inNearDisp_v', inIMO_v'], ...
-        {'Delivered_Power', 'NearestTrim', 'NearestDisplacement', 'IMO_Vessel_Number'});
+%     inIMO_v = repmat(str2double(testcase.AlmavivaIMO), testSz);
+    names = {'Corrected_Power', 'Nearest_Trim', 'Nearest_Displacement'};
+    data = [inPower_v', inNearTrim_v', inNearDisp_v'];
+    [startrow, count] = testcase.insert(names, data);
     
     % Execute
-    testcase.call('filterPowerBelowMinimum', testcase.AlmavivaIMO);
+    testcase.call('filterPowerBelowMinimum', testcase.TestVesselIdString);
     
     % Verify
-    outPower_v = testcase.read('Delivered_Power', startrow, count, 'id');
-    outPower_v = [outPower_v{:}];
+    outPower_v = testcase.select('Corrected_Power', count, startrow, 'id');
+    outPower_v = [outPower_v{:, :}];
     outPower_v(isnan(outPower_v)) = [];
-    filt_act = testcase.read('Filter_SpeedPower_Below', startrow, count, 'id');
-    filt_act = [filt_act{:}];
+    filt_act = testcase.select('Filter_SpeedPower_Below', count, startrow, 'id');
+    filt_act = [filt_act{:, :}];
     filt_act(isnan(filt_act)) = [];
     size_msg = ['FilterSPBelow is expected to have some values TRUE before ',...
         'procedure can be verified.'];
