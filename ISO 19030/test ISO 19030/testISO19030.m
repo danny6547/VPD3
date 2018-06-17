@@ -13,6 +13,7 @@ properties
     TestStaticDatabase = 'static';
     TestInServiceDatabase = 'inservice';
     TestIMO = 1234567;
+    TestVesselIdString = '';
     TestVessel = [];
 end
 
@@ -34,69 +35,19 @@ properties(Constant, Hidden)
     MaxWind = 7.9;
     GravitationalAcceleration = 9.80665;
     MaxRudder = 5;
-%     LowestPower = 28534;
-%     SPTrim = 5.1; % 3.3-9.56;
-%     EngineMinPower = 22840.84;
-%     EngineMaxPower = 67544.40;
-%     SFOCCoefficients = [-6949.127353, 7.918354135, -0.000132468];
-%     LBP = 319;
-%     Wind_Reference_Height_Design = 15;
-%     AlmavivaIMO = sprintf('%u', 9450648);
-%     AlmavivaBreadth = 42.8;
-%     AlmavivaLength = 334;
-%     AlmavivaBlockCoefficient = 0.643;
-%     AlmavivaSpeedPowerCoefficients = [7.07170	-50.54008]; % 6.037644473511698, -40.659732310548080
-%     AlmavivaSpeedPowerDispTrim = [114050, 0];
-%     AlmavivaTransProjArea = 1330;
-%     AlmavivaWindResistCoeffHead = -0.67766500;
-%     AlmavivaWindResistCoeff = [-0.67766500
-%                                 -0.74222815
-%                                 -0.77252740
-%                                 -0.73429870
-%                                 -0.66942290
-%                                 -0.40641463
-%                                 -0.25761423
-%                                 -0.22303768
-%                                 -0.27221212
-%                                 -0.06631846
-%                                 0.34516430
-%                                 0.67289070
-%                                 0.88259417
-%                                 0.83342505
-%                                 0.64720550];
-%     AlmavivaDesignDraft = 15;
-%     AlmavivaPropulsiveEfficiency = 0.71;
-%     AlmavivaAnemometerHeight = 40;
     
 end
 
 methods(TestClassSetup)
     
-%     function establishConnection(obj)
-%     % establishConnection Create connection to database if none exists
-%         
-%         if isempty(obj.Connection)
-%             
-%             conn_ch = ['driver=MySQL ODBC 5.3 ANSI Driver;', ...
-%                         'Server=' obj.Server ';',  ...
-%                         'Database=', obj.Database, ';',  ...
-%                         'Uid=' obj.Uid ';',  ...
-%                         'Pwd=' obj.Pwd ';'];
-%             obj.Connection = adodb_connect(conn_ch);
-%             
-%         end
-%     end
-    
     function vessel = insertTestVessel(testcase)
     % insertTestVessel Insert data for test vessel into table "Vessels"
     
     vessel = cVessel('Database', testcase.TestStaticDatabase);
-%     vessel.StaticDB = testcase.TestStaticDatabase;
     vessel.InServiceDB = testcase.TestInServiceDatabase;
     vessel.IMO = testcase.TestIMO;
     vessel.Configuration.Breadth_Moulded = 42.8;
     vessel.Configuration.Length_Overall = 334;
-%     vessel.Configuration.Block_Coefficient = 0.643;
     vessel.Configuration.Transverse_Projected_Area_Design = 1330;
     vessel.Configuration.Draft_Design = 15;
     vessel.Configuration.LBP = 319;
@@ -164,6 +115,7 @@ methods(TestClassSetup)
     vessel.insert();
     
     testcase.TestVessel = vessel;
+    testcase.TestVesselIdString = num2str(vessel.Vessel_Id);
     
     end
     
@@ -178,34 +130,11 @@ end
 
 methods(TestClassTeardown)
     
-%     function closeConnection(obj)
-%     % closeConnection Close connection to database if it exists
-%         
-%         if ~isempty(obj.Connection)
-%             
-%             obj.dropTable;
-%             
-%             obj.Connection.release;
-%             obj.Connection = [];
-%             
-%         end
-%     end
-    
     function dropTable(obj)
     % dropTable Drops test table in database if none exists
     
-%     if ~isempty(obj.Connection)
-    
     vessel = obj.TestVessel;
-%     if ~isempty(vessel.InServiceDB)
-        
-        vessel.InServiceSQLDB.drop('TABLE', 'tempRawISO');
-%     end
-    
-%     sql_s = ['DROP TABLE IF EXISTS ' obj.TableName ';'];
-% 	adodb_query(obj.Connection, sql_s);
-%     
-%     end
+    vessel.InServiceSQLDB.drop('TABLE', 'tempRawISO');
     
     end
 end
@@ -448,16 +377,17 @@ methods(Test)
     in_press = [1.225, 1.2, 1.1];
     in_R = 287.058;
     in_Temp = [25, 30, 27];
-    exp_dens = num2cell( in_press ./ (in_R.*(in_Temp + 273.15)) )';
+    exp_dens = (in_press ./ (in_R.*(in_Temp + 273.15)) )';
     
     names_c = {'Air_Pressure', 'Air_Temperature'};
-    [startrow, numrows] = testcase.insert([in_press', in_Temp'], names_c);
+    [startrow, numrows] = testcase.insert(names_c, [in_press', in_Temp']);
     
     % Execute
     testcase.call('updateAirDensity');
     
     % Verify
-    act_dens = testcase.read('Air_Density', startrow, numrows);
+    dens_tbl = testcase.select('Air_Density', startrow, numrows);
+    act_dens = [dens_tbl{:, :}];
     msg_dens = ['Data for column ''Air_Density'' should have values ',...
         'matching those given for Equation G5 in standard ISO 19030'];
     testcase.verifyEqual(act_dens, exp_dens, 'AbsTol', 1e-9, msg_dens);
@@ -476,25 +406,26 @@ methods(Test)
     % ISO standard 19030-2, Annexes C and D. 
     
     % Inputs
+    vessel = testcase.TestVessel;
     in_massfoc = [1e5, 1.5e5, 2e5];
     in_lcv = [42, 41.9, 43];
     in_data = [in_massfoc', in_lcv'];
     in_names = {'Mass_Consumed_Fuel_Oil', 'Lower_Caloirifc_Value_Fuel_Oil'};
-    in_IMO = testcase.AlmavivaIMO;
-    [startrow, numrows] = testcase.insert(in_data, in_names);
+    [startrow, numrows] = testcase.insert(in_names, in_data);
     
     x = in_massfoc.* (in_lcv ./ 42.7) ./ 24;
-    coeff = testcase.SFOCCoefficients;
-    exp_brake = num2cell(coeff(3)*x.^2 + coeff(2)*x + coeff(1))';
+    coeff = [vessel.Engine.X0, vessel.Engine.X1, vessel.Engine.X2];
+    exp_brake = (coeff(3)*x.^2 + coeff(2)*x + coeff(1))';
     
     % Execute
-    testcase.call('updateBrakePower', in_IMO);
+    testcase.call('updateBrakePower', num2str(vessel.Vessel_Id));
     
     % Verify
-    act_brake = testcase.read('Brake_Power', startrow, numrows);
+    act_brake = testcase.select('Brake_Power', startrow, numrows);
+    act_brake = [act_brake{:, :}];
     msg_brake = ['Updated Brake Power is expected to match that calculated',...
         ' from mass of fuel oil consumed and the SFOC curve'];
-    testcase.verifyEqual(act_brake, exp_brake, 'RelTol', 1e-8, msg_brake);
+    testcase.verifyEqual(act_brake, exp_brake, 'RelTol', 1e-6, msg_brake);
     
     end
     
@@ -540,18 +471,19 @@ methods(Test)
     in_den15 = repmat(500, 1, 3);
     in_denChange = repmat(10, 1, 3);
     in_tempFuel = 50:5:60;
-    [startrow, count] = testcase.insert([in_vol', in_den15', in_denChange',...
-        in_tempFuel'], {'Volume_Consumed_Fuel_Oil', 'Density_Fuel_Oil_15C',...
-        'Density_Change_Rate_Per_C', 'Temp_Fuel_Oil_At_Flow_Meter'});
+    data = [in_vol', in_den15', in_denChange', in_tempFuel'];
+    names = {'Volume_Consumed_Fuel_Oil', 'Density_Fuel_Oil_15C',...
+        'Density_Change_Rate_Per_C', 'Temp_Fuel_Oil_At_Flow_Meter'};
+    [startrow, count] = testcase.insert(names, data);
     
-    exp_mass = num2cell(...
-        in_vol.*(in_den15 - in_denChange.*(in_tempFuel - 15)))';
+    exp_mass = (in_vol.*(in_den15 - in_denChange.*(in_tempFuel - 15)))';
     
     % Execute
-    testcase.call('updateMassFuelOilConsumed', testcase.InvalidIMO);
+    testcase.call('updateMassFuelOilConsumed', testcase.TestVesselIdString);
     
     % Verify
-    act_mass = testcase.read('Mass_Consumed_Fuel_Oil', startrow, count);
+    act_mass = testcase.select('Mass_Consumed_Fuel_Oil', startrow, count);
+    act_mass = [act_mass{:, :}];
     msg_mass = ['Mass of fuel oil consumed is expected to match that ',...
         'calculated from formula C2 of ISO 19030-2.'];
     testcase.verifyEqual(act_mass, exp_mass, 'RelTol', 1e-9, msg_mass);
@@ -567,21 +499,21 @@ methods(Test)
     % Input
     in_torque = 50:25:100;
     in_rpm = 10:12;
-    [startrow, count] = testcase.insert([in_torque', in_rpm'], ...
-        {'Shaft_Torque', 'Shaft_Revolutions'});
+    names = {'Shaft_Torque', 'Shaft_Revolutions'};
+    data = [in_torque', in_rpm'];
+    [startrow, count] = testcase.insert(names, data);
     
-    exp_shaft = num2cell( in_torque.*in_rpm.*(2*pi/60) )';
+    exp_shaft = ( in_torque.*in_rpm.*(2*pi/60) )';
     
     % Execute
-    testcase.call('updateShaftPower', testcase.InvalidIMO);
+    testcase.call('updateShaftPower', testcase.TestVesselIdString);
     
     % Verify
-    act_shaft = testcase.read('Shaft_Power', startrow, count);
+    act_shaft = testcase.select('Shaft_Power', startrow, count);
+    act_shaft = [act_shaft{:, :}];
     msg_shaft = ['Shaft power expected to be torque multiplied by angular ',...
         'velocity'];
     testcase.verifyEqual(act_shaft, exp_shaft, 'RelTol', 1e-7, msg_shaft);
-    
-        
     end
     
     function testupdateSpeedLoss(testcase)
@@ -594,16 +526,18 @@ methods(Test)
     % Input
     in_sog = [13, 10, 20];
     in_speedexp = [14, 12, 17];
-    [startrow, count] = testcase.insert([in_sog', in_speedexp'], ...
-        {'Speed_Through_Water', 'Expected_Speed_Through_Water'});
+    names = {'Speed_Through_Water', 'Expected_Speed_Through_Water'};
+    data = [in_sog', in_speedexp'];
+    [startrow, count] = testcase.insert(names, data);
     
-    exp_loss = num2cell(((in_sog - in_speedexp) ./ in_speedexp) .* 100)';
+    exp_loss = (((in_sog - in_speedexp) ./ in_speedexp) .* 100)';
     
     % Execute
     testcase.call('updateSpeedLoss')
     
     % Verify
     act_loss = testcase.read('Speed_Loss', startrow, count);
+    act_loss = [act_loss{:, :}];
     msg_loss = ['Speed loss expected to be relative difference between ',...
         'speed over ground and expected speed, as a percentage.'];
     testcase.verifyEqual(act_loss, exp_loss, 'RelTol', 1e-6, msg_loss);
@@ -628,22 +562,27 @@ methods(Test)
     in_DeliveredPower = 30e4:10e4:50e4;
     in_Displacement = 114049:114051;
     in_Trim = zeros(1, 3);
-    in_IMO = repmat(str2double(testcase.AlmavivaIMO), 1, 3);
-    in_A = testcase.AlmavivaSpeedPowerCoefficients(1);
-    in_B = testcase.AlmavivaSpeedPowerCoefficients(2);
-    [startrow, count] = testcase.insert(...
-        [in_DeliveredPower', in_Displacement', in_Trim', in_IMO'], ...
-        {'Delivered_Power', 'Displacement', 'Trim', 'IMO_Vessel_Number'});
+    vessel = testcase.TestVessel;
+    in_A = vessel.SpeedPower.Coefficient_A;
+    in_B = vessel.SpeedPower.Coefficient_B;
+    in_times = now:1:now+length(in_DeliveredPower)-1 + 0.5;
+    in_times = cellstr(datestr(in_times, testcase.DateTimeFormSQL));
+    names = {'Timestamp', 'Corrected_Power', 'Displacement', 'Trim'};
+    data = num2cell([in_DeliveredPower', in_Displacement', in_Trim']);
+    data = [in_times(:), data];
+    [startrow, count] = testcase.insert(names, data);
     
-    exp_espeed = num2cell( in_A(1).*log(in_DeliveredPower) + in_B )';
+    exp_espeed = (in_DeliveredPower/exp(in_B)).^(1/in_A)'; 
+    % ( in_A(1).*log(in_DeliveredPower) + in_B )';
     
     % Execute
-    testcase.call('filterSpeedPowerLookup', testcase.AlmavivaIMO);
-    testcase.call('updateExpectedSpeed', testcase.AlmavivaIMO);
+    testcase.call('filterSpeedPowerLookup', testcase.TestVesselIdString);
+    testcase.call('updateExpectedSpeed', testcase.TestVesselIdString);
     
     % Verify
-    act_espeed = testcase.read('Expected_Speed_Through_Water', startrow,...
-        count);
+    act_espeed = testcase.select('Expected_Speed_Through_Water', count, ...
+        startrow);
+    act_espeed = [act_espeed{:, :}];
     msg_espeed = ['Expected speed is expected to be calculated based on ',...
         'the speed-power curve for this vessel.'];
     testcase.verifyEqual(act_espeed, exp_espeed, 'RelTol', 1e-5, msg_espeed);
@@ -651,39 +590,42 @@ methods(Test)
     % 2
     % Input
     testSz = [1, 4];
-    in_IMO = repmat(str2double(testcase.AlmavivaIMO), testSz);
+%     in_IMO = repmat(str2double(testcase.AlmavivaIMO), testSz);
     
-    dispReference = testcase.AlmavivaSpeedPowerDispTrim(1);
+    dispReference = vessel.SpeedPower.Displacement; % testcase.AlmavivaSpeedPowerDispTrim(1);
     lowerDisp = dispReference*1/(1.05);
     in_Displacement = testcase.randOutThreshold(testSz, @lt, lowerDisp);
     
-    lowerTrim = - testcase.LBP * 0.002;
+    lowerTrim = - vessel.Configuration.LBP * 0.002;
     in_Trim = testcase.randOutThreshold(testSz, @lt, lowerTrim);
     
     in_DeliveredPower = linspace(1e4, 5e4, prod(testSz));
-    in_A = testcase.AlmavivaSpeedPowerCoefficients(1);
-    in_B = testcase.AlmavivaSpeedPowerCoefficients(2);
-    exp_espeed = in_A.*log(in_DeliveredPower) + in_B;
+    in_A = vessel.SpeedPower.Coefficient_A;
+    in_B = vessel.SpeedPower.Coefficient_B;
+    exp_espeed = (in_DeliveredPower/exp(in_B)).^(1/in_A)';  % in_A.*log(in_DeliveredPower) + in_B;
     
     dispReference_v = repmat(dispReference, testSz);
     dispCriteria_l = ~(dispReference_v >= in_Displacement*0.95 & ...
         dispReference_v <= in_Displacement*1.05);
-    exp_espeed(dispCriteria_l) = exp_espeed(dispCriteria_l) .*...
+    exp_espeed(dispCriteria_l) = exp_espeed(dispCriteria_l)' .*...
         (in_Displacement(dispCriteria_l).^(2/3) ./ ...
         dispReference.^(2/3)).^(1/3);
     exp_espeed = num2cell(exp_espeed(:));
-    
-    [startrow, count] = testcase.insert(...
-        [in_DeliveredPower', in_Displacement', in_Trim', in_IMO'], ...
-        {'Delivered_Power', 'Displacement', 'Trim', 'IMO_Vessel_Number'});
+    in_times = now + 0.5:1:now + 0.5 + length(in_DeliveredPower)-1;
+    in_times = cellstr(datestr(in_times, testcase.DateTimeFormSQL));
+    names = {'Timestamp', 'Corrected_Power', 'Displacement', 'Trim'};
+    data = num2cell([in_DeliveredPower', in_Displacement', in_Trim']);
+    data = [in_times(:), data];
+    [startrow, count] = testcase.insert(names, data);
     
     % Execute
-    testcase.call('filterSpeedPowerLookup', testcase.AlmavivaIMO);
-    testcase.call('updateExpectedSpeed', testcase.AlmavivaIMO);
+    testcase.call('filterSpeedPowerLookup', testcase.TestVesselIdString);
+    testcase.call('updateExpectedSpeed', testcase.TestVesselIdString);
     
     % Verify
-    act_espeed = testcase.read('Expected_Speed_Through_Water', startrow,...
-        count);
+    act_espeed = testcase.select('Expected_Speed_Through_Water', count,...
+        startrow);
+    act_espeed = [act_espeed{:, :}];
     msg_espeed = ['Expected_Speed_Through_Water is expected to be corrected'...
         'for displacement using the Admiralty formula when displacement is '...
         'out of range.'];
@@ -2113,14 +2055,24 @@ methods
     if nargin > 1
         names = varargin{1};
     end
+    where_ch = '';
+    otherInputs = {};
+    if nargin > 2
+        otherInputs = varargin(2:end);
+    end
     
-    [~, data] = msql.select(tab, names);
+    [~, data] = msql.select(tab, names, where_ch, otherInputs{:});
     colnames = data.Properties.VariableNames;
     
-    singleCols_l = varfun(@(x) isa(x, 'single'), data, 'OutputFormat', 'Uni');
-    dbl_tbl = varfun(@double, data(:, singleCols_l));
-    data(:, singleCols_l) = [];
-    data = [data, dbl_tbl];
+    data = table2cell(data);
+    data(cellfun(@isnumeric, data)) = ...
+        num2cell(cellfun(@double, data(cellfun(@isnumeric, data))));
+    data = cell2table(data);
+    
+%     singleCols_l = varfun(@(x) isa(x, 'single'), data, 'OutputFormat', 'Uni');
+%     dbl_tbl = varfun(@double, data(:, singleCols_l));
+%     data(:, singleCols_l) = [];
+%     data = [data, dbl_tbl];
     data.Properties.VariableNames = colnames;
     
 %         start_s = '';
@@ -2174,6 +2126,11 @@ methods
     [~, startrow_c] = adodb_query(msql.Connection, sql_numrows);
     startrow = str2double( [startrow_c{:}] );
     numrows = size(data, 1);
+    
+    if isnumeric(data)
+        
+        data = num2cell(data);
+    end
     
     % Concatenate any missing required data
     if ~ismember('Vessel_Id', names)
