@@ -1891,8 +1891,9 @@ methods(Test)
     import matlab.unittest.constraints.IsFalse;
     import matlab.unittest.constraints.EveryElementOf;
     
-    minEngine = testcase.EngineMinPower;
-    maxEngine = testcase.EngineMaxPower;
+    vessel = testcase.TestVessel;
+    minEngine = vessel.Engine.Lowest_Given_Brake_Power;
+    maxEngine = vessel.Engine.Highest_Given_Brake_Power;
     testSz = [1, 2];
     inBrake_v = testcase.randOutThreshold(testSz, @lt, minEngine);
     inBrake_v = [inBrake_v, testcase.randOutThreshold(testSz, @gt, maxEngine)];
@@ -1901,16 +1902,15 @@ methods(Test)
     in_DateTimeUTC = linspace(floor(now), floor(now)+1, prod(testSz));
     data_m = [cellstr(datestr(in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')),...
         num2cell(inBrake_v')];
-    [startrow, count] = testcase.insert(data_m, ...
-        {'DateTime_UTC', 'Brake_Power'});
-    IMO_s = testcase.AlmavivaIMO;
+    [startrow, count] = testcase.insert({'Timestamp', 'Brake_Power'}, data_m);
+%     IMO_s = testcase.AlmavivaIMO;
     
     % Execute
-    testcase.call('filterSFOCOutOfRange', IMO_s);
+    testcase.call('filterSFOCOutOfRange', testcase.TestVesselIdString);
     
     % Verify
-    outFilt_c = testcase.read('Filter_SFOC_Out_Range', startrow, count, 'id');
-    outFilt_v = logical([outFilt_c{:}]);
+    outFilt_c = testcase.select('Filter_SFOC_Out_Range', count, startrow, 'id');
+    outFilt_v = logical([outFilt_c{:, :}]);
     msgFilt = ['Values at indices where brake power is out of range '...
         'are expected to be TRUE'];
     testcase.verifyThat(EveryElementOf(outFilt_v(expTrue_l)), IsTrue, msgFilt);
