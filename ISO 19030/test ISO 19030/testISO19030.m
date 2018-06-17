@@ -1501,7 +1501,6 @@ methods(Test)
     inPower_v = testcase.randOutThreshold(testSz, @lt, lowerPower);
     inNearTrim_v = zeros(testSz);
     inNearDisp_v = repmat(114050, testSz);
-%     inIMO_v = repmat(str2double(testcase.AlmavivaIMO), testSz);
     names = {'Corrected_Power', 'Nearest_Trim', 'Nearest_Displacement'};
     data = [inPower_v', inNearTrim_v', inNearDisp_v'];
     [startrow, count] = testcase.insert(names, data);
@@ -1548,15 +1547,15 @@ methods(Test)
     
     input_m = [cellstr(datestr(in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')),...
         num2cell([in_SpeedGPS', in_Depth'])];
-    [startrow, count] = testcase.insert(input_m, ...
-        {'DateTime_UTC', 'Speed_Over_Ground', 'Water_Depth'});
+    names = {'Timestamp', 'Speed_Over_Ground', 'Water_Depth'};
+    [startrow, count] = testcase.insert(names, input_m);
     
     % Execute
     testcase.call('normaliseHigherFreq');
     
     % Verify
-    outDepth_c = testcase.read('Water_Depth', startrow, count, 'id');
-    outDepth_v = [outDepth_c{:}];
+    outDepth_c = testcase.select('Water_Depth', count, startrow, 'id');
+    outDepth_v = [outDepth_c{:, :}];
     outDepth_v(isnan(outDepth_v)) = [];
     speed_msg = ['High-frequency data is expected to be averaged over the '...
         'lower frequency given.'];
@@ -1583,16 +1582,16 @@ methods(Test)
     
     input_m = [cellstr(datestr(in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')),...
         num2cell([in_SpeedGPS', in_Depth'])];
-    [startrow, count] = testcase.insert(input_m, ...
-        {'DateTime_UTC', 'Speed_Over_Ground', 'Water_Depth'});
+    names = {'Timestamp', 'Speed_Over_Ground', 'Water_Depth'};
+    [startrow, count] = testcase.insert(names, input_m);
     
     % Execute
     testcase.call('normaliseLowerFreq');
     
     % Verify
-    outDepth_c = testcase.read('Water_Depth', startrow, count, 'id');
-    outDepth_v = [outDepth_c{:}];
-    outDepth_v(isnan(outDepth_v)) = [];
+    outDepth_c = testcase.select('Water_Depth', count, startrow, 'id');
+    outDepth_v = [outDepth_c{:, :}];
+    outDepth_v = outDepth_v(:)';
     speed_msg = ['Low-frequency data is expected to be repeated over the '...
         'higher-frequency primary parameter timestep.'];
     
