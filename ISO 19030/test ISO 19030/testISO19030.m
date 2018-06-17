@@ -1115,7 +1115,8 @@ methods(Test)
     
     % 1
     % Input
-    minFOCph = testcase.MinimumFOCph;
+    vessel = testcase.TestVessel;
+    minFOCph = vessel.Engine.Minimum_FOC_ph;
     minFOC = minFOCph*24;
     maxFOC = minFOC + 1e3;
     nData = 10;
@@ -1123,23 +1124,21 @@ methods(Test)
     mfoc_v = (maxFOC - minFOC).*rand(1, nData) + minFOC;
     belowI = randperm(nData, nBelow);
     mfoc_v(belowI) = randi([0, floor(minFOC) - 1]);
-    [startrow, count] = testcase.insert(mfoc_v', {'Mass_Consumed_Fuel_Oil'});
+    [startrow, count] = testcase.insert({'Mass_Consumed_Fuel_Oil'}, mfoc_v');
     
     % Execute
-    testcase.call('removeFOCBelowMinimum', testcase.AlmavivaIMO);
+    testcase.call('removeFOCBelowMinimum', testcase.TestVesselIdString);
     
     % Verify
-    mfoc_act = testcase.read('Mass_Consumed_Fuel_Oil', startrow, count);
-    mfocFilt_act = testcase.read('Filter_SFOC_Out_Range', startrow, count);
+    mfoc_act = testcase.select('Mass_Consumed_Fuel_Oil', count, startrow);
+    mfocFilt_act = testcase.select('Filter_SFOC_Out_Range', count, startrow);
     testcase.assertNotEmpty(mfoc_act, 'MFOC cannot be empty for test to run.')
     
-    mfocFilt_act = [mfocFilt_act{:}];
-    testcase.assertThat(EveryElementOf(mfocFilt_act), ~HasNaN, ...
-        'Filter_SFOC_Out_Range must have some TRUE values.')
+    mfocFilt_act = [mfocFilt_act{:, :}];
     mfocFilt_act = logical(mfocFilt_act);
     testcase.assertThat(AnyElementOf(mfocFilt_act), IsTrue, ...
         'Filter_SFOC_Out_Range must have some TRUE values.')
-    mfoc_act = [mfoc_act{:}];
+    mfoc_act = [mfoc_act{:, :}];
     mfoc_act(isnan(mfoc_act)) = [];
     mfoc_act = mfoc_act(~mfocFilt_act);
     
@@ -1176,23 +1175,21 @@ methods(Test)
     inTemp_v = testcase.randOutThreshold(testSz, @lt, mintemp);
     inputData_m = inTemp_v';
     inputNames_c = {'Seawater_Temperature'};
-    [startrow, count] = testcase.insert(inputData_m, inputNames_c);
+    [startrow, count] = testcase.insert(inputNames_c, inputData_m);
     
     % Execute
-    testcase.call('filterReferenceConditions', testcase.AlmavivaIMO);
+    testcase.call('filterReferenceConditions', testcase.TestVesselIdString);
     
     % Verify
-    temp_act = testcase.read('Seawater_Temperature', startrow, count, 'id');
-    tempFilt_act = testcase.read('Filter_Reference_Seawater_Temp', startrow,...
-        count, 'id');
-    temp_act = [temp_act{:}];
-    tempFilt_act = logical([tempFilt_act{:}]);
+    temp_act = testcase.select('Seawater_Temperature', count, startrow, 'id');
+    tempFilt_act = testcase.select('Filter_Reference_Seawater_Temp', count,...
+        startrow, 'id');
+    temp_act = [temp_act{:, :}];
+    tempFilt_act = logical([tempFilt_act{:, :}]);
     testcase.assertThat(AnyElementOf(tempFilt_act), IsTrue, ['Filt_Reference_Seawater_Temp must '...
         'have some true values in order to be tested.']);
     temp_act = temp_act(~tempFilt_act);
     
-%     testcase.assertNotEmpty(temp_act, ['Filt_Reference_Seawater_Temp must '...
-%         'ahve some true values in order to be tested.']);
     reftemp_act = EveryElementOf(temp_act);
     reftemp_cons = IsGreaterThan(mintemp);
     temp_msg = ['Water temperatures at or below 2 degrees Celsius should ',...
@@ -1205,24 +1202,26 @@ methods(Test)
     minWind = testcase.MinWind;
     maxWind = testcase.MaxWind;
     
-    inputNames_c = {'Relative_Wind_Speed'};
+    inputNames_c = {'Timestamp', 'Relative_Wind_Speed'};
     inWindSpeed_v = testcase.randOutThreshold(testSz, @lt, 7.9);
-    inputData_m = inWindSpeed_v';
-    [startrow, count] = testcase.insert(inputData_m, inputNames_c);
+    inTimes_v = (now:now+length(inWindSpeed_v)-1) + 0.1;
+    inTimes_c = cellstr(datestr(inTimes_v, testcase.DateTimeFormSQL));
+    inputData_m = [inTimes_c, num2cell(inWindSpeed_v)'];
+    [startrow, count] = testcase.insert(inputNames_c, inputData_m);
     
     % Execute
-    testcase.call('filterReferenceConditions', testcase.AlmavivaIMO);
+    testcase.call('filterReferenceConditions', testcase.TestVesselIdString);
     
     % Verify
-    rudder_act = testcase.read('Relative_Wind_Speed', startrow, count,...
+    rudder_act = testcase.select('Relative_Wind_Speed', count, startrow, ...
         'id');
-    rudderFilt_act = testcase.read('Filter_Reference_Wind_Speed', startrow, count,...
-        'id');
-    rudderFilt_act = logical([rudderFilt_act{:}]);
+    rudderFilt_act = testcase.select('Filter_Reference_Wind_Speed', count, ...
+        startrow, 'id');
+    rudderFilt_act = logical([rudderFilt_act{:, :}]);
     testcase.assertThat(AnyElementOf(rudderFilt_act), IsTrue, ...
         ['Filter_Reference_Wind_Speed must have some true values in order '...
         'to be tested.']);
-    rudder_act = [rudder_act{:}];
+    rudder_act = [rudder_act{:, :}];
     rudder_act = rudder_act(~rudderFilt_act);
     rudder_act(isnan(rudder_act)) = [];
     refwind_act = EveryElementOf(rudder_act);
@@ -1238,10 +1237,10 @@ methods(Test)
     % 3
     
     % Input
+    vessel = testcase.TestVessel;
     inputNames_c = {'Water_Depth', 'Static_Draught_Fore', ...
         'Static_Draught_Aft', 'Speed_Through_Water'};
-    
-    breadth = testcase.AlmavivaBreadth;
+    breadth = vessel.Configuration.Breadth_Moulded;
     g = testcase.GravitationalAcceleration;
     
     aftDraft = [12, 0];
@@ -1259,13 +1258,19 @@ methods(Test)
     aftDraft = repmat(aftDraft, [2, 1]);
     speed = repmat(speed, [2, 1]);
     
-    datetime_s = datestr(now-3:now, 'yyyy-mm-dd HH:MM:SS');
+    datetime_s = datestr((now-3:now)+0.4, 'yyyy-mm-dd HH:MM:SS');
     inputData_m = [depth_v(:), forDraft(:), aftDraft(:), speed(:)];
-    [startrow, count] = testcase.insert(inputData_m, inputNames_c);
+    inTimes_v = (now:now+length(depth_v)-1) + 0.2;
+    inTimes_c = cellstr(datestr(inTimes_v, testcase.DateTimeFormSQL));
+    inputData_m = [inTimes_c, num2cell(inputData_m)];
+    inputNames_c = [{'Timestamp'}, inputNames_c];
+    startrow = testcase.insert(inputNames_c, inputData_m);
     
-    [~, id_c] = adodb_query(testcase.Connection, ...
-        'SELECT id FROM tempRawISO');
-    id_v = [id_c{:}];
+    msql = vessel.InServiceSQLDB;
+    [~, id_c] = msql.select('tempRawISO', 'id');
+%     [~, id_c] = adodb_query(testcase.Connection, ...
+%         'SELECT id FROM tempRawISO');
+    id_v = [id_c{:, :}];
     
 %     update1_s = ['UPDATE ' testcase.TableName ' SET DateTime_UTC = ''' ...
 %         datetime_s(1, :) ''' WHERE id = ' num2str(id_v(3)) ';'];
@@ -1276,42 +1281,42 @@ methods(Test)
 %     update4_s = ['UPDATE ' testcase.TableName ' SET DateTime_UTC = ''' ...
 %         datetime_s(4, :) ''' WHERE id = ' num2str(id_v(3 + 3)) ';'];
     
-    update1_s = ['UPDATE ' testcase.TableName ' SET DateTime_UTC = ''' ...
+    update1_s = ['UPDATE ' testcase.TableName ' SET Timestamp = ''' ...
         datetime_s(1, :) ''' WHERE id = ' num2str(max(id_v) - 3) ';'];
-    update2_s = ['UPDATE ' testcase.TableName ' SET DateTime_UTC = ''' ...
+    update2_s = ['UPDATE ' testcase.TableName ' SET Timestamp = ''' ...
         datetime_s(2, :) ''' WHERE id = ' num2str(max(id_v) - 2) ';'];
-    update3_s = ['UPDATE ' testcase.TableName ' SET DateTime_UTC = ''' ...
+    update3_s = ['UPDATE ' testcase.TableName ' SET Timestamp = ''' ...
         datetime_s(3, :) ''' WHERE id = ' num2str(max(id_v) - 1) ';'];
-    update4_s = ['UPDATE ' testcase.TableName ' SET DateTime_UTC = ''' ...
+    update4_s = ['UPDATE ' testcase.TableName ' SET Timestamp = ''' ...
         datetime_s(4, :) ''' WHERE id = ' num2str(max(id_v)) ';'];
-    adodb_query(testcase.Connection, update1_s);
-    adodb_query(testcase.Connection, update2_s);
-    adodb_query(testcase.Connection, update3_s);
-    adodb_query(testcase.Connection, update4_s);
+    adodb_query(msql.Connection, update1_s);
+    adodb_query(msql.Connection, update2_s);
+    adodb_query(msql.Connection, update3_s);
+    adodb_query(msql.Connection, update4_s);
     
     % Execute
-    testcase.call('filterReferenceConditions', testcase.AlmavivaIMO);
+    testcase.call('filterReferenceConditions', testcase.TestVesselIdString);
     
     % Verify
-    depth5_act = testcase.read('Water_Depth', startrow, 2, 'id');
-    depth6_act = testcase.read('Water_Depth', startrow + 2, 2, 'id');
-    depth5Filt_act = testcase.read('Filter_Reference_Water_Depth', ...
-        startrow, 2, 'id');
-    depth6Filt_act = testcase.read('Filter_Reference_Water_Depth', ...
-        startrow + 2, 2, 'id');
+    depth5_act = testcase.select('Water_Depth', 2, startrow, 'id');
+    depth6_act = testcase.select('Water_Depth', 2, startrow + 2, 'id');
+    depth5Filt_act = testcase.select('Filter_Reference_Water_Depth', ...
+        2, startrow, 'id');
+    depth6Filt_act = testcase.select('Filter_Reference_Water_Depth', ...
+        2, startrow + 2, 'id');
     testcase.assertNotEmpty(depth5_act, ['Water_Depth must not be non-empty ',...
         'to be tested.']);
     testcase.assertNotEmpty(depth6_act, ['Water_Depth must not be non-empty ',...
         'to be tested.']);
-    depth5_act = [depth5_act{:}];
+    depth5_act = [depth5_act{:, :}];
     depth5_act(isnan(depth5_act)) = [];
-    depth6_act = [depth6_act{:}];
+    depth6_act = [depth6_act{:, :}];
     depth6_act(isnan(depth6_act)) = [];
     
-    depth5Filt_act = [depth5Filt_act{:}];
+    depth5Filt_act = [depth5Filt_act{:, :}];
     depth5Filt_act = logical(depth5Filt_act);
     depth5_act = depth5_act(~depth5Filt_act);
-    depth6Filt_act = [depth6Filt_act{:}];
+    depth6Filt_act = [depth6Filt_act{:, :}];
     depth6Filt_act = logical(depth6Filt_act);
     depth6_act = depth6_act(~depth6Filt_act);
     testcase.assertThat(AnyElementOf(depth5Filt_act), IsTrue, ...
@@ -1337,23 +1342,26 @@ methods(Test)
     % 4
     % Input
     maxRudder = testcase.MaxRudder;
-    inputNames_c = {'Rudder_Angle'};
+    inputNames_c = {'Timestamp', 'Rudder_Angle'};
     inRudderAngle_v = testcase.randOutThreshold(testSz, @lt, maxRudder);
     inputData_m = inRudderAngle_v';
-    [startrow, count] = testcase.insert(inputData_m, inputNames_c);
+    inTimes_v = (now:now+length(inRudderAngle_v)-1) + 0.3;
+    inTimes_c = cellstr(datestr(inTimes_v, testcase.DateTimeFormSQL));
+    inputData_m = [inTimes_c, num2cell(inputData_m)];
+    [startrow, count] = testcase.insert(inputNames_c, inputData_m);
     
     % Execute
-    testcase.call('filterReferenceConditions', testcase.AlmavivaIMO);
+    testcase.call('filterReferenceConditions', testcase.TestVesselIdString);
     
     % Verify
-    rudder_act = testcase.read('Rudder_Angle', startrow, count, 'id');
-    rudderFilt_act = testcase.read('Filter_Reference_Rudder_Angle', startrow, count, 'id');
+    rudder_act = testcase.select('Rudder_Angle', count, startrow, 'id');
+    rudderFilt_act = testcase.select('Filter_Reference_Rudder_Angle', count, startrow, 'id');
     testcase.assertNotEmpty(rudder_act, ['Rudder angle must not be non-empty ',...
         'to be tested.']);
-    rudder_act = [rudder_act{:}];
+    rudder_act = [rudder_act{:, :}];
     rudder_act(isnan(rudder_act)) = [];
     
-    rudderFilt_act = logical([rudderFilt_act{:}]);
+    rudderFilt_act = logical([rudderFilt_act{:, :}]);
     rudder_act = rudder_act(~rudderFilt_act);
     rudder_act = EveryElementOf(rudder_act);
     rudder_cons = IsLessThan(maxRudder);
