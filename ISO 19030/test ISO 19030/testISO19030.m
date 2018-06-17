@@ -306,17 +306,18 @@ methods(Static)
     
     end
     
-    function [inDisp_v, inTrim_v] = randDispTrim(testSz, spDisp, spTrim)
+    function [inDisp_v, inTrim_v] = randDispTrim(testSz, spDisp, spTrim, lbp)
     % randDispTrim Random vector of displacements, trim around threshold
     
     bothValid_l = false;
+    
     while ~any(bothValid_l) || all(bothValid_l)
         
         lowerDisp = (1/1.05)*spDisp;
         upperDisp = (1/0.95)*spDisp;
         inDisp_v = testISO19030.randOutThreshold(testSz, @lt, upperDisp, ...
             @gt, lowerDisp);
-        lbp = testISO19030.LBP;
+%         lbp = testISO19030.LBP;
         
         lowerTrim = spTrim - 0.002*lbp;
         upperTrim = spTrim + 0.002*lbp;
@@ -1390,10 +1391,13 @@ methods(Test)
     import matlab.unittest.constraints.IsGreaterThanOrEqualTo;
     import matlab.unittest.constraints.IsLessThanOrEqualTo;
     testSz = [1, 4];
+    vessel = testcase.TestVessel;
+    spTrim = vessel.SpeedPower.Trim;
+    lbp = vessel.Configuration.LBP;
     
     spDisp = 114050;
-    spTrim = testcase.SPTrim;
-    [inDisp_v, inTrim_v] = testcase.randDispTrim(testSz, spDisp, spTrim);
+%     spTrim = testcase.SPTrim;
+    [inDisp_v, inTrim_v] = testcase.randDispTrim(testSz, spDisp, spTrim, lbp);
     inDelPower_v = testcase.randOutThreshold(testSz, @gt, 0);
     
 %     bothValid_l = false;
@@ -1416,27 +1420,27 @@ methods(Test)
 %     end
     inStatic_Draught_Aft = randi([0, 2], testSz);
     inStatic_Draught_Fore = inTrim_v + inStatic_Draught_Aft;
-    imo = repmat(str2double(testcase.AlmavivaIMO), testSz);
+%     imo = repmat(str2double(testcase.AlmavivaIMO), testSz);
     
-    inputData_m = [imo', inDelPower_v', inDisp_v', inTrim_v', ...
+    inputData_m = [inDelPower_v', inDisp_v', inTrim_v', ...
         inStatic_Draught_Fore', inStatic_Draught_Aft'];
-    inputNames_c = {'IMO_Vessel_Number', 'Delivered_Power', 'Displacement', 'Trim', ...
+    inputNames_c = {'Delivered_Power', 'Displacement', 'Trim', ...
         'Static_Draught_Fore', 'Static_Draught_Aft'};
-    [startrow, count] = testcase.insert(inputData_m, inputNames_c);
+    [startrow, count] = testcase.insert(inputNames_c, inputData_m);
     
     % Execute
-    testcase.call('filterSpeedPowerLookup', testcase.AlmavivaIMO);
+    testcase.call('filterSpeedPowerLookup', testcase.TestVesselIdString);
     
     % Verify
-    filt_act = testcase.read('Filter_SpeedPower_Disp_Trim', startrow, count, 'id');
-    disp_v = testcase.read('Displacement', startrow, count, 'id');
+    filt_act = testcase.select('Filter_SpeedPower_Disp', count, startrow, 'id');
+    disp_v = testcase.select('Displacement', count, startrow, 'id');
     testcase.assertNotEmpty(disp_v, ['Displacement cannot be empty',...
         ' for test.']);
     testcase.assertNotEmpty(filt_act, ['Filter_SpeedPower_Disp_Trim cannot be empty',...
         ' for test.']);
-    disp_v = [disp_v{:}];
+    disp_v = [disp_v{:, :}];
     disp_v(isnan(disp_v)) = [];
-    filt_act = [filt_act{:}];
+    filt_act = [filt_act{:, :}];
     filt_act(isnan(filt_act)) = [];
     testcase.assertNotEmpty(disp_v, ['Displacement cannot be empty',...
         ' for test.']);
@@ -1454,19 +1458,23 @@ methods(Test)
         'expected to be TRUE.'];
     testcase.verifyThat(disp_act, minDisp_cons, minDisp_msg);
     
-    trim_c = testcase.read('Trim', startrow, count, 'id');
-    trim_v = [trim_c{:}];
-    trim_v(isnan(filt_act)) = [];
+    filt_act = testcase.select('Filter_SpeedPower_Trim', count, startrow, 'id');
+    filt_act = [filt_act{:, :}];
+    trim_c = testcase.select('Trim', count, startrow, 'id');
+    trim_v = [trim_c{:, :}];
+    filterSpeedPowerTrim_l = filt_act;
+    trim_v(filterSpeedPowerTrim_l) = [];
+%     trim_v(isnan(filt_act)) = [];
 %     filt_act = testcase.read('FilterSPDispTrim', startrow, count, 'id');
 %     filt_act = [filt_act{:}];
 %     filt_act(isnan(filt_act)) = [];
-    trim_act = EveryElementOf(repmat(spTrim, 1, numel(trim_v(~filt_act))));
-    minTrim_cons = IsGreaterThanOrEqualTo(trim_v(~filt_act) - 0.002*lbp);
+    trim_act = EveryElementOf(repmat(spTrim, 1, numel(trim_v)));
+    minTrim_cons = IsGreaterThanOrEqualTo(trim_v - 0.002*lbp);
     minTrim_msg = ['Elements of Filter_SpeedPower_Trim corresponding to those ',...
         'outside of +/- 0.2% of the LBP of the vessel are expected to be ',...
         'FALSE.'];
     testcase.verifyThat(trim_act, minTrim_cons, minTrim_msg);
-    minTrim_cons = IsLessThanOrEqualTo(trim_v(~filt_act) + 0.002*lbp);
+    minTrim_cons = IsLessThanOrEqualTo(trim_v + 0.002*lbp);
     minTrim_msg = ['Elements of Filter_SpeedPower_Trim corresponding to those ',...
         'outside of +/- 0.2% of the LBP of the vessel are expected to be ',...
         'FALSE.'];
