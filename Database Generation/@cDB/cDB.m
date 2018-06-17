@@ -636,7 +636,8 @@ classdef cDB < cMySQL
         'createVesselToVesselOwner.sql            '
         'createWindCoefficientModel.sql           '
         'createWindCoefficientModelValue.sql  	'
-        'createSpeedPower.sql'};
+        'createSpeedPower.sql'
+        'createGlobalConstants.sql'};
        createStaticFullpath_c = cellfun(@(x) fullfile(topleveldir, ISODir, x), ...
            createStatic_c, 'Uni', 0);
        obj = obj.source(createStaticFullpath_c);
