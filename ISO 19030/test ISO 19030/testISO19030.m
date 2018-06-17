@@ -1625,13 +1625,14 @@ methods(Test)
     tstep = 1 / (24*(60/2));
     in_DateTimeUTC = linspace(now, now+(tstep*(N-1)), N);
     
-    [startrow, count] = testcase.insert([cellstr(datestr(...
+    names = {'Timestamp', 'Speed_Over_Ground', 'Relative_Wind_Speed',...
+        'Rudder_Angle'};
+    data = [cellstr(datestr(...
         in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')), ...
         num2cell(in_SpeedOverGround)',...
         num2cell(in_RelWindSpeed)', ...
-        num2cell(in_RudderAngle)'], ...
-        {'DateTime_UTC', 'Speed_Over_Ground', 'Relative_Wind_Speed',...
-        'Rudder_Angle'});
+        num2cell(in_RudderAngle)'];
+    [startrow, count] = testcase.insert(names, data);
     
     mSpeed = mean(reshape(in_SpeedOverGround, [nBlock, N/nBlock]));
     mSpeed = repmat(mSpeed, [nBlock, 1]);
@@ -1666,6 +1667,19 @@ methods(Test)
     x_f = @(z) abs(z - mSpeed) ./ ( stdSpeed - sqrt(2) );
     x_f = @(z) abs(z - mWind) ./ ( stdWind - sqrt(2) );
     
+    del10Speed = abs(mSpeed - in_SpeedOverGround);
+    xSpeed = del10Speed ./ (stdSpeed * sqrt(2));
+    p = 0.3275911;
+    tSpeed = 1 ./ (1 + (p*del10Speed) ./ (stdSpeed *sqrt(2)));
+    
+    chauvPoly = [1.061405429, -1.453152027, 1.421413741, -0.284496736,...
+        0.254829592];
+    case1_l = xSpeed >= 0;
+    polySpeed = polyval(chauvPoly, tSpeed);
+    chauvSpeed = in_SpeedOverGround;
+    chauvSpeed(case1_l) = polySpeed.*exp(-xSpeed(case1_l).^2)*N < 0.5;
+    chauvSpeed(~case1_l) = (2 - abs(polySpeed)).*exp(-xSpeed(case1_l).^2)*N < 0.5;
+    
     chav_f = @(delta, sigma, N) erfc(delta ./ (sigma - sqrt(2)))*N < 0.5;
     chauvSpeed = chav_f(abs(in_SpeedOverGround - mSpeed),...
         stdSpeed, nBlock);
@@ -1679,9 +1693,10 @@ methods(Test)
     testcase.call('updateChauvenetCriteria');
     
     % Verify
-    outChauv_c = testcase.read('Chauvenet_Criteria', startrow, count, 'id');
-    outChauv_v = [outChauv_c{:}];
-    outChauv_v(isnan(outChauv_v)) = [];
+    outChauv_c = testcase.select('Chauvenet_Criteria', count, startrow, 'id');
+    outChauv_v = [outChauv_c{:, :}];
+    outChauv_v = outChauv_v(:)';
+%     outChauv_v(isnan(outChauv_v)) = [];
     actChauv = logical(outChauv_v);
     chauv_msg = ['Chauvenet criterion expected to be calculated based on '...
         'formula I7.'];
@@ -1758,14 +1773,16 @@ methods(Test)
     tstep = 1 / (24*(60/2));
     in_DateTimeUTC = linspace(now, now+(tstep*(N-1)), N);
     
-    [startrow, count] = testcase.insert([cellstr(datestr(...
+    names = {'Timestamp', 'Shaft_Revolutions', 'Speed_Through_Water', ...
+        'Speed_Over_Ground', 'Rudder_Angle'};
+    data = [cellstr(datestr(...
         in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')), ...
         num2cell(in_RPM)',...
         num2cell(in_SpeedThroughWater)', ...
         num2cell(in_SpeedOverGround)',...
-        num2cell(in_RudderAngle)'], ...
-        {'DateTime_UTC', 'Shaft_Revolutions', 'Speed_Through_Water', ...
-        'Speed_Over_Ground', 'Rudder_Angle'});
+        num2cell(in_RudderAngle)'];
+    
+    [startrow, count] = testcase.insert(names, data);
     
     stdRPM = std(reshape(in_RPM, [nBlock, N/nBlock]), 1);
     stdRPM = repmat(stdRPM, [nBlock, 1]);
@@ -1802,14 +1819,14 @@ methods(Test)
     testcase.call('updateValidated');
     
     % Verify
-    outValidated_c = testcase.read('Validated', startrow, count, 'id');
-    outValidated_v = [outValidated_c{:}];
+    outValidated_c = testcase.select('Validated', count, startrow, 'id');
+    outValidated_v = [outValidated_c{:, :}];
     outValidated_v(isnan(outValidated_v)) = [];
     actValidated = logical(outValidated_v);
     validated_msg = ['Field name ''Validated'' expected to be true when '...
         'standard devaitions of all four fields given in Annex J are not '...
         'exceeded.'];
-    testcase.verifyEqual(actValidated, exp_validated, validated_msg);
+    testcase.verifyEqual(actValidated(:), exp_validated(:), validated_msg);
     
     % 2
     testcase.dropTable
@@ -1822,34 +1839,34 @@ methods(Test)
     in_RudderAngle = abs(randn([1, N]));
     tstep = 1 / (24*(60/11));
     in_DateTimeUTC = linspace(now, now+(tstep*(N-1)), N);
-    
-    [startrow, count] = testcase.insert([cellstr(datestr(...
+    name = {'Timestamp', 'Speed_Through_Water', ...
+        'Speed_Over_Ground', 'Rudder_Angle'};
+    data = [cellstr(datestr(...
         in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')), ...
         num2cell(in_SpeedThroughWater)', ...
         num2cell(in_SpeedOverGround)',...
-        num2cell(in_RudderAngle)'], ...
-        {'DateTime_UTC', 'Speed_Through_Water', ...
-        'Speed_Over_Ground', 'Rudder_Angle'});
+        num2cell(in_RudderAngle)'];
+    [startrow, count] = testcase.insert(name, data);
     
     % Execute
     testcase.call('updateValidated');
     
     % Verify
-    outValidated_c = testcase.read('Validated', startrow, count, 'id');
-    outValidated_v = [outValidated_c{:}];
+    outValidated_c = testcase.select('Validated', count, startrow, 'id');
+    outValidated_v = [outValidated_c{:, :}];
     outValidated_v(isnan(outValidated_v)) = [];
     actValidated = logical(outValidated_v);
     validated_msg = ['Field name ''Validated'' expected to be false when '...
         'data frequency is less than once per 10 minutes.'];
     testcase.verifyThat(EveryElementOf(actValidated), IsFalse, validated_msg);
     
-    outSTW_c = testcase.read('Speed_Through_Water', startrow, count, 'id');
-    outSOG_c = testcase.read('Speed_Over_Ground', startrow, count, 'id');
-    outRA_c = testcase.read('Rudder_Angle', startrow, count, 'id');
+    outSTW_c = testcase.select('Speed_Through_Water', count, startrow, 'id');
+    outSOG_c = testcase.select('Speed_Over_Ground',  count, startrow, 'id');
+    outRA_c = testcase.select('Rudder_Angle',  count, startrow, 'id');
     
-    outSTW = [outSTW_c{:}];
-    outSOG = [outSOG_c{:}];
-    outRA = [outRA_c{:}];
+    outSTW = [outSTW_c{:, :}]';
+    outSOG = [outSOG_c{:, :}]';
+    outRA = [outRA_c{:, :}]';
     
     validated_msg = ['Input data should be unaffected when frequency is '...
         'less than onece per 10 minutes.'];

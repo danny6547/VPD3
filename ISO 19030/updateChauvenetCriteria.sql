@@ -12,8 +12,8 @@ CREATE PROCEDURE updateChauvenetCriteria()
 BEGIN
 
 	/* Constants */
-	SET @startTime := (SELECT MIN(DateTime_UTC) from `inservice`.tempRawISO);
-	SET @firstgroup := (SELECT FLOOR((TO_SECONDS(MIN(DateTime_UTC)) - TO_SECONDS(@startTime))/(600)) FROM `inservice`.tempRawISO);
+	SET @startTime := (SELECT MIN(Timestamp) from `inservice`.tempRawISO);
+	SET @firstgroup := (SELECT FLOOR((TO_SECONDS(MIN(Timestamp)) - TO_SECONDS(@startTime))/(600)) FROM `inservice`.tempRawISO);
     
     /* Calculate 10 minute averages */
     DROP TABLE IF EXISTS `inservice`.mu10Mins;
@@ -65,7 +65,7 @@ BEGIN
 					 AVG(Static_Draught_Aft) AS Static_Draught_Aft,
 					 COUNT(*) AS N
 				FROM `inservice`.tempRawISO
-					GROUP BY FLOOR((TO_SECONDS(DateTime_UTC) - TO_SECONDS(@startTime))/(600)));
+					GROUP BY FLOOR((TO_SECONDS(Timestamp) - TO_SECONDS(@startTime))/(600)));
                     
     /* Calculate individual errors of data from the 10-minute mean */
 	DROP TABLE IF EXISTS `inservice`.del10Mins;
@@ -73,7 +73,7 @@ BEGIN
     
 	CREATE TABLE `inservice`.del10Mins (
 							id INT PRIMARY KEY AUTO_INCREMENT,
-                            DateTime_UTC DATETIME,
+                            Timestamp DATETIME,
 							Relative_Wind_Speed DOUBLE(10 , 5 ),
 							Relative_Wind_Direction DOUBLE(10 , 5 ),
 							Speed_Over_Ground DOUBLE(10 , 5 ),
@@ -89,7 +89,7 @@ BEGIN
 							 Static_Draught_Aft DOUBLE(10, 5),
 							N INT);
     
-	INSERT INTO `inservice`.del10Mins (DateTime_UTC,
+	INSERT INTO `inservice`.del10Mins (Timestamp,
 							Speed_Over_Ground, 
 							Relative_Wind_Speed, 
 							Shaft_Revolutions, 
@@ -104,7 +104,7 @@ BEGIN
 							Relative_Wind_Direction,
 							Ship_Heading)
 		SELECT
-				t.DateTime_UTC,
+				t.Timestamp,
 				ABS(t.Speed_Over_Ground - mu.Speed_Over_Ground) AS Speed_Over_Ground,
 				ABS(t.Relative_Wind_Speed - mu.Relative_Wind_Speed) AS Relative_Wind_Speed,
 				ABS(t.Shaft_Revolutions - mu.Shaft_Revolutions) AS Shaft_Revolutions,
@@ -129,7 +129,7 @@ BEGIN
 				END AS Ship_Heading
 					FROM `inservice`.tempRawISO t
 						JOIN mu10Mins mu
-							ON mu.id = FLOOR((TO_SECONDS(t.DateTime_UTC) - TO_SECONDS(@startTime))/(600)) - @firstgroup + 1;
+							ON mu.id = FLOOR((TO_SECONDS(t.Timestamp) - TO_SECONDS(@startTime))/(600)) - @firstgroup + 1;
     
     /* Calculate 10 minute standard error of mean */
 	DROP TABLE IF EXISTS `inservice`.sem10Mins;
@@ -164,7 +164,7 @@ BEGIN
 					 SQRT(AVG(POWER(Static_Draught_Aft, 2))),
 					 SQRT(AVG(POWER(Seawater_Temperature, 2)))
 				FROM `inservice`.del10Mins
-					GROUP BY FLOOR((TO_SECONDS(DateTime_UTC) - TO_SECONDS(@startTime))/(600)));
+					GROUP BY FLOOR((TO_SECONDS(Timestamp) - TO_SECONDS(@startTime))/(600)));
     
 	/* Calculate ERFC function on 10 minute blocks */
 	DROP TABLE IF EXISTS `inservice`.erfc10Mins;
@@ -256,9 +256,9 @@ BEGIN
 			mu.N
 				FROM `inservice`.del10Mins t
 				JOIN `inservice`.mu10Mins mu
-					ON mu.id = FLOOR((TO_SECONDS(t.DateTime_UTC) - TO_SECONDS(@startTime))/(600)) - @firstgroup + 1
+					ON mu.id = FLOOR((TO_SECONDS(t.Timestamp) - TO_SECONDS(@startTime))/(600)) - @firstgroup + 1
 				JOIN `inservice`.sem10Mins sem
-					ON sem.id = FLOOR((TO_SECONDS(t.DateTime_UTC) - TO_SECONDS(@startTime))/(600)) - @firstgroup + 1;
+					ON sem.id = FLOOR((TO_SECONDS(t.Timestamp) - TO_SECONDS(@startTime))/(600)) - @firstgroup + 1;
     
     /* Compare the complimentary error function for each parameter with the threhold value for exclusion */
 	set @a1 := 0.254829592;
@@ -348,17 +348,19 @@ BEGIN
 						IFNULL(c.Water_Depth, FALSE) OR IFNULL(c.Air_Temperature, FALSE) OR IFNULL(c.Static_Draught_Fore, FALSE) OR IFNULL(c.Static_Draught_Aft, FALSE) OR IFNULL(c.Seawater_Temperature, FALSE));
 		
 		/* Mark analysis as Chauvenet Filtered */
-		SET @timeStep := (SELECT (SELECT to_seconds(DateTime_UTC) FROM `inservice`.tempRawISO WHERE Speed_Over_Ground IS NOT NULL LIMIT 1, 1) - 
-			(SELECT to_seconds(DateTime_UTC) FROM `inservice`.tempRawISO WHERE Speed_Over_Ground IS NOT NULL LIMIT 0, 1) );
+		SET @timeStep := (SELECT (SELECT to_seconds(Timestamp) FROM `inservice`.tempRawISO WHERE Speed_Over_Ground IS NOT NULL LIMIT 1, 1) - 
+			(SELECT to_seconds(Timestamp) FROM `inservice`.tempRawISO WHERE Speed_Over_Ground IS NOT NULL LIMIT 0, 1) );
 		IF @timeStep < 600 THEN
 			SET @ChauvenetFiltered := TRUE;
 		ELSE
 			SET @ChauvenetFiltered := FALSE;
 		END IF;
 		
+        /*
 		CALL IMOStartEnd(@imo, @startd, @endd);
 		IF @imo IS NOT NULL AND @startd IS NOT NULL AND @endd IS NOT NULL THEN
 			INSERT INTO `inservice`.Analysis (IMO_Vessel_Number, StartDate, EndDate, ChauvenetFiltered)
 			VALUES (@imo, @startd, @endd, @ChauvenetFiltered) ON DUPLICATE KEY UPDATE ChauvenetFiltered = VALUES(ChauvenetFiltered);
 		END IF;
+        */
 END;
