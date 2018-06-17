@@ -897,15 +897,18 @@ methods(Test)
     % Input
     in_ShaftTorque = [10, nan, 12];
     in_ShaftRPM = 12:2:16;
-    testcase.insert([in_ShaftTorque', in_ShaftRPM'], ...
-        {'Shaft_Torque', 'Shaft_Revolutions'});
+    name = {'Shaft_Torque', 'Shaft_Revolutions'};
+    data = [in_ShaftTorque', in_ShaftRPM'];
+    testcase.insert(name, data);
+    vessel = testcase.TestVessel;
     
     % Execute
-    testcase.call('isShaftPowerAvailable',...
-        testcase.InvalidIMO, '@out');
+    testcase.call('isShaftPowerAvailable', {testcase.TestVesselIdString,...
+        '@out'});
     
     % Verify
-    [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
+%     [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
+    [~, act_isAvail] = adodb_query(vessel.InServiceSQLDB.Connection, 'SELECT @out;');
     act_isAvail = logical(str2double([act_isAvail{:}]));
     msg_isAvail = ['Shaft power is expected to be available when shaft ',...
         'torque and rpm are available.'];
@@ -917,15 +920,17 @@ methods(Test)
     testcase.createTable;
     in_ShaftTorque = nan(1, 3);
     in_ShaftRPM = 12:2:16;
-    testcase.insert([in_ShaftTorque', in_ShaftRPM'], ...
-        {'Shaft_Torque', 'Shaft_Revolutions'});
+    name = {'Shaft_Torque', 'Shaft_Revolutions'};
+    data = [in_ShaftTorque', in_ShaftRPM'];
+    testcase.insert(name, data);
     
     % Execute
-    testcase.call('isShaftPowerAvailable', testcase.InvalidIMO,...
-        '@out');
+    testcase.call('isShaftPowerAvailable', {testcase.TestVesselIdString,...
+        '@out'});
         
     % Verify
-    [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
+%     [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
+    [~, act_isAvail] = adodb_query(vessel.InServiceSQLDB.Connection, 'SELECT @out;');
     act_isAvail = logical(str2double([act_isAvail{:}]));
     msg_isAvail = ['Shaft power is expected not to be available when shaft ',...
         'torque and rpm are available.'];
