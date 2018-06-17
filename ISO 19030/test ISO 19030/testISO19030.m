@@ -1903,7 +1903,6 @@ methods(Test)
     data_m = [cellstr(datestr(in_DateTimeUTC, 'yyyy-mm-dd HH:MM:SS.FFF')),...
         num2cell(inBrake_v')];
     [startrow, count] = testcase.insert({'Timestamp', 'Brake_Power'}, data_m);
-%     IMO_s = testcase.AlmavivaIMO;
     
     % Execute
     testcase.call('filterSFOCOutOfRange', testcase.TestVesselIdString);
@@ -1965,21 +1964,28 @@ methods(Test)
     input_DraftFore = abs(randn(testSz));
     input_DraftAft = 2*T - input_DraftFore;
     
-    Ades = testcase.AlmavivaTransProjArea;
-    Zrefdes = testcase.Wind_Reference_Height_Design;
-    Tdes = testcase.AlmavivaDesignDraft;
+    vessel = testcase.TestVessel;
+    Ades = vessel.Configuration.Transverse_Projected_Area_Design;
+    Zrefdes = vessel.Configuration.Wind_Reference_Height_Design;
+    Tdes = vessel.Configuration.Draft_Design;
+    B = vessel.Configuration.Breadth_Moulded;
+    anemometerHeight = vessel.Configuration.Anemometer_Height;
+%     Ades = testcase.AlmavivaTransProjArea;
+%     Zrefdes = testcase.Wind_Reference_Height_Design;
+%     Tdes = testcase.AlmavivaDesignDraft;
     delT = Tdes - T;
-    B = testcase.AlmavivaBreadth;
+%     B = testcase.AlmavivaBreadth;
     A = Ades + delT.* B;
     zref = (Ades.*(Zrefdes + delT) + 0.5.* B.* delT.^2) ./ A;
     
     vt = sqrt(vr.^2 + vg.^2 - 2.* vr.* vg.* cosd(psir) );
-    za = testcase.AlmavivaAnemometerHeight + delT;
+    za = anemometerHeight + delT;
     vtref = vt.* (zref/za).^(1/7);
     condition = vr.* cosd(psir + psi0) - vg.* cosd(psi0) >= 0;
     psit = atand( (vr.* sind(psir + psi0) - vg.*sind(psi0)) ./...
         (vr.* cosd(psir + psi0) - vg.* cosd(psi0) ));
     psit(~condition) = psit(~condition) + 180;
+    psit = mod(psit, 360);
     vrref = sqrt(vtref.^2 + vg.^2 + 2.* vtref.* vg.*cosd(psit + psi0));
     
     condition1 = vg + vtref.* cosd(psit - psi0) >= 0;
@@ -1988,63 +1994,57 @@ methods(Test)
     psirref(~condition1) = psirref(~condition1) + 180;
     
     in_DateTimeUTC = testISO19030.datetime_utc(testSz);
-    input_IMO = repmat(str2double(testcase.AlmavivaIMO), [1, prod(testSz)]);
-    input_NumericCols = [input_IMO; vr; psir; input_DraftFore;...
+%     input_IMO = repmat(str2double(testcase.AlmavivaIMO), [1, prod(testSz)]);
+    input_NumericCols = [vr; psir; input_DraftFore;...
         input_DraftAft; vg; psi0];
     in_Data = [in_DateTimeUTC, num2cell(input_NumericCols)'];
-    in_Names = {'DateTime_UTC', 'IMO_Vessel_Number', 'Relative_Wind_Speed', ...
+    in_Names = {'Timestamp', 'Relative_Wind_Speed', ...
         'Relative_Wind_Direction', 'Static_Draught_Fore', ...
         'Static_Draught_Aft', 'Speed_Over_Ground', 'Ship_Heading'};
-    [startrow, count] = testcase.insert(in_Data, in_Names);
-    testcase.call('updateTransProjArea', testcase.AlmavivaIMO);
+    [startrow, count] = testcase.insert(in_Names, in_Data);
+    testcase.call('updateTransProjArea', testcase.TestVesselIdString);
     
     % Execute
-    testcase.call('updateWindReference');
+    testcase.call('updateWindReference', testcase.TestVesselIdString);
     
     % Verify
-    act_Speedc = testcase.read({'True_Wind_Speed'},...
-        startrow, count);
-    act_Speed = [act_Speedc{:}];
+    act_Speedc = testcase.select({'True_Wind_Speed'}, count, startrow);
+    act_Speed = [act_Speedc{:, :}]';
     msg_Speed = ['True wind speed should be '...
         'calculated according to Annex E.'];
     exp_Speed = vt;
     testcase.verifyEqual(act_Speed, exp_Speed, 'RelTol', 9e-3, msg_Speed);
     
-    act_Dirc = testcase.read({'True_Wind_Direction'},...
-        startrow, count);
-    act_Dir = [act_Dirc{:}];
+    act_Dirc = testcase.select({'True_Wind_Direction'}, count, startrow);
+    act_Dir = [act_Dirc{:, :}]';
     msg_Dir = ['True wind direction at reference height should be '...
         'calculated according to Annex E.'];
     exp_Dir = psit;
     testcase.verifyEqual(act_Dir, exp_Dir, 'RelTol', 9e-3, msg_Dir);
     
-    act_Heightc = testcase.read({'Wind_Reference_Height'},...
-        startrow, count);
-    act_Height = [act_Heightc{:}];
+    act_Heightc = testcase.select({'Wind_Reference_Height'}, count, startrow);
+    act_Height = [act_Heightc{:, :}]';
     msg_Height = ['Wind reference height should be '...
         'calculated according to Annex E.'];
     exp_Height = zref;
     testcase.verifyEqual(act_Height, exp_Height, 'RelTol', 9e-3, msg_Height);
     
-    act_Speedc = testcase.read({'True_Wind_Speed_Reference'},...
-        startrow, count);
-    act_Speed = [act_Speedc{:}];
+    act_Speedc = testcase.select({'True_Wind_Speed_Reference'}, count, startrow);
+    act_Speed = [act_Speedc{:, :}]';
     msg_Speed = ['True wind speed at reference height should be '...
         'calculated according to Annex E.'];
     exp_Speed = vtref;
     testcase.verifyEqual(act_Speed, exp_Speed, 'RelTol', 9e-3, msg_Speed);
     
-    act_Speedc = testcase.read({'Relative_Wind_Speed_Reference'},...
-        startrow, count);
-    act_Speed = [act_Speedc{:}];
+    act_Speedc = testcase.select({'Relative_Wind_Speed_Reference'}, count, startrow);
+    act_Speed = [act_Speedc{:, :}]';
     msg_Speed = ['Relative wind speed at reference height should be '...
         'calculated according to Annex E.'];
     exp_Speed = vrref;
     testcase.verifyEqual(act_Speed, exp_Speed, 'RelTol', 9e-3, msg_Speed);
     
-    act_Dirc = testcase.read({'Relative_Wind_Direction_Reference'},...
-        startrow, count);
-    act_Dir = [act_Dirc{:}];
+    act_Dirc = testcase.select({'Relative_Wind_Direction_Reference'}, count, startrow);
+    act_Dir = [act_Dirc{:, :}]';
     msg_Dir = ['Relative wind direction at reference height should be '...
         'calculated according to Annex E.'];
     exp_Dir = psirref;
