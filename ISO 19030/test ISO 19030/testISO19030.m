@@ -97,6 +97,7 @@ methods(TestClassSetup)
     sp.Trim = 0;
     sp.Minimum_Power = 28534;
     sp.Maximum_Power = 9e4;
+    sp.Propulsive_Efficiency = 2;
     vessel.SpeedPower = sp;
     
     % Insert displacement so won't error
@@ -640,35 +641,36 @@ methods(Test)
     % standard.
     
     % Input
+    vessel = testcase.TestVessel;
     in_DeliveredPower = 10e3:1e3:12e3;
     in_SOG = 15:2:19;
-    in_PropulsCalm = testcase.AlmavivaPropulsiveEfficiency;
-    in_PropulsActual = 0.7;
+    in_PropulsCalm = repmat(2, size(in_SOG)); % vessel.SpeedPower.Propulsive_Efficiency; %testcase.AlmavivaPropulsiveEfficiency;
+    in_PropulsActual = repmat(0.7, size(in_PropulsCalm));
     testSz = [1, 3];
     in_NearDisp = repmat(114050, testSz);
     in_NearTrim = zeros(testSz);
-    in_IMO = repmat(str2double(testcase.AlmavivaIMO), testSz);
+%     in_IMO = repmat(str2double(testcase.AlmavivaIMO), testSz);
     
     airResist = 0.1:0.1:0.3;
     windResist = 0.3:0.2:0.7;
-    [startrow, count] = testcase.insert(...
-        [windResist', airResist', in_SOG', in_DeliveredPower', in_NearDisp',...
-        in_NearTrim', in_IMO'],...
-        {'Wind_Resistance_Relative', 'Air_Resistance_No_Wind', ...
-        'Speed_Over_Ground', 'Delivered_Power', 'NearestDisplacement', ...
-        'NearestTrim', 'IMO_Vessel_Number'});
-    
-    exp_wind = num2cell(((windResist - airResist).*in_SOG)./ in_PropulsCalm + ...
+    names = {'Wind_Resistance_Relative', 'Air_Resistance_No_Wind', ...
+        'Speed_Over_Ground', 'Delivered_Power', 'Nearest_Displacement', ...
+        'Nearest_Trim'};
+    data = [windResist', airResist', in_SOG', in_DeliveredPower', in_NearDisp',...
+        in_NearTrim'];
+    [startrow, count] = testcase.insert(names, data);
+    exp_wind = (((windResist - airResist).*in_SOG)./ in_PropulsCalm + ...
         in_DeliveredPower.*(1 - in_PropulsActual./in_PropulsCalm))';
     
     % Execute
-    testcase.call('updateWindResistanceCorrection', testcase.AlmavivaIMO);
+    testcase.call('updateWindResistanceCorrection', testcase.TestVesselIdString);
     
     % Verify
-    act_wind = testcase.read('Wind_Resistance_Correction', startrow, count);
+    act_wind = testcase.select('Wind_Resistance_Correction', count, startrow);
+    act_wind = [act_wind{:, :}];
     msg_wind = ['Wind resistance correction values should match those ',...
         'calculated with Equation G2 in the standard.'];
-    testcase.verifyEqual(act_wind, exp_wind, 'RelTol', 1e-7, msg_wind);
+    testcase.verifyEqual(act_wind, exp_wind, 'RelTol', 1e-3, msg_wind);
     
     end
     
@@ -678,11 +680,13 @@ methods(Test)
     % according to equation G2 of the ISO 19030-2 standard.
     
     % Input
-%     Coeffs = [testcase.AlmavivaWindResistCoeffHead, [0.2:0.1:0.6, ...
-%         0.55:-0.1:0.05].*1e-5];
-    Coeffs = testcase.AlmavivaWindResistCoeff(:)';
-    RelWindDir = [30, 45, 0];
-    CoeffDirEdges = [-7.5/2 : 7.5 : 30, 45:15:180];
+    vessel = testcase.TestVessel;
+    Coeffs = vessel.WindCoefficient.Coefficient(:)';
+    Dirs = vessel.WindCoefficient.Direction(:)';
+    dirStep = Dirs(2) - Dirs(1);
+    
+    RelWindDir = [30, 44, 0];
+    CoeffDirEdges = -dirStep/2 : dirStep : 360;
     [~, relwind_i] = histc(RelWindDir, CoeffDirEdges);
     CoeffRelWind = Coeffs(relwind_i);
     
@@ -690,19 +694,20 @@ methods(Test)
     RelWindSpeed = [10, 15, 25];
     TransArea = abs(randn(1, 3)*1000);
     
-    exp_rel = num2cell(0.5 * Air_Dens .* RelWindSpeed.^2 .* TransArea ...
+    exp_rel = (0.5 * Air_Dens .* RelWindSpeed.^2 .* TransArea ...
         .* CoeffRelWind)';
-    [startrow, count] = testcase.insert(...
-        [Air_Dens', RelWindSpeed', RelWindDir', TransArea'], ...
-        {'Air_Density', 'Relative_Wind_Speed', 'Relative_Wind_Direction',...
-        'Transverse_Projected_Area_Current'});
+    names = {'Air_Density', 'Relative_Wind_Speed_Reference', 'Relative_Wind_Direction_Reference',...
+        'Transverse_Projected_Area_Current'};
+    data = [Air_Dens', RelWindSpeed', RelWindDir', TransArea'];
+    [startrow, count] = testcase.insert(names, data);
     
     % Execute
 %     testcase.call('updateTransProjArea', testcase.AlmavivaIMO);
-    testcase.call('updateWindResistanceRelative', testcase.AlmavivaIMO);
+    testcase.call('updateWindResistanceRelative', testcase.TestVesselIdString);
     
     % Verify
-    act_rel = testcase.read({'Wind_Resistance_Relative'}, startrow, count);
+    act_rel = testcase.select({'Wind_Resistance_Relative'}, count, startrow);
+    act_rel = [act_rel{:, :}];
     msg_rel = ['Relative wind resistance expected to match definition given',...
         'by equation G2 in the standard.'];
     testcase.verifyEqual(act_rel, exp_rel, 'RelTol', 1e-3, msg_rel);
@@ -715,24 +720,27 @@ methods(Test)
     % according to equation G2 in the ISO 19030-2 standard.
     
     % Input
+    vessel = testcase.TestVessel;
+    Coeffs = vessel.WindCoefficient.Coefficient(:)';
     Air_Dens = [1.22, 1.21, 1.23];
     SOG = [10, 15, 25];
-    CoeffHeadWind = testcase.AlmavivaWindResistCoeffHead;
+    CoeffHeadWind = Coeffs(1);
     TransArea = abs(randn(1, 3))*1000;
     
-    exp_air = num2cell(0.5 * Air_Dens .* SOG.^2 .* TransArea .* CoeffHeadWind)';
-    [startrow, count] = testcase.insert([Air_Dens', SOG', TransArea'], ...
-        {'Air_Density', 'Speed_Over_Ground', 'Transverse_Projected_Area_Current'});
+    exp_air = (0.5 * Air_Dens .* SOG.^2 .* TransArea .* CoeffHeadWind)';
+    names = {'Air_Density', 'Speed_Over_Ground', 'Transverse_Projected_Area_Current'};
+    data = [Air_Dens', SOG', TransArea'];
+    [startrow, count] = testcase.insert(names, data);
     
     % Execute
-    testcase.call('updateAirResistanceNoWind', testcase.AlmavivaIMO);
+    testcase.call('updateAirResistanceNoWind', testcase.TestVesselIdString);
     
     % Verify
-    act_air = testcase.read({'Air_Resistance_No_Wind'}, startrow, count);
+    act_air = testcase.select({'Air_Resistance_No_Wind'}, count, startrow);
+    act_air = [act_air{:, :}];
     msg_air = ['Air resistance expected to match definition given',...
         'by equation G2 in the standard.'];
     testcase.verifyEqual(act_air, exp_air, 'RelTol', 1e-4, msg_air);
-    
     end
     
     function testupdateTransProjAreaCurrent(testcase)
@@ -743,28 +751,30 @@ methods(Test)
     % 19030-2 standard.
     
     % Input
-    designArea = testcase.AlmavivaTransProjArea;
-    designDraft = testcase.AlmavivaDesignDraft;
+    vessel = testcase.TestVessel;
+    designArea = vessel.Configuration.Transverse_Projected_Area_Design;
+    designDraft = vessel.Configuration.Draft_Design;
     draftFore = [11, 13, 9];
     draftAft = [9, 11, 7];
     currentDraft = mean([draftFore; draftAft]);
-    shipWidth = testcase.AlmavivaBreadth;
-    [startrow, count] = testcase.insert([draftFore', draftAft'], ...
-        {'Static_Draught_Fore', 'Static_Draught_Aft'});
+    shipWidth = vessel.Configuration.Breadth_Moulded;
+    names = {'Static_Draught_Fore', 'Static_Draught_Aft'};
+    data = [draftFore', draftAft'];
+    [startrow, count] = testcase.insert(names, data);
     
-    exp_area = num2cell(designArea + ...
+    exp_area = (designArea + ...
         (designDraft - currentDraft).*shipWidth)';
     
     % Execute
-    testcase.call('updateTransProjArea', testcase.AlmavivaIMO);
+    testcase.call('updateTransProjArea', testcase.TestVesselIdString);
     
     % Verify
-    act_area = testcase.read('Transverse_Projected_Area_Current', ...
-        startrow, count);
+    act_area = testcase.select('Transverse_Projected_Area_Current', count, ...
+        startrow);
+    act_area = [act_area{:, :}];
     msg_area = ['Transverse projected area in current loading condition ',...
         'should be calculated from equations G3 and G4 in the standard'];
-    testcase.verifyEqual(act_area, exp_area, msg_area);
-    
+    testcase.verifyEqual(act_area, exp_area, 'RelTol', 1e-7, msg_area);
     end
     
     function testupdatecorrectPower(testcase)
@@ -773,20 +783,21 @@ methods(Test)
     % Input
     in_delivered = 10e3:1e3:12e3;
     in_correction = 1e3:0.5e3:2e3;
-    [startrow, count] = testcase.insert([in_delivered', in_correction'],...
-        {'Delivered_Power', 'Wind_Resistance_Correction'});
+    name = {'Delivered_Power', 'Wind_Resistance_Correction'};
+    data = [in_delivered', in_correction'];
+    [startrow, count] = testcase.insert(name, data);
     
-    exp_corr = num2cell( in_delivered - in_correction )';
+    exp_corr = ( in_delivered - in_correction )';
     
     % Execute
     testcase.call('updateCorrectedPower');
         
     % Verify
-    act_corr = testcase.read('Corrected_Power', startrow, count);
+    act_corr = testcase.select('Corrected_Power', count, startrow);
+    act_corr = [act_corr{:, :}];
     msg_corr = ['The corrected power is expected to be the difference ',...
         'between delivered power and wind resistance correction.'];
     testcase.verifyEqual(act_corr, exp_corr, msg_corr);
-    
     end
     
     function testupdateDeliveredPower(testcase)
@@ -806,15 +817,17 @@ methods(Test)
     % Input
     in_torque = 1e4:1e4:3e4;
     in_revs = 10:10:30;
-    [startrow, count] = testcase.insert([in_torque', in_revs'], ...
-        {'Shaft_Torque', 'Shaft_Revolutions'});
+    names = {'Shaft_Torque', 'Shaft_Revolutions'};
+    data = [in_torque', in_revs'];
+    [startrow, count] = testcase.insert(names, data);
     
     % Execute
-    testcase.call('updateDeliveredPower', testcase.AlmavivaIMO);
+    testcase.call('updateDeliveredPower', testcase.TestVesselIdString);
     
     % Verify
-    act_del = testcase.read('Delivered_Power', startrow, count);
-    act_allNull = any(cellfun(@isnan, act_del));
+    act_del = testcase.select('Delivered_Power', count, startrow);
+    act_del = [act_del{:, :}];
+    act_allNull = all(isnan(act_del));
     msg_del = ['Delivered Power is expected to be equal to shaft power when',...
         'shaft power is available'];
     testcase.verifyFalse(act_allNull, msg_del);
@@ -829,19 +842,21 @@ methods(Test)
     in_FuelDens = 300:5:310;
     in_DensChange = 1:3;
     in_FuelTemp = 50:52;
-    [startrow, count] = testcase.insert([in_LCV', in_VFOC', in_FuelDens',...
-        in_DensChange', in_FuelTemp'], {'Lower_Caloirifc_Value_Fuel_Oil', ...
+    names = {'Lower_Caloirifc_Value_Fuel_Oil', ...
                         'Volume_Consumed_Fuel_Oil',...
                         'Density_Fuel_Oil_15C',...
                         'Density_Change_Rate_Per_C',...
-                        'Temp_Fuel_Oil_At_Flow_Meter'});
+                        'Temp_Fuel_Oil_At_Flow_Meter'};
+    data = [in_LCV', in_VFOC', in_FuelDens', in_DensChange', in_FuelTemp'];
+    [startrow, count] = testcase.insert(names, data);
     
     % Execute
-    testcase.call('updateDeliveredPower', testcase.AlmavivaIMO);
+    testcase.call('updateDeliveredPower', testcase.TestVesselIdString);
     
     % Verify
-    act_del = testcase.read('Delivered_Power', startrow, count);
-    act_allNull = any(cellfun(@isnan, act_del));
+    act_del = testcase.select('Delivered_Power', count, startrow);
+    act_del = [act_del{:, :}];
+    act_allNull = all(isnan(act_del));
     msg_brake = ['Delivered Power is expected to be equal to brake power when',...
         ' shaft power is unavailable but brake power is.'];
     testcase.verifyFalse(act_allNull, msg_brake);
@@ -856,21 +871,16 @@ methods(Test)
     in_FuelDens = 300:5:310;
     in_DensChange = 1:3;
     in_FuelTemp = nan(1, 3);
-    testcase.insert([in_LCV', in_VFOC', in_FuelDens', in_DensChange', ...
-        in_FuelTemp'], {'Lower_Caloirifc_Value_Fuel_Oil', ...
-                        'Volume_Consumed_Fuel_Oil',...
-                        'Density_Fuel_Oil_15C',...
-                        'Density_Change_Rate_Per_C',...
-                        'Temp_Fuel_Oil_At_Flow_Meter'});
+    data = [in_LCV', in_VFOC', in_FuelDens', in_DensChange', in_FuelTemp'];
+    testcase.insert(names, data)
     
     % Execute
-    exec_f = @() testcase.call('updateDeliveredPower', testcase.AlmavivaIMO);
+    exec_f = @() testcase.call('updateDeliveredPower', testcase.TestVesselIdString);
     
     % Verify
     exp_errid = 'MATLAB:COM:E2147500037';
     msg_error = 'An error is expected when power cannot be calculated.';
     testcase.verifyError(exec_f, exp_errid, msg_error);
-    
     end
     
     function testisShaftPowerAvailable(testcase)

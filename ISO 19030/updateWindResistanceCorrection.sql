@@ -6,7 +6,7 @@ DROP PROCEDURE IF EXISTS updateWindResistanceCorrection;
 
 delimiter //
 
-CREATE PROCEDURE updateWindResistanceCorrection(imo INT)
+CREATE PROCEDURE updateWindResistanceCorrection(vcid INT)
 BEGIN
 
 	/* UPDATE tempRawISO
@@ -15,23 +15,26 @@ BEGIN
 		Delivered_Power * (1 - (0.7 / (SELECT Propulsive_Efficiency FROM SpeedPower WHERE IMO_Vessel_Number = imo)));
 	*/
     
-	UPDATE `inservice`.tempRawISO e 
-		JOIN
-			(SELECT q.id, w.Propulsive_Efficiency, w.Speed, w.Power, q.Delivered_Power FROM `inservice`.tempRawISO q
-				JOIN `static`.SpeedPower w
-					ON 
-						/* q.IMO_Vessel_Number = w.IMO_Vessel_Number AND */
-						q.NearestDisplacement = w.Displacement AND
-						q.NearestTrim = w.Trim
-                        WHERE w.ModelID IN (SELECT Speed_Power_Model FROM `static`.VesselSpeedPowerModel)
-				GROUP BY id) r
-		ON e.id = r.id
-		SET e.Wind_Resistance_Correction = 
-			/*(
-			(e.Wind_Resistance_Relative - e.Air_Resistance_No_Wind) * e.Speed_Over_Ground / r.Propulsive_Efficiency) + 
-			(e.Delivered_Power * 1E3) * (1 - (0.7 / r.Propulsive_Efficiency)
-			) / 1E3
-			;*/
-            
-            (((e.Wind_Resistance_Relative - e.Air_Resistance_No_Wind) * e.Speed_Over_Ground / IFNULL(r.Propulsive_Efficiency, 0.7)) + (e.Delivered_Power * 1E3) * (1 - (0.7 / IFNULL(r.Propulsive_Efficiency, 0.7)))) /1e3;
+UPDATE `inservice`.tempRawISO e 
+	JOIN
+		(SELECT q.id, w.Propulsive_Efficiency, w.Speed, w.Power, q.Delivered_Power FROM `inservice`.tempRawISO q
+	JOIN `static`.SpeedPower w
+		JOIN `static`.SpeedPowerCoefficientModelValue t
+			ON 
+				q.Nearest_Displacement = t.Displacement AND
+				q.Nearest_Trim = t.Trim
+					WHERE w.Speed_Power_Coefficient_Model_Value_Id IN 
+						(SELECT Speed_Power_Coefficient_Model_Id FROM `static`.SpeedPowerCoefficientModelValue WHERE Speed_Power_Coefficient_Model_Id =
+							(SELECT Speed_Power_Coefficient_Model_Id FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid)
+                                                                        )
+					GROUP BY id) r
+	ON e.id = r.id
+	SET e.Wind_Resistance_Correction = 
+		/*(
+		(e.Wind_Resistance_Relative - e.Air_Resistance_No_Wind) * e.Speed_Over_Ground / r.Propulsive_Efficiency) + 
+		(e.Delivered_Power * 1E3) * (1 - (0.7 / r.Propulsive_Efficiency)
+		) / 1E3
+		;*/
+		
+		(((e.Wind_Resistance_Relative - e.Air_Resistance_No_Wind) * e.Speed_Over_Ground / IFNULL(r.Propulsive_Efficiency, 0.7)) + (e.Delivered_Power * 1E3) * (1 - (0.7 / IFNULL(r.Propulsive_Efficiency, 0.7)))) /1e3;
 END;

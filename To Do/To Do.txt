@@ -894,6 +894,9 @@ testISO19030:
 whats wrong with updateDisplacementFromDraftTrim.sql?
 how does ISO19030.sql get data from bunker delivery notes?
 Error when cV.IMO = imo after cV.insert with empty cV.Displacement (VesselConfiguration.Displacement_Model_ID empty, NaN returned for cV.Disp.Model_Id)
+cVSP.insert: When Speed, Power empty large number of NULLs in SpeedPower table
+ISO19030: take vessel configuration id as input and pass to all sub-procedures
+Process ISO19030: keep analysis administration tables and procedures? (what was analysed, what was compliant etc)
 	
 
 

@@ -6,10 +6,10 @@ DROP PROCEDURE IF EXISTS updateWindResistanceRelative;
 
 delimiter //
 
-CREATE PROCEDURE updateWindResistanceRelative(imo INT)
+CREATE PROCEDURE updateWindResistanceRelative(vcid INT)
 BEGIN
     
-    SET @currModel := (SELECT Wind_Model_ID FROM `static`.Vessels WHERE IMO_Vessel_Number = imo);
+    SET @currModel := (SELECT Wind_Coefficient_Model_ID FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid);
     /*
 	UPDATE tempRawISO t
 		JOIN (
@@ -36,16 +36,20 @@ BEGIN
 		JOIN (
 				SELECT b.Coefficient, b.tid AS 'id' FROM 
 				(
-					SELECT t.id AS 'tid', MIN(ABS(Direction - Relative_Wind_Direction_Reference)) AS 'MinDiff', Coefficient, Direction FROM `inservice`.tempRawISO t
-						JOIN `static`.WindCoefficientDirection w
-							 WHERE ModelID = @currModel
-								GROUP BY tid 
+					SELECT t.id AS 'tid', MIN(ABS(w.Direction - t.Relative_Wind_Direction_Reference)) AS 'MinDiff', Coefficient, Direction FROM `inservice`.tempRawISO t
+						JOIN `static`.WindCoefficientModel e
+							JOIN `static`.WindCoefficientModelValue w
+								ON w.Wind_Coefficient_Model_Id = e.Wind_Coefficient_Model_Id
+								 WHERE e.Wind_Coefficient_Model_Id = (SELECT Wind_Coefficient_Model_Id FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid)
+									GROUP BY tid 
 						 ) a
 				JOIN 
 				(
-					SELECT t.id AS 'tid', ABS(Direction - Relative_Wind_Direction_Reference) AS 'Diff', Coefficient, Direction FROM `inservice`.tempRawISO t
-						JOIN `static`.WindCoefficientDirection w
-							 WHERE ModelID = @currModel
+					SELECT t.id AS 'tid', ABS(w.Direction - t.Relative_Wind_Direction_Reference) AS 'Diff', Coefficient, Direction FROM `inservice`.tempRawISO t
+						JOIN `static`.WindCoefficientModel e
+							JOIN `static`.WindCoefficientModelValue w
+								ON w.Wind_Coefficient_Model_Id = e.Wind_Coefficient_Model_Id
+								 WHERE e.Wind_Coefficient_Model_Id = (SELECT Wind_Coefficient_Model_Id FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid)
 						 ) b
 				ON a.MinDiff = b.Diff
 				GROUP BY b.tid 

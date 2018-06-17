@@ -19,8 +19,8 @@ BEGIN
 	END IF;
     
     /*IF @imo IS NOT NULL AND @startd IS NOT NULL AND @endd IS NOT NULL THEN*/
-		CALL IMOStartEnd(@imo, @startd, @endd);
+	/*	CALL IMOStartEnd(@imo, @startd, @endd);
 		INSERT INTO `inservice`.Analysis (IMO_Vessel_Number, StartDate, EndDate, WindResistanceApplied) 
-		VALUES (@imo, @startd, @endd, WindResValid) ON duplicate key update WindResistanceApplied = values(WindResistanceApplied);
+		VALUES (@imo, @startd, @endd, WindResValid) ON duplicate key update WindResistanceApplied = values(WindResistanceApplied);*/
     /*END IF;*/
 END;
