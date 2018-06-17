@@ -1931,18 +1931,18 @@ methods(Test)
     exp_Trim = input_DraftFore - input_DraftAft;
     in_DateTimeUTC = testISO19030.datetime_utc(testSz);
     in_Data = [in_DateTimeUTC, num2cell([input_DraftFore, input_DraftAft])];
-    in_Names = {'DateTime_UTC', 'Static_Draught_Fore', 'Static_Draught_Aft'};
-    [startrow, count] = testcase.insert(in_Data, in_Names);
+    in_Names = {'Timestamp', 'Static_Draught_Fore', 'Static_Draught_Aft'};
+    [startrow, count] = testcase.insert(in_Names, in_Data);
     
     % Execute
     testcase.call('updateTrim');
     
     % Verify
-    act_Trimc = testcase.read({'Trim'}, startrow, count);
-    act_Trim = [act_Trimc{:}];
+    act_Trimc = testcase.select({'Trim'}, count, startrow);
+    act_Trim = [act_Trimc{:, :}];
     msg_Trim = ['Trim expected to be the difference between fore and '...
         'aft draft.'];
-    testcase.verifyEqual(act_Trim, exp_Trim', 'RelTol', 9e-3, msg_Trim);
+    testcase.verifyEqual(act_Trim, exp_Trim, 'RelTol', 9e-3, msg_Trim);
     
     end
     
