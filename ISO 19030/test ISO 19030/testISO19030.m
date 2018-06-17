@@ -1084,14 +1084,15 @@ methods(Test)
     zeroI = randperm(nData, nZero);
     mfoc_v(zeroI) = -randi([0, 1]);
     
-    [startrow, count] = testcase.insert(mfoc_v', {'Mass_Consumed_Fuel_Oil'});
+    [startrow, count] = testcase.insert({'Mass_Consumed_Fuel_Oil'}, mfoc_v');
     
     % Execute
     testcase.call('removeInvalidRecords');
     
     % Verify
-    mfoc_act = testcase.read('Mass_Consumed_Fuel_Oil', startrow, count);
-    mfoc_act = [mfoc_act{:}];
+    mfoc_act = testcase.select('Mass_Consumed_Fuel_Oil', count, startrow);
+    mfoc_act = [mfoc_act{:, :}];
+    mfoc_act(isnan(mfoc_act)) = [];
     ZeroMfoc_act = EveryElementOf(mfoc_act);
     ZeroMfoc_cons = IsGreaterThan(0);
     ZeroMfoc_Msg = ['All elements of Mass_Consumed_Fuel_Oil are expected '...
