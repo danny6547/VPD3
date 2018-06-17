@@ -950,24 +950,27 @@ methods(Test)
     
     % 1:
     % Input
+    vessel = testcase.TestVessel;
     in_LCV = 42:44;
     in_VFOC = 20:5:30;
     in_FuelDens = 300:5:310;
     in_DensChange = 1:3;
     in_FuelTemp = 50:52;
-    testcase.insert([in_LCV', in_VFOC', in_FuelDens', in_DensChange', ...
-        in_FuelTemp'], {'Lower_Caloirifc_Value_Fuel_Oil', ...
+    names = {'Lower_Caloirifc_Value_Fuel_Oil', ...
                         'Volume_Consumed_Fuel_Oil',...
                         'Density_Fuel_Oil_15C',...
                         'Density_Change_Rate_Per_C',...
-                        'Temp_Fuel_Oil_At_Flow_Meter'});
+                        'Temp_Fuel_Oil_At_Flow_Meter'};
+    data = [in_LCV', in_VFOC', in_FuelDens', in_DensChange', in_FuelTemp'];
+    testcase.insert(names, data);
     
     % Execute
-    testcase.call('isBrakePowerAvailable', testcase.InvalidIMO, '@out',...
-        '@needVolume');
+    testcase.call('isBrakePowerAvailable', {testcase.TestVesselIdString, '@out',...
+        '@needVolume'});
     
     % Verify
-    [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
+%     [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
+    [~, act_isAvail] = adodb_query(vessel.InServiceSQLDB.Connection, 'SELECT @out;');
     act_isAvail = logical(str2double([act_isAvail{:}]));
     msg_avail = ['Output expected to be true when MFOC and LCV are both ',...
         'given or can be calculated.'];
@@ -983,24 +986,20 @@ methods(Test)
     in_FuelDens = 300:5:310;
     in_DensChange = 1:3;
     in_FuelTemp = nan(1, 3);
-    testcase.insert([in_LCV', in_VFOC', in_FuelDens', in_DensChange', ...
-        in_FuelTemp'], {'Lower_Caloirifc_Value_Fuel_Oil', ...
-                        'Volume_Consumed_Fuel_Oil',...
-                        'Density_Fuel_Oil_15C',...
-                        'Density_Change_Rate_Per_C',...
-                        'Temp_Fuel_Oil_At_Flow_Meter'});
+    data = [in_LCV', in_VFOC', in_FuelDens', in_DensChange', in_FuelTemp'];
+    testcase.insert(names, data);
     
     % Execute
-    testcase.call('isBrakePowerAvailable', testcase.InvalidIMO, '@out',...
-        '@needVolume');
+    testcase.call('isBrakePowerAvailable', {testcase.TestVesselIdString, '@out',...
+        '@needVolume'});
     
     % Verify
-    [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
+%     [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
+    [~, act_isAvail] = adodb_query(vessel.InServiceSQLDB.Connection, 'SELECT @out;');
     act_isAvail = logical(str2double([act_isAvail{:}]));
     msg_avail = ['Output expected to be false when either MFOC or LCV cannot ',...
         'be calculated.'];
     testcase.verifyFalse(act_isAvail, msg_avail);
-    
     end
     
     function testupdateFromBunkerNote(testcase)
