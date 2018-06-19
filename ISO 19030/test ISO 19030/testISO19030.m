@@ -1956,11 +1956,11 @@ methods(Test)
     % Input
     testSz = [1, 3];
     
-    T = abs(randn(testSz)); % testcase.randOutThreshold(testSz, @gt, 0);
+    T = abs(randn(testSz));
     vr = abs(randn(testSz));
     vg = abs(randn(testSz));
     psir = abs(randn(testSz))*90;
-    psi0 = testcase.randOutThreshold(testSz, @lt, 180); % abs(randn(testSz))*50; 
+    psi0 = testcase.randOutThreshold(testSz, @lt, 180);
     input_DraftFore = abs(randn(testSz));
     input_DraftAft = 2*T - input_DraftFore;
     
@@ -1970,11 +1970,7 @@ methods(Test)
     Tdes = vessel.Configuration.Draft_Design;
     B = vessel.Configuration.Breadth_Moulded;
     anemometerHeight = vessel.Configuration.Anemometer_Height;
-%     Ades = testcase.AlmavivaTransProjArea;
-%     Zrefdes = testcase.Wind_Reference_Height_Design;
-%     Tdes = testcase.AlmavivaDesignDraft;
     delT = Tdes - T;
-%     B = testcase.AlmavivaBreadth;
     A = Ades + delT.* B;
     zref = (Ades.*(Zrefdes + delT) + 0.5.* B.* delT.^2) ./ A;
     
@@ -1994,7 +1990,6 @@ methods(Test)
     psirref(~condition1) = psirref(~condition1) + 180;
     
     in_DateTimeUTC = testISO19030.datetime_utc(testSz);
-%     input_IMO = repmat(str2double(testcase.AlmavivaIMO), [1, prod(testSz)]);
     input_NumericCols = [vr; psir; input_DraftFore;...
         input_DraftAft; vg; psi0];
     in_Data = [in_DateTimeUTC, num2cell(input_NumericCols)'];
