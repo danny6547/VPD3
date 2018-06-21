@@ -53,26 +53,27 @@ end
 % Create basic table cell
 cell_ch = '<td align="center"><input id="INPUTID" name="INPUTNAME" size="25" type="text"/>';
 
+% Input names
+[inName_c, edge_c] = obj.inputName(names, datalength, nameDim);
+
 % Write inputId
 nCells = nRows*nCols;
 inputId_m = reshape(1:nCells, nRows, nCols);
 inputId_c = arrayfun(@num2str, inputId_m, 'Uni', 0);
 cell_c = cellfun(@(x) strrep(cell_ch, 'INPUTID', x), inputId_c, 'Uni', 0);
 
-% Determine if grid
-obj = obj.isGrid;
-
+% % Determine if grid
+% obj = obj.isGrid;
 % Write input names
-if obj.IsGrid
+% if obj.IsGrid
     
     % Input names are combinations of grid row and column indices
 %     rowNames = obj.RowNames;
-    inName_c = obj.inputName(names, datalength, nameDim);
-else
-    
-    % Input names are columns concatenated with index
-    inName_c = obj.inputName(colLabels, datalength, nameDim);
-end
+% else
+%     
+%     % Input names are columns concatenated with index
+%     inName_c = obj.inputName(colLabels, datalength, nameDim);
+% end
 
 cell_c = cellfun(@(x, y) strrep(x, 'INPUTNAME', y), cell_c, inName_c,...
     'Uni', 0);
