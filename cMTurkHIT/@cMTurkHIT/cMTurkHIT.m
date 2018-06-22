@@ -35,4 +35,10 @@ classdef cMTurkHIT
            end
        end
     end
+    
+    methods(Static)
+        
+        [header, footer] = printHTMLTableHeaderFooter()
+            
+    end
 end

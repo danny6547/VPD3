@@ -53,6 +53,10 @@ if hasTrim_l
     % Combine vectors
     gridNameIdx_c = strcat(draftIdxRep_c, trimIdxRep_c);
     varSubs_c(nameDim) = { find(trim_l) };
+    if nameDim == 1
+        
+        gridNameIdx_c = gridNameIdx_c';
+    end
     inName(varSubs_c{:}) = gridNameIdx_c;
 end
 

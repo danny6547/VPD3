@@ -2,17 +2,6 @@ function table_c = printHTMLTable(obj)
 %printHTMLTable Print HTML tags representing rows and columns of table
 %   Detailed explanation goes here
 
-% Make header row with column labels, if any given
-colLabels = obj.ColumnLabels;
-tabHeaderRow_c = {};
-if ~isempty(colLabels)
-    
-    tabHeader_ch = '<td align="center">HEADER</td>';
-    % tabHeader_c = repmat({tabHeader_ch}, length(headers), 1);
-    tabHeader_c = cellfun(@(x) strrep(tabHeader_ch, 'HEADER', x), colLabels, 'Uni', 0);
-    tabHeaderRow_c = [{'<tr>'}, tabHeader_c, {'</tr>'}];
-end
-
 % Make rows with input fields
 if ~isempty(obj.RowNames)
     
@@ -51,35 +40,68 @@ if ~isempty(obj.ColumnNames)
 end
 
 % Create basic table cell
-cell_ch = '<td align="center"><input id="INPUTID" name="INPUTNAME" size="25" type="text"/>';
+cell_ch = '<td align="center"><input id="INPUTID" name="INPUTNAME" size="25" type="text"/></td>';
 
 % Input names
 [inName_c, edge_c] = obj.inputName(names, datalength, nameDim);
 
 % Write inputId
-nCells = nRows*nCols;
-inputId_m = reshape(1:nCells, nRows, nCols);
+nCells = numel(inName_c);
+inputId_m = reshape(1:nCells, size(inName_c));
 inputId_c = arrayfun(@num2str, inputId_m, 'Uni', 0);
 cell_c = cellfun(@(x) strrep(cell_ch, 'INPUTID', x), inputId_c, 'Uni', 0);
-
-% % Determine if grid
-% obj = obj.isGrid;
-% Write input names
-% if obj.IsGrid
-    
-    % Input names are combinations of grid row and column indices
-%     rowNames = obj.RowNames;
-% else
-%     
-%     % Input names are columns concatenated with index
-%     inName_c = obj.inputName(colLabels, datalength, nameDim);
-% end
-
 cell_c = cellfun(@(x, y) strrep(x, 'INPUTNAME', y), cell_c, inName_c,...
     'Uni', 0);
 
-% Concatenate
-table_c = [tabHeaderRow_c; cell_c];
+% Combine edge and names
+% Create empty column/row
+dataDim = find(1:2 ~= nameDim);
+if ~isempty(edge_c)
+    
+    edge_ch = '<td align="center"></td>';
+    if isrow(edge_c)
+        edgeSz = [1, numel(names)];
+    else
+        edgeSz = [numel(names), 1];
+    end
+    edgeHtml_c = repmat({edge_ch}, edgeSz);
+
+    % Assign edge vector
+    edge_l = ismember(names, obj.TrimName);
+    edgeHtml_c(edge_l) = {'<td align="center"><input id="INPUTID" name="INPUTNAME" size="25" type="text"/></td>'};
+    edgeHtml_c(~edge_l) = {'<td align="center"></td>'};
+    edgeHtml_c(edge_l) = cellfun(@(x, y) strrep(x, 'INPUTNAME', y), ...
+        edgeHtml_c(edge_l), edge_c, 'Uni', 0);
+
+    % Append to left/top side
+    cell_c = cat(dataDim, edgeHtml_c, cell_c);
+end
+
+% Assign labels
+colLabels = obj.ColumnLabels;
+tabHeader_ch = '<th align="center">HEADER</th>';
+% labelRow_c = {};
+if ~isempty(colLabels)
+    
+    labelRow_c = cellfun(@(x) strrep(tabHeader_ch, 'HEADER', x), colLabels, 'Uni', 0);
+    cell_c = [labelRow_c; cell_c];
+end
+rowLabels = obj.RowLabels;
+% labelCol_c = {};
+if ~isempty(rowLabels)
+    
+    labelCol_c = cellfun(@(x) strrep(tabHeader_ch, 'HEADER', x), rowLabels, 'Uni', 0);
+    labelCol_c = labelCol_c(:);
+    cell_c = [labelCol_c, cell_c];
+end
+% cell_c = cat(nameDim, labelRow_c, cell_c);
+% cell_c = cat(dataDim, labelCol_c, cell_c);
+
+% Define rows
+rowOpen_c = repmat({'<tr>'}, size(cell_c, 1), 1);
+rowClose_c = repmat({'</tr>'}, size(cell_c, 1), 1);
+cell_c = [rowOpen_c, cell_c, rowClose_c]';
+cell_c = cell_c(:);
 [header, footer] = obj.printHTMLTableHeaderFooter;
-table_c = [header; table_c; footer];
+table_c = [{header}; cell_c; {footer}];
 end
