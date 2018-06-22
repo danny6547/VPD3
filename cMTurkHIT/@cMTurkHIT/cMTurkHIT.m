@@ -4,6 +4,7 @@ classdef cMTurkHIT
     
     properties
         
+        Directory = '';
         ColumnLabels = '';
         RowLabels = '';
         ColumnNames = '';
