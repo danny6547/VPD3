@@ -40,7 +40,7 @@ if ~isempty(obj.ColumnNames)
 end
 
 % Create basic table cell
-cell_ch = '<td align="center"><input id="INPUTID" name="INPUTNAME" size="25" type="text"/></td>';
+cell_ch = '<td align="center"><input id="INPUTID" name="INPUTNAME" size="10" type="text"/></td>';
 
 % Input names
 [inName_c, edge_c] = obj.inputName(names, datalength, nameDim);

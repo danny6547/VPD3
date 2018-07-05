@@ -7,7 +7,6 @@ function [files] = imageFiles(obj)
 imageFile_st = dir([imageDir, '\*.jpg']);
 fileNames = {imageFile_st.name};
 files = cellfun(@(x) fullfile(imageDir, x), fileNames, 'Uni', 0);
-% sampleImageFile = fullfile(imageDir, imageFile_st(1).name);
-% sampleImage = imread(sampleImageFile);
-% [nRows, nCol, ~] = size(sampleImage);
+
+
 end

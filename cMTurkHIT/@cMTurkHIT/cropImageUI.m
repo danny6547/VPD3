@@ -3,13 +3,21 @@ function obj = cropImageUI(obj)
 %   Detailed explanation goes here
 
 % Get size of image
-[~, imageDir] = obj.imageDir;
-imageFile_st = dir([imageDir, '\*.jpg']);
-sampleImageFile = fullfile(imageDir, imageFile_st(1).name);
+files = obj.imageFiles();
+
+if isempty(files)
+    
+    errid = 'UI:FilesMissing';
+    errmsg = 'No image files found';
+    error(errid, errmsg);
+end 
+
+sampleImageFile = files{1};
 sampleImage = imread(sampleImageFile);
 [nRows, nCol, ~] = size(sampleImage);
 
 % Show sample image
+newFig = figure;
 imshow(sampleImage, 'Border', 'tight');
 set(gca, 'Visible', 'on');
 
@@ -25,7 +33,7 @@ while ~con
     imshow(sampleImage(rows, :, :));
     set(gca, 'Visible', 'on');
 
-    answer = input('Continue to columns? [Y/N]:\n', 's');
+    answer = input('Continue to width? [Y/N]:\n', 's');
     con = strcmpi(answer, 'y');
 end
 sampleImage = sampleImage(rows, :, :);
@@ -48,3 +56,4 @@ end
 
 % Crop all images with row and columns to keep
 obj.cropImages(rows, cols);
+close(newFig);
