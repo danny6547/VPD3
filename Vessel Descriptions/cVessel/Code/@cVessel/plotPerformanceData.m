@@ -106,7 +106,7 @@ while obj.iterateDD
        
        % Plot data
 %        hold on
-       xdata = currDD_tbl.datetime_utc; % datenum(currData.DateTime_UTC, 'dd-mm-yyyy');
+       xdata = currDD_tbl.timestamp; % datenum(currData.DateTime_UTC, 'dd-mm-yyyy');
        convFact = 1;
        if ismember(currVessel.Variable, {'speed_loss', 'speed_index'})
            convFact = 1e2;

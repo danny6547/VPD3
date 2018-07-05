@@ -31,7 +31,7 @@ while obj.iterateDD
     
     % Index into input and get dates
 %     currDate = datenum(char(currStruct.DateTime_UTC), 'dd-mm-yyyy');
-    currDate = currDD_tbl.datetime_utc;
+    currDate = currDD_tbl.timestamp;
     currVar = currVessel.Variable;
     currPerf = currDD_tbl.(currVar);
 %     [ri, ci] = ind2sub(sizeStruct, si);

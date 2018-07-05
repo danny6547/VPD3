@@ -1176,10 +1176,10 @@ classdef cVessel < cModelID
         % Insert update resistance
         resCol = {'IMO_Vessel_Number', 'DateTime_UTC', ...
             'Wind_Resistance_Relative'};
-        midnights_l = cellfun(@(x) length(x) == 10, iso_tbl.datetime_utc);
-        sqldates_c = iso_tbl.datetime_utc;
+        midnights_l = cellfun(@(x) length(x) == 10, iso_tbl.timestamp);
+        sqldates_c = iso_tbl.timestamp;
         sqldates_c(midnights_l) = cellfun(@(x) [x, ' 00:00:00'], ...
-            iso_tbl.datetime_utc(midnights_l), 'Uni', 0);
+            iso_tbl.timestamp(midnights_l), 'Uni', 0);
         
         sqldates_ch = datestr(datenum(sqldates_c, obj(1).DateFormStr),...'dd-mm-yyyy HH:MM:SS'),...
             'yyyy-mm-dd HH:MM');
@@ -1284,11 +1284,11 @@ classdef cVessel < cModelID
 %             nDDi = obj(oi).numDDIntervals; % numel(obj(oi).DryDock) + 1;
             nDDi = numel(obj(oi).DryDock) + 1;
             if isempty(obj(oi).DryDock)
-                mat = true(numel(obj(oi).InService.datetime_utc), 1);
+                mat = true(numel(obj(oi).InService.timestamp), 1);
                 continue
             end
-            mat = false(numel(obj(oi).InService.datetime_utc), nDDi);
-            currDates = obj(oi).InService.datetime_utc;
+            mat = false(numel(obj(oi).InService.timestamp), nDDi);
+            currDates = obj(oi).InService.timestamp;
             
             for di = 1:nDDi
                 
@@ -1442,7 +1442,7 @@ classdef cVessel < cModelID
 %                'VariableNames', {'DateTime_UTC', 'Speed_Index'});
            tbl = objDD.InService(data_l, :);
            tbl = timetable2table(tbl);
-           tbl.datetime_utc = datenum(tbl.datetime_utc);
+           tbl.timestamp = datenum(tbl.timestamp);
         end
         
         function obj = assignDefaults(obj, varargin)
