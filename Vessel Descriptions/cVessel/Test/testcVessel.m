@@ -15,6 +15,8 @@ properties
     SQLWhereSpeedPowerModel;
     SQLWhereDisplacement;
     SQLWhereWind;
+    SQLWhereOwner;
+    SQLWhereToOwner;
 end
 
 methods
@@ -121,47 +123,6 @@ methods(TestClassSetup)
     end
     end
     
-    function removeVessel2Insert(testcase)
-    % Ensure that vessel for testing insert methods is not in DB
-    
-%     vessel = testcase.testVesselInsert;
-%     
-% %     % Remove from each table which could contain data for vessel
-% %     vid = vessel.Vessel_Id;
-% %     spid = [vessel.SpeedPower.Model_ID];
-% %     did = vessel.Displacement.Model_ID;
-% %     wid = vessel.WindCoefficient.Model_ID;
-% %     where_sql = ['Vessel_Id = ', num2str(vid)];
-% %     whereEngine_sql = ['Engine_Model = ''', vessel.Engine.Name, ''''];
-% %     whereSP_sql = ['Speed_Power_Coefficient_Model_Id IN (', sprintf('%u, %u', spid), ')'];
-% %     whereDisp_sql = ['Displacement_Model_Id = ', num2str(did)];
-% %     whereWind_sql = ['Wind_Coefficient_Model_Id = ', num2str(wid)];
-%     
-%     where_sql = testcase.SQLWhereVessel;
-%     whereEngine_sql = testcase.SQLWhereEngine;
-%     whereSP_sql = testcase.SQLWhereSpeedPower;
-%     whereSPModel_sql = testcase.SQLWhereSpeedPowerModel;
-%     whereDisp_sql = testcase.SQLWhereDisplacement;
-%     whereWind_sql = testcase.SQLWhereWind;
-%     
-%     vessel.deleteSQL('EngineModel', whereEngine_sql);
-%     vessel.deleteSQL('SpeedPower', whereSP_sql);
-%     vessel.deleteSQL('SpeedPowerCoefficientModel', whereSPModel_sql);
-%     vessel.deleteSQL('SpeedPowerCoefficientModelValue', whereSPModel_sql);
-%     vessel.deleteSQL('DisplacementModel', whereDisp_sql);
-%     vessel.deleteSQL('DisplacementModelValue', whereDisp_sql);
-%     vessel.deleteSQL('WindCoefficientModel', whereWind_sql);
-%     vessel.deleteSQL('WindCoefficientModelValue', whereWind_sql);
-%     
-%     vessel.deleteSQL('Vessel', where_sql);
-%     vessel.deleteSQL('VesselInfo', where_sql);
-%     vessel.deleteSQL('VesselConfiguration', where_sql);
-%     vessel.deleteSQL('VesselToVesselOwner', where_sql);
-%     vessel.deleteSQL('BunkerDeliveryNote', where_sql);
-%     vessel.deleteSQL('DryDock', where_sql);
-    
-    end
-    
     function insertVessel(testcase)
     % Insert test vessel into DB
     
@@ -181,12 +142,16 @@ methods(TestClassSetup)
     did = vessel.Displacement.Model_ID;
     wid = vessel.WindCoefficient.Model_ID;
     spmid = vessel.Configuration.Speed_Power_Coefficient_Model_Id;
+    oid = vessel.Owner.Vessel_Owner_Id;
+    void = vessel.Owner.Vessel_To_Vessel_Owner_Id;
     where_sql = ['Vessel_Id = ', num2str(vid)];
     whereEngine_sql = ['Engine_Model = ''', vessel.Engine.Engine_Model, ''''];
     whereSP_sql = ['Speed_Power_Coefficient_Model_Value_Id IN (', sprintf('%u, %u', spid), ')'];
     whereSPModel_sql = ['Speed_Power_Coefficient_Model_Id = ', num2str(spmid)];
     whereDisp_sql = ['Displacement_Model_Id = ', num2str(did)];
     whereWind_sql = ['Wind_Coefficient_Model_Id = ', num2str(wid)];
+    whereOwner_sql = ['Vessel_Owner_Id = ', num2str(oid)];
+    whereToOwner_sql = ['Vessel_To_Vessel_Owner_Id = ', num2str(void)];
 
     testcase.SQLWhereVessel = where_sql;
     testcase.SQLWhereEngine = whereEngine_sql;
@@ -194,6 +159,8 @@ methods(TestClassSetup)
     testcase.SQLWhereSpeedPowerModel = whereSPModel_sql;
     testcase.SQLWhereDisplacement = whereDisp_sql;
     testcase.SQLWhereWind = whereWind_sql;
+    testcase.SQLWhereOwner = whereOwner_sql;
+    testcase.SQLWhereToOwner = whereToOwner_sql;
     
     end
     
@@ -219,11 +186,45 @@ methods(TestMethodSetup)
     function insertVessel2Read(testcase)
     % Ensure that vessel for testing read methods is in DB
         
-    
+        
     end
 end
 
-methods(Test)
+methods(TestClassTeardown)
 
+    
+    function deleteTestVessel(testcase)
+    % Ensure that vessel for testing insert methods is not in DB
+    
+    vessel = testcase.testVesselInsert;
+    
+    where_sql = testcase.SQLWhereVessel;
+    whereEngine_sql = testcase.SQLWhereEngine;
+    whereSP_sql = testcase.SQLWhereSpeedPower;
+    whereSPModel_sql = testcase.SQLWhereSpeedPowerModel;
+    whereDisp_sql = testcase.SQLWhereDisplacement;
+    whereWind_sql = testcase.SQLWhereWind;
+    whereOwner_sql = testcase.SQLWhereOwner;
+    
+    vessel.SQL.deleteSQL('EngineModel', whereEngine_sql);
+    vessel.SQL.deleteSQL('SpeedPower', whereSP_sql);
+    vessel.SQL.deleteSQL('SpeedPowerCoefficientModel', whereSPModel_sql);
+    vessel.SQL.deleteSQL('SpeedPowerCoefficientModelValue', whereSPModel_sql);
+    vessel.SQL.deleteSQL('DisplacementModel', whereDisp_sql);
+    vessel.SQL.deleteSQL('DisplacementModelValue', whereDisp_sql);
+    vessel.SQL.deleteSQL('WindCoefficientModel', whereWind_sql);
+    vessel.SQL.deleteSQL('WindCoefficientModelValue', whereWind_sql);
+    
+    vessel.SQL.deleteSQL('Vessel', where_sql);
+    vessel.SQL.deleteSQL('VesselInfo', where_sql);
+    vessel.SQL.deleteSQL('VesselConfiguration', where_sql);
+    vessel.SQL.deleteSQL('VesselToVesselOwner', where_sql);
+    vessel.SQL.deleteSQL('BunkerDeliveryNote', where_sql);
+    vessel.SQL.deleteSQL('DryDock', where_sql);
+    vessel.SQL.deleteSQL('VesselOwner', whereOwner_sql);
+    vessel.SQL.deleteSQL('VesselToVesselOwner', whereOwner_sql);
+    
+    end
+    
 end
 end

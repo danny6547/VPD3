@@ -75,5 +75,10 @@ classdef cVesselOwner < cModelID & cDateConvert
             
             endd = obj.Valid_To;
         end
+        
+        function void = get.Vessel_Owner_Id(obj)
+            
+            void = obj.Model_ID;
+        end
     end
 end

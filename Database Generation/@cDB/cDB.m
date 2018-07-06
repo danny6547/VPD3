@@ -619,7 +619,7 @@ classdef cDB
        sql = obj.SQL;
        sql.drop('DATABASE', dbname, true);
        sql.Database = '';
-       [~, connInput_c, connInput_ch] = sql.connectionData;
+       [~, connInput_c] = sql.connectionData;
        sql = cMySQL(connInput_c{:});
        sql.createDatabase(dbname, true);
        sql = cMySQL('SavedConnection', dbname);
