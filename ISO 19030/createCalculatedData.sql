@@ -10,7 +10,7 @@ CREATE PROCEDURE createCalculatedData()
 
 BEGIN
 
-CREATE TABLE `inservice`.CalculatedData (
+CREATE TABLE CalculatedData (
 						Calculated_Data_Id bigint(19) PRIMARY KEY UNIQUE AUTO_INCREMENT NOT NULL,
 						Vessel_Configuration_Id	int(10) NOT NULL,
 						Raw_Data_Id	bigint(19) NOT NULL,

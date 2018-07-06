@@ -1,17 +1,17 @@
 /* Select data for ISO 19030 analysis from RawData table for a given IMO and store in temporary table for analysis, TempRawIso. */
 
-DROP PROCEDURE IF EXISTS `inservice`.createTempRawISO;
+DROP PROCEDURE IF EXISTS createTempRawISO;
 
 delimiter //
 
-CREATE PROCEDURE `inservice`.createTempRawISO(vid INT)
+CREATE PROCEDURE createTempRawISO(vid INT)
 BEGIN
 	
-	DROP TABLE IF EXISTS `inservice`.tempRawISO;
+	DROP TABLE IF EXISTS tempRawISO;
     
 	/* CREATE TABLE tempRawISO LIKE rawdata; */
     /* Creating table with all columns much faster than adding later */
-	CREATE TABLE `inservice`.tempRawISO (id INT PRIMARY KEY AUTO_INCREMENT,
+	CREATE TABLE tempRawISO (id INT PRIMARY KEY AUTO_INCREMENT,
 							 Timestamp DATETIME NOT NULL,
 							 Vessel_Id INT(10) NOT NULL,
 							 Latitude FLOAT(15, 5),
@@ -98,8 +98,8 @@ BEGIN
 						 CONSTRAINT UniqueDates UNIQUE(Timestamp)
 						 ) ENGINE = MYISAM;
 	
-	INSERT INTO `inservice`.tempRawISO (Raw_Data_Id, Timestamp, Vessel_Id, Latitude, Longitude, Relative_Wind_Speed, Relative_Wind_Direction, Speed_Over_Ground, Ship_Heading, Shaft_Revolutions, Static_Draught_Fore, Static_Draught_Aft, Water_Depth, Rudder_Angle, Seawater_Temperature, Air_Temperature, Air_Pressure, Speed_Through_Water, Air_Density, Delivered_Power, Shaft_Power, Brake_Power, Shaft_Torque, Mass_Consumed_Fuel_Oil, Volume_Consumed_Fuel_Oil, Temp_Fuel_Oil_At_Flow_Meter, Displacement)
+	INSERT INTO tempRawISO (Raw_Data_Id, Timestamp, Vessel_Id, Latitude, Longitude, Relative_Wind_Speed, Relative_Wind_Direction, Speed_Over_Ground, Ship_Heading, Shaft_Revolutions, Static_Draught_Fore, Static_Draught_Aft, Water_Depth, Rudder_Angle, Seawater_Temperature, Air_Temperature, Air_Pressure, Speed_Through_Water, Air_Density, Delivered_Power, Shaft_Power, Brake_Power, Shaft_Torque, Mass_Consumed_Fuel_Oil, Volume_Consumed_Fuel_Oil, Temp_Fuel_Oil_At_Flow_Meter, Displacement)
 		SELECT Raw_Data_Id, Timestamp, Vessel_Id, Latitude, Longitude, Relative_Wind_Speed, Relative_Wind_Direction, Speed_Over_Ground, Ship_Heading, Shaft_Revolutions, Static_Draught_Fore, Static_Draught_Aft, Water_Depth, Rudder_Angle, Seawater_Temperature, Air_Temperature, Air_Pressure, Speed_Through_Water, Air_Density, Delivered_Power, Shaft_Power, Brake_Power, Shaft_Torque, Mass_Consumed_Fuel_Oil, Volume_Consumed_Fuel_Oil, Temp_Fuel_Oil_At_Flow_Meter, Displacement
-			FROM `inservice`.rawdata WHERE Vessel_Id = vid;
+			FROM rawdata WHERE Vessel_Id = vid;
     
 END

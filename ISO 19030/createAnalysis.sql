@@ -8,7 +8,7 @@ CREATE PROCEDURE createAnalysis()
 
 BEGIN
 
-	CREATE TABLE `inservice`.Analysis (id INT PRIMARY KEY AUTO_INCREMENT,
+	CREATE TABLE Analysis (id INT PRIMARY KEY AUTO_INCREMENT,
 									 IMO_Vessel_Number INT(7) NOT NULL COMMENT 'International Maritime Organisation Vessel Number',
 									 StartDate DATETIME NOT NULL,
 									 EndDate DATETIME NOT NULL,
