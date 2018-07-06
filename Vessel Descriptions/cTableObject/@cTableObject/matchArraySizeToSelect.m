@@ -26,7 +26,9 @@ sync = obj.Sync;
 class_ch = class(obj);
 for oi = 2:nObj
    
-    obj(oi) = eval(class_ch);
+    [~, ~, in] = obj(1).SQL.connectionData();
+%     cl = strcat('''', cl, '''');
+    obj(oi) = eval([class_ch, '(',  in, ')']);
     obj(oi) = copyData(obj(1), obj(oi));
     
 %     for pi = 1:numel(obj(1).DataProperty)

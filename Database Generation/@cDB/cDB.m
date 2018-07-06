@@ -70,9 +70,10 @@ classdef cDB < cMySQL
     methods
     % Methods to delete
        
-       function obj = cDB()
+       function obj = cDB(varargin)
        % cDB Constructor method for class cDB.
-    
+       
+           obj = obj@cMySQL(varargin{:});
        end
        
        function create(obj, name, varargin)

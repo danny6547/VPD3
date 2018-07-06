@@ -38,7 +38,7 @@ classdef cVessel < cModelID
         IterFinished = false;
         DryDockIndexDB = [];
         DDIterator = [0, 1, 0];
-        Info = cVesselInfo;
+        Info = [];
         StaticDB char = '';
         InServiceDB char = '';
     end
@@ -1588,10 +1588,13 @@ classdef cVessel < cModelID
            obj.Model_ID = vid;
            obj.Vessel_Id = vid;
            
+           % Get connection data for this object
+           [~, connInput_c] = obj.SQL.connectionData();
+           
            % Read DD
            if ~isempty(vid)
                
-               ddd = obj.DryDock();
+               ddd = obj.DryDock;
                tab = ddd.DBTable;
                field = ddd.TableIdentifier;
                alias_c = ddd.propertyAlias;
@@ -1626,7 +1629,7 @@ classdef cVessel < cModelID
                
                % Assign super-model ID to obj and select using that
                currSPSQL = sp.SQL;
-               sp = cVesselSpeedPower();
+               sp = cVesselSpeedPower(connInput_c{:});
                sp.SQL = currSPSQL;
                sp.Speed_Power_Coefficient_Model_Id = spmID;
                [sp.Sync] = deal(false);
