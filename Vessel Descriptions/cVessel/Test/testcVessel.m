@@ -5,7 +5,7 @@ classdef testcVessel < matlab.unittest.TestCase
 properties
     
     TestDatabase = 'Static';
-    TestInServiceDB = 'InService';
+    TestInServiceDB = 'inservice';
     TestIMO = 1234567;
     TestVessel;
     TestcMySQL;
@@ -22,7 +22,7 @@ methods
     function vessel = testVesselInsert(testcase)
         
         testDB = testcase.TestDatabase;
-        vessel = cVessel('Database', testDB);
+        vessel = cVessel('SavedConnection', testDB);
         vessel.InServiceDB = testcase.TestInServiceDB;
         
         % Identity
@@ -110,7 +110,8 @@ methods(TestClassSetup)
     function createDB(testcase)
     % createDB Create database for Vessel if it doesn't exist
     
-    obj = cDB();
+    testDB = testcase.TestDatabase;
+    obj = cDB('SavedConnection', testDB);
     [obj, isDB] = obj.existDB(testcase.TestDatabase);
     
     if ~isDB
