@@ -4,8 +4,8 @@ classdef testcVessel < matlab.unittest.TestCase
 
 properties
     
-    TestDatabase = 'Static';
-    TestInServiceDB = 'inservice';
+    TestDatabase = 'static';
+    TestInServiceDB = 'static';
     TestIMO = 1234567;
     TestVessel;
     TestcMySQL;
@@ -63,7 +63,7 @@ methods
         vessel.Engine.Highest_Given_Brake_Power = 6;
         
         % Speed Power
-        sp = cVesselSpeedPower('Size', [1, 2], 'Database', testDB);
+        sp = cVesselSpeedPower('Size', [1, 2], 'SavedConnection', testDB);
         sp(1).Speed = [10, 15];
         sp(1).Power = [10, 15]*1e4;
         sp(1).Trim = 1;
@@ -81,7 +81,7 @@ methods
         vessel.SpeedPower = sp;
         
         % Dry Dock
-        ddd = cVesselDryDock('Size', [1, 2], 'Database', testDB);
+        ddd = cVesselDryDock('Size', [1, 2], 'SavedConnection', testDB);
         ddd(1).Start_Date = '2000-01-01';
         ddd(1).End_Date = '2000-01-14';
 %         ddd(1).Model_ID = 1;
@@ -112,7 +112,7 @@ methods(TestClassSetup)
     
     testDB = testcase.TestDatabase;
     obj = cDB('SavedConnection', testDB);
-    [obj, isDB] = obj.existDB(testcase.TestDatabase);
+    [obj, isDB] = obj.SQL.existDB(testcase.TestDatabase);
     
     if ~isDB
 
@@ -173,7 +173,7 @@ methods(TestClassSetup)
     
     % Assign cMySQL object
     testDB = testcase.TestDatabase;
-    testcase.TestcMySQL = cMySQL('Database', testDB);
+    testcase.TestcMySQL = cMySQL('SavedConnection', testDB);
 
     % Assign where SQL
     vid = vessel.Model_ID;
@@ -208,8 +208,8 @@ methods(TestClassSetup)
     function deleteCalculated(testcase)
         
         vessel = testcase.testVesselInsert();
-        vid = vessel.Vessel_Id;
-        sql = ['DELETE FROM `', testcase.TestInServiceDB, '`.CalculatedData WHERE Vessel_Id = ' num2str(vid)];
+        vid = vessel.Configuration.Vessel_Configuration_Id;
+        sql = ['DELETE FROM `', testcase.TestInServiceDB, '`.CalculatedData WHERE Vessel_Configuration_Id = ' num2str(vid)];
         testcase.TestcMySQL.execute(sql);
     end
 end

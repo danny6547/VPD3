@@ -289,7 +289,7 @@ classdef cVesselDryDock < cModelID & cDateConvert
             end
             
             props2skipDD_c = {'IMO_Vessel_Number', 'DateStrFormat'};
-            props2skip_c = union(properties(cMySQL), props2skipDD_c);
+            props2skip_c = union(properties('cMySQL'), props2skipDD_c);
             props = setdiff(properties(obj), props2skip_c);
             empty = false(numel(props), numel(obj));
             for oi = 1:numel(obj)

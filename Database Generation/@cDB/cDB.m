@@ -1,4 +1,4 @@
-classdef cDB < cMySQL
+classdef cDB
     %cDB Generate Hull Performance database structure and insert data
     %   cDB will generate the tables and procedures of existing schema, and
     %   load data into them, to create the Hempel Hull Performance
@@ -19,6 +19,7 @@ classdef cDB < cMySQL
     properties
         
         VesselDirectory = '\\hempelgroup.sharepoint.com@SSL\DavWWWRoot\sites\HullPerformanceManagementTeam\Vessel Library';
+        SQL;
         BuildSchema = true;
         LoadRaw = true;
         LoadPerformance = true;
@@ -73,7 +74,8 @@ classdef cDB < cMySQL
        function obj = cDB(varargin)
        % cDB Constructor method for class cDB.
        
-           obj = obj@cMySQL(varargin{:});
+%            obj = obj@cMySQL(varargin{:});
+           obj.SQL = cMySQL(varargin{:});
        end
        
        function create(obj, name, varargin)
@@ -605,7 +607,7 @@ classdef cDB < cMySQL
        % Create database for static vessel data.
        
        % Input
-       dbname = 'Static';
+       dbname = 'static';
        if nargin > 1 && ~isempty(varargin{1})
            
            dbname = varargin{1};
@@ -614,14 +616,20 @@ classdef cDB < cMySQL
        end
        
        % Create Database
-       obj = obj.drop('DATABASE', dbname, true);
-       obj = obj.createDatabase(dbname, true);
-       obj.Database = dbname;
+       sql = obj.SQL;
+       sql.drop('DATABASE', dbname, true);
+       sql.Database = '';
+       [~, connInput_c, connInput_ch] = sql.connectionData;
+       sql = cMySQL(connInput_c{:});
+       sql.createDatabase(dbname, true);
+       sql = cMySQL('SavedConnection', dbname);
+       obj.SQL = sql;
        
        % Build Schema
        topleveldir = obj.TopLevelDir;
        ISODir = 'ISO 19030';
        createStatic_c = {
+        'createRawData.sql             '
         'createBunkerDeliveryNote.sql             '
         'createDisplacementModel.sql              '
         'createDisplacementModelValue.sql         '
@@ -638,12 +646,60 @@ classdef cDB < cMySQL
         'createWindCoefficientModel.sql           '
         'createWindCoefficientModelValue.sql  	'
         'createSpeedPower.sql'
-        'createGlobalConstants.sql'};
+        'createGlobalConstants.sql'
+        'createCalculatedData.sql      '
+        'createAnalysis.sql'};
+    createProcedures_c = {
+        'createTempChauvenetFilter.sql'
+        'ISO19030.sql'
+        'ProcessISO19030.sql'
+        'createChauvenetFilter.sql'
+        'filterPowerBelowMinimum.sql'
+        'filterReferenceConditions.sql'
+        'filterSFOCOutOfRange.sql'
+        'filterSpeedPowerLookup.sql'
+        'isBrakePowerAvailable.sql'
+        'isShaftPowerAvailable.sql'
+        'normaliseHigherFreq.sql'
+        'normaliseLowerFreq.sql'
+        'removeFOCBelowMinimum.sql'
+        'removeInvalidRecords.sql'
+        'removeNullRows_prc.sql'
+        'sortOnDateTime.sql'
+        'updateAirDensity.sql'
+        'updateAirResistanceNoWind.sql'
+        'updateBrakePower.sql'
+        'updateChauvenetCriteria.sql'
+        'updateCorrectedPower.sql'
+        'updateDeliveredPower.sql'
+        'updateDisplacement.sql'
+        'updateExpectedSpeed.sql'
+        'updateFromBunkerNote.sql'
+        'updateMassFuelOilConsumed.sql'
+        'updateShaftPower.sql'
+        'updateSpeedLoss.sql'
+        'updateTransProjArea.sql'
+        'updateTrim.sql'
+        'updateValidated.sql'
+        'updateWindResistanceCorrection.sql'
+        'updateWindResistanceRelative.sql'
+        'validateFrequencies.sql'
+        'updateDefaultValues.sql'
+        'updateWindReference.sql'
+        'knots2mps.sql'
+        'updateNearestTrim.sql'
+        'applyFilters.sql'
+        'bar2Pa.sql'};
        createStaticFullpath_c = cellfun(@(x) fullfile(topleveldir, ISODir, x), ...
            createStatic_c, 'Uni', 0);
-       obj = obj.source(createStaticFullpath_c);
+       sql.source(createStaticFullpath_c);
        static_c = strrep(createStatic_c, '.sql', '');
-       cellfun(@(x) obj.call(x), static_c, 'Uni', 0);
+       cellfun(@(x) sql.call(x), static_c, 'Uni', 0);
+       
+       % Create procedures
+       createStaticFullpath_c = cellfun(@(x) fullfile(topleveldir, ISODir, x), ...
+           createProcedures_c, 'Uni', 0);
+       sql.source(createStaticFullpath_c);
        
 %        % Run all files in InsertStatic dir
 %        if obj.InsertStatic
@@ -657,6 +713,8 @@ classdef cDB < cMySQL
 %                run(allFilesNames{fi});
 %            end
 %        end
+%        obj.createInService(dbname, false);
+
        end
        
        function createInService(obj, varargin)
@@ -668,23 +726,37 @@ classdef cDB < cMySQL
            dbname = varargin{1};
            dbname = obj.validateDBName(dbname);
        end
+       obj.SQL = cMySQL('SavedConnection', dbname);
+       
+       refresh_l = true;
+       if nargin > 2
+           
+           refresh_l = varargin{2};
+           validateattributes(refresh_l, {'logical'}, {'scalar'},...
+               'cDB.createInService', 'refresh', 3);
+       end
            
        % Create Database
-       obj = obj.drop('DATABASE', dbname, true);
-       obj = obj.createDatabase(dbname, true);
-       obj.Database = dbname;
+       sql = obj.SQL;
+       if refresh_l
+           
+           sql.drop('DATABASE', dbname, true);
+           sql.createDatabase(dbname, true);
+       end
        
        % Build Schema
+%        obj.Database = dbname;
        topleveldir = obj.TopLevelDir;
        ISODir = 'ISO 19030';
        createInService_c = {
                         'createRawData.sql             '
-                        'createCalculatedData.sql      '};
+                        'createCalculatedData.sql      '
+                        'createTempChauvenetFilter.sql'};
        createStaticFullpath_c = cellfun(@(x) fullfile(topleveldir, ISODir, x), ...
            createInService_c, 'Uni', 0);
-       obj = obj.source(createStaticFullpath_c);
+       sql.source(createStaticFullpath_c);
        createInService_c = strrep(createInService_c, '.sql', '');
-       cellfun(@(x) obj.call(x), createInService_c, 'Uni', 0);
+       cellfun(@(x) sql.call(x), createInService_c, 'Uni', 0);
        
        % Create ISO19030 Procedures
        iso19030_c = {'createAnalysis.sql'
@@ -763,7 +835,7 @@ classdef cDB < cMySQL
                         };
        iso19030Fullpath_c = cellfun(@(x) fullfile(topleveldir, ISODir, x), ...
            iso19030_c, 'Uni', 0);
-       obj.source(iso19030Fullpath_c);
+       sql.source(iso19030Fullpath_c);
        end
        
        function loadStatic(obj, varargin)

@@ -114,8 +114,8 @@ methods(TestClassSetup)
         
         imo = testcase.TestIMO;
         dbname = testcase.TestDatabase;
-        vessel = cVessel('Database', dbname);
-        vessel.InServiceDB = 'TestInService';
+        vessel = cVessel('SavedConnection', dbname);
+        vessel.InServiceDB = testcase.TestInServiceDB;
         vessel.IMO = imo;
         testcase.SelectedVessel = vessel;
     end
