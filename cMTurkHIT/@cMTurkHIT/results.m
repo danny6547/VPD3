@@ -12,21 +12,23 @@ if nargin > 1
 end
 
 % Prep
-obj.prepareOutputFile;
+% obj.prepareOutputFile;
 
 % Read data part of file
 % file_tbl = readtable(filename, 'ReadVariableNames', true, 'Delimiter', ',');
-file_c = cell(1, 93);
+nCol = 91;
+file_c = cell(1, nCol);
 fid = fopen(filename, 'r');
 hi = 1;
 while ~feof(fid)
     
-    temp_cc = textscan(fid, '%q', 93, 'Delimiter', ',');
     if hi == 1
         
-        colNames = [temp_cc{:}];
+        temp_cc = textscan(fid, '%q', nCol+2, 'Delimiter', ',');
+        colNames = [temp_cc{:}(1:end-2)];
     else
         
+        temp_cc = textscan(fid, '%q', nCol, 'Delimiter', ',');
         file_c(hi - 1, :) = [temp_cc{:}];
     end
     hi = hi + 1;
@@ -65,14 +67,19 @@ isGrid_l = any(trim_l);
 
 if isGrid_l
     
+    % Save into object
+    obj.IsGrid = isGrid_l;
+    
     % Get edge values
     draftEdgeTemp_l = regexp(answerNames, [draftAnswerName_ch, '_\d+$']);
     draftEdge_l = ~cellfun(@isempty, draftEdgeTemp_l);
     trimEdge_l = trim_l;
     draftEdge_c = answerNames(draftEdge_l);
     trimEdge_c = answerNames(trim_l);
-    draftEdgeIdx_v = regexp(draftEdge_c, [draftAnswerName_ch, '_\d+']);
-    trimEdgeIdx_v = regexp(trimEdge_c, [trimAnswerName_ch, '_\d+']);
+    draftEdgeIdx_c = regexp(draftEdge_c, [draftAnswerName_ch, '_\d+'], 'match');
+    trimEdgeIdx_c = regexp(trimEdge_c, [trimAnswerName_ch, '_\d+'], 'match');
+    draftEdgeIdx_v = [draftEdgeIdx_c{:}];
+    trimEdgeIdx_v = [trimEdgeIdx_c{:}];
     [~, sortAscDraftIdx_v] = sort(draftEdgeIdx_v);
     [~, sortAscTrimIdx_v] = sort(trimEdgeIdx_v);
     
@@ -81,25 +88,24 @@ if isGrid_l
         obj.TrimName, '_[\d]+'];
     gridNamePattern_c = regexp(answerNames, gridNamePattern_ch);
     disp_l = ~cellfun(@isempty, gridNamePattern_c);
-    displacement = answer_tbl(:, disp_l);
+    displacement = answer_tbl{:, disp_l};
     
     % Get edge vector indices
     gridNames_c = answerNames(disp_l);
     gridIdx_cc = regexp(gridNames_c(:), '[\d]+', 'match');
-    gridIdx_c = [gridIdx_cc{:}]';
-    gridIdx_m = cellfun(@str2double, gridIdx_c);
-    draftIdx_v = gridIdx_m(:, 1);
-    trimIdx_v = gridIdx_m(:, 2);
+    [draftIdx_c, trimIdx_c] = cellfun(@(x) x{:}, gridIdx_cc, 'Uni', 0);
+    draftIdx_v = cellfun(@str2double, draftIdx_c);
+    trimIdx_v = cellfun(@str2double, trimIdx_c);
     
     nGrid = sum(disp_l);
-    draft = nan(nHITs, nGrid);
-    trim = nan(nHITs, nGrid);
+    draft = nan(nHIT, nGrid);
+    trim = nan(nHIT, nGrid);
     for hi = 1:nHIT
         
         % Get edge vector values, sorted in ascending order
-        draftVal_v = answer_tbl(hi, draftEdge_l);
+        draftVal_v = [answer_tbl{hi, draftEdge_l}];
         draftVal_v = draftVal_v(sortAscDraftIdx_v);
-        trimVal_v = answer_tbl(hi, trimEdge_l);
+        trimVal_v = [answer_tbl{hi, trimEdge_l}];
         trimVal_v = trimVal_v(sortAscTrimIdx_v);
         
         % Index the sorted edge vectors with the corresponding grid entry
@@ -111,4 +117,7 @@ if isGrid_l
     tbl = table(draft(:), trim(:), displacement(:), ...
         'VariableNames', {'Draft', 'Trim', 'Displacement'});
 end
+
+obj.FileData = tbl;
+
 end

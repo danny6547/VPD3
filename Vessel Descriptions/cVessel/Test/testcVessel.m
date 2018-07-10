@@ -192,7 +192,6 @@ end
 
 methods(TestClassTeardown)
 
-    
     function deleteTestVessel(testcase)
     % Ensure that vessel for testing insert methods is not in DB
     
