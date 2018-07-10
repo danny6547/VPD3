@@ -22,6 +22,8 @@ classdef cMTurkHIT
         DeafaultColumnName = 'column_';
         CSVFileName = 'Input';
         OutFileName = '';
+        FileData;
+        InvalidData;
     end
     
     properties(Constant, Hidden)
@@ -35,6 +37,7 @@ classdef cMTurkHIT
     properties(Dependent)
         
         CSVFilePath = '';
+        FilteredData;
     end
     
     methods
@@ -76,5 +79,29 @@ classdef cMTurkHIT
             ins = validateCellStr(ins);
             obj.Instructions = ins;
         end
+        
+        function filt = get.FilteredData(obj)
+            
+            file = obj.FileData;
+            invalid = obj.InvalidData;
+            
+            if obj.IsGrid
+                
+                filter_l = ismember(file.Draft,  invalid(:, 1)) &...
+                    ismember(file.Trim,  invalid(:, 2));
+            else
+                
+                filter_l = ismember(file.Draft,  invalid);
+            end
+            
+            filt = file(~filter_l, :);
+        end
+        
+        function obj = set.InvalidData(obj, invalid)
+            
+            invalid = unique(invalid, 'rows');
+            obj.InvalidData = invalid;
+        end
+        
     end
 end
