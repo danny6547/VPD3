@@ -16,21 +16,18 @@ end
 
 % Read data part of file
 % file_tbl = readtable(filename, 'ReadVariableNames', true, 'Delimiter', ',');
-nCol = 91;
-file_c = cell(1, nCol);
 fid = fopen(filename, 'r');
+tempScan_c = textscan(fid, '%s', 1, 'Delimiter', '\n');
+colNames_cc = textscan([tempScan_c{1}{:}], '%q', inf, 'Delimiter', ',');
+colNames = colNames_cc{1}(1:end-2);
+
+nCol = length(colNames);
+file_c = cell(1, nCol);
 hi = 1;
 while ~feof(fid)
     
-    if hi == 1
-        
-        temp_cc = textscan(fid, '%q', nCol+2, 'Delimiter', ',');
-        colNames = [temp_cc{:}(1:end-2)];
-    else
-        
-        temp_cc = textscan(fid, '%q', nCol, 'Delimiter', ',');
-        file_c(hi - 1, :) = [temp_cc{:}];
-    end
+    temp_cc = textscan(fid, '%q', nCol, 'Delimiter', ',');
+    file_c(hi, :) = [temp_cc{:}];
     hi = hi + 1;
 end
 fclose(fid);
@@ -64,11 +61,11 @@ trimAnswerName_ch = ['Answer_', obj.TrimName];
 draftAnswerName_ch = ['Answer_', obj.DraftName];
 trim_l = contains(answerNames, trimAnswerName_ch);
 isGrid_l = any(trim_l);
+    
+% Save into object
+obj.IsGrid = isGrid_l;
 
 if isGrid_l
-    
-    % Save into object
-    obj.IsGrid = isGrid_l;
     
     % Get edge values
     draftEdgeTemp_l = regexp(answerNames, [draftAnswerName_ch, '_\d+$']);
@@ -116,6 +113,36 @@ if isGrid_l
     % Create table
     tbl = table(draft(:), trim(:), displacement(:), ...
         'VariableNames', {'Draft', 'Trim', 'Displacement'});
+    
+else
+    
+    % Get variable names
+    startIdx_v = regexp(answerNames, 'Answer_', 'end');
+    endIdx_v = regexp(answerNames, '_[\d]+', 'start');
+    duplicateNames = cellfun(@(name, si, ei) name(si+1:ei-1), answerNames, ...
+        startIdx_v, endIdx_v, 'Uni', 0);
+    names = unique(duplicateNames);
+    
+    % Iterate names
+    tbl = table();
+    for name = names
+        
+        % Index file table with this name
+        thisName_ch = ['Answer_', [name{:}]];
+        thisName_l = contains(answer_tbl.Properties.VariableNames, thisName_ch);
+        name_tbl = answer_tbl(:, thisName_l);
+        
+        % Sort columns from file into ascending order
+        thisName_c = answerNames(thisName_l);
+        idx_cc = regexp(thisName_c, '[\d]+', 'match');
+        idx_c = [idx_cc{:}];
+        idx_v = cellfun(@str2double, idx_c);
+        [~, sortI] = sort(idx_v, 'asc');
+        name_tbl = name_tbl(:, sortI);
+        
+        % Append column of data into output table
+        tbl.([name{:}]) = name_tbl{:, :}(:);
+    end
 end
 
 obj.FileData = tbl;

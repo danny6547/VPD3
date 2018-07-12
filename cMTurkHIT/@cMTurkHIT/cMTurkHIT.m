@@ -13,6 +13,7 @@ classdef cMTurkHIT
         NumRows;
         ImageURL = '';
         Instructions = {''};
+        ModelName = '';
     end
     
     properties(Hidden)
@@ -24,6 +25,9 @@ classdef cMTurkHIT
         OutFileName = '';
         FileData;
         InvalidData;
+        FilteredData;
+        InsertLimit = 1000;
+        NaNFilter;
     end
     
     properties(Constant, Hidden)
@@ -32,12 +36,13 @@ classdef cMTurkHIT
         DraftName = 'Draft';
         InputDirectory = 'Input';
         OutputDirectory = 'Output';
+        ScriptDirectory = 'Script';
     end
     
-    properties(Dependent)
+    properties(Dependent, Hidden)
         
         CSVFilePath = '';
-        FilteredData;
+        Model_Id;
     end
     
     methods
@@ -51,9 +56,31 @@ classdef cMTurkHIT
        end
     end
     
-    methods(Static)
+    methods(Static, Hidden)
         
         [header, footer] = printHTMLTableHeaderFooter()
+    end
+    
+    methods(Hidden)
+        
+        [obj, imageDir] = imageDir(obj)
+        [files] = imageFiles(obj)
+        [obj, tbl] = results(obj, varargin)
+        [sql, sql_c] = printSQL(obj, varargin)
+        obj = insertIntoDatabase(obj)
+        [obj, nan_l] = nanFilter(obj)
+        html = copyHTML(obj)
+        html = printHTML(obj)
+        table_c = printHTMLTable(obj)
+        obj = printCSV(obj)
+        sql = copySQL(obj)
+        copyHTMLTable(obj)
+        html = printInstructions(obj)
+        obj = isGrid(obj)
+        filename = outName(obj)
+        prepareOutputFile(obj)
+        html = print(obj)
+        [inName, varargout] = inputName(obj, name, datalength, nameDim)
     end
     
     methods
@@ -83,17 +110,15 @@ classdef cMTurkHIT
         function filt = get.FilteredData(obj)
             
             file = obj.FileData;
-            invalid = obj.InvalidData;
             
-            if obj.IsGrid
-                
-                filter_l = ismember(file.Draft,  invalid(:, 1)) &...
-                    ismember(file.Trim,  invalid(:, 2));
-            else
-                
-                filter_l = ismember(file.Draft,  invalid);
-            end
+            % Get invalid filter
+            [obj, invalid_l] = obj.invalidFilter();
             
+            % Get nan filter
+            [~, nan_l] = obj.nanFilter;
+            filter_l = invalid_l | nan_l;
+            
+            % Apply filters
             filt = file(~filter_l, :);
         end
         
@@ -103,5 +128,57 @@ classdef cMTurkHIT
             obj.InvalidData = invalid;
         end
         
+        function obj = set.InsertLimit(obj, lim)
+            
+            validateattributes(lim, {'numeric'}, ...
+                {'real', 'scalar', 'positive'});
+            obj.InsertLimit = lim;
+        end
+        
+        function obj = set.ModelName(obj, name)
+            
+            % Check name is string
+            validateattributes(name, {'char'}, {'vector'});
+            
+            % Check name is in database
+            tsql = cTSQL('SavedConnection', 'hullperformance');
+            where_sql = ['Name = ', tsql.encloseStringQuotes(name)];
+            id_tbl = tsql.select('DisplacementModel', 'COUNT(*)',...
+                where_sql);
+            if isempty(id_tbl)
+                
+                errid = 'SetName:NameNotFound';
+                errmsg = ['ModelName must be an existing DisplacementModel '...
+                    'name in database'];
+                error(errid, errmsg);
+            end
+            
+            % Assign
+            obj.ModelName = name;
+        end
+        
+        function id = get.Model_Id(obj)
+            
+            % If name empty, return empty model
+            id = [];
+            name = obj.ModelName;
+            if isempty(name)
+                return
+            end
+            
+            % Get model id from name
+            tsql = cTSQL('SavedConnection', 'hullperformance');
+            where_sql = ['Name = ', tsql.encloseStringQuotes(name)];
+            [~, id_tbl] = tsql.select('DisplacementModel', 'Displacement_Model_Id',...
+                where_sql);
+            id = [id_tbl{:, :}];
+            id = double(id);
+        end
+        
+%         function obj = set.RowNames(obj, names)
+%             
+%             names = obj.validateNames(names);
+%             obj.RowNames = names;
+%         end
     end
 end

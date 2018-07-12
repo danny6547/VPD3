@@ -1,7 +1,8 @@
-function copyHTML(obj)
+function html = copyHTML(obj)
 %copyHTML Copy HTML to clipboard
 %   Detailed explanation goes here
 
 tab_c = obj.printHTML;
-clipboard('copy', [tab_c{:}]);
+html = [tab_c{:}];
+clipboard('copy', html);
 end
