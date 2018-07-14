@@ -11,11 +11,7 @@ if nargin > 1
         'filename', 2);
 end
 
-% Prep
-% obj.prepareOutputFile;
-
 % Read data part of file
-% file_tbl = readtable(filename, 'ReadVariableNames', true, 'Delimiter', ',');
 fid = fopen(filename, 'r');
 tempScan_c = textscan(fid, '%s', 1, 'Delimiter', '\n');
 colNames_cc = textscan([tempScan_c{1}{:}], '%q', inf, 'Delimiter', ',');
@@ -60,10 +56,9 @@ answer_tbl = array2table(answerTbl_m, ...
 trimAnswerName_ch = ['Answer_', obj.TrimName];
 draftAnswerName_ch = ['Answer_', obj.DraftName];
 trim_l = contains(answerNames, trimAnswerName_ch);
-isGrid_l = any(trim_l);
-    
+
 % Save into object
-obj.IsGrid = isGrid_l;
+isGrid_l = obj.isGrid(answerNames);
 
 if isGrid_l
     
@@ -93,6 +88,10 @@ if isGrid_l
     [draftIdx_c, trimIdx_c] = cellfun(@(x) x{:}, gridIdx_cc, 'Uni', 0);
     draftIdx_v = cellfun(@str2double, draftIdx_c);
     trimIdx_v = cellfun(@str2double, trimIdx_c);
+    
+    % Assign numbers of edge vectors
+    obj.nDraft = numel(draftIdx_v);
+    obj.nTrim = numel(trimIdx_v);
     
     nGrid = sum(disp_l);
     draft = nan(nHIT, nGrid);
@@ -127,9 +126,16 @@ else
     tbl = table();
     for name = names
         
+        % Skip if page name found
+        if isempty([name{:}])
+            
+            continue
+        end
+        
         % Index file table with this name
         thisName_ch = ['Answer_', [name{:}]];
-        thisName_l = contains(answer_tbl.Properties.VariableNames, thisName_ch);
+        thisName_c = regexp(answerNames, [thisName_ch, '_[\d]+']);
+        thisName_l = ~cellfun(@isempty, thisName_c);
         name_tbl = answer_tbl(:, thisName_l);
         
         % Sort columns from file into ascending order
@@ -141,10 +147,46 @@ else
         name_tbl = name_tbl(:, sortI);
         
         % Append column of data into output table
-        tbl.([name{:}]) = name_tbl{:, :}(:);
+        tbl.([name{:}]) = name_tbl{:, :}(:); 
+    end
+    
+    % Assign numbers of draft
+    obj.nDraft = height(name_tbl);
+    obj.nTrim = 0;
+    
+    % Check for any page variables
+    if obj.hasPageData() && ~isempty(obj.PageValue)
+
+        % Index current image to find corresponding page value
+        fileImg_c = file_tbl.Input_image_url;
+        objimg_c = obj.ImageURL;
+        [~, imageOrder_v] = ismember(fileImg_c, objimg_c);
+        page_v = obj.PageValue(imageOrder_v);
+        
+    elseif obj.hasPageData() && ~isempty(obj.PageLabel)
+        
+        % Read page values from file
+        pageAnswer_ch = ['Answer_', obj.PageName];
+        page_v = answer_tbl.(pageAnswer_ch);
+    else
+        
+        % Error if page name given but no label or values
+        errid = 'PageData:InsufficientInput';
+        errmsg = ['In order to parse page data, either property PageLabel '...
+            'or PageValues must be given'];
+        error(errid, errmsg);
+    end
+    
+    if obj.hasPageData()
+        
+        % Assign page values to output table
+        page_m = repmat(page_v(:), [1, width(name_tbl)]);
+        tbl.(obj.PageName) = page_m(:);
+        
+        % Data is gridded even if layout was table
+        obj.IsGrid = true;
     end
 end
 
 obj.FileData = tbl;
-
 end

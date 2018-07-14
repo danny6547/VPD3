@@ -14,20 +14,27 @@ classdef cMTurkHIT
         ImageURL = '';
         Instructions = {''};
         ModelName = '';
+        PageName = '';
+        PageValue = [];
+        PageLabel = '';
+        PageLabelRight = '';
     end
     
     properties(Hidden)
         
         IsGrid;
-        DeafaultRowName = 'row_';
-        DeafaultColumnName = 'column_';
-        CSVFileName = 'Input';
-        OutFileName = '';
         FileData;
         InvalidData;
         FilteredData;
         InsertLimit = 1000;
         NaNFilter;
+        DeafaultRowName = 'row_';
+        DeafaultColumnName = 'column_';
+        CSVFileName = 'Input';
+        TemplateSite = 'Transcription From Image';
+        nDraft;
+        nTrim;
+%         OutFileName = '';
     end
     
     properties(Constant, Hidden)
@@ -37,6 +44,7 @@ classdef cMTurkHIT
         InputDirectory = 'Input';
         OutputDirectory = 'Output';
         ScriptDirectory = 'Script';
+        ImageDirectory = 'Images';
     end
     
     properties(Dependent, Hidden)
@@ -49,10 +57,12 @@ classdef cMTurkHIT
     
        function obj = cMTurkHIT(varargin)
        
+           obj = obj.defaultInstructions;
            if nargin == 0
                
                return
            end
+           
        end
     end
     
@@ -76,7 +86,7 @@ classdef cMTurkHIT
         sql = copySQL(obj)
         copyHTMLTable(obj)
         html = printInstructions(obj)
-        obj = isGrid(obj)
+        obj = isGrid(obj, names)
         filename = outName(obj)
         prepareOutputFile(obj)
         html = print(obj)

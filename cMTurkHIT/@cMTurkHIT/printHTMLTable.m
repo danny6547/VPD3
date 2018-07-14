@@ -15,8 +15,8 @@ if ~isempty(obj.RowNames)
     else
 
         errid = 'MakeTable:NeedNumRows';
-        errmsg = ['To find the number of rows either property RowNames or '...
-            'NumRows must be given'];
+        errmsg = ['To find the number of rows either property ColumnNames or '...
+            'NumColumns must be given'];
         error(errid, errmsg);
     end
 end
@@ -104,4 +104,24 @@ cell_c = [rowOpen_c, cell_c, rowClose_c]';
 cell_c = cell_c(:);
 [header, footer] = obj.printHTMLTableHeaderFooter;
 table_c = [{header}; cell_c; {footer}];
+
+% Create page input
+if ~isempty(obj.PageName) && ~isempty(obj.PageLabel)
+    
+    cell_ch = '<td align="center"><input id="INPUTID" name="INPUTNAME" size="10" type="text"/></td>';
+    inputIdPage = max(inputId_m(:)) + 1;
+    cell_ch = strrep(cell_ch, 'INPUTID', num2str(inputIdPage));
+    cell_ch = strrep(cell_ch, 'INPUTNAME', obj.PageName);
+    pageHeader_ch = ['<th align="center">', obj.PageLabel ,'</th>'];
+    pageHeaderRight_ch = '';
+    if ~isempty(obj.PageLabelRight)
+        pageHeaderRight_ch = ['<th align="center">', obj.PageLabelRight ,'</th>'];
+    end
+    pageTable_c = {pageHeader_ch, cell_ch, pageHeaderRight_ch};
+    
+    rowOpen_c = {'<tr>'};
+    rowClose_c = {'</tr>'};
+    page_c = [rowOpen_c, pageTable_c, rowClose_c];
+    page_c = [{header}, page_c, {footer}];
+    table_c = [page_c'; table_c];
 end

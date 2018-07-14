@@ -2,6 +2,7 @@ function [sql, sql_c] = printSQL(obj, varargin)
 %printSQL Print SQL statement to insert data into database
 %   Detailed explanation goes here
 
+sql = '';
 sql_c = {};
 
 file_l = false;
@@ -23,17 +24,11 @@ insertLimit = obj.InsertLimit;
 
 % Error if filtered data not given
 % Remove columns not found database 
+obj.errorIfNoData();
 tbl = obj.databaseTable;
-if isempty(tbl)
-    return;
-end
 
 % Error if model id not given
-name = obj.ModelName;
-if isempty(name)
-    
-    return;
-end
+obj.errorIfNoModel();
 id = obj.Model_Id;
 
 % Create matrix of data from table

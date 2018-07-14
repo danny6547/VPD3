@@ -26,8 +26,9 @@ end
 % Request user input for invalid points
 fprintf(1, '%s\n', 'To filter data, click (and drag) to select invalid ');
 fprintf(1, '%s\n', 'points, right click and select ''Copy Data to Clipboard'',');
-fprintf(1, '%s\n', 'then hit return, and repeat as necessary. When finished,');
-fprintf(1, '%s\n', 'enter any text below:');
+fprintf(1, '%s\n', 'then hit return, and repeat as necessary. Enter the text ');
+fprintf(1, '%s\n', '''undo'' to replace the most recently-removed points. ');
+fprintf(1, '%s\n', 'Enter any other text to return.');
 
 fin = false;
 lastNRows = [];

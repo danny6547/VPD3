@@ -10,4 +10,7 @@ htmlTab = obj.printHTMLTable();
 
 % Concat
 html = [htmlIns; htmlTab];
+
+% Insert
+html = obj.concatTemplateHTML(html);
 end

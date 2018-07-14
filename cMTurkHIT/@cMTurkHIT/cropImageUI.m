@@ -32,6 +32,7 @@ while ~con
     % Update image
     imshow(sampleImage(rows, :, :));
     set(gca, 'Visible', 'on');
+    set(gca,'XMinorTick','on');
 
     answer = input('Continue to width? [Y/N]:\n', 's');
     con = strcmpi(answer, 'y');
@@ -49,6 +50,7 @@ while ~con
     % Update image
     imshow(sampleImage(:, cols, :));
     set(gca, 'Visible', 'on');
+    set(gca,'XMinorTick','on');
     
     answer = input('Finished? [Y/N]:\n', 's');
     con = strcmpi(answer, 'y');
