@@ -141,7 +141,17 @@ classdef (Abstract) cModelID < cTableObject & handle
 %                obj(oi).Model_ID = id;
 %            end
 
-           obj(oi) = insert@cTableObject(obj(oi), model); %, [], [], [], varargin{:});
+            % Concat model id alias and value to inputs
+            mid = [obj(oi).Model_ID];
+            mid_c = {};
+            if ~isempty(mid)
+
+                name = alias_c{end, 2};
+                value = mid;
+                mid_c = {name, value};
+            end
+            
+           obj(oi) = insert@cTableObject(obj(oi), model, [], [], alias_c, mid_c{:});
 %            insert@cTableObject(obj(oi), obj(oi).ModelTable, '', [], alias_c); %, idFieldValue_c{:});
            
            tables = obj(oi).ValueTable;

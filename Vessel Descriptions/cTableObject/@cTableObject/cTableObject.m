@@ -68,11 +68,12 @@ classdef cTableObject < handle
         end
 
         alias_c = obj.propertyAlias;
-        if nargin > 4 
+        if nargin > 4
 
             alias_c = varargin{3};
-            if isempty(alias_c) && isnumeric(alias_c)
-                
+            if (~isempty(alias_c) && ~any(ismember(alias_c(:, 2), identifier))) ...
+                || (isempty(alias_c) && isnumeric(alias_c))
+                    
                 alias_c = {};
             end
 %             validateattributes(alias_c, {'cell'}, {}, ....
@@ -208,13 +209,21 @@ classdef cTableObject < handle
         if obj(1).Last_Update_Id
             lastUpdateColName = identifier;
         end
+        
+        [~, height_tbl] = obj(1).SQL.select(table, 'COUNT(*)');
+        nRowsBefore = [height_tbl{:, :}];
+        
         obj(1).SQL.insertValuesDuplicate(table, matchFields_c, data_c, [], lastUpdateColName);
 
+        [~, height_tbl] = obj(1).SQL.select(table, 'COUNT(*)');
+        nRowsAfter = [height_tbl{:, :}];
+        nRowsChange = ~isequal(nRowsAfter, nRowsBefore);
+        
         % Select out data for vessel, to synchronise with DB
         emptyID_l = cellfun(@isempty, {obj.(identifier)});
         
         % Assume at this point that if one OBJ has empty id, they all do
-        if all(emptyID_l)
+        if all(emptyID_l) && nRowsChange
             
             id_v = obj.lastInsertID;
             
@@ -223,7 +232,8 @@ classdef cTableObject < handle
                 additionalInputs = [additionalInputs, {identifier}, {id_v}];
             end
         end
-            
+        
+%         alias_c = obj.propertyAlias;
         obj = obj.select(table, identifier, [], alias_c, [], false, additionalInputs{:});
         end
 

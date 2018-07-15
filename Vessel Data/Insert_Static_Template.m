@@ -33,7 +33,7 @@ vessel.Owner.Vessel_Owner_Name = 'Berge Bulk';
 vessel.Owner.Ownership_Start = '1993-01-01';
 
 % Dry dock dates
-vessel.DryDock(1).Start_Date = '??2016-10-30';
+vessel.DryDock(1).Start_Date = '2016-10-30';
 vessel.DryDock(1).End_Date = '2016-11-06';
 vessel.DryDock(1).Vertical_Bottom_Surface_Prep = 'Spot Blast';
 vessel.DryDock(1).Vertical_Bottom_Coating = 'Hempaguard X5';
@@ -42,7 +42,7 @@ vessel.DryDock(1).Flat_Bottom_Coating = 'Hempaguard X5';
 vessel.DryDock(1).Bot_Top_Surface_Prep = 'Spot Blast';
 vessel.DryDock(1).Bot_Top_Coating = 'Hempaguard X5';
 
-vessel.DryDock(2).Start_Date = '??2013-09-18';
+vessel.DryDock(2).Start_Date = '2013-09-18';
 vessel.DryDock(2).End_Date = '2013-10-10';
 vessel.DryDock(2).Vertical_Bottom_Surface_Prep = 'Full Blast';
 vessel.DryDock(2).Vertical_Bottom_Coating = 'Hempaguard X5';

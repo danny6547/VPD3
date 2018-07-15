@@ -17,5 +17,5 @@ BEGIN
 								Propulsive_Efficiency DOUBLE(10, 5),
 								Speed DOUBLE(10, 5), /* m/s */
 								Power DOUBLE(12, 5) /* kW */
-								/*CONSTRAINT UniqueDispTrimSpeed UNIQUE(Speed_Power_Coefficient_Model_Value_Id, Speed, Power)*/);
+								,CONSTRAINT UniqueDispTrimSpeed UNIQUE(Speed_Power_Coefficient_Model_Value_Id, Speed));
 END;
