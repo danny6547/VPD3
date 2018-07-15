@@ -1489,30 +1489,30 @@ classdef cVessel < cModelID
             end
         end
         
-        function [dbconn, dbname] = validateSavedDB(obj, db, varargin)
-        % validateSavedDB 
-        
-        % Check type and size
-        if ischar(db)
-            
-            validateattributes(db, {'char', 'cConnectSQLDB'},...
-                {'vector'}, varargin{:});
-            dbconn_c = obj.SQL.savedConnection(db);
-            dbconn = cSQL.instantiateChildObj(dbconn_c{:});
-            dbname = db;
-            
-        elseif isa(db, 'cConnectSQLDB')
-            
-            validateattributes(db, {'cConnectSQLDB'},...
-                {'scalar'}, varargin{:});
-            dbconn = db;
-            dbname = db.Database;
-        else
-            
-            validateattributes(db, {'char', 'cConnectSQLDB'},...
-                {}, varargin{:});
-        end
-        end
+%         function [dbconn, dbname] = validateSavedDB(obj, db, varargin)
+%         % validateSavedDB 
+%         
+%         % Check type and size
+%         if ischar(db)
+%             
+%             validateattributes(db, {'char', 'cConnectSQLDB'},...
+%                 {'vector'}, varargin{:});
+%             dbconn_c = obj.SQL.savedConnection(db);
+%             dbconn = cSQL.instantiateChildObj(dbconn_c{:});
+%             dbname = db;
+%             
+%         elseif isa(db, 'cConnectSQLDB')
+%             
+%             validateattributes(db, {'cConnectSQLDB'},...
+%                 {'scalar'}, varargin{:});
+%             dbconn = db;
+%             dbname = db.Database;
+%         else
+%             
+%             validateattributes(db, {'char', 'cConnectSQLDB'},...
+%                 {}, varargin{:});
+%         end
+%         end
     end
     
     methods
@@ -1521,21 +1521,20 @@ classdef cVessel < cModelID
         % Change database of object and all nested objects
         
         % Change DB connection for object and nested objects
-%         obj.Database = dbname;
-        obj.DryDock.SQL.SavedConnection = dbname;
-        obj.Configuration.SQL.SavedConnection = dbname;
-        obj.SpeedPower.SQL.SavedConnection = dbname;
-%         obj.Report.SQL.SavedConnection = dbname;
-        obj.WindCoefficient.SQL.SavedConnection = dbname;
-        obj.Displacement.SQL.SavedConnection = dbname;
-        obj.Engine.SQL.SavedConnection = dbname;
-        obj.Owner.SQL.SavedConnection = dbname;
-        obj.Configuration.SQL.SavedConnection = dbname;
+        ddSQL = [obj.DryDock];
+        dbname_c = repmat({dbname}, 1, numel(ddSQL));
+        [ddSQL.SavedConnection] = dbname_c{:};
+        spSQL = [obj.SpeedPower];
+        dbname_c = repmat({dbname}, 1, numel(spSQL));
+        [spSQL.SavedConnection] = dbname_c{:};
         
-        % Assign
-        obj.SQL.SavedConnection = dbname;
-%         obj.StaticDB = dbname;
-%         obj.InServiceDB = dbname;
+        obj.Configuration.SavedConnection = dbname;
+        obj.WindCoefficient.SavedConnection = dbname;
+        obj.Displacement.SavedConnection = dbname;
+        obj.Engine.SavedConnection = dbname;
+        obj.Owner.SavedConnection = dbname;
+        
+        obj.SavedConnection = dbname;
         end
        
 %         function dbname = get.DatabaseName(obj)
@@ -1934,8 +1933,16 @@ classdef cVessel < cModelID
             
             if isa(ins, 'table')
                 
+                % If all timestamps are midnight, times are omitted
+                length_v = cellfun(@length, ins.timestamp);
+                dateformstr = obj.DateFormStr;
+                if all(length_v == 10)
+                    
+                    dateformstr = obj.DateFormStr(1:10);
+                end
+                
                 ins.timestamp = datetime(ins.timestamp,'InputFormat',...
-                    obj.DateFormStr);
+                    dateformstr);
                 
 %                 ins.timestamp = datetime(ins.timestamp, 'ConvertFrom', 'datenum');
                 ins = table2timetable(ins, 'RowTimes', 'timestamp');

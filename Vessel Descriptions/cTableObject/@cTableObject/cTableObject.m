@@ -13,6 +13,7 @@ classdef cTableObject < handle
         
         SQL;
         Last_Update_Id = false;
+        SavedConnection;
     end
     
     methods
@@ -760,6 +761,13 @@ classdef cTableObject < handle
             
             validateattributes(sql, {'cSQL'}, {'scalar'});
             obj.SQL = sql;
+        end
+        
+        function obj = set.SavedConnection(obj, save)
+        % Construct new SQL and assign saved connection properties
+        
+           csql = obj.SQL.instantiateChildObj(save);
+           obj.SQL = csql;
         end
     end
 end

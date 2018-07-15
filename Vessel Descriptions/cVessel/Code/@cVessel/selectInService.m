@@ -24,7 +24,22 @@ for oi = 1:numel(obj)
     % Select data and assign
     tab = 'CalculatedData c JOIN RawData r ON c.Raw_Data_Id = r.Raw_Data_Id';
     % cols = '*';
-    where = ['c.Vessel_Configuration_Id = ', vcid_ch];
-    [~, tbl] = obj(oi).InServiceSQLDB.select(tab, cols, where);
-    obj(oi).InService = tbl;
+    where = ['c.Vessel_Configuration_Id = ', vcid_ch, ' ORDER BY Timestamp'];
+    limit_ch = 20000;
+    [~, tbl] = obj(oi).SQL.select(tab, cols, where, limit_ch);
+    
+    if ~isempty(tbl)
+        obj(oi).InService = tbl;
+        
+    else
+    
+        % Check for data in raw table if none found in calcualted
+        tab = 'RawData';
+        cols = '*';
+        vid = obj(oi).Vessel_Id;
+        vid_ch = num2str(vid);
+        where = ['Vessel_Id = ', vid_ch, ' ORDER BY Timestamp'];
+        [~, tbl] = obj(oi).SQL.select(tab, cols, where, limit_ch);
+        obj(oi).InService = tbl;
+    end
 end
