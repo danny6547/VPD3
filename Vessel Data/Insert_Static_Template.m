@@ -133,53 +133,65 @@ vessel.Displacement.FluidDensity = 1025; % tn / m^3, optional, default values is
 % Insert data
 vessel = vessel.insert;
 
-% % Load time-series data
-% % 2011
-% sheets = {'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', ...
-%     'SEP', 'OCT', 'NOV', 'DEC'};
-% filename = ['L:\Project\MWB-Fuel efficiency\Hull and propeller '...
-%     'performance\Vessels\Berge Bulk\Berge Kibo\Time series data\'...
-%     'KBO 2011.xls'];
-% dates = [734504, 734535, 734563, 734594, 734624, 734655, 734685, ...
-%     734716, 734747, 734777, 734808, 734838];
-% vessel = vessel.loadBergeNoon(filename, sheets, dates);
-% 
-% % 2012
-% sheets = {'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', ...
-%     'SEP', 'OCT', 'NOV', 'DEC'};
-% filename = ['L:\Project\MWB-Fuel efficiency\Hull and propeller '...
-%     'performance\Vessels\Berge Bulk\Berge Kibo\Time series data\'...
-%     'KBO 2012.xls'];
-% dates = [734869, 734900, 734929, 734960, 734990, 735021, 735051,...
-%     735082, 735113, 735143, 735174, 735204];
+% Load time-series data
+kiboDir = ['\\hempelgroup.sharepoint.com@SSL\DavWWWRoot\sites\'...
+    'HullPerformanceManagementTeam\Vessel Library\Berge Bulk\'...
+    'Time series data\Berge Kibo\'];
+
+% 2011
+sheets = {'JAN', 'FEB', 'MAR', 'APR', 'JUN', 'JUL', 'AUG', ...
+    'SEP', 'OCT', 'NOV', 'DEC'};
+name = 'KBO 2011.xls';
+filename = fullfile(kiboDir, name);
+dates = [734504, 734535, 734563, 734594, 734655, 734685, ...
+    734716, 734747, 734777, 734808, 734838];
+fileColI = [1, 10, 11, 12, 19, 26, 27, 14, 21, 22];
+vessel = vessel.loadBergeNoon(filename, sheets, dates, ...
+    'fileColID', fileColI);
+
+dates = 734624;
+sheets = {'MAY'};
+fileColI = [2, 10, 11, 12, 19, 26, 27, 14, 21, 22];
+vessel = vessel.loadBergeNoon(filename, sheets, dates, ...
+    'fileColID', fileColI);
+
+% 2012
+name = 'KBO 2012.xls';
+filename = fullfile(kiboDir, name);
+sheets = {'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', ...
+    'SEP', 'OCT', 'NOV', 'DEC'};
+dates = [734869, 734900, 734929, 734960, 734990, 735021, 735051,...
+    735082, 735113, 735143, 735174, 735204];
 % fileColI = [1, 10, 11, 12, 19, 26, 27, 14, 21, 22];
-% vessel = vessel.loadBergeNoon(filename, sheets, dates);
-% 
-% % 2013 - 2016
-% VesselDir_ch = ['L:\Project\MWB-Fuel efficiency\Hull and propeller '...
-%     'performance\Vessels\Berge Bulk\Berge Kibo\Time series data'];
-% file_c = {'KBO VPR 12 2013.xls', 'KBO VPR 12 2014.xlsx', ...
-%     'KBO-VPR-10-2015.xlsx', 'KBO-VPR-1611.xlsx'};
-% filename = cellfun(@(x) fullfile(VesselDir_ch, x), file_c, 'Uni', 0);
-% vessel = vessel.loadBergeNoon(filename);
-% 
-% % 2016
-% VesselDir_ch = ['L:\Project\MWB-Fuel efficiency\Hull and propeller '...
-%     'performance\Vessels\Berge Bulk\Berge Kibo\Time series data'];
-% file_c = {'VSL VPR MTH 2016_template-REVISED.xlsx'};
-% filename = cellfun(@(x) fullfile(VesselDir_ch, x), file_c, 'Uni', 0);
-% vessel = vessel.loadBergeNoon(filename);
-% 
-% % 2017
-% VesselDir_ch = ['L:\Project\MWB-Fuel efficiency\Hull and propeller '...
-%     'performance\Vessels\Berge Bulk\Berge Kibo\Time series data'];
-% file_c = {'VSL VPR MTH 2017_template-REVISED b.xlsx'};
-% filename = cellfun(@(x) fullfile(VesselDir_ch, x), file_c, 'Uni', 0);
-% vessel = vessel.loadBergeNoon(filename);
-% 
-% % 2018
-% sheetname = {'10.17', '11.17', '12.17', '01.18', '02.18'};
-% filename = 'VSL VPR MTH 2018_template-REVISED.xlsx';
-% basedate = datenum(sheetname, 'mm.yy');
-% vessel = vessel.loadBergeNoon(filename, sheetname, basedate, ...
-%     'LastRow', [37, 37, 37, 37, 37]);
+vessel = vessel.loadBergeNoon(filename, sheets, dates);
+
+% 2013 - 2016
+file_c = {'KBO VPR 12 2013.xls', 'KBO VPR 12 2014.xlsx', ...
+    'KBO-VPR-10-2015.xlsx', 'KBO-VPR-1611.xlsx'};
+filename = cellfun(@(x) fullfile(kiboDir, x), file_c, 'Uni', 0);
+vessel = vessel.loadBergeNoon(filename);
+
+% 2016
+name = 'VSL VPR MTH 2016_template-REVISED.xlsx';
+filename = fullfile(kiboDir, name);
+vessel = vessel.loadBergeNoon(filename);
+
+% 2017
+name = 'VSL VPR MTH 2017_template-REVISED b.xlsx';
+filename = fullfile(kiboDir, name);
+vessel = vessel.loadBergeNoon(filename);
+
+sheetname = {'10.17', '11.17', '12.17'};
+name = 'VSL VPR MTH 2018_template-REVISED_a.xlsx';
+filename = fullfile(kiboDir, name);
+basedate = datenum(sheetname, 'mm.yy');
+vessel = vessel.loadBergeNoon(filename, sheetname, basedate, ...
+    'LastRow', [37, 37, 37, 37, 37]);
+
+% 2018
+sheetname = {'01.18', '02.18', '03.18', '04.18'};
+name = 'VSL VPR MTH 2018_template-REVISED b.xlsx';
+filename = fullfile(kiboDir, name);
+basedate = datenum(sheetname, 'mm.yy');
+vessel = vessel.loadBergeNoon(filename, sheetname, basedate, ...
+    'LastRow', [37, 37, 37, 37, 37]);

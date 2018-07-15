@@ -50,7 +50,7 @@ for fi = 1:numel(filename)
     validateattributes(basedate, {'numeric'}, {'real', 'positive', ...
         '>=', datenum('01-01-1950')}, 'cVessel.loadBergeNoon', 'baseDate', 2);
 
-    imo = obj.IMO_Vessel_Number;
+    imo = obj.IMO;
     if isempty(imo)
 
         errid = 'loadBerge:NeedIMO';
@@ -72,7 +72,7 @@ for fi = 1:numel(filename)
 
     validateattributes(imo, {'numeric'}, {'scalar', 'positive', 'integer'}, ...
        'cVessel.loadDNVGLReportingFormat', 'imo', 3);
-    set2_sql = ['IMO_Vessel_Number = ', num2str(imo)];
+    set2_sql = ['Vessel_Id = ', num2str(obj.Vessel_Id)];
 
     for si = 1:numel(sheetname)
 
@@ -107,7 +107,7 @@ for fi = 1:numel(filename)
 %                         'Speed_Through_Water'
 %                                    });
         p.addParameter('SetSQL', ...
-                    {['DateTime_UTC = nullif(STR_TO_DATE(@DayOfMonth, ''%d'') + ' '' baseDate_sql ', ''0000-00-00 00:00:00.000'')'],...
+                    {['Timestamp = nullif(STR_TO_DATE(@DayOfMonth, ''%d'') + ' '' baseDate_sql ', ''0000-00-00 00:00:00.000'')'],...
                     'Speed_Through_Water = nullif(knots2mps(@Speed_Through_Water), ''-'')',...
                     ['Relative_Wind_Speed = CASE '...
                     'WHEN @Wind_Force = '''' THEN NULL ',...

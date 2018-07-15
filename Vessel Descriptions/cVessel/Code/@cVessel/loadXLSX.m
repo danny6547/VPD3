@@ -111,6 +111,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
     
     % Append set SQL
     [~, tabColNames] = obj.SQL.colNames('RawData');
+    tabColNames = setdiff(tabColNames, 'Raw_Data_Id');
     if ~isequal(set_c, {''})
 
         % Generate default set statement
@@ -146,20 +147,20 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
         setNames_c = {''};
     end
 
-    [isIMO, idxIMO] = ismember('IMO_Vessel_Number', setNames_c);
-    if isIMO
+    [isVid, vidIdx] = ismember('Vessel_Id', setNames_c);
+    if isVid
 
-        imoNum_ch = set_c{idxIMO}(strfind(set_c{idxIMO}, ' = ')+3:end);
-        imo = str2double(imoNum_ch);
+        vidNum_ch = set_c{vidIdx}(strfind(set_c{vidIdx}, ' = ')+3:end);
+        vid = str2double(vidNum_ch);
         
-    elseif ~isempty(obj.IMO_Vessel_Number)
+    elseif ~isempty(obj.Vessel_Id)
         
-        imo = obj.IMO_Vessel_Number;
+        vid = obj.Vessel_Id;
     else
         
-        % Error, need IMO somewhere to insert data 
+        % Error, need vessel id somewhere to insert data 
     end
-    fileColName = [fileColName,{'IMO_Vessel_Number'}];
+    fileColName = [fileColName,{'Vessel_Id'}];
 
     % Iterate over files
     for fi = 1:numel(filename)
@@ -219,8 +220,8 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
         % Prepare outpus
 %         if isIMO
             
-            imo_v = repmat(imo, [height(file_tbl), 1]);
-            file_tbl.IMO_Vessel_Number = imo_v; 
+            vid_v = repmat(vid, [height(file_tbl), 1]);
+            file_tbl.Vessel_Id = vid_v; 
 %         end
 
         % Write table as csv
