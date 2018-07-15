@@ -30,6 +30,9 @@ classdef cVesselOwner < cModelID & cDateConvert
         ValueTable = {'VesselToVesselOwner'};
         ModelField = {'Vessel_Owner_Id'};
         ValueObject = {};
+        NameAlias = 'Vessel_Owner_Name';
+        OtherTable = '';
+        OtherTableIdentifier = '';
     end
     
     properties(Hidden)

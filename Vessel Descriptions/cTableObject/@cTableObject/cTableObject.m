@@ -673,6 +673,33 @@ classdef cTableObject < handle
         id = str2double([id_c{:}]);
             
         end
+        
+       function obj = copySQLToArray(obj)
+       % copySQLToArray Copy SQL of first obj to full array if empty
+       
+       % Check criteria
+       array_l = ~isempty(obj) && ~isscalar(obj);
+       if ~array_l
+           
+           return
+       end
+       
+       firstSQLNonEmpty = ~isempty(obj(1).SQL);
+       if ~firstSQLNonEmpty
+           
+           return
+       end
+       
+       allOtherSQLEmpty = all(isempty(obj(2:end).SQL));
+       if ~allOtherSQLEmpty
+           
+           return
+       end
+       
+       % Copy
+       [obj(2:end).SQL] = deal(obj(1).SQL);
+       
+       end
     end
     
     methods(Hidden, Static)
@@ -705,6 +732,8 @@ classdef cTableObject < handle
             fields = additionalFields_c;
             data = additionalData_c;
         end
+        
+       
     end
     
     methods

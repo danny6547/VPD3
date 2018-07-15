@@ -22,6 +22,9 @@ classdef cVesselInfo < cModelID & cDateConvert
         ValueObject = {};
         ModelField = {};
         TableIdentifier = 'Vessel_Id';
+        NameAlias = 'Vessel_Name';
+        OtherTable = '';
+        OtherTableIdentifier = '';
     end
     
     properties(Hidden)

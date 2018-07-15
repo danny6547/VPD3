@@ -26,6 +26,8 @@ classdef cVesselWindCoefficient < cModelID
         ValueObject = {};
         OtherTable = {};
         TableIdentifier = 'Wind_Coefficient_Model_Id';
+        NameAlias = '';
+        OtherTableIdentifier = '';
     end
     
     properties(Hidden)
@@ -185,5 +187,11 @@ classdef cVesselWindCoefficient < cModelID
             
             obj.Coefficient = coeff(:)';
         end
+        
+        function id = get.Wind_Coefficient_Model_Id(obj)
+            
+            id = obj.Model_ID;
+        end
+        
     end
 end

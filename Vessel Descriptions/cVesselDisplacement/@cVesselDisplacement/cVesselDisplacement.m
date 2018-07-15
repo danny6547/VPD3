@@ -28,8 +28,10 @@ classdef cVesselDisplacement < cModelID & cVesselDisplacementConversion
                         'Deleted',...
                         'LCF'};
         ValueObject = {};
-        OtherTable = {};
         TableIdentifier = 'Displacement_Model_Id';
+        NameAlias = '';
+        OtherTable = '';
+        OtherTableIdentifier = '';
     end
     
     properties(Hidden)

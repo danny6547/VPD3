@@ -15,6 +15,9 @@ classdef (Abstract) cModelID < cTableObject & handle
         ValueTable;
         ModelTable; 
         ModelField;
+        NameAlias;
+        OtherTable;
+        OtherTableIdentifier;
     end
     
     properties(Hidden)
@@ -137,7 +140,8 @@ classdef (Abstract) cModelID < cTableObject & handle
 %                id = obj.incrementID(model, modelValue);
 %                obj(oi).Model_ID = id;
 %            end
-           obj(oi) = insert@cTableObject(obj(oi), model);
+
+           obj(oi) = insert@cTableObject(obj(oi), model); %, [], [], [], varargin{:});
 %            insert@cTableObject(obj(oi), obj(oi).ModelTable, '', [], alias_c); %, idFieldValue_c{:});
            
            tables = obj(oi).ValueTable;
@@ -174,6 +178,45 @@ classdef (Abstract) cModelID < cTableObject & handle
        [obj.Sync] = deal(true);
        end
        
+       function obj = selectByName(obj, name)
+       % selectByName Return first model found in DB with given name
+           
+       % Input
+       validateattributes(name, {'char'}, {'vector'}, 'cModelID', 'name', 2);
+       
+       % Find name in DB
+       if isempty(obj(1).OtherTable)
+           
+           tab = obj(1).ModelTable;
+           col = obj(1).ModelField{1};
+       else
+           
+           tab = obj(1).OtherTable{1};
+           col = obj(1).OtherTableIdentifier{1};
+       end
+       
+       % Account for obj whose Name property has different column in DB
+       nameCol = 'Name';
+       if ~isempty(obj(1).NameAlias)
+           
+           nameCol = obj(1).NameAlias;
+       end
+       
+       % Select
+       where = [nameCol, ' = ', obj(1).SQL.encloseStringQuotes(name)];
+       [~, id_tbl] = obj.SQL.select(tab, col, where);
+       
+       % Error if name not found
+       if isempty(id_tbl)
+           errid = 'selectModel:NameNotFound';
+           errmsg = ['Model named ', name, ' not found in table ', tab];
+           error(errid, errmsg)
+       end
+       
+       % Assign id
+       id = double(id_tbl{1, 1});
+       [obj.Model_ID] = id;
+       end
     end
     
     methods(Access = protected, Hidden)

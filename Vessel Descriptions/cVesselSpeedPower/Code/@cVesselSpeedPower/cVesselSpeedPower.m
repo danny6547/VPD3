@@ -61,6 +61,7 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
         OtherTable = {'SpeedPowerCoefficientModel'};
         OtherTableIdentifier = {'Speed_Power_Coefficient_Model_Id'};
         TableIdentifier = 'Speed_Power_Coefficient_Model_Value_Id';
+        NameAlias = '';
     end
     
     methods
@@ -168,16 +169,26 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
            end
            
            % Insert into super-model table, get super-ID
-           superID = obj(1).incrementID('SpeedPowerCoefficientModel', ...
-               'Speed_Power_Coefficient_Model_Id');
-%            superID = obj(1).Speed_Power_Coefficient_Model_Id;
+           superID = obj(1).Speed_Power_Coefficient_Model_Id;
+           if isempty(superID)
+               
+               superID = obj(1).incrementID('SpeedPowerCoefficientModel', ...
+                   'Speed_Power_Coefficient_Model_Id');
+           end
            [obj.Speed_Power_Coefficient_Model_Id] = deal(superID);
+%            superID = obj(1).Speed_Power_Coefficient_Model_Id;
            insert@cTableObject(obj(1), 'SpeedPowerCoefficientModel', {}, ...
                'Speed_Power_Coefficient_Model_Id', {}, 'Speed_Power_Coefficient_Model_Id', superID);
 %            [obj.Model_ID] = deal(mid);
            
            % Insert into models
-           insert@cModelID(obj);
+           mid = [obj.Model_ID];
+           insertInputs_c = {};
+           if ~isempty(mid)
+               
+               insertInputs_c = {'Speed_Power_Coefficient_Model_Value_Id', mid};
+           end
+           insert@cModelID(obj, insertInputs_c{:});
            
 %            obj.insertSpeedPowerModel();
 %            insertIntoTable@cModelID(obj);

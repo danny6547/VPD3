@@ -39,6 +39,7 @@ classdef cVesselEngine < cModelID
         OtherTable = {};
         OtherTableIdentifier = {};
         TableIdentifier = 'Engine_Model_Id';
+        NameAlias = 'Engine_Model';
     end
     
     properties(Hidden, Dependent)

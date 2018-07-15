@@ -39,27 +39,21 @@ classdef cVesselDryDock < cModelID & cDateConvert
                         'Deleted'};
         TableIdentifier = 'Dry_Dock_Id';
         ObjectIdentifier = 'Dry_Dock_Id';
-    end
-    
-    properties(Hidden, Constant)
-        
+        OtherTableIdentifier = {};
+        OtherTable = {};
         ModelTable = 'DryDock';
         ValueTable = {};
         ModelField = {'Dry_Dock_Id'};
         ValueObject = {};
-        OtherTable = {};
+        StartDateProp = 'Start_Date';
+        EndDateProp = 'End_Date';
+        NameAlias = '';
     end
     
     properties(Hidden)
         
         Vessel_Id = [];
         Dry_Dock_Id = [];
-    end
-    
-    properties(Constant, Hidden)
-        
-        StartDateProp = 'Start_Date';
-        EndDateProp = 'End_Date';
     end
     
     methods
@@ -329,6 +323,12 @@ classdef cVesselDryDock < cModelID & cDateConvert
             ch = [c{:}];
             validateattributes(ch, {'char'}, {'vector', 'row'});
         end
+        
+        function str = removeQuestionMarks(str)
+        % removeQuestionMarks Fix bizarre MATLAB error where '?' prepended
+        
+            str(str == '?') = [];
+        end
     end
     
     methods
@@ -359,6 +359,7 @@ classdef cVesselDryDock < cModelID & cDateConvert
         
         function obj = set.Start_Date(obj, start)
             
+            start = obj.removeQuestionMarks(start);
             obj.Valid_From = start;
         end
         
@@ -369,6 +370,7 @@ classdef cVesselDryDock < cModelID & cDateConvert
         
         function obj = set.End_Date(obj, endd)
             
+            endd = obj.removeQuestionMarks(endd);
             obj.Valid_To = endd;
         end
         

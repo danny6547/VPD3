@@ -195,33 +195,35 @@ methods(TestClassTeardown)
     function deleteTestVessel(testcase)
     % Ensure that vessel for testing insert methods is not in DB
     
-    vessel = testcase.testVesselInsert;
-    
-    where_sql = testcase.SQLWhereVessel;
-    whereEngine_sql = testcase.SQLWhereEngine;
-    whereSP_sql = testcase.SQLWhereSpeedPower;
-    whereSPModel_sql = testcase.SQLWhereSpeedPowerModel;
-    whereDisp_sql = testcase.SQLWhereDisplacement;
-    whereWind_sql = testcase.SQLWhereWind;
-    whereOwner_sql = testcase.SQLWhereOwner;
-    
-    vessel.SQL.deleteSQL('EngineModel', whereEngine_sql);
-    vessel.SQL.deleteSQL('SpeedPower', whereSP_sql);
-    vessel.SQL.deleteSQL('SpeedPowerCoefficientModel', whereSPModel_sql);
-    vessel.SQL.deleteSQL('SpeedPowerCoefficientModelValue', whereSPModel_sql);
-    vessel.SQL.deleteSQL('DisplacementModel', whereDisp_sql);
-    vessel.SQL.deleteSQL('DisplacementModelValue', whereDisp_sql);
-    vessel.SQL.deleteSQL('WindCoefficientModel', whereWind_sql);
-    vessel.SQL.deleteSQL('WindCoefficientModelValue', whereWind_sql);
-    
-    vessel.SQL.deleteSQL('Vessel', where_sql);
-    vessel.SQL.deleteSQL('VesselInfo', where_sql);
-    vessel.SQL.deleteSQL('VesselConfiguration', where_sql);
-    vessel.SQL.deleteSQL('VesselToVesselOwner', where_sql);
-    vessel.SQL.deleteSQL('BunkerDeliveryNote', where_sql);
-    vessel.SQL.deleteSQL('DryDock', where_sql);
-    vessel.SQL.deleteSQL('VesselOwner', whereOwner_sql);
-    vessel.SQL.deleteSQL('VesselToVesselOwner', whereOwner_sql);
+%         vessel = testcase.testVesselInsert;
+%         deleteFromDB(vessel);
+%     vessel = testcase.testVesselInsert;
+%     
+%     where_sql = testcase.SQLWhereVessel;
+%     whereEngine_sql = testcase.SQLWhereEngine;
+%     whereSP_sql = testcase.SQLWhereSpeedPower;
+%     whereSPModel_sql = testcase.SQLWhereSpeedPowerModel;
+%     whereDisp_sql = testcase.SQLWhereDisplacement;
+%     whereWind_sql = testcase.SQLWhereWind;
+%     whereOwner_sql = testcase.SQLWhereOwner;
+%     
+%     vessel.SQL.deleteSQL('EngineModel', whereEngine_sql);
+%     vessel.SQL.deleteSQL('SpeedPower', whereSP_sql);
+%     vessel.SQL.deleteSQL('SpeedPowerCoefficientModel', whereSPModel_sql);
+%     vessel.SQL.deleteSQL('SpeedPowerCoefficientModelValue', whereSPModel_sql);
+%     vessel.SQL.deleteSQL('DisplacementModel', whereDisp_sql);
+%     vessel.SQL.deleteSQL('DisplacementModelValue', whereDisp_sql);
+%     vessel.SQL.deleteSQL('WindCoefficientModel', whereWind_sql);
+%     vessel.SQL.deleteSQL('WindCoefficientModelValue', whereWind_sql);
+%     
+%     vessel.SQL.deleteSQL('Vessel', where_sql);
+%     vessel.SQL.deleteSQL('VesselInfo', where_sql);
+%     vessel.SQL.deleteSQL('VesselConfiguration', where_sql);
+%     vessel.SQL.deleteSQL('VesselToVesselOwner', where_sql);
+%     vessel.SQL.deleteSQL('BunkerDeliveryNote', where_sql);
+%     vessel.SQL.deleteSQL('DryDock', where_sql);
+%     vessel.SQL.deleteSQL('VesselOwner', whereOwner_sql);
+%     vessel.SQL.deleteSQL('VesselToVesselOwner', whereOwner_sql);
     
     end
     

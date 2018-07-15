@@ -73,6 +73,7 @@ classdef cVessel < cModelID
         OtherTable = {};
         OtherTableIdentifier = {};
         TableIdentifier = 'Vessel_Id';
+        NameAlias = '';
     end
     
     methods
@@ -1715,7 +1716,13 @@ classdef cVessel < cModelID
        
        function obj = set.SpeedPower(obj, sp)
            
+           % Input
+           validateattributes(sp, {'cVesselSpeedPower'}, {});
+       
            obj.SpeedPower = sp;
+           
+           % Apply connection across array, if array was expanded from default
+           obj.SpeedPower.copySQLToArray;
        end
 %        function obj = set.DateTime_UTC(obj, dates)
 %         % Set property method for DateTime_UTC
@@ -1829,6 +1836,9 @@ classdef cVessel < cModelID
        
        % Assign object
        obj.DryDock = ddd;
+       
+       % Apply connection across array, if array was expanded from default
+       obj.DryDock.copySQLToArray;
        
        end
        
@@ -1961,7 +1971,11 @@ classdef cVessel < cModelID
         
         function obj = set.InServiceDB(obj, db)
             
-            validateattributes(db, {'char'}, {'vector'});
+            if isempty(db)
+                db = '';
+            else
+                validateattributes(db, {'char'}, {'vector'});
+            end
             obj.InServiceDB = db;
         end
         
