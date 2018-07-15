@@ -39,8 +39,8 @@ classdef cVessel < cModelID
         DryDockIndexDB = [];
         DDIterator = [0, 1, 0];
         Info = [];
-        StaticDB char = '';
-        InServiceDB char = '';
+%         StaticDB char = '';
+%         InServiceDB char = '';
     end
     
     properties(Dependent)
@@ -54,8 +54,8 @@ classdef cVessel < cModelID
         
         DDIntervals;
         numDDIntervals;
-        StaticSQLDB = [];
-        InServiceSQLDB = [];
+%         StaticSQLDB = [];
+%         InServiceSQLDB = [];
     end
     
     properties(Access = private)
@@ -114,7 +114,7 @@ classdef cVessel < cModelID
         readInputs_c = {imo};
         
         obj = obj.assignDefaults(varargin{:});
-        obj.Database = obj.SQL.Database;
+%         obj.Database = obj.SQL.Database;
         if ~imo_l && ~shipData_l
             
             return
@@ -1522,20 +1522,20 @@ classdef cVessel < cModelID
         
         % Change DB connection for object and nested objects
 %         obj.Database = dbname;
-        obj.DryDock.SQL.Database = dbname;
-        obj.Configuration.SQL.Database = dbname;
-        obj.SpeedPower.SQL.Database = dbname;
-%         obj.Report.SQL.Database = dbname;
-        obj.WindCoefficient.SQL.Database = dbname;
-        obj.Displacement.SQL.Database = dbname;
-        obj.Engine.SQL.Database = dbname;
-        obj.Owner.SQL.Database = dbname;
-        obj.Configuration.SQL.Database = dbname;
+        obj.DryDock.SQL.SavedConnection = dbname;
+        obj.Configuration.SQL.SavedConnection = dbname;
+        obj.SpeedPower.SQL.SavedConnection = dbname;
+%         obj.Report.SQL.SavedConnection = dbname;
+        obj.WindCoefficient.SQL.SavedConnection = dbname;
+        obj.Displacement.SQL.SavedConnection = dbname;
+        obj.Engine.SQL.SavedConnection = dbname;
+        obj.Owner.SQL.SavedConnection = dbname;
+        obj.Configuration.SQL.SavedConnection = dbname;
         
         % Assign
-        obj.Database = dbname;
-        obj.StaticDB = dbname;
-        obj.InServiceDB = dbname;
+        obj.SQL.SavedConnection = dbname;
+%         obj.StaticDB = dbname;
+%         obj.InServiceDB = dbname;
         end
        
 %         function dbname = get.DatabaseName(obj)
@@ -1958,34 +1958,34 @@ classdef cVessel < cModelID
 %             dbconn = validateSavedDB(db, 'cVessel.StaticDB', 'StaticDB', 1);
 %             obj.StaticSQLDB = dbconn;
 %         end
+%         
+%         function sql = get.StaticSQLDB(obj)
+%             
+%             sql = obj.SQL;
+%         end
+%         
+%         function obj = set.StaticSQLDB(obj, sql)
+%             
+%             obj.SQL = sql;
+%         end
         
-        function sql = get.StaticSQLDB(obj)
-            
-            sql = obj.SQL;
-        end
+%         function obj = set.InServiceDB(obj, db)
+%             
+%             if isempty(db)
+%                 db = '';
+%             else
+%                 validateattributes(db, {'char'}, {'vector'});
+%             end
+%             obj.InServiceDB = db;
+%         end
         
-        function obj = set.StaticSQLDB(obj, sql)
-            
-            obj.SQL = sql;
-        end
-        
-        function obj = set.InServiceDB(obj, db)
-            
-            if isempty(db)
-                db = '';
-            else
-                validateattributes(db, {'char'}, {'vector'});
-            end
-            obj.InServiceDB = db;
-        end
-        
-        function db = get.InServiceSQLDB(obj)
-            
-            dbname = obj.InServiceDB;
-            dbconn = obj.validateSavedDB(dbname, 'cVessel.StaticDB',...
-                'StaticDB', 1);
-            db = dbconn;
-        end
+%         function db = get.InServiceSQLDB(obj)
+%             
+%             dbname = obj.InServiceDB;
+%             dbconn = obj.validateSavedDB(dbname, 'cVessel.StaticDB',...
+%                 'StaticDB', 1);
+%             db = dbconn;
+%         end
         
         function str = get.DateFormStr(obj)
             
