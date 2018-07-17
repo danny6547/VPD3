@@ -101,8 +101,10 @@ if isGrid_l
         % Get edge vector values, sorted in ascending order
         draftVal_v = [answer_tbl{hi, draftEdge_l}];
         draftVal_v = draftVal_v(sortAscDraftIdx_v);
+        draftVal_v = sort(draftVal_v);
         trimVal_v = [answer_tbl{hi, trimEdge_l}];
         trimVal_v = trimVal_v(sortAscTrimIdx_v);
+        trimVal_v = sort(trimVal_v);
         
         % Index the sorted edge vectors with the corresponding grid entry
         draft(hi, :) = draftVal_v(draftIdx_v);
@@ -168,7 +170,8 @@ else
         % Read page values from file
         pageAnswer_ch = ['Answer_', obj.PageName];
         page_v = answer_tbl.(pageAnswer_ch);
-    else
+        
+    elseif obj.hasPageData()
         
         % Error if page name given but no label or values
         errid = 'PageData:InsufficientInput';

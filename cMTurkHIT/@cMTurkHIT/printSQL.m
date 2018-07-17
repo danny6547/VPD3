@@ -39,7 +39,13 @@ data_m = [data_m, id_v];
 % Split input data by insert limit
 nRows = size(data_m, 1);
 starti_v = 1:insertLimit:nRows;
-endi_v = insertLimit:insertLimit:nRows;
+if insertLimit > nRows
+    
+    endi_v = nRows;
+else
+    
+    endi_v = insertLimit:insertLimit:nRows;
+end
 if ~isequal(endi_v(end), nRows)
 
     endi_v(end+1) = nRows;

@@ -68,7 +68,7 @@ if ~isempty(edge_c)
 
     % Assign edge vector
     edge_l = ismember(names, obj.TrimName);
-    edgeHtml_c(edge_l) = {'<td align="center"><input id="INPUTID" name="INPUTNAME" size="25" type="text"/></td>'};
+    edgeHtml_c(edge_l) = {'<td align="center"><input id="INPUTID" name="INPUTNAME" size="10" type="text"/></td>'};
     edgeHtml_c(~edge_l) = {'<td align="center"></td>'};
     edgeHtml_c(edge_l) = cellfun(@(x, y) strrep(x, 'INPUTNAME', y), ...
         edgeHtml_c(edge_l), edge_c, 'Uni', 0);
