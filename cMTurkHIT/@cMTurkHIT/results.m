@@ -11,6 +11,13 @@ if nargin > 1
         'filename', 2);
 end
 
+if exist(filename, 'file') ~= 2
+    
+    errid = 'ParseError:FileNotFound';
+    errmsg = 'Output CSV file is expected to be found in ''Output'' sub-folder';
+    error(errid, errmsg);
+end
+
 % Read data part of file
 fid = fopen(filename, 'r');
 tempScan_c = textscan(fid, '%s', 1, 'Delimiter', '\n');
@@ -22,8 +29,14 @@ file_c = cell(1, nCol);
 hi = 1;
 while ~feof(fid)
     
-    temp_cc = textscan(fid, '%q', nCol, 'Delimiter', ',');
-    file_c(hi, :) = [temp_cc{:}];
+    temp_ch = fgetl(fid);
+    temp_cc = textscan(temp_ch, '%q', nCol, 'Delimiter', ',');
+    line_c = [temp_cc{:}];
+    if isempty(line_c)
+        
+        continue
+    end
+    file_c(hi, :) = line_c;
     hi = hi + 1;
 end
 fclose(fid);
@@ -43,8 +56,13 @@ answer_l = contains(colNames, 'Answer_');
 answerNames = colNames(answer_l);
 answer_tbl = file_tbl(:, answer_l);
 
+% Save into object
+isGrid_l = obj.isGrid(answer_tbl);
+obj.IsGrid = isGrid_l;
+
 % Convert to numeric with NaN
-answerTbl_c = table2cell(answer_tbl);
+% answerTbl_c = table2cell(answer_tbl);
+answerTbl_c = obj.applyFunc(answer_tbl);
 answerTbl_m = cellfun(@str2double, answerTbl_c);
 answer_tbl = array2table(answerTbl_m, ...
     'VariableNames', answer_tbl.Properties.VariableNames);
@@ -57,8 +75,7 @@ trimAnswerName_ch = ['Answer_', obj.TrimName];
 draftAnswerName_ch = ['Answer_', obj.DraftName];
 trim_l = contains(answerNames, trimAnswerName_ch);
 
-% Save into object
-isGrid_l = obj.isGrid(answerNames);
+% Data is gridded even if layout was table
 
 if isGrid_l
     

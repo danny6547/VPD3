@@ -34,8 +34,15 @@ fin = false;
 lastNRows = [];
 while ~fin
     
+%     xlim = get(ax, 'XLim');
+%     ylim = get(ax, 'YLim');
+%     zlim = get(ax, 'ZLim');
+    
     % Check if user has entered any text
     answer = input('', 's');
+    
+    % Get current display properties
+    view = get(ax, 'View');
     
     % Undo last
     undo_l = strcmpi(answer, 'undo');
@@ -67,6 +74,12 @@ while ~fin
         obj.InvalidData = [obj.InvalidData; invalid];
         obj.plot(ax, true);
     end
+    
+    % Assign current display properties
+    set(ax, 'View', view);
+%     set(ax, 'XLim', xlim);
+%     set(ax, 'YLim', ylim);
+%     set(ax, 'ZLim', zlim);
 end
 
 % Reset graphical properties to default

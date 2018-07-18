@@ -15,6 +15,7 @@ if isempty(image_url)
 end
 
 % Make table
+image_url = cellstr(image_url);
 input_tbl = table(image_url, 'VariableNames', {'image_url'});
 
 % Write file

@@ -18,6 +18,7 @@ classdef cMTurkHIT
         PageValue = [];
         PageLabel = '';
         PageLabelRight = '';
+        DataFunc = {};
     end
     
     properties(Hidden)
@@ -185,10 +186,22 @@ classdef cMTurkHIT
             id = double(id);
         end
         
-%         function obj = set.RowNames(obj, names)
-%             
-%             names = obj.validateNames(names);
-%             obj.RowNames = names;
-%         end
+        function obj = set.DataFunc(obj, funccell)
+            
+            validateattributes(funccell, {'cell'}, {'ncols', 2});
+            
+            errid = 'MTurkDataFunc:FuncFormatIncorrect';
+            errmsg = ['Property ''DataFunc'' must have a cell array whose '...
+                'first column contains only strings and whose second '...
+                'column contains only function handles'];
+            
+            err_f = @(errStruct, inputs) error(errid, errmsg);
+            cellfun(@(x) validateattributes(x, {'char'},...
+                {'vector'}), funccell(:, 1), 'ErrorHandler', err_f);
+            cellfun(@(x) validateattributes(x, {'function_handle'},...
+                {'scalar'}), funccell(:, 2), 'ErrorHandler', err_f);
+            
+            obj.DataFunc = funccell;
+        end
     end
 end

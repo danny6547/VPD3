@@ -40,24 +40,26 @@ if hasTrim_l
     trimIdx_c = vect2Names_f(trimIdx_v, obj.TrimName);
     
     % Repeat trims to create grid
-    if nTrim > 1
+    if nTrim > 1 && nDraft > 1
         
         trimIdxRep_c = repmat(trimIdx_c(:)', [nDraft, 1]);
-    end
-    
-    if nDraft > 1
-        
         draftIdxRep_c = repmat(draftIdx_c(:), [1, nTrim]);
-    end
-    
-    % Combine vectors
-    gridNameIdx_c = strcat(draftIdxRep_c, trimIdxRep_c);
-    varSubs_c(nameDim) = { find(trim_l) };
-    if nameDim == 1
         
-        gridNameIdx_c = gridNameIdx_c';
+        % Combine vectors
+        gridNameIdx_c = strcat(draftIdxRep_c, trimIdxRep_c);
+        varSubs_c(nameDim) = { find(trim_l) };
+        if nameDim == 1
+
+            gridNameIdx_c = gridNameIdx_c';
+        end
+        inName(varSubs_c{:}) = gridNameIdx_c;
+    else
+        
+        % Draft and trim are both given as columns in a table
+        trimIdxRep_c = vect2Names_f(draftIdx_v, obj.TrimName);
+        varSubs_c(nameDim) = { find(trim_l) };
+        inName(varSubs_c{:}) = trimIdxRep_c;
     end
-    inName(varSubs_c{:}) = gridNameIdx_c;
 end
 
 % Create other index vectors

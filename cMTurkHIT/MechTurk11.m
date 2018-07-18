@@ -1,15 +1,15 @@
 %% 11
-obj = cMTurkHIT();
-obj.RowLabels   = {'DRAFT MEAN', 'MOULD VOL', 'KB'};
-obj.RowNames    = {'Draft', 'Mld_Vol', 'KB'};
-obj.NumColumns = 7;
-tab_c = obj.printHTMLTable;
+% obj = cMTurkHIT();
+% obj.RowLabels   = {'DRAFT MEAN', 'MOULD VOL', 'KB'};
+% obj.RowNames    = {'Draft', 'Mld_Vol', 'KB'};
+% obj.NumColumns = 7;
+% tab_c = obj.printHTMLTable;
 
-obj2 = cMTurkHIT();
-obj2.RowNames   = {'Draft', 'Trim', 'Trim', 'Trim', 'Trim', 'Trim', 'Trim', 'Trim'};
-obj2.NumColumns = 7;
-obj2.ColumnLabels = {'TRIM', 'DISPLACEMENT', '', '', '', '', '', ''};
-tab2_c = obj2.printHTMLTable;
+obj = cMTurkHIT();
+obj.RowNames   = {'Draft', 'Trim', 'Trim', 'Trim', 'Trim', 'Trim', 'Trim', 'Trim'};
+obj.NumColumns = 7;
+obj.ColumnLabels = {'TRIM', 'DISPLACEMENT', '', '', '', '', '', ''};
+tab2_c = obj.printHTMLTable;
 % LOTS
 % UASC A7
 

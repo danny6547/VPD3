@@ -41,21 +41,36 @@ if ~isempty(tbl)
     else
         
         draft = tbl.Draft;
-        lcf = tbl.LCF;
-        tpc = tbl.TPC;
-        disp = tbl.Displacement;
-        ax = subplot(3, 1, 1);
-        h1 = plot(ax, draft, disp, 'Linestyle', 'none', 'Marker', '.', 'MarkerSize', 7);
-        xlabel(ax, 'Draft (m)');
-        ylabel(ax, 'Disp (tn)');
-        ax = subplot(3, 1, 2);
-        h2 = plot(ax, draft, tpc, 'Linestyle', 'none', 'Marker', '.', 'MarkerSize', 7);
-        xlabel(ax, 'Draft (m)');
-        ylabel(ax, 'TPC (tn/mc)');
-        ax = subplot(3, 1, 3);
-        h3 = plot(ax, draft, lcf, 'Linestyle', 'none', 'Marker', '.', 'MarkerSize', 7);
-        xlabel(ax, 'Draft (m)');
-        ylabel(ax, 'LCF (m)');
-        h = [h1, h2, h3];
+        varNames = tbl.Properties.VariableNames;
+        nVar = numel(varNames);
+        ax = subplot(nVar, 1, 1);
+        h = nan(1, nVar);
+        for vi = 1:nVar
+            
+            ax = subplot(nVar, 1, vi);
+            currVarName = varNames{vi};
+            currVarData = tbl.(currVarName);
+            h1 = plot(ax, draft, currVarData, 'Linestyle', 'none',...
+                'Marker', '.', 'MarkerSize', 7);
+            xlabel(ax, 'Draft (m)');
+            ylabel(ax, currVarName);
+            h(vi) = h1;
+        end
+%         lcf = tbl.LCF;
+%         tpc = tbl.TPC;
+%         disp = tbl.Displacement;
+%         ax = subplot(3, 1, 1);
+%         h1 = plot(ax, draft, disp, 'Linestyle', 'none', 'Marker', '.', 'MarkerSize', 7);
+%         xlabel(ax, 'Draft (m)');
+%         ylabel(ax, 'Disp (tn)');
+%         ax = subplot(3, 1, 2);
+%         h2 = plot(ax, draft, tpc, 'Linestyle', 'none', 'Marker', '.', 'MarkerSize', 7);
+%         xlabel(ax, 'Draft (m)');
+%         ylabel(ax, 'TPC (tn/mc)');
+%         ax = subplot(3, 1, 3);
+%         h3 = plot(ax, draft, lcf, 'Linestyle', 'none', 'Marker', '.', 'MarkerSize', 7);
+%         xlabel(ax, 'Draft (m)');
+%         ylabel(ax, 'LCF (m)');
+%         h = [h1, h2, h3];
     end
 end

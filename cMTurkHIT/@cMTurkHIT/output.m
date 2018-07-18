@@ -1,4 +1,4 @@
-function sql = output(obj)
+function [obj, sql] = output(obj)
 %output Operations required to process output from mTurk API
 %   Detailed explanation goes here
 

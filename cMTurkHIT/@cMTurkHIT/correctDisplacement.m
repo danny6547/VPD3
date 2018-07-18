@@ -17,6 +17,8 @@ dispCorrection_m = nan(nd, nt);
 dispCorrection_m(sub2ind(size(dispCorrection_m), d_i, t_i)) = corr_tbl.Displacement;
 
 % Sort base displacement vector to same order as correction matrix
+[~, uni_i] = unique(base_tbl.Draft);
+base_tbl = base_tbl(uni_i, :);
 baseDraft_l = ismember(base_tbl.Draft, d_v);
 base_tbl = base_tbl(baseDraft_l, :);
 [baseDraft_v, sortDraft_i] = sort(base_tbl.Draft);
