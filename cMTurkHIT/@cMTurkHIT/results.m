@@ -97,16 +97,18 @@ if isGrid_l
         obj.TrimName, '_[\d]+'];
     gridNamePattern_c = regexp(answerNames, gridNamePattern_ch);
     disp_l = ~cellfun(@isempty, gridNamePattern_c);
+    dispTable_l = false;
+    if ~any(disp_l)
+        
+        dispNames_c = obj.fileTableNames(answer_tbl, 'Displacement');
+        disp_l = ismember(answerNames, dispNames_c);
+        dispTable_l = true;
+    end
     displacement = answer_tbl{:, disp_l};
     
-    % Get edge vector indices
-    gridNames_c = answerNames(disp_l);
-    gridIdx_cc = regexp(gridNames_c(:), '[\d]+', 'match');
-    [draftIdx_c, trimIdx_c] = cellfun(@(x) x{:}, gridIdx_cc, 'Uni', 0);
-    draftIdx_v = cellfun(@str2double, draftIdx_c);
-    trimIdx_v = cellfun(@str2double, trimIdx_c);
-    
     % Assign numbers of edge vectors
+    [~, draftIdx_v] = obj.fileTableNames(answer_tbl, obj.DraftName);
+    [~, trimIdx_v] = obj.fileTableNames(answer_tbl, obj.TrimName);
     obj.nDraft = numel(draftIdx_v);
     obj.nTrim = numel(trimIdx_v);
     
@@ -115,23 +117,40 @@ if isGrid_l
     trim = nan(nHIT, nGrid);
     for hi = 1:nHIT
         
-        % Get edge vector values, sorted in ascending order
-        draftVal_v = [answer_tbl{hi, draftEdge_l}];
-        draftVal_v = draftVal_v(sortAscDraftIdx_v);
-        draftVal_v = sort(draftVal_v);
-        trimVal_v = [answer_tbl{hi, trimEdge_l}];
-        trimVal_v = trimVal_v(sortAscTrimIdx_v);
-        trimVal_v = sort(trimVal_v);
-        
-        % Index the sorted edge vectors with the corresponding grid entry
-        draft(hi, :) = draftVal_v(draftIdx_v);
-        trim(hi, :) = trimVal_v(trimIdx_v);
+        if dispTable_l
+            
+            % 
+            draftVal_v = [answer_tbl{hi, draftEdge_l}];
+            trimVal_v = [answer_tbl{hi, trimEdge_l}];
+            draft(hi, :) = draftVal_v;
+            trim(hi, :) = trimVal_v;
+        else
+
+            % Get edge vector indices
+            gridNames_c = answerNames(disp_l);
+            gridIdx_cc = regexp(gridNames_c(:), '[\d]+', 'match');
+            [draftIdx_c, trimIdx_c] = cellfun(@(x) x{:}, gridIdx_cc, 'Uni', 0);
+            draftIdx_v = cellfun(@str2double, draftIdx_c);
+            trimIdx_v = cellfun(@str2double, trimIdx_c);
+
+            % Get edge vector values, sorted in ascending order
+            draftVal_v = [answer_tbl{hi, draftEdge_l}];
+            draftVal_v = draftVal_v(sortAscDraftIdx_v);
+            draftVal_v = sort(draftVal_v);
+            trimVal_v = [answer_tbl{hi, trimEdge_l}];
+            trimVal_v = trimVal_v(sortAscTrimIdx_v);
+            trimVal_v = sort(trimVal_v);
+
+            % Index the sorted edge vectors with the corresponding grid entry
+            draft(hi, :) = draftVal_v(draftIdx_v);
+            trim(hi, :) = trimVal_v(trimIdx_v);
+        end
+
     end
     
     % Create table
     tbl = table(draft(:), trim(:), displacement(:), ...
         'VariableNames', {'Draft', 'Trim', 'Displacement'});
-    
 else
     
     % Get variable names

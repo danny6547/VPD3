@@ -30,10 +30,10 @@ names = tbl.Properties.VariableNames;
 if isempty(name1) || isempty(name2)
     return
 end
-[name3] = obj.fileTableNames(tbl, 'Displacement', true);
+dispEdge = obj.fileTableNames(tbl, {'Draft', 'Trim'});
+dispValue = obj.fileTableNames(tbl, 'Displacement');
 
 % Check if names are found
 log = all(ismember(name1, names)) && all(ismember(name2, names)) && ...
-    all(ismember(name3, names));
-
+    (all(ismember(dispEdge, names)) ||  all(ismember(dispValue, names)));
 end

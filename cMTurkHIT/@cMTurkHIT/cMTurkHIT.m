@@ -70,6 +70,7 @@ classdef cMTurkHIT
     methods(Static, Hidden)
         
         [header, footer] = printHTMLTableHeaderFooter()
+        [names, varargout] = fileTableNames(tbl, name, varargin)
     end
     
     methods(Hidden)
