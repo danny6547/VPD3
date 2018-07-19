@@ -90,7 +90,6 @@ classdef cMTurkHIT
         html = printInstructions(obj)
         obj = isGrid(obj, names)
         filename = outName(obj)
-        prepareOutputFile(obj)
         html = print(obj)
         [inName, varargout] = inputName(obj, name, datalength, nameDim)
     end
