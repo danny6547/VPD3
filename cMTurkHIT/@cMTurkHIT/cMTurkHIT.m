@@ -71,12 +71,13 @@ classdef cMTurkHIT
         
         [header, footer] = printHTMLTableHeaderFooter()
         [names, varargout] = fileTableNames(tbl, name, varargin)
+        [rows, cols] = requestCropIdx(img)
     end
     
     methods(Hidden)
         
         [obj, imageDir] = imageDir(obj)
-        [files] = imageFiles(obj)
+        [filepath, filename] = imageFiles(obj)
         [obj, tbl] = results(obj, varargin)
         [sql, sql_c] = printSQL(obj, varargin)
         obj = insertIntoDatabase(obj)
@@ -84,7 +85,7 @@ classdef cMTurkHIT
         html = copyHTML(obj)
         html = printHTML(obj)
         table_c = printHTMLTable(obj)
-        obj = printCSV(obj)
+        obj = printCSV(obj, varargin)
         sql = copySQL(obj)
         copyHTMLTable(obj)
         html = printInstructions(obj)
@@ -98,9 +99,15 @@ classdef cMTurkHIT
         
         function obj = set.ImageURL(obj, img)
         
-            img = validateCellStr(img);
-            img = char(img);
-            obj.ImageURL = img;
+            if iscellstr(img)
+                
+                obj.ImageURL = img;
+            else
+                
+                img = validateCellStr(img);
+                img = char(img);
+                obj.ImageURL = img;
+            end
         end
         
         function path = get.CSVFilePath(obj)

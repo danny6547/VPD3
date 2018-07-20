@@ -1,14 +1,15 @@
-function obj = cropImages(obj, rows, cols)
+function obj = cropImages(obj, rows, cols, varargin)
 %cropImages Crop all images in directory after user interaction
 %   Detailed explanation goes here
 
-% Read in images and crop and save
-% objDir = obj.Directory;
-% imageDir = fullfile(fileparts(objDir), 'Images');
-% files_st = rdir([imageDir, '\*.jpg']);
-% files_c = {files_st.name};
-
+% Input
 files_c = obj.imageFiles();
+if nargin > 3
+    
+    files_c = varargin{1};
+    validateCellStr(files_c, 'cMTurkHIT.cropImages', 'files', 4);
+end
+
 
 for fi = 1:numel(files_c)
     
