@@ -37,6 +37,7 @@ classdef cMTurkHIT < handle
         nTrim;
         StartInputId = 1;
         EndInputId;
+        RowValues;
 %         OutFileName = '';
     end
     

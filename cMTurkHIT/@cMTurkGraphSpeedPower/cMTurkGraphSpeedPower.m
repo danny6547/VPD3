@@ -54,12 +54,18 @@ classdef cMTurkGraphSpeedPower < cMTurkHIT
         [rows, cols] = areaFromExtents(bl, tr, sz)
         ax = concatPixelAxes(filename)
         [h] = plotDragRectangle(varargin)
-        [fig] = anonymiseUI(filename)
+        [fig, ax] = anonymiseUI(filename)
         [html] = printHTMLImageInput(urlidx)
         html = encloseDiv(html);
         [html] = bulletPoints(html)
         [html] = text(html);
         plotHorizontalLines(ax, y);
+    end
+    
+    methods(Hidden)
+        
+        speed = linspaceSpeedOrdinate(obj, ax)
+        h = plotVerticalLines(obj, filename)
     end
     
     methods

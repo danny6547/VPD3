@@ -2,7 +2,6 @@ function obj = cropImages(obj, rows, cols)
 %cropImages Crop all images in directory after user interaction
 %   Detailed explanation goes here
 
-
 [filepath, filename] = obj.imageFiles();
 sampleImageFile = filepath{1};
 sampleImage = imread(sampleImageFile);
@@ -46,8 +45,11 @@ obj.GraphWidthPixels = numel(unique(cols));
 obj.GraphHeightPixels = numel(unique(rows));
 
 % Anonymise images
-fig = obj.anonymiseUI(filepath);
-close(fig)
+obj.anonymiseUI(filepath);
+
+% Plot lines
+obj.plotVerticalLines(filepath);
+% close(fig)
 
 % Concatenate image of axes tick marks
-obj.concatPixelAxes(filepath);
+% obj.concatPixelAxes(filepath);

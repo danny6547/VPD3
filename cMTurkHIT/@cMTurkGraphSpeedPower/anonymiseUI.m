@@ -1,8 +1,9 @@
-function [fig] = anonymiseUI(filename)
+function [fig, ax] = anonymiseUI(filename)
 %anonymiseUI Anonymise image by overlaying identifying information
 %   Detailed explanation goes here
 
-fig = nan(1, numel(filename));
+fig = gobjects(1, numel(filename));
+ax = gobjects(1, numel(filename));
 
 % Open images
 for fi = 1:numel(filename)
@@ -32,8 +33,9 @@ for fi = 1:numel(filename)
     end
     
     fig(fi) = gcf;
+    ax(fi) = gca;
     f = getframe(gca);
     img = frame2im(f);
     imwrite(img, currFile);
-    plottools('off')
+%     plottools('off')
 end

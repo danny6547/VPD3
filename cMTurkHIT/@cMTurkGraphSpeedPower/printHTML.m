@@ -7,7 +7,6 @@ htmlIns = obj.printInstructions();
 
 % Print speed, power tables
 htmlSpeedPower_cc = cell(1, obj.NCurve);
-obj.NumRows = 25;
 allLabels = obj.ColumnLabels;
 odd_v = 1:2:obj.NCurve*2;
 tempObjArray = cell(1, obj.NCurve);
@@ -23,8 +22,9 @@ for si = 1:obj.NCurve
     tempObj.ColumnNames = colNames;
     tempObj.CoordinateName1 = colNames{1};
     tempObj.ColumnLabels = currLabels;
-    tempObj.NumRows = obj.NumRows;
+%     tempObj.NumRows = obj.NumRows;
     tempObj.StartInputId = startInputId;
+    tempObj.RowValues = obj.RowValues;
     htmlSpeedPower_cc{si} = tempObj.printHTMLTable();
     tempObjArray{si} = tempObj;
     startInputId = tempObj.EndInputId + 1;

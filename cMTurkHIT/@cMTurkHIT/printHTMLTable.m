@@ -103,6 +103,37 @@ end
 % cell_c = cat(nameDim, labelRow_c, cell_c);
 % cell_c = cat(dataDim, labelCol_c, cell_c);
 
+% Assign row values if any given
+if ~isempty(obj.RowValues)
+    
+    rowVal_c = cell_c(:, 1);
+    startIdx_c = regexp(rowVal_c, '(<input id=){1,1}', 'start');
+    endIdx_c = regexp(rowVal_c, '(/>){1,1}', 'end');
+    dataCell_l = ~cellfun(@isempty, startIdx_c) & ~cellfun(@isempty, endIdx_c);
+    
+    % Check number of row values matches number of data rows
+    if ~isequal(sum(dataCell_l), numel(obj.RowValues))
+        
+        errid = 'ReplaceRows:SizeMismatch';
+        errmsg = ['To print values into the first column of each row, '...
+            'the number of elements of property ''RowValues'' must match '...
+            'the number of rows in the table.'];
+        error(errid, errmsg);
+    end
+    val_c = arrayfun(@num2str, obj.RowValues(:), 'Uni', 0);
+    val_c = obj.text(val_c);
+    val_c = val_c(:);
+    
+    % Replace current rows with new rows
+    rowVal_c = rowVal_c(dataCell_l);
+    startIdx_c = startIdx_c(dataCell_l);
+    endIdx_c = endIdx_c(dataCell_l);
+    rowVal_c = cellfun(@(x, si, ei, y) strrep(x, x(si:ei), y), ...
+        rowVal_c, startIdx_c, endIdx_c, val_c, 'Uni', 0);
+    
+    cell_c(dataCell_l, 1) = rowVal_c;
+end
+
 % Define rows
 rowOpen_c = repmat({'<tr>'}, size(cell_c, 1), 1);
 rowClose_c = repmat({'</tr>'}, size(cell_c, 1), 1);
