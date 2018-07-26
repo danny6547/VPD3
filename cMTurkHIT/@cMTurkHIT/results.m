@@ -3,12 +3,20 @@ function [obj, tbl] = results(obj, varargin)
 %   Detailed explanation goes here
 
 filename = obj.outName;
-if nargin > 1
+if nargin > 1 && ~isempty(varargin{1})
     
     % Take input file
     filename = varargin{1};
     validateattributes(filename, {'char'}, {'vector'}, 'cMTurkHIT.results',...
         'filename', 2);
+end
+
+allNames = true;
+if nargin > 2 && ~isempty(varargin{2})
+    
+    allNames = varargin{2};
+    validateattributes(allNames, {'logical'}, {'scalar'}, 'cMTurkHIT.results',...
+        'allNames', 3);
 end
 
 if exist(filename, 'file') ~= 2
@@ -18,43 +26,39 @@ if exist(filename, 'file') ~= 2
     error(errid, errmsg);
 end
 
-% Read data part of file
-fid = fopen(filename, 'r');
-tempScan_c = textscan(fid, '%s', 1, 'Delimiter', '\n');
-colNames_cc = textscan([tempScan_c{1}{:}], '%q', inf, 'Delimiter', ',');
-colNames = colNames_cc{1}(1:end-2);
+% % Read data part of file
+% fid = fopen(filename, 'r');
+% tempScan_c = textscan(fid, '%s', 1, 'Delimiter', '\n');
+% colNames_cc = textscan([tempScan_c{1}{:}], '%q', inf, 'Delimiter', ',');
+% colNames = colNames_cc{1}(1:end-2);
+% 
+% nCol = length(colNames);
+% file_c = cell(1, nCol);
+% hi = 1;
+% while ~feof(fid)
+%     
+%     temp_ch = fgetl(fid);
+%     temp_cc = textscan(temp_ch, '%q', nCol, 'Delimiter', ',');
+%     line_c = [temp_cc{:}];
+%     if isempty(line_c)
+%         
+%         continue
+%     end
+%     file_c(hi, :) = line_c;
+%     hi = hi + 1;
+% end
+% fclose(fid);
+% 
+% % Create table from cell
+% colNames = strrep(colNames, '.', '_');
+% file_tbl = cell2table(file_c, 'VariableNames', colNames);
+% 
+% % Filter rejects
+% reject_l = strcmp(file_tbl.AssignmentStatus, 'Rejected');
+% file_tbl(reject_l, :) = [];
+% nHIT = height(file_tbl);
 
-nCol = length(colNames);
-file_c = cell(1, nCol);
-hi = 1;
-while ~feof(fid)
-    
-    temp_ch = fgetl(fid);
-    temp_cc = textscan(temp_ch, '%q', nCol, 'Delimiter', ',');
-    line_c = [temp_cc{:}];
-    if isempty(line_c)
-        
-        continue
-    end
-    file_c(hi, :) = line_c;
-    hi = hi + 1;
-end
-fclose(fid);
-
-% Create table from cell
-colNames = strrep(colNames, '.', '_');
-file_tbl = cell2table(file_c, 'VariableNames', colNames);
-
-% Filter rejects
-reject_l = strcmp(file_tbl.AssignmentStatus, 'Rejected');
-file_tbl(reject_l, :) = [];
-nHIT = height(file_tbl);
-
-% Get answers
-colNames = file_tbl.Properties.VariableNames;
-answer_l = contains(colNames, 'Answer_');
-answerNames = colNames(answer_l);
-answer_tbl = file_tbl(:, answer_l);
+[file_tbl, answer_tbl, nHIT] = obj.readFileTable(filename, true);
 
 % Save into object
 isGrid_l = obj.isGrid(answer_tbl);
@@ -62,17 +66,21 @@ obj.IsGrid = isGrid_l;
 
 % Convert to numeric with NaN
 % answerTbl_c = table2cell(answer_tbl);
-answerTbl_c = obj.applyFunc(answer_tbl);
-answerTbl_m = cellfun(@str2double, answerTbl_c);
-answer_tbl = array2table(answerTbl_m, ...
-    'VariableNames', answer_tbl.Properties.VariableNames);
+% answerTbl_c = obj.applyFunc(answer_tbl);
+% answerTbl_m = cellfun(@str2double, answerTbl_c);
+% answer_tbl = array2table(answerTbl_m, ...
+%     'VariableNames', answer_tbl.Properties.VariableNames);
+% answer_l = contains(colNames, 'Answer_');
+% answerNames = colNames(answer_l);
+
+answerNames = answer_tbl.Properties.VariableNames;
 
 % Get draft vector
 
 
 % Get trim
-trimAnswerName_ch = ['Answer_', obj.TrimName];
-draftAnswerName_ch = ['Answer_', obj.DraftName];
+trimAnswerName_ch = ['Answer_', obj.CoordinateName2]; %['Answer_', obj.TrimName];
+draftAnswerName_ch = ['Answer_', obj.CoordinateName1]; %['Answer_', obj.DraftName];
 trim_l = contains(answerNames, trimAnswerName_ch);
 
 % Data is gridded even if layout was table
@@ -160,6 +168,13 @@ else
         startIdx_v, endIdx_v, 'Uni', 0);
     names = unique(duplicateNames);
     
+    % Only process data for specified names, if requested
+    if ~allNames
+        
+        allNames_c = obj.Names;
+        names = intersect(allNames_c, names);
+    end
+    
     % Iterate names
     tbl = table();
     for name = names
@@ -178,7 +193,7 @@ else
         
         % Sort columns from file into ascending order
         thisName_c = answerNames(thisName_l);
-        idx_cc = regexp(thisName_c, '[\d]+', 'match');
+        idx_cc = regexp(thisName_c, '[\d]+$', 'match');
         idx_c = [idx_cc{:}];
         idx_v = cellfun(@str2double, idx_c);
         [~, sortI] = sort(idx_v, 'asc');

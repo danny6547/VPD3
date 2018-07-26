@@ -23,5 +23,5 @@ fclose(fid);
 % Insert html at appropriate line
 insert_ch = '<!-- End Instructions --><!-- Image Transcription Layout -->';
 insert_i = find(contains(file_c, insert_ch), 1);
-html = [file_c(1:insert_i-1)'; html; file_c(insert_i:end)'];
+html = [file_c(1:insert_i-1)'; html(:); file_c(insert_i:end)'];
 end

@@ -4,7 +4,7 @@ function [inName, varargout] = inputName(obj, name, datalength, nameDim)
 
 
 % Make draft index vector
-draft_l = ismember(name, obj.DraftName);
+draft_l = ismember(name, obj.CoordinateName1);
 draftInNames_l = sum(draft_l) > 1;
 if draftInNames_l
     
@@ -24,20 +24,20 @@ inName = cell(outSz_v);
 
 % Convert to names, index and assign
 vect2Names_f = @(x, n) strcat(n, '_', arrayfun(@num2str, x, 'Uni', 0));
-draftIdx_c = vect2Names_f(draftIdx_v, obj.DraftName);
-[~, draftName_i] = ismember('Draft', name);
+draftIdx_c = vect2Names_f(draftIdx_v, obj.CoordinateName1);
+[~, draftName_i] = ismember(obj.CoordinateName1, name);
 varSubs_c = {':', ':'};
 varSubs_c(nameDim) = { draftName_i };
 inName(varSubs_c{:}) = draftIdx_c;
 
 % Check if Trim in names
-trim_l = ismember(name, obj.TrimName);
-hasTrim_l = ismember(obj.TrimName, name);
+trim_l = ismember(name, obj.CoordinateName2);
+hasTrim_l = ismember(obj.CoordinateName2, name);
 if hasTrim_l
     
     nTrim = sum(trim_l);
     trimIdx_v = 1:nTrim;
-    trimIdx_c = vect2Names_f(trimIdx_v, obj.TrimName);
+    trimIdx_c = vect2Names_f(trimIdx_v, obj.CoordinateName2);
     
     % Repeat trims to create grid
     if nTrim > 1 && nDraft > 1
@@ -56,7 +56,7 @@ if hasTrim_l
     else
         
         % Draft and trim are both given as columns in a table
-        trimIdxRep_c = vect2Names_f(draftIdx_v, obj.TrimName);
+        trimIdxRep_c = vect2Names_f(draftIdx_v, obj.CoordinateName2);
         varSubs_c(nameDim) = { find(trim_l) };
         inName(varSubs_c{:}) = trimIdxRep_c;
     end

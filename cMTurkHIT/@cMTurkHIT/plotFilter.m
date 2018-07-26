@@ -1,4 +1,4 @@
-function obj = plotFilter(obj)
+function obj = plotFilter(obj, varargin)
 %plotFilter Plot and request user manually filter points
 %   Detailed explanation goes here
 
@@ -10,7 +10,15 @@ if isempty(obj.FileData)
     error(errid, errmsg);
 end
 
-ax = obj.plot([], true);
+if nargin > 1
+    
+    ax = varargin{1};
+    validateattributes(ax, {'matlab.graphics.axis.Axes'}, {'scalar'},...
+        'cMTurkGraphSpeedPower.plotFilter', 'ax', 2);
+else
+    ax = obj.plot([], true);
+end
+
 set(ax, 'NextPlot', 'ReplaceChildren');
 
 % Dock so user can find figure easier, turn on data brushing

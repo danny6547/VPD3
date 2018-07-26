@@ -14,9 +14,9 @@ if ~isempty(obj.RowNames)
         datalength = nCol;
     else
 
-        errid = 'MakeTable:NeedNumRows';
-        errmsg = ['To find the number of rows either property ColumnNames or '...
-            'NumColumns must be given'];
+        errid = 'MakeTable:NeedNumCols';
+        errmsg = ['To find the number of columns either property ColumnNames or'...
+            ' NumColumns must be given'];
         error(errid, errmsg);
     end
 end
@@ -32,12 +32,15 @@ if ~isempty(obj.ColumnNames)
         datalength = nRow;
     else
         
-        errid = 'MakeTable:NeedNumCols';
-        errmsg = ['To find the number of columns either property ColumnNames or'...
-            ' NumColumns must be given'];
+        errid = 'MakeTable:NeedNumRows';
+        errmsg = ['To find the number of rows either property ColumnNames or '...
+            'NumColumns must be given'];
         error(errid, errmsg);
     end
 end
+
+% Assign into Names
+obj.Names = names;
 
 % Create basic table cell
 cell_ch = '<td align="center"><input id="INPUTID" name="INPUTNAME" size="10" type="text"/></td>';
@@ -47,7 +50,10 @@ cell_ch = '<td align="center"><input id="INPUTID" name="INPUTNAME" size="10" typ
 
 % Write inputId
 nCells = numel(inName_c);
-inputId_m = reshape(1:nCells, size(inName_c));
+startId = obj.StartInputId;
+endId = startId + nCells - 1;
+obj.EndInputId = endId;
+inputId_m = reshape(startId:endId, size(inName_c));
 inputId_c = arrayfun(@num2str, inputId_m, 'Uni', 0);
 cell_c = cellfun(@(x) strrep(cell_ch, 'INPUTID', x), inputId_c, 'Uni', 0);
 cell_c = cellfun(@(x, y) strrep(x, 'INPUTNAME', y), cell_c, inName_c,...

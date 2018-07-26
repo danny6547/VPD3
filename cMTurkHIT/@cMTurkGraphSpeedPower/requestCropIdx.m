@@ -8,7 +8,10 @@ con = false;
 imshow(img);
 set(gca, 'Visible', 'on');
 set(gca, 'NextPlot', 'replacechildren');
-bottomleft = input(['Enter indices of bottom-left of graph area in square brackets ([x, y]) and enter the text ''break'' when done:\n'], 's');
+fprintf(1, '%s\n', 'Enter indices of bottom-left of graph area in square');
+fprintf(1, '%s\n', 'brackets ([x, y]). The greyed-out area will be ');
+fprintf(1, '%s\n', 'cropped. Press the ''Enter'' key  when done:');
+bottomleft = input('', 's');
 while ~con
     
     bottomleft = eval(bottomleft);
@@ -35,11 +38,15 @@ while ~con
     set(gca, 'NextPlot', 'replacechildren');
 
     bottomleft = input('', 's');
-    con = strcmpi(bottomleft, 'break');
+    con = strcmpi(bottomleft, '');
 end
 cropImg = tempImg;
 
-topright = input(['Enter indices of the top-right of the graph area in square brackets ([x, y]) and enter the text ''break'' when done:\n'], 's');
+% topright = input(['Enter indices of the top-right of the graph area in square brackets ([x, y]) and enter the text ''break'' when done:\n'], 's');
+fprintf(1, '%s\n', 'Enter indices of top-right of graph area in square');
+fprintf(1, '%s\n', 'brackets ([x, y]). The greyed-out area will be ');
+fprintf(1, '%s\n', 'cropped. Press the ''Enter'' key  when done:');
+topright = input('', 's');
 con = false;
 while ~con
     
@@ -67,7 +74,7 @@ while ~con
     set(gca, 'NextPlot', 'replacechildren');
 
     topright = input('', 's');
-    con = strcmpi(topright, 'break');
+    con = strcmpi(topright, '');
 end
 
 % Rows and columns to keep from those to remove

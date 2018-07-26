@@ -44,7 +44,9 @@ for fi = 1:numel(filename)
                 % 'Position', [0, 0, 0.5, 1])
 
     % Save 
-    saveas(gcf, currFile);
+    frm = getframe(f1);
+    imwrite(frm.cdata, currFile);
+	close(f1);
 
     % Output
     ax = [ax1, ax2];

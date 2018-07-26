@@ -1,4 +1,4 @@
-classdef cMTurkHIT
+classdef cMTurkHIT < handle
     %CMTURKHIT Numeric data from image/document with Mechanical Turk
     %   Detailed explanation goes here
     
@@ -35,17 +35,30 @@ classdef cMTurkHIT
         TemplateSite = 'Transcription From Image';
         nDraft;
         nTrim;
+        StartInputId = 1;
+        EndInputId;
 %         OutFileName = '';
     end
     
     properties(Constant, Hidden)
         
-        TrimName = 'Trim';
-        DraftName = 'Draft';
+%         TrimName = 'Trim';
+%         DraftName = 'Draft';
         InputDirectory = 'Input';
         OutputDirectory = 'Output';
         ScriptDirectory = 'Script';
         ImageDirectory = 'Images';
+    end
+    
+    properties(Hidden)
+        
+        Names;
+    end
+    
+    properties(Access=protected, Hidden, Abstract)
+        
+        CoordinateName1
+        CoordinateName2
     end
     
     properties(Dependent, Hidden)
@@ -72,6 +85,7 @@ classdef cMTurkHIT
         [header, footer] = printHTMLTableHeaderFooter()
         [names, varargout] = fileTableNames(tbl, name, varargin)
         [rows, cols] = requestCropIdx(img)
+        validateInteger(val, varargin)
     end
     
     methods(Hidden)
@@ -93,11 +107,12 @@ classdef cMTurkHIT
         filename = outName(obj)
         html = print(obj)
         [inName, varargout] = inputName(obj, name, datalength, nameDim)
+        [file, answer, nHIT] = readFileTable(obj, filename, varargin)
     end
     
     methods
         
-        function obj = set.ImageURL(obj, img)
+        function set.ImageURL(obj, img)
         
             if iscellstr(img)
                 

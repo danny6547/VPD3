@@ -5,6 +5,12 @@ classdef cMTurkHydrostaticTable < cMTurkHIT
     properties
     end
     
+    properties(Constant, Hidden)
+        
+        CoordinateName1 = 'Draft';
+        CoordinateName2 = 'Trim';
+    end
+    
     methods
     
        function obj = cMTurkHydrostaticTable()
