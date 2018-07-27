@@ -5,7 +5,7 @@ classdef cMTurkHydrostaticTable < cMTurkHIT
     properties
     end
     
-    properties(Constant, Hidden)
+    properties(Access=protected, Hidden)
         
         CoordinateName1 = 'Draft';
         CoordinateName2 = 'Trim';
