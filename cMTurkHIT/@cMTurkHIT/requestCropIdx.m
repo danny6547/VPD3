@@ -3,7 +3,7 @@ function [rows, cols] = requestCropIdx(img)
 %   Detailed explanation goes here
 
 % Ask user for rows to keep
-[nRows, nCol, ~] = size(sampleImage);
+[nRows, nCol, ~] = size(img);
 con = false;
 while ~con
 
