@@ -12,9 +12,9 @@ BEGIN
 /* CALL createTempMarorkaRaw(); */
 /* CALL updateFromBunkerNote(imo); */
 
-INSERT INTO rawdata (IMO_Vessel_Number,
+INSERT INTO rawdata (Vessel_Id,
 							Water_Depth, 
-							DateTime_UTC,
+							Timestamp,
 							Relative_Wind_Speed,
 							 Relative_Wind_Direction,
 							 Speed_Over_Ground,
@@ -33,7 +33,7 @@ INSERT INTO rawdata (IMO_Vessel_Number,
                              Seawater_Temperature
                              /* Displacement */
                              )
-SELECT IMONo,
+SELECT (SELECT Vessel_Id FROM Vessel WHERE IMO = IMONo),
 							 `Sea depth [m]`, 
 							 DateTime_UTC,
 							 `Relative wind speed [m/s]`,
@@ -55,9 +55,9 @@ SELECT IMONo,
                              /* Draft_Displacement_Actual */
 							 FROM tempMarorkaRaw
 								ON DUPLICATE KEY UPDATE 
-									IMO_Vessel_Number = VALUES(IMO_Vessel_Number),
+									Vessel_Id = VALUES(Vessel_Id),
                                     Water_Depth = VALUES(Water_Depth),
-                                    DateTime_UTC = VALUES(DateTime_UTC),
+                                    Timestamp = VALUES(Timestamp),
                                     Relative_Wind_Speed = VALUES(Relative_Wind_Speed),
                                     Relative_Wind_Direction = VALUES(Relative_Wind_Direction),
                                     Speed_Over_Ground = VALUES(Speed_Over_Ground),

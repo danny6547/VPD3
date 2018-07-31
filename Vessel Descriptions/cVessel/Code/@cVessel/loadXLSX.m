@@ -110,12 +110,16 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
     readCols_l = iscellstr(fileColID);
     
     % Append set SQL
-    [~, tabColNames] = obj.SQL.colNames('RawData');
-    tabColNames = setdiff(tabColNames, 'Raw_Data_Id');
+    [~, tabColNames] = obj.SQL.colNames(tab);
+    id_lc = regexp(tabColNames, '(_Id{1,1}$)');
+    id_l = ~cellfun(@isempty, id_lc);
+    idName_c = tabColNames(id_l);
+    tabColNames = setdiff(tabColNames, idName_c);
+    tabColNames = setdiff(tabColNames, 'id');
+    tabColNames = obj.SQL.encloseCols(tabColNames, '`');
     if ~isequal(set_c, {''})
 
         % Generate default set statement
-        tabColNames = setdiff(tabColNames, 'id');
         [~, ~, defSet_c] = obj.SQL.setNullIfEmpty(tabColNames);
         cutAtEquals_f = @(x) x(1:strfind(x, ' = ')-1);
         inDefaultNames_c = cellfun(cutAtEquals_f, defSet_c, 'Uni', 0);
@@ -160,7 +164,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
         
         % Error, need vessel id somewhere to insert data 
     end
-    fileColName = [fileColName,{'Vessel_Id'}];
+    fileColName = [fileColName(:)',{'Vessel_Id'}];
 
     % Iterate over files
     for fi = 1:numel(filename)
