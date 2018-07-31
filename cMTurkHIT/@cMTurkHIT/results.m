@@ -101,8 +101,8 @@ if isGrid_l
     [~, sortAscTrimIdx_v] = sort(trimEdgeIdx_v);
     
     % Get displacement matrix
-    gridNamePattern_ch = ['Answer_', obj.DraftName, '_[\d]+', ...
-        obj.TrimName, '_[\d]+'];
+    gridNamePattern_ch = ['Answer_', obj.CoordinateName1, '_[\d]+', ...
+        obj.CoordinateName2, '_[\d]+'];
     gridNamePattern_c = regexp(answerNames, gridNamePattern_ch);
     disp_l = ~cellfun(@isempty, gridNamePattern_c);
     dispTable_l = false;
@@ -115,8 +115,8 @@ if isGrid_l
     displacement = answer_tbl{:, disp_l};
     
     % Assign numbers of edge vectors
-    [~, draftIdx_v] = obj.fileTableNames(answer_tbl, obj.DraftName);
-    [~, trimIdx_v] = obj.fileTableNames(answer_tbl, obj.TrimName);
+    [~, draftIdx_v] = obj.fileTableNames(answer_tbl, obj.CoordinateName1);
+    [~, trimIdx_v] = obj.fileTableNames(answer_tbl, obj.CoordinateName2);
     obj.nDraft = numel(draftIdx_v);
     obj.nTrim = numel(trimIdx_v);
     

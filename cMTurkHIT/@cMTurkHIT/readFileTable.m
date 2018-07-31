@@ -36,6 +36,7 @@ fclose(fid);
 
 % Create table from cell
 colNames = strrep(colNames, '.', '_');
+colNames = genvarname(colNames);
 file = cell2table(file_c, 'VariableNames', colNames);
 
 % Filter rejects
