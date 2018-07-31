@@ -6,6 +6,7 @@ classdef cTableObject < handle
         
         DataProperty;
         TableIdentifier;
+        EmptyIgnore;
 %         ObjectIdentifier;
     end
     
@@ -249,7 +250,8 @@ classdef cTableObject < handle
             props = obj.DataProperty;
             
             % Exclude certain properties with default values
-            props = setdiff(props, 'Deleted');
+            emptyIgnore_c = obj.EmptyIgnore;
+            props = setdiff(props, emptyIgnore_c);
             
             empty = false(numel(props), numel(obj));
             for oi = 1:numel(obj)

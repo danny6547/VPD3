@@ -32,6 +32,7 @@ classdef cVesselDisplacement < cModelID & cVesselDisplacementConversion
         NameAlias = '';
         OtherTable = '';
         OtherTableIdentifier = '';
+        EmptyIgnore = {'Deleted'};
     end
     
     properties(Hidden)

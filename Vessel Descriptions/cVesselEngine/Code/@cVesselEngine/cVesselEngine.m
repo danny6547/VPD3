@@ -40,6 +40,7 @@ classdef cVesselEngine < cModelID
         OtherTableIdentifier = {};
         TableIdentifier = 'Engine_Model_Id';
         NameAlias = 'Engine_Model';
+        EmptyIgnore = {'Deleted'};
     end
     
     properties(Hidden, Dependent)
@@ -113,25 +114,25 @@ classdef cVesselEngine < cModelID
     
     methods(Hidden)
         
-        function empty = isempty(obj) 
-            
-            if any(size(obj) == 0)
-                empty = true;
-                return
-            end
-            
-            numObj = numel(obj);
-            props = properties(obj);
-            empty = false(numel(props), numObj);
-            for oi = 1:numObj
-                for pi = 1:numel(props)
-                    prop = props{pi};
-                    empty(pi, oi) = isempty(obj(oi).(prop));
-                end
-            end
-%             empty = empty(:);
-            empty = all(empty);
-        end
+%         function empty = isempty(obj) 
+%             
+%             if any(size(obj) == 0)
+%                 empty = true;
+%                 return
+%             end
+%             
+%             numObj = numel(obj);
+%             props = properties(obj);
+%             empty = false(numel(props), numObj);
+%             for oi = 1:numObj
+%                 for pi = 1:numel(props)
+%                     prop = props{pi};
+%                     empty(pi, oi) = isempty(obj(oi).(prop));
+%                 end
+%             end
+% %             empty = empty(:);
+%             empty = all(empty);
+%         end
         
     end
     

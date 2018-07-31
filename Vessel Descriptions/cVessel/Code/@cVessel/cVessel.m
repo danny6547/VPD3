@@ -74,6 +74,7 @@ classdef cVessel < cModelID
         OtherTableIdentifier = {};
         TableIdentifier = 'Vessel_Id';
         NameAlias = '';
+        EmptyIgnore = {'Deleted', 'R_Squared'};
     end
     
     methods
@@ -264,21 +265,21 @@ classdef cVessel < cModelID
            end
 
            % Insert models that may need to get identifier from DB first
-           if ~isempty(obj.SpeedPower)
+           if ~isempty([obj.SpeedPower])
                obj.SpeedPower.insert();
            end
            
-           if ~isempty(obj.Engine)
+           if ~isempty([obj.Engine])
                
 %                obj.Engine.Engine_Model_Id = obj.Engine.Model_ID;
                obj.Engine.insert();
            end
            
-           if ~isempty(obj.WindCoefficient)
+           if ~isempty([obj.WindCoefficient])
                obj.WindCoefficient.insert();
            end
            
-           if ~isempty(obj.Displacement)
+           if ~isempty([obj.Displacement])
                obj.Displacement.insert();
            end
            

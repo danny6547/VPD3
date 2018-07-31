@@ -62,6 +62,7 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
         OtherTableIdentifier = {'Speed_Power_Coefficient_Model_Id'};
         TableIdentifier = 'Speed_Power_Coefficient_Model_Value_Id';
         NameAlias = '';
+        EmptyIgnore = {'Deleted', 'R_Squared'};
     end
     
     methods

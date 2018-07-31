@@ -48,6 +48,7 @@ classdef cVesselDryDock < cModelID & cDateConvert
         StartDateProp = 'Start_Date';
         EndDateProp = 'End_Date';
         NameAlias = '';
+        EmptyIgnore = {'Deleted'};
     end
     
     properties(Hidden)

@@ -66,6 +66,7 @@ classdef cVesselConfiguration < matlab.mixin.Copyable & cModelID & cDateConvert
         OtherTableIdentifier = {};
         TableIdentifier = 'Vessel_Id';
         NameAlias = 'Vessel_Configuration_Description';
+        EmptyIgnore = {'Deleted', 'R_Squared'};
     end
     
     

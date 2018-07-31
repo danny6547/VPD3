@@ -25,6 +25,7 @@ classdef cVesselInfo < cModelID & cDateConvert
         NameAlias = 'Vessel_Name';
         OtherTable = '';
         OtherTableIdentifier = '';
+        EmptyIgnore = {'Deleted'};
     end
     
     properties(Hidden)

@@ -28,6 +28,7 @@ classdef cVesselWindCoefficient < cModelID
         TableIdentifier = 'Wind_Coefficient_Model_Id';
         NameAlias = '';
         OtherTableIdentifier = '';
+        EmptyIgnore = {'Deleted'};
     end
     
     properties(Hidden)
@@ -120,25 +121,25 @@ classdef cVesselWindCoefficient < cModelID
            
        end
        
-       function empty = isempty(obj)
-       % isempty True for empty object data.
-       
-           empty = true(size(obj));
-           for oi = 1:numel(obj)
-               if ~isempty(obj(oi).Direction)
-                   empty(oi) = false;
-               end
-               if ~isempty(obj(oi).Coefficient)
-                   empty(oi) = false;
-               end
-               if ~isempty(obj(oi).Wind_Reference_Height_Design)
-                   empty(oi) = false;
-               end
-               if ~isempty(obj(oi).Name)
-                   empty(oi) = false;
-               end
-           end
-       end
+%        function empty = isempty(obj)
+%        % isempty True for empty object data.
+%        
+%            empty = true(size(obj));
+%            for oi = 1:numel(obj)
+%                if ~isempty(obj(oi).Direction)
+%                    empty(oi) = false;
+%                end
+%                if ~isempty(obj(oi).Coefficient)
+%                    empty(oi) = false;
+%                end
+%                if ~isempty(obj(oi).Wind_Reference_Height_Design)
+%                    empty(oi) = false;
+%                end
+%                if ~isempty(obj(oi).Name)
+%                    empty(oi) = false;
+%                end
+%            end
+%        end
        
 %        function insertIntoTable(obj)
 %        % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs

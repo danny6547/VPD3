@@ -33,6 +33,7 @@ classdef cVesselOwner < cModelID & cDateConvert
         NameAlias = 'Vessel_Owner_Name';
         OtherTable = '';
         OtherTableIdentifier = '';
+        EmptyIgnore = {'Deleted'};
     end
     
     properties(Hidden)
