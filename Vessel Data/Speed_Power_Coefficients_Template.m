@@ -17,11 +17,11 @@ sp(1).Name = 'Design';
 
 ballast = [...
                                 ];
-sp(2).Speed = ballast(:, 1) * knots2mps;
-sp(2).Power = ballast(:, 2) * bhp2Kw;
-sp(2).Trim = [];
-sp(2).Displacement = [];
-sp(2).FluidDensity = [];
-sp(2).Name = 'Ballast';
+sp(end+1).Speed = ballast(:, 1) * knots2mps;
+sp(end).Power = ballast(:, 2) * bhp2Kw;
+sp(end).Trim = [];
+sp(end).Displacement = [];
+sp(end).FluidDensity = [];
+sp(end).Name = 'Ballast';
 
 sp.print;
