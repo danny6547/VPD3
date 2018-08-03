@@ -73,7 +73,7 @@ if ~isempty(edge_c)
     edgeHtml_c = repmat({edge_ch}, edgeSz);
 
     % Assign edge vector
-    edge_l = ismember(names, obj.TrimName);
+    edge_l = ismember(names, obj.CoordinateName2);
     edgeHtml_c(edge_l) = {'<td align="center"><input id="INPUTID" name="INPUTNAME" size="10" type="text"/></td>'};
     edgeHtml_c(~edge_l) = {'<td align="center"></td>'};
     edgeHtml_c(edge_l) = cellfun(@(x, y) strrep(x, 'INPUTNAME', y), ...
