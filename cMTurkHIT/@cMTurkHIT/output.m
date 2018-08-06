@@ -21,7 +21,8 @@ if ui
 end
 
 % Write SQL insert statement
-sql = obj.printSQL('Insert.sql');
+obj.printSQL('Insert.sql');
+sql = obj.copySQL();
 
 % Write data to file
 obj.printData('HydTable.csv', true);
