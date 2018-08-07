@@ -114,6 +114,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
     id_lc = regexp(tabColNames, '(_Id{1,1}$)');
     id_l = ~cellfun(@isempty, id_lc);
     idName_c = tabColNames(id_l);
+    idName_c = setdiff(idName_c, 'Vessel_Id');
     tabColNames = setdiff(tabColNames, idName_c);
     tabColNames = setdiff(tabColNames, 'id');
     tabColNames = obj.SQL.encloseCols(tabColNames, '`');
@@ -152,7 +153,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
     end
 
     [isVid, vidIdx] = ismember('Vessel_Id', setNames_c);
-    if isVid
+    if isVid && isempty(obj.Vessel_Id)
 
         vidNum_ch = set_c{vidIdx}(strfind(set_c{vidIdx}, ' = ')+3:end);
         vid = str2double(vidNum_ch);

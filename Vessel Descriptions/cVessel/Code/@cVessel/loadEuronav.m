@@ -16,6 +16,8 @@ if nargin > 2
     readSheets_l = false;
 end
 
+% Insert into vessels table if not found
+obj = insertIntoVessel(obj);
 
 for fi = 1:numel(filename)
     
