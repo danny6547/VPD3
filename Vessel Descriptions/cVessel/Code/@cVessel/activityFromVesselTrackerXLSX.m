@@ -47,7 +47,7 @@ idleDD = days(max(idleDurDD));
 
 % If idle period overlaps start of previous quarter, count all of it in to 
 % previous quarter
-if idleStartQuart == quart_tbl.datetime(1)
+if idleStartQuart(1) == quart_tbl.datetime(1)
     
     idleStartQuart_i = find(idleStartDD < quart_tbl.datetime(1), 1, 'last');
     idleDurQuart(1) = idleDurDD(idleStartQuart_i);

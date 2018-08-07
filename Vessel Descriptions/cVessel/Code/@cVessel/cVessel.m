@@ -1516,6 +1516,11 @@ classdef cVessel < cModelID
 %         end
     end
     
+    methods(Static)
+        
+        [trading_tbl, idleDD_tbl, idleQuart_tbl] = activityFromVesselTrackerXLSX(filename, dd, varargin);
+    end
+    
     methods
         
         function obj = set.Database(obj, dbname)
