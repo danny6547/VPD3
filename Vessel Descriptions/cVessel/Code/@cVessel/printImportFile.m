@@ -1,12 +1,26 @@
-function printImportFile(obj, filename, nonNull, gtZero)
+function printImportFile(obj, filename, varargin)
 %printImportFile Print file for import into SHAPE
 %   Detailed explanation goes here
 
 % Input
 validateattributes(filename, {'char'}, {'vector'}, ...
     'cVessel.printImportFile', 'filename', 2);
-nonNull = validateCellStr(nonNull, 'cVessel.printImportFile', 'nonNull', 3);
-gtZero = validateCellStr(gtZero, 'cVessel.printImportFile', 'gtZero', 4);
+
+nonNull = {'Relative_Wind_Direction', 'Relative_Wind_Speed', ...
+    'Static_Draught_Fore', 'Static_Draught_Aft', 'Delivered_Power'};
+if nargin > 2
+    
+    nonNull = varargin{1};
+    nonNull = validateCellStr(nonNull, 'cVessel.printImportFile', 'nonNull', 3);
+end
+
+gtZero = {'Relative_Wind_Direction', 'Relative_Wind_Speed',...
+    'Static_Draught_Fore', 'Static_Draught_Aft', 'Delivered_Power'};
+if nargin > 3
+    
+    gtZero = varargin{2};
+    gtZero = validateCellStr(gtZero, 'cVessel.printImportFile', 'gtZero', 4);
+end
 
 % Put file name in uploads dir
 uploadsDir = 'C:\ProgramData\MySQL\MySQL Server 5.7\Uploads';
