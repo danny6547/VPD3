@@ -26,8 +26,16 @@ inName = cell(outSz_v);
 vect2Names_f = @(x, n) strcat(n, '_', arrayfun(@num2str, x, 'Uni', 0));
 draftIdx_c = vect2Names_f(draftIdx_v, obj.CoordinateName1);
 [~, draftName_i] = ismember(obj.CoordinateName1, name);
-varSubs_c = {':', ':'};
-varSubs_c(nameDim) = { draftName_i };
+
+% if nameDim == 1
+   
+    varSubs_c = {':', ':'};
+% elseif nameDim == 2
+%     
+%     varSubs_c = {'2:end', '2:end'};
+% end
+% varSubs_c = {':', ':'};
+varSubs_c(nameDim_l) = { draftName_i };
 inName(varSubs_c{:}) = draftIdx_c;
 
 % Check if Trim in names
