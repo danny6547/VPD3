@@ -472,7 +472,9 @@ classdef cTableObject < handle
         
         [~, ~, sqlSelect] = obj(1).SQL.select(table, '*');
         [~, sqlSelect] = obj(1).SQL.determinateSQL(sqlSelect);
-        [~, sqlSelectWhereIn_ch] = obj(1).SQL.combineSQL(sqlSelect, sqlWhereID_ch);
+%         sqlNotDel_ch = 'AND Deleted = 0';
+        [~, sqlSelectWhereIn_ch] = obj(1).SQL.combineSQL(sqlSelect, ...
+            sqlWhereID_ch);
         %         table_st = obj(1).execute(sqlSelectWhereIn_ch);
 %         [~, ~, q] = obj(1).executeIfOneOutput(1, sqlSelectWhereIn_ch);
         [~, ~, table_st] = obj(1).SQL.executeIfOneOutput(1, sqlSelectWhereIn_ch);

@@ -30,7 +30,7 @@ ignore_ch = 1;
 set_ch = '';
 setnull_c = {'all'};
 
-obj = obj.InServiceSQLDB.loadInFile(filename, tab, cols, delimiter_ch, ignore_ch, set_ch, setnull_c);
+obj = obj.SQL.loadInFile(filename, tab, cols, delimiter_ch, ignore_ch, set_ch, setnull_c);
 
     function [success, message] = replaceCommaWithPoint(filename)
         
