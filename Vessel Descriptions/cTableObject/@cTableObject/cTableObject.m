@@ -7,7 +7,6 @@ classdef cTableObject < handle
         DataProperty;
         TableIdentifier;
         EmptyIgnore;
-%         ObjectIdentifier;
     end
     
     properties(Hidden)
@@ -20,32 +19,10 @@ classdef cTableObject < handle
     methods
     
         function obj = cTableObject(varargin)
-% 
-%            % Check if input identifies a saved connection, or gives all
-%            % connection details
-%            if nargin == 1
-%                
-%                [connInput_c, conn_s] = cConnectSQLDB.savedConnection(...
-%                    varargin{:});
-%            else
-%                
-%                temp = cConnectSQLDB(varargin{:});
-%                conn_s = temp.connectionStruct;
-%                connInput_c = varargin;
-%            end
-           
+            
            % Determine which cSQL sub-class to instantiate
            csql = cSQL.instantiateChildObj(varargin{:});
-%            if strcmp(conn_s.UserID, 'hullperformancematlab')
-%                 
-%                csql = cTSQL(connInput_c{:});
-%            else
-%                 
-%                csql = cMySQL(connInput_c{:});
-%            end
-           
            obj.SQL = csql;
-%            obj = obj@cMySQL(varargin{:});
         end
 
         function obj = insert(obj, table, varargin)
@@ -78,14 +55,10 @@ classdef cTableObject < handle
                     
                 alias_c = {};
             end
-%             validateattributes(alias_c, {'cell'}, {}, ....
-%                 'cTableObject.insert', 'alias', 5);
         end
         
         additionalFields_c = {};
         additionalData_c = arrayfun(@(x) {}, dataObj, 'Uni', 0)';
-%         additionalData_c = cell(numel(dataObj), 1);
-        additionalData_cc = {};
         numAdditional = 0;
         additionalInputs = {};
         if nargin > 5
@@ -99,35 +72,7 @@ classdef cTableObject < handle
                 additionalData_c = repmat(additionalData_c, [numel(dataObj), 1]);
             end
             
-%             paramValues = varargin(2:end);
-%             p = inputParser();
-%             p.KeepUnmatched = true;
-%             p.parse(paramValues{:});
-%             results = p.Unmatched;
-% 
-%             additionalFields_c = fieldnames(results);
             numAdditional = numel(additionalFields_c);
-% 
-%         %             additionalData_c = struct2cell(results')';
-% 
-%         %             numericCols_l = all(cellfun(@isnumeric, additionalData_c));
-%         %             additionalData_cc = mat2cell(additionalData_c, nRows, ones(1, nCols));
-%         %             additionalData_cc(numericCols_l) = cellfun(...
-%         %                 @(x) [x{:}], additionalData_cc(numericCols_l), 'Uni', 0);
-% 
-%             resData_st = structfun(@cellstr, results, 'Uni', 0, ...
-%                 'Err', @(x, y) num2cell(y));
-%             resData_c = struct2cell(resData_st);
-%             resData_c = cellfun(@(x) x(:), resData_c, 'Uni', 0);
-%             additionalData_c = [resData_c{:}];
-%             [nRows, nCols] = size(additionalData_c);
-%             additionalData_c = mat2cell(additionalData_c, ones(1, nRows),...
-%                 nCols);
-        %             additionalData_c = cellfun(@num2cell, additionalData_c, 'Uni', 0);
-
-        %             resData_c = struct2cell(results);
-        %             resData_c = cellfun(@(x) x(:), resData_c, 'Uni', 0);
-        %             additionalData_c = num2cell(cell2mat(resData_c));
         end
         
         % Get matching field names
@@ -154,7 +99,6 @@ classdef cTableObject < handle
                 tempData_c(numericData_l), 'Uni', 0);
 
             tempData_c = [tempData_c, additionalData_c{oi, :}];
-        %             tempData_c(cellfun(@isempty, tempData_c)) = {nan};
             [currData_c{:}] = cVessel.repeatInputs(tempData_c);
             currData_c(~numericData_l) = tempData_c(~numericData_l);
 
@@ -166,7 +110,6 @@ classdef cTableObject < handle
                 nonChar_c = cellfun(@(x) x(:), nonChar_c, 'Uni', 0);
                 nRows = unique(cellfun(@length, ...
                     nonChar_c(~cellfun(@isempty, nonChar_c))));
-        %                 nRows = size(nonChar_c{1}, 1);
                 if isempty(nRows)
 
                     nRows = size(currData_c(charData_l), 1) ;
@@ -191,22 +134,13 @@ classdef cTableObject < handle
                 end
             end
             currData_c = q;
-
-        %             currData_c = cellfun(@num2cell, currData_c, 'Uni', 0);
-        %             currData_c = num2cell(cell2mat(...
-        %                 currData_c));
-        %             currData_c(~charData_l) = ...
-        %                 cellfun(@(x) x(:), currData_c(~charData_l), 'Uni', 0);
             emptyNonChar_l = cellfun(@(x) isempty(x) && ~ischar(x), currData_c);
             currData_c(emptyNonChar_l) = {nan};
-        %             currData_c(~charData_l) = num2cell(cell2mat(...
-        %                 currData_c(~charData_l)));
             data_c = [data_c; currData_c];
         end
 
         % Insert matrix of data into table
         matchFields_c = [matchFields_c(:); additionalFields_c(:)];
-        %         data_c = [data_c, additionalData_c];
         lastUpdateColName = [];
         if obj(1).Last_Update_Id
             lastUpdateColName = identifier;
@@ -235,7 +169,6 @@ classdef cTableObject < handle
             end
         end
         
-%         alias_c = obj.propertyAlias;
         obj = obj.select(table, identifier, [], alias_c, [], false, additionalInputs{:});
         end
 
@@ -273,8 +206,6 @@ classdef cTableObject < handle
         % Output
         inDB = false;
         inOBJ = false;
-        %         objdiff = true;
-        %         fielddiff = true;
 
         % Input
         validateattributes(table, {'char'}, {'vector'}, ...
@@ -282,34 +213,16 @@ classdef cTableObject < handle
         validateattributes(identifier, {'char'}, {'vector'}, ...
             'cVessel.readFromTable', 'identifier', 3);
 
-        cols2write = {}; %properties(obj);
-%         if nargin > 3 && ~isempty(varargin{1})
-% 
-%             cols2write = varargin{1};
-%             validateCellStr(cols2write, 'cMySQL.readFromTable',...
-%                 'cols2write', 1);
-%         end
-
-%         % Input
-%         p = inputParser();
-%         p.addParameter('alias', {}, @iscell);
-%         p.addParameter('whereField', false, @islogical);
-%         p.addParameter('whereField', '', @ischar);
-%         p.KeepUnmatched = true;
-%         p.parse(varargin{:});
-%         res = p.Results;
-%         additionalInputs_c = res.Unmatched;
-        
-        whereField = identifier; % obj(1).TableIdentifier;
+        cols2write = {};
+        whereField = identifier; 
         idValInObj_l = true;
         
-        prop_c = obj.DataProperty; % properties(obj);
+        prop_c = obj.DataProperty;
         prop_c = prop_c(:);
         identifierProp_ch = identifier;
         whereValue = {};
         aliasProp_ch = '';
         if nargin > 4 && ~isempty(varargin{2})
-%         if isfield(res, 'alias')
 
             alias_c = varargin{2};
             validateattributes(alias_c, {'cell'}, {'2d', 'ncols', 2}, ...
@@ -361,7 +274,6 @@ classdef cTableObject < handle
                 obj.parseAdditional(additionalInputs_c{:});
             
             % Enclose any char values 
-            
             additionalData_c = [additionalData_c{:}];
             additionalDataStr_c = cellfun(@num2str, additionalData_c, 'Uni', 0);
             additionalDataStr_c = additionalDataStr_c(:);
@@ -374,20 +286,10 @@ classdef cTableObject < handle
                 whereValueInput = true;
             end
             
-%             if isempty(whereValue) || any(cellfun(@isempty, whereValue))
-%                 
-%                 whereValueInput = false;
-%                 whereValue = additionalData_c(1);
-%             else
-%                 whereValueInput = true;
-%             end
-%             identifier = additionalFields_c{1};
             whereField = additionalFields_c{1};
             whereValue = additionalData_c(1);
             
             idValInObj_l = false;
-%             whereField_c{1} = additionalFields_c{1};
-%             whereField_c{2} = additionalDataStr_c{1};
         end
         
         if ~iscell(whereValue)
@@ -395,12 +297,8 @@ classdef cTableObject < handle
         end
         
         % Get matching field names and object properties
-%         temp_st = obj.SQL.execute(['DESCRIBE ', table]);
         [~, temp_st] = obj(1).SQL.describe(table);
-        
-        
         fields_c = temp_st.field;
-        %         prop_c = properties(obj);
         matchField_c = intersect(fields_c, prop_c);
         matchField_c = union(matchField_c, additionalFields_c);
 
@@ -414,9 +312,7 @@ classdef cTableObject < handle
         end
 
         % No need to read data for identifier, given in input
-%         matchField_c = intersect(prop_c, cols2write);
         matchField_c = intersect(matchField_c, fields_c);
-%         matchField_c = setdiff(matchField_c, identifier);
 
         % Select table where rows match identifier values in object
         if whereValueInput
@@ -452,63 +348,20 @@ classdef cTableObject < handle
         
         [~, sqlWhereID_ch] = obj(1).SQL.combineSQL('WHERE', whereField, 'IN',...
             objIDvals_ch);
-%         sqlWhereAnd_ch = additionalCondition_ch;
-%         
-%         if isequal(objIDvals_ch, '()')
-%             
-%             sqlWhere_ch = ['WHERE ', sqlWhereAnd_ch];
-%         else
-%             
-%             if ~isempty(sqlWhereAnd_ch)
-%                 
-%                 sqlWhereAnd_ch = ['AND ', sqlWhereAnd_ch];
-%             end
-%             [obj(1), sqlWhere_ch] = obj(1).combineSQL('WHERE', identifier, 'IN',...
-%                 objIDvals_ch, sqlWhereAnd_ch);
-%         end
-        
-%         [obj(1), sqlWhereIn_ch] = obj(1).combineSQL('WHERE', identifier, 'IN',...
-%             objIDvals_ch, additionalCondition_ch);
-        
         [~, ~, sqlSelect] = obj(1).SQL.select(table, '*');
         [~, sqlSelect] = obj(1).SQL.determinateSQL(sqlSelect);
-%         sqlNotDel_ch = 'AND Deleted = 0';
         [~, sqlSelectWhereIn_ch] = obj(1).SQL.combineSQL(sqlSelect, ...
             sqlWhereID_ch);
-        %         table_st = obj(1).execute(sqlSelectWhereIn_ch);
-%         [~, ~, q] = obj(1).executeIfOneOutput(1, sqlSelectWhereIn_ch);
         [~, ~, table_st] = obj(1).SQL.executeIfOneOutput(1, sqlSelectWhereIn_ch);
-
-%         [obj(1), sqlWhere_ch] = obj(1).combineSQL(identifier, 'IN',...
-%             objIDvals_ch);
-%         [obj(1), table_st] = select@cMySQL(obj(1), table, '*', sqlWhere_ch);
+        
         if isempty(table_st)
 
             return
-%             errid = 'readTable:IdentifierDataMissing';
-%             errmsg = 'No data could be read for the values of IDENTIFIER.';
-%             error(errid, errmsg);
         end
         
         % Object found in DB
         inDB = true;
 
-%         tableID_c = table_st.(lowerId_ch);
-%         if iscell(tableID_c)
-%         %             [obj_l, obj_i] = ismember([tableID_c{:}], [objID_c{:}]);
-%             [~, obj_i] = ismember([objID_c{:}], [tableID_c{:}]);
-% 
-%         %             nID = sum(obj_l);
-%         else
-%         %             nID = 1;
-%             [~, obj_i] = ismember([objID_c{:}], tableID_c);
-%         %             obj_i = 1;
-%         %             obj_l = true;
-%         end
-
-        % Expand array to match results of SELECT query
-%         tblCol = lower(obj(1).TableIdentifier);
-%         objID_ch = lower(objID);
 
         % Repeat table to match number of objects
         if ~isscalar(obj) && height(table_st) == 1
@@ -523,24 +376,7 @@ classdef cTableObject < handle
             lowerId_ch = modCol_ch;
         end
         
-        % Create arrays to track whether object data has changed by read
-        %         fielddiff = true(length(matchField_c), numel(obj));
-        
-            idVal_c = table_st.(lowerId_ch);
-        
-%         if idValInObj_l
-%             
-%             tabId = obj(1).TableIdentifier;
-%             idVal_c = unique([obj.(tabId)]);
-%         else
-%             
-%             idVal_c = unique(table_st.(lowerId_ch));
-%             if isscalar(idVal_c) && ~isscalar(obj)
-%                 
-%                 idVal_c = repmat(idVal_c, size(obj));
-%             end
-%         end
-        
+        idVal_c = table_st.(lowerId_ch);
         if ~iscell(idVal_c)
             
             idVal_c = arrayfun(@(x) x, idVal_c, 'Uni', 0);
@@ -553,7 +389,7 @@ classdef cTableObject < handle
             lowerField = lower(currField);
             currData = table_st.(lowerField);
             if ~iscell(currData)
-        %                 currData = {currData};
+                
                 currData = num2cell(currData);
             end
             
@@ -563,39 +399,19 @@ classdef cTableObject < handle
             end
             
             for oi = 1:numel(obj)
-
-%                 if obj_i(oi) == 0
-%                     continue
-%                 end
-        %                 currObji = obj_i(oi);
-%                 currTablei = obj_i(oi);
                 
-%                 if ~identifierValueInput
-%                     identifierValue = obj(oi).(identifierProp_ch);
-%                 end
-                currData_l = table_st.(lowerId_ch) == idVal_c{oi}; %obj(oi).(identifierProp_ch);
-
-                % Check if different
-        %                 fielddiff(ii, oi) = ...
-        %                     ~isequal(obj(oi).(currField), currData{currData_l}) || ...
-        %                     (isequal(size(obj(oi).(currField)), size(currData{currData_l})) && ...
-        %                 isnan(obj(oi).(currField)) && isnan(currData{currData_l}));
-
-                try
-        %                     obj(oi).(currField) = currData{currTablei};
-                    obj(oi).(currField) = [currData{currData_l}]; %[currData{currData_l}];
+                currData_l = table_st.(lowerId_ch) == idVal_c{oi};
+                
+                try obj(oi).(currField) = [currData{currData_l}];
+                    
                 catch e
+                    
                     % Write some code here later...
                     % Error is attempt to write to dependent property
                     disp('hello');
                 end
             end
         end
-
-        % Return which objects are different
-        %         objdiff = any(fielddiff);
-        %         objDifferent_l = all(objDifferent_l);
-
         end
        
        function [log, propDiff] = isequal(obj, obj2)
@@ -613,12 +429,6 @@ classdef cTableObject < handle
                log = false;
                return
            end
-           
-%            if ~isscalar(obj2)
-%                
-%                log = false;
-%                return
-%            end
            
            if ~isequal(size(obj), size(obj2))
                
@@ -641,7 +451,7 @@ classdef cTableObject < handle
                    return
                end
 
-               eqf = @(x, y, tol) (isequal(size(x), size(y)) && all(isnan(x)) && all(isnan(y))) ... (isscalar(x) && isscalar(y) && isnan(x) && isnan(y))...
+               eqf = @(x, y, tol) (isequal(size(x), size(y)) && all(isnan(x)) && all(isnan(y))) ...
                    || ((numel(x) == numel(y)) && all(abs(x(:) - y(:)) < tol));
                tolerance = 1e-15;
 
@@ -732,13 +542,6 @@ classdef cTableObject < handle
             results = p.Unmatched;
 
             additionalFields_c = fieldnames(results);
-        %             additionalData_c = struct2cell(results')';
-
-        %             numericCols_l = all(cellfun(@isnumeric, additionalData_c));
-        %             additionalData_cc = mat2cell(additionalData_c, nRows, ones(1, nCols));
-        %             additionalData_cc(numericCols_l) = cellfun(...
-        %                 @(x) [x{:}], additionalData_cc(numericCols_l), 'Uni', 0);
-
             resData_st = structfun(@cellstr, results, 'Uni', 0, ...
                 'Err', @(x, y) num2cell(y));
             resData_c = struct2cell(resData_st);
@@ -750,22 +553,12 @@ classdef cTableObject < handle
             fields = additionalFields_c;
             data = additionalData_c;
         end
-        
-       
     end
     
     methods
         
         function set.SQL(obj, sql)
         % 
-%             if ~isa(sql, 'cSQL')
-%                 
-%                 errid = 'cV:NotAnSQL';
-%                 errmsg = ['Value assigned to property SQL must be a sub-class',...
-%                     ' of cSQL'];
-%                 error(errid, errmsg);
-%             end
-            
             validateattributes(sql, {'cSQL'}, {'scalar'});
             obj.SQL = sql;
         end

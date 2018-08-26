@@ -95,8 +95,8 @@ classdef cVesselEngine < cModelID
        
        for oi = 1:numObj
            
-           if ~isempty(obj(oi).Power) % && ~isempty(obj(oi).MCR)
-               currPower = obj(oi).Power; %obj(oi).powerFromMCRPCT(obj(oi).Power, obj(oi).MCR);
+           if ~isempty(obj(oi).Power)
+               currPower = obj(oi).Power;
                LowestPower(oi) = min(currPower);
                HighestPower(oi) = max(currPower);
                obj(oi).Lowest_Given_Brake_Power = min(currPower);
@@ -110,30 +110,6 @@ classdef cVesselEngine < cModelID
            end
        end
        end
-    end
-    
-    methods(Hidden)
-        
-%         function empty = isempty(obj) 
-%             
-%             if any(size(obj) == 0)
-%                 empty = true;
-%                 return
-%             end
-%             
-%             numObj = numel(obj);
-%             props = properties(obj);
-%             empty = false(numel(props), numObj);
-%             for oi = 1:numObj
-%                 for pi = 1:numel(props)
-%                     prop = props{pi};
-%                     empty(pi, oi) = isempty(obj(oi).(prop));
-%                 end
-%             end
-% %             empty = empty(:);
-%             empty = all(empty);
-%         end
-        
     end
     
     methods(Static)
@@ -162,9 +138,8 @@ classdef cVesselEngine < cModelID
             eid = obj.Model_ID;
         end
         
-        function obj = set.Engine_Model_Id(obj, eid)
+        function obj = set.Engine_Model_Id(obj, ~)
             
-%             obj.Engine_Model_Id = eid;
         end
     end
 end

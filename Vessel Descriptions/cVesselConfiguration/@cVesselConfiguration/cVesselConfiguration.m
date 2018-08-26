@@ -10,10 +10,7 @@ classdef cVesselConfiguration < matlab.mixin.Copyable & cModelID & cDateConvert
         Breadth_Moulded = [];
         Draft_Design = [];
         Anemometer_Height = [];
-        
         Engine_Model_Id double = [];
-%         Valid_From char = '';
-%         Valid_To char = '';
         Default_Configuration logical = [];
         Speed_Power_Source char = [];
         Wind_Reference_Height_Design double = [];
@@ -23,7 +20,6 @@ classdef cVesselConfiguration < matlab.mixin.Copyable & cModelID & cDateConvert
         Vessel_Configuration_Description char = '';
         Apply_Wind_Calculations logical;
         Fuel_Type char = '';
-%         Deleted = false;
     end
     
     properties(Hidden)
@@ -69,14 +65,6 @@ classdef cVesselConfiguration < matlab.mixin.Copyable & cModelID & cDateConvert
         EmptyIgnore = {'Deleted', 'R_Squared'};
     end
     
-    
-%     properties(Hidden, Constant)
-%        
-%         ModelTable = 'Vessel';
-%         ValueTable = {'VesselConfiguration'};
-%         ModelField = 'Vessel_Id';
-%     end
-    
     methods
     
        function obj = cVesselConfiguration(varargin)
@@ -89,10 +77,5 @@ classdef cVesselConfiguration < matlab.mixin.Copyable & cModelID & cDateConvert
            obj.DateStrFormat = 'yyyy-mm-dd';
            obj = insert@cModelID(obj, varargin{:});
        end
-%        function obj = insertIntoTable(obj)
-%            
-%            tab = 'Vessels';
-%            insertIntoTable@cTableObject(obj, tab);
-%        end
     end
 end

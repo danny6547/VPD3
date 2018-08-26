@@ -8,12 +8,6 @@ classdef cDateConvert < handle
         Valid_To;
     end
     
-%     properties(Dependent)
-%         
-%         StartDate char = '';
-%         EndDate char = '';
-%     end
-    
     properties(Hidden, Constant)
         
         DateStrFormat char = 'yyyy-mm-dd';
@@ -36,13 +30,6 @@ classdef cDateConvert < handle
     methods(Hidden, Static)
         
         function newdate = setDate(olddate, stringformat)
-            
-%             % Allow empty dates?
-%             if isempty(olddate)
-%                 
-%                 newdate = '';
-%                 return
-%             end
             
             % Trim excess whitespace sometimes read from DB
             olddate(olddate == 0) = [];

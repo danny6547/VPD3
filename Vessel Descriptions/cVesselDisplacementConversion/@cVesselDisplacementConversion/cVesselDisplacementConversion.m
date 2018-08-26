@@ -31,20 +31,14 @@ classdef cVesselDisplacementConversion < handle
 
                currProp = prop{pi};
                disp = [obj(oi).(currProp)];
-%                disp_c(cellfun(@isempty, disp_c)) = {nan};
-%                disp = [disp_c{:}];
-%                dens = nan(size(disp));
+               
+               if ~isempty(obj(oi).FluidDensity)
 
-%                for oi = 1:numel(obj)
-                   if ~isempty(obj(oi).FluidDensity)
+                   dens = obj(oi).FluidDensity;
+               else
 
-                       dens = obj(oi).FluidDensity;
-                   else
-
-                       dens = obj(oi).DefaultDensity;
-                   end
-%                end
-
+                   dens = obj(oi).DefaultDensity;
+               end
                disp = disp ./ (dens ./ 1e3);
                obj(oi).(currProp) = disp;
            end
@@ -53,18 +47,14 @@ classdef cVesselDisplacementConversion < handle
        
        function obj = displacementInMass(obj, prop)
        
-           prop = validateCellStr(prop);
-           numProps = numel(prop);
-           
+       prop = validateCellStr(prop);
+       numProps = numel(prop);
+       
         for oi = 1:numel(obj)
            for pi = 1:numProps
 
                currProp = prop{pi};
                disp = [obj(oi).(currProp)];
-%                disp_c(cellfun(@isempty, disp_c)) = {nan};
-%                disp = [disp_c{:}];
-%                dens = nan(size(disp));
-%                for oi = 1:numel(obj)
                if ~isempty(obj(oi).FluidDensity)
 
                    dens = obj(oi).FluidDensity;
@@ -72,7 +62,6 @@ classdef cVesselDisplacementConversion < handle
 
                    dens = obj(oi).DefaultDensity;
                end
-%                end
                disp = disp .* (dens ./ 1e3);
                obj(oi).(currProp) = disp;
            end

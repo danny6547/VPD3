@@ -74,7 +74,6 @@ classdef cDB
        function obj = cDB(varargin)
        % cDB Constructor method for class cDB.
        
-%            obj = obj@cMySQL(varargin{:});
            obj.SQL = cMySQL(varargin{:});
        end
        
@@ -95,9 +94,7 @@ classdef cDB
        % Input
        validateattributes(name, {'char'}, {'vector'}, 'create', 'name', 2);
        
-%        topleveldir = ['C:\Users\damcl\OneDrive - Hempel Group\Documents\'...
-%            'SQL\tests\EcoInsight Test Scripts'];
-       topleveldir = obj.TopLevelDir; % fileparts(fileparts(fileparts(mfilename('fullpath'))));
+       topleveldir = obj.TopLevelDir;
        if nargin > 2
            topleveldir = varargin{1};
            validateattributes(topleveldir, {'char'}, {'vector'}, 'create', ...

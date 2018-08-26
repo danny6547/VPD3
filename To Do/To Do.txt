@@ -897,7 +897,7 @@ Error when cV.IMO = imo after cV.insert with empty cV.Displacement (VesselConfig
 cVSP.insert: When Speed, Power empty large number of NULLs in SpeedPower table
 ISO19030: take vessel configuration id as input and pass to all sub-procedures
 Process ISO19030: keep analysis administration tables and procedures? (what was analysed, what was compliant etc)
-error: vessels with multiple configurations cannot be selected (error when obj.IMO =imo)
+# error: vessels with multiple configurations cannot be selected (error when obj.IMO =imo)
 ?How to "check-out" vessel from one DB to another? (problems start with conflicting modelIDs. Wipe all ModelIDs?)
 error: too many connections with 10 or so vessels. What is global variable code doing?
 DB: replace force.rawdata with delegate spec rawdata table

@@ -5,7 +5,6 @@ classdef cVesselOwner < cModelID & cDateConvert
     properties
         
         Vessel_Owner_Name;
-%         Deleted;
     end
     
     properties(Dependent)
@@ -38,7 +37,6 @@ classdef cVesselOwner < cModelID & cDateConvert
     
     properties(Hidden)
         
-%         Model_ID;
         Vessel_Owner_Id;
         Vessel_To_Vessel_Owner_Id;
         Vessel_Id;
@@ -50,12 +48,6 @@ classdef cVesselOwner < cModelID & cDateConvert
            
            obj = obj@cModelID(varargin{:});
        end
-       
-%        function obj = insert(obj, varargin)
-%            
-%            obj.DateStrFormat = 'yyyy-mm-dd';
-%            obj = insert@cModelID(obj, varargin{:});
-%        end
     end
     
     methods

@@ -8,7 +8,6 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
         Power double;
         Trim double;
         Displacement double;
-%         FluidDensity double;
         Speed_Power_Source char = '';
         Propulsive_Efficiency double = [];
         Coefficient_A double = [];
@@ -115,7 +114,8 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
                 case 'polynomial2'
                     
                     fo = polyfit(power, speed, 2);
-                    residuals = speed - (fo(1)*power.^2 + fo(2)*power + fo(3));  % polyval(fo, power);
+                    residuals = speed - (fo(1)*power.^2 + ...
+                        fo(2)*power + fo(3));
             end
             
             % Get statistics of fit
@@ -149,11 +149,6 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
                 @(x) ~isempty(x.Speed) && ~isempty(x.Power), obj);
            obj(hasSpeedPower) = obj(hasSpeedPower).fit;
            obj(hasSpeedPower) = obj(hasSpeedPower).powerExtents;
-           
-%            obj.insertModel;
-%            obj = obj.incrementSpeedPowerModel;
-           % Init MID
-%            mid = [obj.Model_ID];
 
            % Check model name, description are same throughout array
            name = {obj.Name};
@@ -177,10 +172,10 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
                    'Speed_Power_Coefficient_Model_Id');
            end
            [obj.Speed_Power_Coefficient_Model_Id] = deal(superID);
-%            superID = obj(1).Speed_Power_Coefficient_Model_Id;
-           insert@cTableObject(obj(1), 'SpeedPowerCoefficientModel', {}, ...
-               'Speed_Power_Coefficient_Model_Id', {}, 'Speed_Power_Coefficient_Model_Id', superID);
-%            [obj.Model_ID] = deal(mid);
+           insert@cTableObject(obj(1),...
+               'SpeedPowerCoefficientModel', {}, ...
+               'Speed_Power_Coefficient_Model_Id', {}, ...
+               'Speed_Power_Coefficient_Model_Id', superID);
            
            % Insert into models
            mid = [obj.Model_ID];
@@ -190,18 +185,6 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
                insertInputs_c = {'Speed_Power_Coefficient_Model_Value_Id', mid};
            end
            insert@cModelID(obj, insertInputs_c{:});
-           
-%            obj.insertSpeedPowerModel();
-%            insertIntoTable@cModelID(obj);
-%            
-%            % ModelID subclass needs to write model name, description 
-%            % because cModelID cannot have those properties
-%            for oi = 1:numel(obj)
-%                
-%                currObj = obj(oi);
-%                insertIntoTable@cMySQL(currObj, currObj.ModelTable, [], ...
-%                    currObj.ModelField, currObj.Model_ID);
-%            end
        end
        
        function [obj, h] = plot(obj)
@@ -218,12 +201,11 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
                 ylabel('Power (kW)');
                 title('Speed against Power data and fit');
                 
-                if ~isempty(obj(oi).Coefficient_A) && ~isempty(obj(oi).Coefficient_B)
+                if ~isempty(obj(oi).Coefficient_A) &&....
+                        ~isempty(obj(oi).Coefficient_B)
                     
                     y = linspace(min(obj(oi).Power), max(obj(oi).Power), 1e3);
                     coeffs = [obj(oi).Coefficient_A, obj(oi).Coefficient_B];
-%                     x = polyval(obj(oi).Coefficients, y);
-
                     switch obj(oi).Model
                         
                         case 'exponential'
@@ -302,9 +284,7 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
        maxP = arrayfun(@(x) max(x.Power), obj)';
        
        % Numeric vectors of optional values, with nan where empty
-%        r2 = [obj.R_Squared]';
        r2 = arrayfun(@(x) mean(x.R_Squared), obj)';
-%        tr = [obj.Trim]';
        tr = arrayfun(@(x) mean(x.Trim), obj)';
        obj = obj.displacementInVolume('Displacement'); 
        diM3 = arrayfun(@(x) mean(x.Displacement), obj)';
@@ -321,7 +301,8 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
        fprintf(1, '%s\t%s\t%s\t  %s\t  %s\t      %s\t%s\t%s\n',...
            'Coefficient A', 'Coefficient B', 'R Squared', 'MinPower',...
            'MaxPower', 'Trim', 'Displacement (m^3)', 'Name');
-       fprintf(1, '%11.10f\t%11.10f\t%9f\t%10.3f\t%10.3f\t%10f\t%10.3f\t\t\t%s\n', mat_c{:});
+       fprintf(1, '%11.10f\t%11.10f\t%9f\t%10.3f\t%10.3f\t%10f\t%10.3f\t\t\t%s\n',...
+           mat_c{:});
        
        end
     end
@@ -331,9 +312,6 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
        function spdt = speedPowerDraftTrim(obj)
           
            % Repeat all to the same size
-%            allLengths_c = arrayfun(@(x) length(x.Speed), obj, 'Uni', 0);
-%            numRows = sum([allLengths_c{:}]);
-           
            empties_c = arrayfun(@(x) [isempty(x.Speed), ...
                         isempty(x.Power),...
                         isempty(x.Displacement),...
@@ -346,17 +324,12 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
            currRow = 1;
            for oi = 1:numel(obj)
                 
-                
-%                 currOut_m = nan(numRows, numNonEmptyProps);
                 [out_c{:}] = cVessel.repeatInputs({obj(oi).Speed, obj(oi).Power,...
                     obj(oi).Displacement, obj(oi).Trim, obj(oi).Propulsive_Efficiency});
                 out_c = cellfun(@(x) x(:), out_c, 'Uni', 0);
-%                 currOut_m = [currOut_m; cell2mat(out_c)];'
-%                 currMat = cell2mat(out_c);
 
                 % Error can occur when some props not assigned to. Fix with
                 % replacing missing values in matrix with nan columns
-
                 currMat = [out_c{:}];
                 currNumRows = size(currMat, 1);
                 currOut_m(currRow : currRow + currNumRows - 1, :) = currMat;
@@ -388,10 +361,6 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
            if readSuperFirst_l
 
                % Read Super
-%                superTable_ch = [obj(1).OtherTable{:}];
-%                superTableID_ch = [obj(1).OtherTableIdentifier{:}];
-%                obj = select@cTableObject(obj, superTable_ch, superTableID_ch,...
-%                    varargin{3:end});
                spmID = [obj.Speed_Power_Coefficient_Model_Id];
                tab = cVesselSpeedPower.OtherTable{1};
                ident = cVesselSpeedPower.OtherTableIdentifier{1};
@@ -421,46 +390,11 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
                end
                [obj.Sync] = deal(true);
                
-%                modelTable_ch = obj.ModelTable;
-%                spmid = unique([obj.Speed_Power_Coefficient_Model_Id]);
-%                spmvID_sql = 'Speed_Power_Coefficient_Model_Value_Id';
-%                where_sql = [obj(1).OtherTableIdentifier{1}, ' = ', num2str(spmid)];
-%                [~, count_tbl] = obj(1).SQL.select(modelTable_ch, spmvID_sql, where_sql);
-%                if isempty(count_tbl)
-% 
-%                    spvmid = [];
-%                    return
-%                else
-% 
-%                    spvmid = count_tbl.speed_power_coefficient_model_value_id;
-%                end
-% 
-%                countSpmid = height(count_tbl);
-%                if isempty(obj) || isscalar(obj)
-% 
-%                    otherObj = cVesselSpeedPower('Size', [1, countSpmid-1]);
-%                    
-%                    obj = [obj, otherObj];
-%                    [obj.Name] = deal(obj(1).Name);
-%                    [obj.Description] = deal(obj(1).Description);
-%                    [obj.Deleted] = deal(obj(1).Deleted);
-% 
-%                elseif numel(obj) ~= countSpmid
-% 
-%                    errid = 'cVSP:SelectIntoExisting';
-%                    errmsg = ['If OBJ is non-scalar, OBJ must have as many '...
-%                        'elements as speed power curves in the selected model.'];
-%                    error(errid, errmsg);
-%                end
-%                return
-               
            elseif ~readSuperFirst_l && ~callBaseOnly_l
                
                tab = obj(1).ModelTable;
                identifier = obj(1).TableIdentifier;
-%                alias_c = varargin{4};
                alias_c = obj.propertyAlias;
-%                whereVal = varargin{3};
                whereVal = [obj.Model_ID];
                [obj.Sync] = deal(false);
                obj = select@cTableObject(obj, tab, identifier, [], alias_c,  whereVal);
@@ -468,10 +402,6 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
                tab = cVesselSpeedPower.ValueTable{1};
                identifier = obj(1).TableIdentifier;
                whereVal = [obj.Model_ID];
-%                if ~isempty([obj.Speed])
-%                    [obj.Speed] = deal([]);
-%                    [obj.Power] = deal([]);
-%                end
                obj = select@cTableObject(obj, tab, identifier, [], alias_c,  whereVal);
                [obj.Sync] = deal(true);
 
@@ -488,43 +418,6 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
                
                obj = select@cTableObject(obj, varargin{:});
            end
-           
-%            readModel_l = strcmpi(tab, obj(1).ModelTable);
-%            readValue_l = strcmpi(tab, obj(1).ValueTable{1});
-%            
-%            if readModel_l
-%                
-%            % Read Model, Value tables
-% %            [obj.Sync] = deal(false);
-%            cMidInput_c = varargin;
-%            cMidInput_c{1} = obj(1).ModelTable;
-%            cMidInput_c{2} = 'Speed_Power_Coefficient_Model_Value_Id'; %[varargin{2}] {1};
-%            cMidInput_c{3} = spmid;
-%            cMidInput_c{4} = {'Model_ID', 'Speed_Power_Coefficient_Model_Value_Id'}; %varargin{4}(1, :);
-%            if numel(cMidInput_c) == 5
-% 
-%                cMidInput_c(5) = [];
-%            end
-%            % Read Model, Value tables
-%            cMidInput_c{1} = obj(1).ValueTable{1};
-% %            cMidInput_c{2} = varargin{2}{2};
-% %            cMidInput_c{4} = varargin{4}(2, :);
-%            obj = select@cTableObject(obj, cMidInput_c{:});
-               
-    %            [obj.Sync] = deal(true);
-%            end
-%            % Assign model ID, this time with Sync on
-%            [obj.Sync] = deal(false);
-%                spvmid = [obj.Model_ID];
-%                [obj.Model_ID] = deal(spvmid(1));
-%            [obj.Sync] = deal(true);
-%            obj.select(tab, field, mid, alias_c, obj2_c);
-           
-%            % To actually get all spm
-%            spmvid = [obj.Speed_Power_Coefficient_Model_Id];
-%            
-%            
-           
        end
     end
     
@@ -537,7 +430,6 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
             [speed, power, draft, trim] = cVessel.repeatInputs({obj.Speed,...
                 obj.Power, obj.Trim, obj.Displacement});
             spdt = [speed(:), power(:), draft(:), trim(:)];
-            
         end
         
         function obj = set.Speed(obj, speed)
@@ -561,18 +453,6 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
         power = obj.Power;
         speed = speed(:)';
         power = power(:)';
-%         if ~isempty(power) && (~isempty(speed) && ~isempty(power))...
-%                 && ~isequal(size(power), size(speed))
-%             
-%             errID = 'cSP:SPSizeMismatch';
-%             errMsg = 'Speed vector length must match that of Power';
-%             error(errID, errMsg);
-%         end
-        
-        if ~isempty(speed)
-%             obj = obj.incrementModelID;
-        end
-        
         obj.Speed = speed;
         end
         
@@ -597,14 +477,6 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
         speed = obj.Speed;
         speed = speed(:)';
         power = power(:)';
-%         if ~isempty(power) && (~isempty(speed) && ~isempty(power))...
-%                 && ~isequal(size(power), size(speed))
-%             
-%             errID = 'cSP:SPSizeMismatch';
-%             errMsg = 'Power vector length must match that of Speed';
-%             error(errID, errMsg);
-%         end
-        
         obj.Power = power;
             
         end
@@ -650,18 +522,10 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
 
         function obj = set.Speed_Power_Source(obj, sps)
             
-%             if ~isempty(sps)
-%                 obj = obj.incrementModelID;
-%             end
-            
             obj.Speed_Power_Source = sps;
         end
         
         function obj = set.Propulsive_Efficiency(obj, propEff)
-            
-%             if ~isempty(propEff)
-%                 obj = obj.incrementModelID;
-%             end
             
             obj.Propulsive_Efficiency = propEff;
         end

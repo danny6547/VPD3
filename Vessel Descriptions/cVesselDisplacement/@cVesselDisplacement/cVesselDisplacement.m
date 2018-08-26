@@ -4,8 +4,6 @@ classdef cVesselDisplacement < cModelID & cVesselDisplacementConversion
     
     properties
         
-%         Name = '';
-%         Description = '';
         Displacement = [];
         Draft_Mean = [];
         Trim = [];
@@ -99,33 +97,17 @@ classdef cVesselDisplacement < cModelID & cVesselDisplacementConversion
        function obj = displacementInMass(obj)
        % displacementInMass Covert displacement units to those of mass
            
-           obj = displacementInMass@cVesselDisplacementConversion(obj, 'Displacement');
-%            newDisp_c = num2cell(newDisp_v);
-%            [obj.Displacement] = deal(newDisp_c{:});
+           obj = displacementInMass@cVesselDisplacementConversion(obj,...
+               'Displacement');
        end
        
        function obj = displacementInVolume(obj)
        % displacementInMass Covert displacement units to those of mass
            
-           obj = displacementInVolume@cVesselDisplacementConversion(obj, 'Displacement');
-%            newDisp_c = num2cell(newDisp_v);
-%            [obj.Displacement] = deal(newDisp_c{:});
+           obj = displacementInVolume@cVesselDisplacementConversion(obj,...
+               'Displacement');
        end
        
-%        function insertIntoTable(obj)
-%        % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs
-%            
-%            insertIntoTable@cModelID(obj);
-%            
-%            % ModelID subclass needs to write model name, description 
-%            % because cModelID cannot have those properties
-%            for oi = 1:numel(obj)
-%                
-%                currObj = obj(oi);
-%                insertIntoTable@cMySQL(currObj, currObj.ModelTable, [], ...
-%                    currObj.ModelField, currObj.Model_ID);
-%            end
-%        end
     end
     
     methods(Static)

@@ -9,7 +9,6 @@ classdef cVessel < cModelID
     properties
         
         IMO double = [];
-%         Name char = '';
         Vessel_Id double = [];
         Database char = '';
         
@@ -23,9 +22,6 @@ classdef cVessel < cModelID
         FuelType = 'HFO';
         
         Variable = 'speed_loss';
-%         Performance_Index
-%         Speed_Index
-%         DateTime_UTC
         TimeStep double = 1;
         InService;
         
@@ -40,8 +36,6 @@ classdef cVessel < cModelID
         DDIterator = [0, 1, 0];
         Info = [];
         PreviousConfiguration;
-%         StaticDB char = '';
-%         InServiceDB char = '';
     end
     
     properties(Dependent)
@@ -55,8 +49,6 @@ classdef cVessel < cModelID
         
         DDIntervals;
         numDDIntervals;
-%         StaticSQLDB = [];
-%         InServiceSQLDB = [];
     end
     
     properties(Access = private)
@@ -85,48 +77,24 @@ classdef cVessel < cModelID
        
        % Initialise Connections
        obj = obj@cModelID(varargin{:});
-       
-%         if nargin == 0
-% 
-%            obj = obj.assignDefaults();
-%            return
-%         end
 
         % Inputs
         p = inputParser();
         p.addParameter('IMO', []);
         p.addParameter('FileName', '');
-        p.addParameter('ShipData', []);
         p.KeepUnmatched = true;
-%         p.addParameter('Database', '');
         p.parse(varargin{:});
         res = p.Results;
-        
-%         % Re-assign DB
-%         if ~isempty(res.Database)
-%             
-%             obj.Database = res.Database;
-%         end
 
         imo = res.IMO;
-        shipDataInput = res.ShipData;
-
         imo_l = ~isempty(imo);
-        shipData_l = ~isempty(shipDataInput);
         readInputs_c = {imo};
         
         obj = obj.assignDefaults(varargin{:});
-%         obj.Database = obj.SQL.Database;
-        if ~imo_l && ~shipData_l
-            
+        if ~imo_l
             return
         end
 
-        % Data reading procedures must read all DD intervals
-        if shipData_l
-
-           validateattributes(shipDataInput, {'struct'}, {});
-        end
 
         if imo_l
 
@@ -142,41 +110,14 @@ classdef cVessel < cModelID
         end
 
         obj = obj.assignDefaults();
-        if shipData_l && ~imo_l
-
-           shipData = shipDataInput;
-%            indb = true(1, size(shipData, 2));
-            numOuts = numel(shipData);
-            obj(numOuts) = cVessel;
-            
-            validFields = {'DateTime_UTC', ...
-                            'Performance_Index',...
-                            'Speed_Index'};
-            inputFields = fieldnames(shipData);
-            fields2read = intersect(validFields, inputFields);
-
-            for ii = 1:numel(obj)
-                for fi = 1:numel(fields2read)
-
-                    currField = fields2read{fi};
-                    obj(ii).(currField) = shipData(ii).(currField);
-                    obj(ii).IMO_Vessel_Number = imo(ii);
-                    obj(ii).Particulars.IMO_Vessel_Number = imo(ii);
-                end
-            end
-        end
 
         % Get IMO from struct
-%         imo = deal([shipData(:).IMO_Vessel_Number]);
         if ~any(indb)
 
            size_c = num2cell(size(imo));
            obj(size_c{:}) = cVessel();
            imo_c = num2cell(imo);
            [obj.IMO] = deal(imo_c{:});
-           
-%            parts = [obj.Particulars];
-%            [parts.IMO_Vessel_Number] = deal(imo_c{:});
         else
             
             % Remove from array any without data
@@ -189,47 +130,6 @@ classdef cVessel < cModelID
                     'speed_index'};
             obj = obj.filterOnUniqueIndex(index_c, prop_c);
         end
-        
-        % Expand array to size of input data and assign known values
-%         numOuts = numel(shipData(:, indb));
-%         obj(numOuts) = cVessel;
-%         for ii = 1:numel(obj)
-% %             for fi = 1:numel(fields2read)
-% % 
-% %                 currField = fields2read{fi};
-% %                 obj(ii).(currField) = shipData(ii).(currField);
-%                 obj(ii).IMO_Vessel_Number = imo(ii);
-%                 obj(ii).Particulars.IMO_Vessel_Number = imo(ii);
-% %             end
-%         end
-        
-
-        % Error when inputs not recognised
-
-
-%         % Read Vessel static data from DB
-%         try
-%             obj = obj.readFromTable('Vessels', 'IMO_Vessel_Number');
-%             parts = obj.Particulars;
-%             parts.readFromTable('Vessels', 'IMO_Vessel_Number');
-%         catch ee
-%             
-%             if ~strcmp(ee.identifier, 'readTable:IdentifierDataMissing')
-%                 
-%                 rethrow(ee);
-%             end
-%         end
-%         
-%         for vi = 1:numel(obj)
-% 
-%             dd_v = cVesselDryDock();
-%             dd_v.IMO_Vessel_Number = obj(vi).IMO_Vessel_Number;
-%             dd_v = dd_v.readFromTable;
-%             obj(vi).DryDock = dd_v;
-%         end
-
-        % Read SpeedPower
-       
        end
        
        function obj = assignClass(obj, vesselclass)
@@ -272,7 +172,6 @@ classdef cVessel < cModelID
            
            if ~isempty([obj.Engine])
                
-%                obj.Engine.Engine_Model_Id = obj.Engine.Model_ID;
                obj.Engine.insert();
            end
            
@@ -318,104 +217,28 @@ classdef cVessel < cModelID
            end
        end
        
-       function obj = insertIntoVessels(obj)
-       % insertIntoVessels Insert vessel data into table 'Vessels'.
-       
-       % If wind model given, assign id to particulars
-       wind_cvw = [obj.WindCoefficient];
-       hasWind_l = ~cellfun(@isempty, {wind_cvw.Name});
-       wind_cv = obj(hasWind_l);
-       
-       for oi = 1:numel(wind_cv)
-           
-           wind_cv(oi).Particulars.Wind_Model_ID = ...
-               wind_cv(oi).WindCoefficient.Models_id;
-       end
-       
-       % Insert
-       parts = [obj.Particulars];
-       parts.insertIntoTable();
-           
-       obj.insertIntoTable();
-       
-       end
-       
-       function obj = insertIntoSFOCCoefficients(obj)
-       % insertIntoSFOCCoefficients Insert engine data into table
-       
-           dataObj = [obj.Engine];
-           dataObj(isempty(dataObj)) = [];
-           if ~isempty(dataObj)
-               tab = 'SFOCCoefficients';
-               obj.insertIntoTable(tab, dataObj, 'Engine_Model', {dataObj.Name});
-           end
-       end
-       
-%        function obj = insertIntoSpeedPower(obj)
-%        % insertIntoSpeedPower Insert speed, power, draft, trim data.
+%        function obj = insertIntoVessels(obj)
+%        % insertIntoVessels Insert vessel data into table 'Vessels'.
 %        
-%        % Insert into speedPower, speedPowerCoefficients, Models unless
-%        % empty
-%        sp = [obj.SpeedPower];
-%        if isempty(sp)
+%        % If wind model given, assign id to particulars
+%        wind_cvw = [obj.WindCoefficient];
+%        hasWind_l = ~cellfun(@isempty, {wind_cvw.Name});
+%        wind_cv = obj(hasWind_l);
+%        
+%        for oi = 1:numel(wind_cv)
 %            
-%            return
+%            wind_cv(oi).Particulars.Wind_Model_ID = ...
+%                wind_cv(oi).WindCoefficient.Models_id;
 %        end
 %        
-%        sp(isempty(sp)) = [];
-%        sp.insertIntoTable;
-%        
-%        % Insert into vesselspeedpowermodel
-%        nsp = arrayfun(@(x) numel(x.SpeedPower), obj);
-%        imo_c = arrayfun(@(x, y) repmat(x.IMO_Vessel_Number, 1, y), ...
-%            obj, nsp, 'Uni', 0);
-%        imo_v = [imo_c{:}];
-%        obj.insertIntoTable(...
-%            'vesselspeedpowermodel', sp, ...
-%            'IMO_Vessel_Number', imo_v,...
-%            'Speed_Power_Model', [sp.Models_id]);
+%        % Insert
+%        parts = [obj.Particulars];
+%        parts.insertIntoTable();
+%            
+%        obj.insertIntoTable();
 %        
 %        end
-       
-       function obj = insertBunkerDeliveryNote(obj)
-       % insertBunkerDeliveryNote Insert data from bunker delivery note.
-           
-           
-       end
-       
-       function obj = insertIntoDryDockDates(obj)
-       % insertIntoDryDocking Insert data into table "DryDockDates"
 
-           ddd = [obj.DryDock];
-           ddd.insertIntoTable();
-       end
-       
-        function obj = insertIntoWindCoefficients(obj)
-        % insertIntoWindCoefficient Insert data into wind coefficient table
-
-            windCoeffs_v = [obj.WindCoefficient];
-            windCoeffs_v(isempty(windCoeffs_v)) = [];
-            if numel(windCoeffs_v) > 0
-
-                windCoeffs_v.insertIntoTable();
-            end
-        end
-
-        function obj = insertIntoDisplacement(obj)
-        % insertIntoDisplacement Insert displacement data into DB.
-
-           if ~isempty([obj.Displacement])
-
-               objdisp = [obj.Displacement];
-               objdisp = objdisp.displacementInVolume();
-               objdisp.insertIntoTable();
-
-               objdisp.displacementInMass;
-               objdisp_c = num2cell(objdisp);
-               [obj.Displacement] = deal(objdisp_c{:});
-           end
-        end
-        
        function written = reportTable(obj, filename)
        % reportTable Write tables for report into xlsx file
        % written = reportTable(obj, filename) will write into partial or
@@ -530,7 +353,6 @@ classdef cVessel < cModelID
         
         % Load performance, speed files
         tempTab = 'tempDNVPer';
-%         permTab = 'DNVGLPerformanceData';
         permTab = 'PerformanceData';
         delimiter_ch = '\t';
         ignore_i = 1;
@@ -935,45 +757,6 @@ classdef cVessel < cModelID
         function [obj, rawTable] = rawData(obj, varargin)
         % rawData Get raw data for this vessel at this dry-docking interval
         
-%             % Get raw table name, performanceData inputs
-%             rawTable = strrep(obj(1).PerformanceTable, 'Performance',...
-%                 'Raw');
-%             [imo, ddi] = obj.currentIMODryDockIndex;
-%             [~, rawColumns] = obj(1).colNames(rawTable);
-%             excludedCols = {'id'};
-%             rawColumns = setdiff(rawColumns, excludedCols);
-%             inputs_c = {imo, ddi, rawColumns};
-%             
-%             % Get DDi, Vessel data from raw table using PerformanceTable
-%             % property
-%             perTable = obj(1).PerformanceTable;
-%             [obj.PerformanceTable] = deal(rawTable);
-%             rawStruc = obj(1).performanceData(inputs_c{:});
-%             [obj.PerformanceTable] = deal(perTable);
-%             
-%             % Convert raw datetime to datenum
-%             tempObj = obj;
-%             tempObj = tempObj.assignPerformanceData(rawStruc, 'DateTime_UTC');
-%             [rawStruc.DateTime_UTC] = deal(tempObj.DateTime_UTC);
-%             
-%             % Modify or Remove data affected not read directly from DB
-%             rawStruc = rmfield(rawStruc, 'DryDockInterval');
-%             dataField_c = setdiff(fieldnames(rawStruc), 'IMO_Vessel_Number');
-%             dataField1 = dataField_c{1};
-%             for ri = 1:numel(rawStruc)
-%                 
-%                 rawStruc(ri).IMO_Vessel_Number = ...
-%                     repmat(rawStruc(ri).IMO_Vessel_Number, 1, ...
-%                     length(rawStruc(ri).(dataField1)));
-%             end
-%             
-%             rawStruc = arrayfun(@(x) structfun(@(y) y(:), x, 'Uni', 0),...
-%                 rawStruc);
-%             
-%             % Table output: create vector cell of tables, vertically
-%             % concatenate them, return as vector of tables
-%             rawTable = struct2table(rawStruc);
-            
             cols = '*';
             if nargin > 1 && ~isempty(varargin{1})
                 
@@ -1137,8 +920,6 @@ classdef cVessel < cModelID
        % isPerDataEmpty True if performance data variable empty or NAN.
        
            vars = {obj.Variable};
-%            skip = arrayfun(@(x, y) isempty(x.(y{:})) || ...
-%                 all(isnan(x.(y{:}))), obj, vars);
            skip = arrayfun(@(x, y) isempty(x.InService.(y{:})) || ...
                 all(isnan(x.InService.(y{:}))), obj, vars);
        end
@@ -1260,20 +1041,11 @@ classdef cVessel < cModelID
         % Input
         validateattributes(index, {'char'}, {'vector'}, ...
             'filterOnUniqueIndex', 'index', 2);
-%         prop = validateCellStr(prop, 'filterOnUniqueIndex', 'prop', 3);
         
         % Iterate and filter non-unique indices of index data
         for ii = 1:numel(obj)
+            
             [~, uniIndexI] = unique(obj(ii).InService.(index));
-            
-%             for pi = 1:numel(prop)
-%                 
-%                 currData = obj(ii).(prop{pi});
-%                 obj(ii).(prop{pi}) = currData(uniIndexI);
-%             end
-%             
-%             obj(ii).(index) = uniIndex;
-            
             obj(ii).InService = obj(ii).InService(uniIndexI, :);
         end
         end
@@ -1375,11 +1147,10 @@ classdef cVessel < cModelID
            remainingAreEmpty_l = ~any(nonEmptyDDI_l(nextDDI_i:end));
            nextVessel_l = isempty(nextDDI_i) ||...
                nextDDI_i > length(nonEmptyDDI_l) || remainingAreEmpty_l;
-%            nextDDI_i = nonEmptyDD_i(currDDI+1:end);
            nextVessel = currVessel;
            
            % If the next DD interval has no corresponding data
-           if nextVessel_l % nextDDIEmpty_l % isempty(nextDDI_i)
+           if nextVessel_l
                
                % Continue looking for data in next vessels
                nextVessel = currVessel + 1;
@@ -1400,8 +1171,6 @@ classdef cVessel < cModelID
                % If no DD intervals remain with data, end iteration
                if ~dataFound_l
                    
-%                    nextVessel = numel(obj) + 1;
-%                    nextDDI_i = 1;
                    nextVessel = numel(obj);
                    nextDDI_i = obj(currVessel).numDDIntervals;
                end
@@ -1440,23 +1209,12 @@ classdef cVessel < cModelID
            data_l = DDI_l(:, ddiNonEmpty_i);
            
            % Temp code: build table from current data properties
-%            tbl = table(objDD.DateTime_UTC(data_l)',...
-%                objDD.Speed_Index(data_l)', ...
-%                'VariableNames', {'DateTime_UTC', 'Speed_Index'});
            tbl = objDD.InService(data_l, :);
            tbl = timetable2table(tbl);
            tbl.timestamp = datenum(tbl.timestamp);
         end
         
         function obj = assignDefaults(obj, varargin)
-            
-%             if nargin == 1
-%                 
-%                 for oi = 1:numel(obj)
-% 
-%                     obj(oi).SpeedPower = cVesselSpeedPower.empty();
-%                 end
-%             end
             
             % Iterate and assign
             for oi = 1:numel(obj)
@@ -1477,9 +1235,6 @@ classdef cVessel < cModelID
         % vessel_Id DB identifier for vessel, increment if necessary
             
             imo_ch = num2str(imo);
-%             sel_sql = ['SELECT * FROM Vessel WHERE IMO = ', imo_ch, ...
-%                 ' LIMIT 1'];
-%             vid_st = obj.execute(sel_sql);
             [~, vid_tbl] = obj.SQL.select('Vessel', '*', ...
                 ['IMO = ', imo_ch], 1);
             
@@ -1490,31 +1245,6 @@ classdef cVessel < cModelID
                 vid = vid_tbl.vessel_id;
             end
         end
-        
-%         function [dbconn, dbname] = validateSavedDB(obj, db, varargin)
-%         % validateSavedDB 
-%         
-%         % Check type and size
-%         if ischar(db)
-%             
-%             validateattributes(db, {'char', 'cConnectSQLDB'},...
-%                 {'vector'}, varargin{:});
-%             dbconn_c = obj.SQL.savedConnection(db);
-%             dbconn = cSQL.instantiateChildObj(dbconn_c{:});
-%             dbname = db;
-%             
-%         elseif isa(db, 'cConnectSQLDB')
-%             
-%             validateattributes(db, {'cConnectSQLDB'},...
-%                 {'scalar'}, varargin{:});
-%             dbconn = db;
-%             dbname = db.Database;
-%         else
-%             
-%             validateattributes(db, {'char', 'cConnectSQLDB'},...
-%                 {}, varargin{:});
-%         end
-%         end
     end
     
     methods(Static)
@@ -1524,7 +1254,7 @@ classdef cVessel < cModelID
     
     methods
         
-        function obj = set.Database(obj, dbname)
+       function obj = set.Database(obj, dbname)
         % Change database of object and all nested objects
         
         % Change DB connection for object and nested objects
@@ -1542,13 +1272,7 @@ classdef cVessel < cModelID
         obj.Owner.SavedConnection = dbname;
         
         obj.SavedConnection = dbname;
-        end
-       
-%         function dbname = get.DatabaseName(obj)
-%         % Take name of Database
-%             
-%             dbname = obj.Database;
-%         end
+       end
         
        function obj = set.IMO(obj, IMO)
            
@@ -1573,25 +1297,8 @@ classdef cVessel < cModelID
                return
            end
            
-%            obj.readFromTable('Vessel', 'IMO');
-%            
-%            imo_ch = num2str(IMO);
-%            [~, vess_tbl] = obj.select('Vessel', 'Vessel_Id',...
-%                ['IMO = ', imo_ch, ' AND Deleted = 0']);
-%            
-%            if isempty(vess_tbl)
-%                
-%                [~, newid_tbl] = obj.select('Vessel', 'MAX(Vessel_Id)+1');
-%                vid = str2double([newid_tbl{:, :}]);
-%                obj.Vessel_Id = vid;
-%            else
-%                
-%                vid = vess_tbl.Vessel_Id;
-%            end
-
            % Get Vessel_Id for given IMO
            [~, vid] = obj.vessel_Id(IMO);
-%            obj.Configuration.select('VesselConfiguration', 'Vessel_Id'
            obj.Model_ID = vid;
            obj.Vessel_Id = vid;
            
@@ -1623,7 +1330,6 @@ classdef cVessel < cModelID
 
                tab = 'VesselOwner';
                field = {'Vessel_Owner_Id'};
-%                obj.select(tab, field, [], alias_c, {obj.Owner}, 'Vessel_Owner_Id', obj.Owner.Model_ID);
                obj.select(tab, field, owner.Model_ID, alias_c, {owner});
            end
            
@@ -1631,7 +1337,6 @@ classdef cVessel < cModelID
            config = obj.Configuration;
            spmID = config.Speed_Power_Coefficient_Model_Id;
            sp = [obj.SpeedPower];
-%            [sp.Speed_Power_Coefficient_Model_Id] = deal(spmID);
            if ~isempty(spmID)
                
                % Assign super-model ID to obj and select using that
@@ -1641,28 +1346,7 @@ classdef cVessel < cModelID
                sp.Speed_Power_Coefficient_Model_Id = spmID;
                [sp.Sync] = deal(false);
                sp = sp.select();
-%                if isempty([sp.Speed_Power_Coefficient_Model_Id])
-% 
-%                    input_c = {sp(1).OtherTable, 'Speed_Power_Coefficient_Model_Id',... %sp(1).OtherTableIdentifier, ...
-%                        [], {}, [], sp(1).OtherTableIdentifier{1}, spmID};
-%                    sp = sp.select(input_c{:});
-%                end
-%                
-%                alias_c = sp.propertyAlias;
-%                [sp.Sync] = deal(false);
-%                input_c = {sp(1).ModelTable, sp(1).ModelField{1}, ...
-%                    [], alias_c, [], [], sp(1).OtherTableIdentifier{1}, spmID};
-%                sp = sp.select(input_c{:});
-%                
-%                % Check if ValueTable exists, currently doesn't in
-%                % hullperformance DB
-%                [~, isValueTable] = sp(1).SQL.isTable(sp(1).ValueTable{1});
-%                if isValueTable
-%                    
-%                    input_c = {sp(1).ValueTable{1}, sp(1).ModelField{2}, [], ...
-%                        alias_c};
-%                    sp = sp.select(input_c{:});
-%                end
+
                [sp.Sync] = deal(true);
                obj.SpeedPower = sp;
            end
@@ -1681,43 +1365,6 @@ classdef cVessel < cModelID
            
            % In-service
            obj = obj.selectInService;
-           
-%            sp = [obj.SpeedPower];
-%            [~, spvmid] = sp.select([], [], spmID);
-%            if ~isempty(spvmid)
-% 
-%                for spi = 1:numel(sp)
-%                    
-%                    sp(spi).Model_ID = spvmid(spi);
-%                end
-%                [obj.SpeedPower] = deal(sp);
-%            end
-           
-           % Assign Vessel_Id to each object identified by it
-%            
-%            obj = obj.checkModel('Vessel', 'IMO', IMO);
-%            vid = obj.Vessel_Id;
-%            
-%            field = 'Vessel_Id';
-%            obj.Configuration = obj.Configuration.checkModel('VesselConfiguration', field, vid);
-%            obj.Owner = obj.Owner.checkModel('VesselOwner', field, vid);
-%            obj.Info = obj.Info.checkModel('VesselInfo', field, vid);
-%            obj.DryDock = obj.DryDock.checkModel('DryDock', field, vid);
-           
-%            obj.Particulars.IMO_Vessel_Number = IMO;
-           
-%            % Apply to Speed, Power
-%            if ~isempty(IMO)
-%                
-%                sp = obj.SpeedPower;
-%                [sp.IMO_Vessel_Number] = deal(IMO);
-%                obj.SpeedPower = sp;
-%            end
-           
-%            if ~isempty(obj.DryDock)
-            
-%            [obj.DryDock(:).IMO_Vessel_Number] = deal(IMO);
-%            end
        end
        
        function obj = set.SpeedPower(obj, sp)
@@ -1730,82 +1377,18 @@ classdef cVessel < cModelID
            % Apply connection across array, if array was expanded from default
            obj.SpeedPower.copySQLToArray;
        end
-%        function obj = set.DateTime_UTC(obj, dates)
-%         % Set property method for DateTime_UTC
-%         
-%             dateFormStr = obj.DateFormStr;
-%             errid = 'ShipAnalysis:InvalidDateType';
-%             errmsg = ['Values representing dates must either be numeric '...
-%                 'MATLAB serial date values, strings representing those '...
-%                 'values or a cell array of strings representing those '...
-%                 'values.'];
-%             
-%             if iscell(dates)
-%                 
-%                 try dates = char(dates);
-%                     
-%                 catch e
-%                     
-%                     try allNan_l = all(cellfun(@isnan, dates));
-% 
-%                         if allNan_l
-%                             dates = [dates{:}];
-%                         end
-% 
-%                     catch ee
-%                         
-%                         error(errid, errmsg);
-%                     end
-%                 end
-%             end
-%             
-%             if ischar(dates)
-%                 date_v = datenum(char(dates), dateFormStr);
-%             elseif isnumeric(dates)
-%                 date_v = dates;
-%             else
-%                 error(errid, errmsg);
-%             end
-%             obj.DateTime_UTC = date_v(:)';
-%         
-%        end
-%        
-%        function obj = set.Performance_Index(obj, per)
-%            
-%            obj.Performance_Index = per(:)';
-%        end
-%        
-%        function obj = set.Speed_Index(obj, spe)
-%            
-%            obj.Speed_Index = spe(:)';
-%        end
-%        
+
        function obj = set.Variable(obj, variable)
        % Set property method for Variable
            
            obj.checkVarname( variable );
            obj.Variable = variable;
-           
        end
        
-%        function id = get.Wind_Model_ID(obj)
-%            
-%            id = [];
-%            if ~isempty(obj.WindCoefficient)
-%                
-%                id = obj.WindCoefficient.Models_id;
-%            end
-%        end
-
        function obj = set.WindCoefficient(obj, wc)
            
            validateattributes(wc, {'cVesselWindCoefficient'}, {'scalar'});
-           
-%            if ~isempty(wc.Name)
-               
-               obj.Configuration.Wind_Coefficient_Model_Id = wc.Model_ID;
-%            end
-           
+           obj.Configuration.Wind_Coefficient_Model_Id = wc.Model_ID;
            obj.WindCoefficient = wc;
        end
        
@@ -1834,12 +1417,6 @@ classdef cVessel < cModelID
        % Input
        validateattributes(ddd, {'cVesselDryDock'}, {});
        
-%        % Assign IMO
-%        imo = obj.IMO;
-%        if ~isempty(imo)
-%            [ddd.IMO_Vessel_Number] = deal(imo);
-%        end
-       
        % Assign object
        obj.DryDock = ddd;
        
@@ -1855,29 +1432,6 @@ classdef cVessel < cModelID
                'cVessel.set.Displacement', 'Displacement');
            obj.Displacement = disp;
        end
-       
-%        function obj = set.SpeedPower(obj, sp)
-%            
-%            % Input
-%            validateattributes(sp, {'cVesselSpeedPower'}, {'vector'});
-%            
-%            % Assign IMO
-%            imo = obj.IMO;
-%            if isempty(imo)
-%                
-%                newSp = cVesselSpeedPower();
-%            else
-%                
-%                newSp = sp.copy;
-%                [newSp.IMO_Vessel_Number] = deal(imo);
-%            end
-%            
-%            % Copy connection details to object
-% %            newSp = newSp.copyConnection(obj);
-%            
-%            % Assign object
-%            obj.SpeedPower = newSp;
-%        end
         
         function obj = set.DDIntervals(obj, ~)
         % Set method for DDIntervals prevents user assigning to it
@@ -1905,7 +1459,6 @@ classdef cVessel < cModelID
             
             mat = obj.DDIntervalsFromDates;
             ndd = sum(any(mat));
-%             ndd = numel(obj.DryDock) + 1;
         end
         
         end
@@ -1968,46 +1521,6 @@ classdef cVessel < cModelID
             ins = sortrows(ins);
             obj.InService = ins;
         end
-        
-%         function obj = set.SQL(obj, sql)
-%             
-%             obj.SQL = sql;
-%             obj.StaticDB = sql;
-%         end
-%         
-%         function obj = set.StaticDB(obj, db)
-%             
-%             dbconn = validateSavedDB(db, 'cVessel.StaticDB', 'StaticDB', 1);
-%             obj.StaticSQLDB = dbconn;
-%         end
-%         
-%         function sql = get.StaticSQLDB(obj)
-%             
-%             sql = obj.SQL;
-%         end
-%         
-%         function obj = set.StaticSQLDB(obj, sql)
-%             
-%             obj.SQL = sql;
-%         end
-        
-%         function obj = set.InServiceDB(obj, db)
-%             
-%             if isempty(db)
-%                 db = '';
-%             else
-%                 validateattributes(db, {'char'}, {'vector'});
-%             end
-%             obj.InServiceDB = db;
-%         end
-        
-%         function db = get.InServiceSQLDB(obj)
-%             
-%             dbname = obj.InServiceDB;
-%             dbconn = obj.validateSavedDB(dbname, 'cVessel.StaticDB',...
-%                 'StaticDB', 1);
-%             db = dbconn;
-%         end
         
         function str = get.DateFormStr(obj)
             

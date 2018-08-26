@@ -27,28 +27,11 @@ class_ch = class(obj);
 for oi = 2:nObj
    
     [~, ~, in] = obj(1).SQL.connectionData();
-%     cl = strcat('''', cl, '''');
     obj(oi) = eval([class_ch, '(',  in, ')']);
     obj(oi) = copyData(obj(1), obj(oi));
-    
-%     for pi = 1:numel(obj(1).DataProperty)
-%         
-%         currProp = obj(1).DataProperty{pi};
-%         obj(oi).(currProp) = obj(1).(currProp);
-%     end
 end
 
 % Assign connection properties
 [obj.SQL] = deal(sql);
 [obj.Sync] = deal(sync);
-
-
-% size_v = [1, nObj-1];
-% size_c = num2cell(size_v);
-% size_ch = sprintf('%u, ', size_v);
-% size_ch = ['[', size_ch, ']'];
-% input_ch = ['''Size'', ', size_ch];
-% constructor_ch = [class_ch, '(', input_ch, ');'];
-% obj2(size_c{:}) = eval(constructor_ch);
-
 end

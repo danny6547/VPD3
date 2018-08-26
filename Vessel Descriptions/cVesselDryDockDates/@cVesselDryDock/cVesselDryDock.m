@@ -15,7 +15,6 @@ classdef cVesselDryDock < cModelID & cDateConvert
         Average_Speed_Expected
         Activity_Expected
         Longest_Idle_Period_Expected
-%         Deleted = false;
     end
     
     properties(Hidden, Constant)
@@ -135,14 +134,6 @@ classdef cVesselDryDock < cModelID & cDateConvert
                     obj(oi).(currProp) = file_t{oi, currFileVar_i};
                 end
             end
-            
-%             obj(oi).StartDateNum = datenum(file_t.StartDate(oi)); %, dateform);
-%             obj(oi).EndDateNum = datenum(file_t.EndDate(oi)); %, dateform);
-%             
-%             obj(oi).Vertical_Bottom_Surface_Prep = file_t.VerticalBottomSurfacePrep{oi};
-%             obj(oi).Vertical_Bottom_Coating = file_t.VerticalBottomCoating{oi};
-%             obj(oi).Flat_Bottom_Surface_Prep = file_t.FlatBottomSurfacePrep{oi};
-%             obj(oi).Flat_Bottom_Coating = file_t.FlatBottomCoating{oi};
         end
         
        end
@@ -208,70 +199,6 @@ classdef cVesselDryDock < cModelID & cDateConvert
            obj(oi).DateStrFormat = currDateForm;
        end
        end
-       
-%        function obj = readFromTable(obj)
-%        % readFromTable
-%        
-%        % Can only read when object is empty to prevent overwriting
-%        if ~isempty(obj)
-%            
-%            errid = 'cDDD:overwrite';
-%            errmsg = ['Dry dock dates can only be read from table when '...
-%                'calling object is empty'];
-%            error(errid, errmsg);
-%        end
-%        
-%        % Need IMO number to look up table
-%        imo = obj(1).IMO_Vessel_Number;
-%        if isempty(imo)
-%            
-%            errid = 'cDDD:NoIMO';
-%            errmsg = ['Dry dock dates can only be read from table when '...
-%                'IMO Vessel Number is known.'];
-%            error(errid, errmsg);
-%        end
-%        
-%         % Read data from table
-%         tab = obj(1).DBTable;
-%         cols = {'StartDate', 'EndDate', 'Vertical_Bottom_Surface_Prep', ...
-%             'Vertical_Bottom_Coating', 'Flat_Bottom_Surface_Prep', ...
-%             'Flat_Bottom_Coating'};
-%         where_sql = ['IMO_Vessel_Number = ', num2str(imo)];
-%         [~, ddd_t] = obj(1).select(tab, cols, where_sql);
-%         
-%         % Return if no dry-dockings found for vessel
-%         if isempty(ddd_t)
-%             return
-%         end
-%         
-%         % Pre-allocate array of OBJ
-%         nObj = height(ddd_t);
-%         obj(nObj) = cVesselDryDockDates();
-%         [obj.IMO_Vessel_Number] = deal(imo);
-%         for ri = 1:nObj
-%             
-%             obj(ri).DateStrFormat = 'dd-mm-yyyy';
-%             obj(ri).StartDate = ddd_t.startdate(ri);
-%             obj(ri).EndDate = ddd_t.enddate(ri);
-%             obj(ri).Vertical_Bottom_Surface_Prep = ddd_t.vertical_bottom_surface_prep(ri);
-%             obj(ri).Vertical_Bottom_Coating = ddd_t.vertical_bottom_coating(ri);
-%             obj(ri).Flat_Bottom_Surface_Prep = ddd_t.flat_bottom_surface_prep(ri);
-%             obj(ri).Flat_Bottom_Coating = ddd_t.flat_bottom_coating(ri);
-%         end
-%        end
-      
-%        function insertIntoTable(obj)
-%            
-% %            dataObj = [obj.DryDockDates];
-%            obj(isempty(obj)) = [];
-%            if ~isempty(obj)
-% %                imo = [obj.IMO_Vessel_Number];
-% %                [dataObj.IMO_Vessel_Number] = deal(imo(:));
-% %                tab = 'DryDockDates';
-%                tab = obj(1).DBTable;
-%                insertIntoTable@cMySQL(obj, tab);
-%            end 
-%        end
     end
     
     methods(Hidden)

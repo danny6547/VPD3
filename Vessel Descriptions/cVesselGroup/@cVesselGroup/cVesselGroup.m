@@ -16,13 +16,6 @@ classdef cVesselGroup < cTableObject
         Modified_By;
     end
     
-%     properties(Hidden, Constant)
-%        
-%         ModelTable = 'Vessel';
-%         ModelField = 'Vessel_Id';
-%         ValueTable = {'VesselGroup'};
-%     end
-    
     methods
     
        function obj = cVesselGroup()
