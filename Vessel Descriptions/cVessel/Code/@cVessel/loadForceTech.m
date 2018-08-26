@@ -490,10 +490,10 @@ setnull_c = {...
 '`lower_calorific_value_for_hfo` = nullif(@`lower_calorific_value_for_hfo`,'''')'                                                      
     };
 
-obj = obj.SQL.loadInFile(filename, tab, cols, delimiter_ch, ignore_ch, set_ch, setnull_c);
+obj.SQL.loadInFile(filename, tab, cols, delimiter_ch, ignore_ch, set_ch, setnull_c);
 
 % Insert into RawData table
-obj.call('insertFromForceRawIntoRaw', imo_ch);
+obj.SQL.call('insertFromForceRawIntoRaw', imo_ch);
 
     function [success, message] = replaceCommaWithPoint(filename)
         
