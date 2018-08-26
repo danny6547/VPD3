@@ -39,6 +39,7 @@ classdef cVessel < cModelID
         DryDockIndexDB = [];
         DDIterator = [0, 1, 0];
         Info = [];
+        PreviousConfiguration;
 %         StaticDB char = '';
 %         InServiceDB char = '';
     end
@@ -1916,17 +1917,25 @@ classdef cVessel < cModelID
             obj.DDIterator = di;
         end
         
-%         function obj = set.Configuration(obj, part)
-%            
-%            validateattributes(part, {'cVesselParticulars'}, {'scalar'},...
-%                'cVessel.Particulars', 'Particulars');
-%            
-%            obj.Particulars = copy(part);
-%            if ~isempty(obj.IMO)
-%                
-%                obj.Particulars.IMO_Vessel_Number = obj.IMO;
-%            end
-%         end
+        function obj = set.Configuration(obj, config)
+           
+           % Validate
+           validateattributes(config, {'cVesselConfiguration'}, {});
+           
+           % Get most recent config and assign
+           recent_l = config.currentConfig;
+           obj.Configuration = config(recent_l);
+           obj.PreviousConfiguration = config(~recent_l);
+        end
+        
+        function obj = set.PreviousConfiguration(obj, config)
+            
+           % Validate
+           validateattributes(config, {'cVesselConfiguration'}, {});
+           
+           % Assign
+           obj.PreviousConfiguration = config;
+        end
         
         function obj = set.InService(obj, ins)
             

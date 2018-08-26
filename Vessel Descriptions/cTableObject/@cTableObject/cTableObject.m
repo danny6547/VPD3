@@ -518,12 +518,15 @@ classdef cTableObject < handle
 
         if expandArray_l
             
-            obj = obj.matchArraySizeToSelect(lowerId_ch, table_st);
+            modCol_ch = lower(obj(1).TableIdentifier);
+            obj = obj.matchArraySizeToSelect(modCol_ch, table_st);
+            lowerId_ch = modCol_ch;
         end
         
         % Create arrays to track whether object data has changed by read
         %         fielddiff = true(length(matchField_c), numel(obj));
-        idVal_c = unique(table_st.(lowerId_ch));
+        
+            idVal_c = table_st.(lowerId_ch);
         
 %         if idValInObj_l
 %             

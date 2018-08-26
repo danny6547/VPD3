@@ -17,11 +17,11 @@ classdef cVesselInfo < cModelID & cDateConvert
         DataProperty = {'Valid_From', 'Vessel_Name', 'Deleted',...
                         'Model_ID', 'Vessel_Info_Id'};
         
-        ModelTable = '';
+        ModelTable = 'VesselInfo';
         ValueTable = {};
         ValueObject = {};
-        ModelField = {};
-        TableIdentifier = 'Vessel_Id';
+        ModelField = {'Vessel_Id'};
+        TableIdentifier = 'Vessel_Info_Id';
         NameAlias = 'Vessel_Name';
         OtherTable = '';
         OtherTableIdentifier = '';

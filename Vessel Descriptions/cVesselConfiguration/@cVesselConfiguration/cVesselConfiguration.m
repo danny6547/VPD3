@@ -61,10 +61,10 @@ classdef cVesselConfiguration < matlab.mixin.Copyable & cModelID & cDateConvert
         ModelTable = 'VesselConfiguration';
         ValueTable = {};
         ValueObject = {};
-        ModelField = {'Vessel_Configuration_Id'};
+        ModelField = {'Vessel_Id'};
         OtherTable = {};
         OtherTableIdentifier = {};
-        TableIdentifier = 'Vessel_Id';
+        TableIdentifier = 'Vessel_Configuration_Id';
         NameAlias = 'Vessel_Configuration_Description';
         EmptyIgnore = {'Deleted', 'R_Squared'};
     end

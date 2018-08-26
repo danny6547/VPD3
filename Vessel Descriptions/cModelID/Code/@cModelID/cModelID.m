@@ -331,7 +331,7 @@ classdef (Abstract) cModelID < cTableObject & handle
     
     methods(Hidden)
         
-        function [obj, inDB] = select(obj, tab, field, varargin)
+        function [obj, inDB, allObj] = select(obj, tab, field, varargin)
         % checkModel Check if model in DB and read
 
         % Input
@@ -457,6 +457,7 @@ classdef (Abstract) cModelID < cTableObject & handle
 %             alias_c = repmat(alias_c, [size(tab, 1), 1]);
 %         end
 
+        allObj = cell(1, numel(dataObj_c));
         for oi = 1:numel(dataObj_c)
 
             % Index
@@ -489,6 +490,7 @@ classdef (Abstract) cModelID < cTableObject & handle
 %              mid = currObj.Model_ID;
             midi = mid{oi};
             [currObj.Sync] = deal(false);
+            expand_l = true;
             [currObj, inDB] = select@cTableObject(currObj, currTab,...
                         currField, '', currAlias_c, midi, expand_l, additional{:});
             [currObj.Sync] = deal(true);
@@ -521,7 +523,7 @@ classdef (Abstract) cModelID < cTableObject & handle
         %             end
 
             % Assign
-%             obj(oi) = currObj;
+            allObj{oi} = currObj;
         end
         
         % Assign
@@ -603,8 +605,14 @@ classdef (Abstract) cModelID < cTableObject & handle
                 alias_c = obj.propertyAlias;
 
                 % Select data matching Model ID value
-                obj.select(tab, field, mid, alias_c, obj2_c);
-
+                [~, ~, obj_c] = obj.select(tab, field, mid, alias_c, obj2_c);
+                
+                % Assign child objects
+                for ci = 1:numel(obj2Name_c)
+                    
+                    currProp = obj2Name_c{ci};
+                    obj.(currProp) = obj_c{ci+1};
+                end
             end
 %             if ~inDB
 %                 
