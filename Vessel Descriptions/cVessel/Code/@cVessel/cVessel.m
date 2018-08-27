@@ -335,7 +335,10 @@ classdef cVessel < cModelID
                 tabfile = filename;
             elseif strcmpi(ext, '.xlsx') 
 
-                tabfile = strrep(filename, file, ['temp', file]);
+                [p, f] = fileparts(filename);
+                tabfile = ['temp', f, '.tab'];
+                tabfile = fullfile(p, tabfile);
+%                 tabfile = strrep(filename, file, ['temp', file]);
                 tabfile = strrep(tabfile, ext, '.tab');
                 if exist(tabfile, 'file') == 2
                     delete(tabfile);
