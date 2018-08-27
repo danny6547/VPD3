@@ -1,4 +1,4 @@
-function [trading_tbl, idleDD_tbl, idleQuart_tbl] = activityFromVesselTrackerXLSX(filename, dd, varargin)
+function [trading_tbl, idleDD_tbl, idleQuart_tbl, speed_tbl] = activityFromVesselTrackerXLSX(filename, dd, varargin)
 %activityFromVesselTrackerXLSX Activity data from XLSX file containing AIS
 %   Detailed explanation goes here
 % Idle times are when speed is below 2 knots
@@ -27,6 +27,7 @@ dd_l = f.datetime >= dd;
 dd_tbl = f(dd_l, :);
 quart_l = f.datetime >= f.datetime(end) - 365.25/4;
 quart_tbl = f(quart_l, :);
+speed_tbl = f;
 
 % Average speed in each duration, after filtering idle times
 avgDD = varfun(@mean, dd_tbl(~dd_tbl.idle, :), ...

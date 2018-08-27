@@ -366,7 +366,7 @@ classdef cVessel < cModelID
             currCols_cc = textscan(currTabid, '%s', 3);
             fclose(currTabid);
             currCols_c = [currCols_cc{:}];
-            obj = obj.loadInFileDuplicate(currTab, currCols_c, tempTab,...
+            obj.SQL.loadInFileDuplicate(currTab, currCols_c, tempTab,...
                 permTab, delimiter_ch, ignore_i);
         end
 
@@ -1249,7 +1249,8 @@ classdef cVessel < cModelID
     
     methods(Static)
         
-        [trading_tbl, idleDD_tbl, idleQuart_tbl] = activityFromVesselTrackerXLSX(filename, dd, varargin);
+        [trading_tbl, idleDD_tbl, idleQuart_tbl, speed_tbl] = ...
+            activityFromVesselTrackerXLSX(filename, dd, varargin);
     end
     
     methods
@@ -1516,8 +1517,7 @@ classdef cVessel < cModelID
                 ins = table2timetable(ins, 'RowTimes', 'timestamp');
             end
             
-            validateattributes(ins, {'timetable'}, {}, ...
-                'cVessel.Particulars', 'Particulars');
+            validateattributes(ins, {'timetable'}, {});
             ins = sortrows(ins);
             obj.InService = ins;
         end

@@ -518,7 +518,7 @@ classdef cTableObject < handle
            return
        end
        
-       allOtherSQLEmpty = all(isempty(obj(2:end).SQL));
+       allOtherSQLEmpty = all( arrayfun(@isempty, [obj(2:end).SQL]) );
        if ~allOtherSQLEmpty
            
            return

@@ -12,8 +12,8 @@ avg = nan(1, 2);
 
 if nargin > 1
     
-    stw = varargin{1};
-    dates_v = varargin{2};
+    dates_v = varargin{1};
+    stw = varargin{2};
     
 else
 

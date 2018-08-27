@@ -97,7 +97,7 @@ while obj.iterateDD
     [currDD_tbl, currObj, ddi, vi] = obj.currentDD;
     
     % Index into input and get dates
-    currDate = currDD_tbl.datetime_utc;
+    currDate = currDD_tbl.timestamp;
     currPerf = currDD_tbl.(currObj.Variable);
 
     % Remove duplicate date data (redundant when no duplicates in db)
