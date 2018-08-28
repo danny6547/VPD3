@@ -10,7 +10,7 @@ validateattributes(order, {'numeric'}, {'positive', 'integer'}, 'regressions',..
 while obj.iterateDD
     
     [currDD_tbl, currObj_cv, ddi] = obj.currentDD;
-    x = datenum(currDD_tbl.datetime_utc);
+    x = datenum(currDD_tbl.timestamp);
     y = currDD_tbl.(currObj_cv.Variable);
     
     nany = isnan(y);

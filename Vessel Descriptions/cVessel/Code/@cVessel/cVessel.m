@@ -1531,7 +1531,7 @@ classdef cVessel < cModelID
                 
                 case 'cTSQL'
                     
-                    str = 'yyyy-MM-dd HH:mm:ss.SSSSSSS';
+                    str = 'yyyy-MM-dd HH:mm:ss.FFF';
                     
                 case 'cMySQL'
                     
