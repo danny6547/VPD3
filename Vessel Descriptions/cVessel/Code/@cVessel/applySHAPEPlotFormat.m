@@ -39,7 +39,14 @@ lines_h = findall(ax, 'Type', 'Line');
 lines_h = lines_h(end:-1:1);
 
 col_m = [0.1, 0.2, 0.7; 0.2, 0.7, 0.2];
-for li = 1:numel(lines_h)
+% for li = 1:numel(lines_h)
+%     
+%     set(lines_h(li), 'Color', col_m(li, :));
+% end
+
+ddLines = findall(lines_h, 'LineStyle', 'none');
+for li = 1:numel(ddLines)
     
-    set(lines_h(li), 'Color', col_m(li, :));
+    set(ddLines(li), 'Color', col_m(li, :));
 end
+% avgLines = findall(lines_h, 'LineStyle', '-');
