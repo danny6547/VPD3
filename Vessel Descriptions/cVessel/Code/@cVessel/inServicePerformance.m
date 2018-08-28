@@ -106,7 +106,7 @@ while obj.iterateDD
         servStruct.ReferenceValue = Duration_st(1).Average;
         servStruct.EvaluationDuration = Duration_st(2).EndDate - Duration_st(2).StartDate;
         servStruct.EvaluationValue = Duration_st(2).Average;
-        servStruct.InservicePerformance = servStruct.ReferenceValue - servStruct.EvaluationValue;
+        servStruct.InservicePerformance = servStruct.EvaluationValue - servStruct.ReferenceValue;
         inserv(ddi).DryDockInterval = servStruct;
         currVessel.Report.InServicePerformance(ddi) = servStruct;
 %         

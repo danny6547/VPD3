@@ -73,8 +73,9 @@ while obj.iterateDD
    interval = struct('Duration', [], 'Units', [], 'StartDate', [], 'EndDate', []);
    interval.Duration = duration;
    interval.Units = units;
-   interval.StartDate = datestr(min(dates), currVessel.DateFormStr);
-   interval.EndDate = datestr(max(dates), currVessel.DateFormStr);
+   dt = datetime([min(dates), max(dates)], 'ConvertFrom', 'datenum');
+   interval.StartDate = char(dt(1), currVessel.DateFormStr);
+   interval.EndDate = char(dt(2), currVessel.DateFormStr);
    
    % Assign into output
    servStruct(vi).DryDockInterval(ddi) = interval;
