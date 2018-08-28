@@ -950,11 +950,21 @@ classdef cDB
        % Create database for hull performance data provided by DNVGL
        
        % Assign DB?
-       database = 'dnvgl';
-       obj.Database = database;
+       dbname = 'dnvgl';
+%        obj.SQL.Database = database;
        
        if obj.BuildSchema
            
+           % Create Database
+           sql = obj.SQL;
+           sql.drop('DATABASE', dbname, true);
+           sql.Database = 'sys';
+           [~, connInput_c] = sql.connectionData;
+           sql = cMySQL(connInput_c{:});
+           sql.createDatabase(dbname, true);
+           sql = cMySQL('SavedConnection', dbname);
+           obj.SQL = sql;
+
            % Create tables
            topleveldir = obj.TopLevelDir;
 
@@ -964,6 +974,7 @@ classdef cDB
                                 'createTempRaw.sql'
                                 'insertFromDNVGLRawIntoRaw.sql'
                                 'updateFromBunkerNote.sql'
+                                'createrawdata'
                                 'knots2mps.sql'
                                 'bar2Pa.sql'};
            createFiles1_c = cellfun(@(x) fullfile(topleveldir, ISODir, x), ...
@@ -988,7 +999,7 @@ classdef cDB
 
            % Create procedures for creating tables
            createFiles_c = [createFiles1_c; createFiles2_c; createFiles3_c];
-           obj.source(createFiles_c);
+           obj.SQL.source(createFiles_c);
 
            % Create tables
            createProc_c = {...
@@ -996,11 +1007,11 @@ classdef cDB
                            'createDNVGLRawTempTable'
                            'createDNVGLRaw'
                            'createPerformanceData'
-                           'createrawdata'
+%                            'createrawdata'
                            };
 
            % Check there are as many proc as files
-           cellfun(@(x) obj.call(x), createProc_c, 'Uni', 0);
+           cellfun(@(x) obj.SQL.call(x), createProc_c, 'Uni', 0);
        end
 %        
 %        if obj.LoadPerformance
