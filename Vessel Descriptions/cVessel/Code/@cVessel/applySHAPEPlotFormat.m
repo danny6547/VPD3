@@ -18,10 +18,10 @@ currLines = findall(ax, 'Type', 'line');
 
 set(currLines, 'MarkerSize', 2.25);
 currFig = get(gca, 'Parent');
-set(gcf, 'Color', [1, 1, 1]);
+set(currFig, 'Color', [1, 1, 1]);
 datetick('x', 'QQ-YYYY');
 
-set(get(ax, 'YLabel'), 'String', 'Speed Loss (%)');
+set(get(ax, 'YLabel'), 'String', 'Speed Deviation (%)');
 set(get(ax, 'Title'), 'String', '');
 
 set(ax, 'XGrid', 'on');

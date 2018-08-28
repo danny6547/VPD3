@@ -29,14 +29,15 @@ obj.InService = dnvtbl;
 obj.Variable = 'speed_index';
 obj = obj.inServicePerformance;
 obj = obj.plotPerformanceData;
+obj.applySHAPEPlotFormat;
 [obj, avgQuarter_st] = obj.movingAverage(365.25/4, true, false, false);
 dd = datetime(obj.DryDock(1).End_Date, 'InputFormat', 'yyyy-mm-dd');
-if isempty(activityFileName)
+if~isempty(activityFileName)
     
     [tbl5, idleDD_tbl, ~, speed_tbl] = ...
         obj.activityFromVesselTrackerXLSX(activityFileName, dd);
     stw = speed_tbl.speed;
     dates = speed_tbl.datetime;
     obj.speedHistogram(dates, stw);
-    obj.plotSTW(dates, stw);
+    obj.plotSTW(dates, stw, false);
 end
