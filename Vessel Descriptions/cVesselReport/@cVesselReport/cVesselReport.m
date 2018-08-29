@@ -73,22 +73,29 @@ classdef cVesselReport < cMySQL
            % Get Savings estimate
            [~, savings] = cv.estimatedFuelConsumption(varargin{:});
            fuel = savings.DryDockInterval(end).Fuel;
-           fuelpc = savings.DryDockInterval(end).Fuelpc*1e2;
-           jf=java.text.DecimalFormat;
-           jfdec = get(jf, 'DecimalFormatSymbols');
-           set(jfdec, 'DecimalSeparator', '.');
-           set(jfdec, 'GroupingSeparator', ',');
-           set(jf, 'DecimalFormatSymbols', jfdec);
-           set(jf, 'MaximumFractionDigits', 0);
-           fuel_ch = char(jf.format(fuel));
-%            fuel_ch(end-2:end) = [];
-           fuel_ch = [fuel_ch, ' $'];
-           fuelPC_ch = sprintf(' (%3.2f%%)', fuelpc);
-           fuel_ch = [fuel_ch, fuelPC_ch];
+           if ~isempty(fuel)
+               fuelpc = savings.DryDockInterval(end).Fuelpc*1e2;
+               jf=java.text.DecimalFormat;
+               jfdec = get(jf, 'DecimalFormatSymbols');
+               set(jfdec, 'DecimalSeparator', '.');
+               set(jfdec, 'GroupingSeparator', ',');
+               set(jf, 'DecimalFormatSymbols', jfdec);
+               set(jf, 'MaximumFractionDigits', 0);
+               fuel_ch = char(jf.format(fuel));
+    %            fuel_ch(end-2:end) = [];
+               fuel_ch = [fuel_ch, ' $'];
+               fuelPC_ch = sprintf(' (%3.2f%%)', fuelpc);
+               fuel_ch = [fuel_ch, fuelPC_ch];
+              
+               co2 = savings.DryDockInterval(end).CO2;
+               co2_ch = char(jf.format(co2));
+               co2_ch = [co2_ch, ' tn'];
+           else
+               
+               fuel_ch = '';
+               co2_ch = '';
+           end
            
-           co2 = savings.DryDockInterval(end).CO2;
-           co2_ch = char(jf.format(co2));
-           co2_ch = [co2_ch, ' tn'];
            
            % Get last quarter average
            [~, avgQuarter_st] = cv.movingAverage(365.25/4, true, false, false);
