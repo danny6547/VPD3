@@ -1108,7 +1108,7 @@ classdef cDB
        
        function Insert_ISO15016_Wind_Data()
           
-           dbstatic = 'Static';
+           dbstatic = 'static';
            windData_m = [...
             0	-0.019146806	-0.677665	-1.03173	-0.986038	-0.875632
             7.5	7.434988	-0.74222815	-1.07344	-0.978263	-0.825984
@@ -1127,56 +1127,27 @@ classdef cDB
             180	179.82368	0.6472055	0.925114	0.879426	0.86039];
             dir = windData_m(:, 1);
 
-            obj_wnd = cVesselWindCoefficient();
-            obj_wnd.Database = dbstatic;
+            obj_wnd = cVesselWindCoefficient('SavedConnection', dbstatic);
             obj_wnd.Direction = dir;
             obj_wnd.Coefficient = windData_m(:, 3);
-            obj_wnd = obj_wnd.mirrorAlong180;
             obj_wnd.Name = 'ISO15016 Container Vessel 1';
             obj_wnd.Description = 'Container Vessel 6800TEU, Laden with containers';
-            obj_ves = cVessel();
-            obj_ves.Database = dbstatic;
-            obj_ves.WindCoefficient = obj_wnd;
-            obj_ves.insertIntoWindCoefficients;
 
-            obj_wnd = cVesselWindCoefficient();
-            obj_wnd.Database = dbstatic;
-            obj_wnd.Direction = dir;
-            obj_wnd.Coefficient = windData_m(:, 4);
-            obj_wnd = obj_wnd.mirrorAlong180;
-            obj_wnd.Name = 'ISO15016 Container Vessel 2';
-            obj_wnd.Description = 'Container Vessel 6800TEU, Laden without containers, with lashing bridges';
-            obj_ves = cVessel();
-            obj_ves.Database = dbstatic;
-            obj_ves.WindCoefficient = obj_wnd;
-            obj_ves.insertIntoWindCoefficients;
+            obj_wnd(2).Direction = dir;
+            obj_wnd(2).Coefficient = windData_m(:, 4);
+            obj_wnd(2).Name = 'ISO15016 Container Vessel 2';
+            obj_wnd(2).Description = 'Container Vessel 6800TEU, Laden without containers, with lashing bridges';
 
-            obj_wnd = cVesselWindCoefficient();
-            obj_wnd.Database = dbstatic;
-            obj_wnd.Direction = dir;
-            obj_wnd.Coefficient = windData_m(:, 5);
-            obj_wnd = obj_wnd.mirrorAlong180;
-            obj_wnd.Name = 'ISO15016 Container Vessel 3';
-            obj_wnd.Description = 'Container Vessel 6800TEU, Laden without containers, with lashing bridges';
-            obj_ves = cVessel();
-            obj_ves.Database = dbstatic;
-            obj_ves.WindCoefficient = obj_wnd;
-            obj_ves.insertIntoWindCoefficients;
+            obj_wnd(3).Direction = dir;
+            obj_wnd(3).Coefficient = windData_m(:, 5);
+            obj_wnd(3).Name = 'ISO15016 Container Vessel 3';
+            obj_wnd(3).Description = 'Container Vessel 6800TEU, Laden without containers, with lashing bridges';
 
-            obj_wnd = cVesselWindCoefficient();
-            obj_wnd.Database = dbstatic;
-            obj_wnd.Direction = dir;
-            obj_wnd.Coefficient = windData_m(:, 6);
-            obj_wnd = obj_wnd.mirrorAlong180;
-            obj_wnd.Name = 'ISO15016 Container Vessel 4';
-            obj_wnd.Description = 'Container Vessel 6800TEU, Ballast without containers, without lashing bridges';
-            obj_ves = cVessel();
-            obj_ves.Database = dbstatic;
-            obj_ves.WindCoefficient = obj_wnd;
-            obj_ves.insertIntoWindCoefficients;
+            obj_wnd(4).Direction = dir;
+            obj_wnd(4).Coefficient = windData_m(:, 6);
+            obj_wnd(4).Name = 'ISO15016 Container Vessel 4';
+            obj_wnd(4).Description = 'Container Vessel 6800TEU, Ballast without containers, without lashing bridges';
 
-            wind9200 = cVesselWindCoefficient();
-            wind9200.Database = 'test16';
             dirCoeffs = ...
             [
             0	-0.9724771
@@ -1196,16 +1167,11 @@ classdef cDB
             179.92351	0.9105505
             ];
             directions = [0 7.5 15 22.5 30 45 60 75 90 105 120 135 150 165 180];
-            wind9200.Direction = directions;
-            wind9200.Coefficient = dirCoeffs(:, 2);
-            wind9200 = wind9200.mirrorAlong180;
-            wind9200.Name = 'ISO15016 Container Vessel 5';
-            wind9200.Description = ['Container Vessel 6800TEU, Ballast '...
+            obj_wnd(5).Direction = directions;
+            obj_wnd(5).Coefficient = dirCoeffs(:, 2);
+            obj_wnd(5).Name = 'ISO15016 Container Vessel 5';
+            obj_wnd(5).Description = ['Container Vessel 6800TEU, Ballast '...
                 'without containers, with lashing bridges'];
-            obj_ves = cVessel();
-            obj_ves.Database = dbstatic;
-            obj_ves.WindCoefficient = obj_wnd;
-            obj_ves.insertIntoWindCoefficients;
 
             tankersBallastConventional = [...
                 0.0474177	-0.871362
@@ -1228,17 +1194,10 @@ classdef cDB
             171.419	0.549264
             181.132	0.522717
             ];
-            obj_wnd = cVesselWindCoefficient();
-            obj_wnd.Database = dbstatic;
-            obj_wnd.Direction = 0:10:180;
-            obj_wnd.Coefficient = tankersBallastConventional(:, 2);
-            obj_wnd = obj_wnd.mirrorAlong180;
-            obj_wnd.Name = 'ISO15016 Tanker 1';
-            obj_wnd.Description = 'Tankers in ballast with conventinoal bow';
-            obj_ves = cVessel();
-            obj_ves.Database = dbstatic;
-            obj_ves.WindCoefficient = obj_wnd;
-            obj_ves.insertIntoWindCoefficients;
+            obj_wnd(6).Direction = 0:10:180;
+            obj_wnd(6).Coefficient = tankersBallastConventional(:, 2);
+            obj_wnd(6).Name = 'ISO15016 Tanker 1';
+            obj_wnd(6).Description = 'Tankers in ballast with conventinoal bow';
 
             generalCargo = [....
                 -0.60115	0
@@ -1260,17 +1219,14 @@ classdef cDB
             0.885803	160
             0.770147	170
             ];
-            obj_wnd = cVesselWindCoefficient();
-            obj_wnd.Database = dbstatic;
-            obj_wnd.Direction = [0:10:120, 140:10:180];
-            obj_wnd.Coefficient = generalCargo(:, 1);
+            obj_wnd(7).Direction = [0:10:120, 140:10:180];
+            obj_wnd(7).Coefficient = generalCargo(:, 1);
+            obj_wnd(7).Name = 'ISO15016 General Cargo Vessel 1';
+            obj_wnd(7).Description = 'General Cargo Vessel';
+
             obj_wnd = obj_wnd.mirrorAlong180;
-            obj_wnd.Name = 'ISO15016 General Cargo Vessel 1';
-            obj_wnd.Description = 'General Cargo Vessel';
-            obj_ves = cVessel();
-            obj_ves.Database = dbstatic;
-            obj_ves.WindCoefficient = obj_wnd;
-            obj_ves.insertIntoWindCoefficients;
+            [obj_wnd(2:end).SQL] = deal(obj_wnd(1).SQL);
+            obj_wnd.insert;
        end
        
        function loadHempelModel
@@ -1299,6 +1255,29 @@ classdef cDB
            funcname = stack(1).name;
            validateattributes(dbname, {'char'}, {'vector'}, funcname,...
                'dbname', 1);
+       end
+       
+       function insertEmptyModels(dbname)
+           
+           disp = cVesselDisplacement('SavedConnection', dbname);
+           disp.Name = 'No Displacement Model';
+           disp.insert;
+           
+           engine = cVesselEngine('SavedConnection', dbname);
+           engine.Engine_Model = 'No Engine Model';
+           engine.Highest_Given_Brake_Power = 0;
+           engine.Lowest_Given_Brake_Power = 0;
+           engine.Minimum_FOC_ph = 0;
+           engine.X0 = 0;
+           engine.X1 = 0;
+           engine.X2 = 0;
+           engine.insert;
+           
+           wind = cVesselWindCoefficient('SavedConnection', dbname);
+           wind.Name = 'No Wind Model';
+           wind.Coefficient = 0;
+           wind.Direction = 0;
+           wind.insert;
        end
     end
 end
