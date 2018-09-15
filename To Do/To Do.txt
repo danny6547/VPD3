@@ -901,12 +901,26 @@ Process ISO19030: keep analysis administration tables and procedures? (what was 
 ?How to "check-out" vessel from one DB to another? (problems start with conflicting modelIDs. Wipe all ModelIDs?)
 error: too many connections with 10 or so vessels. What is global variable code doing?
 DB: replace force.rawdata with delegate spec rawdata table
-
-
-
-
-
-
+Error: cV.selectInService when DAY(Timestamp) = 0
+cV.Name: allow user to set and get cV.Info.Name via this property
+Error: cV.insert when any cTO has an empty string for property value and cV not in DB already (otherwise, it will have NaN after selection)
+Error: cVD.insert fails to write data for more than one trim value when "grid" displacements given (at least one constraint will have to be removed, probably Draft_Mean, Model_Id)
+Error: cVSP.selectByName() fails for Berge Kinabalu model.
+Store data for each savedConnection:
+	e.g. DNVGL, hullperformance
+	InServiceTable: PerformanceData, CalculatedData
+	InServiceIdentifierColumn: IMO_Vessel_Number, Vessel_Id
+	InServiceIdentifierProperty: IMO_Vessel_Number, Vessel_Id
+cV.selectInService:
+	find .Database in InServiceParameters, error if not found
+	input RAWTABLE logical scalar, if true, change name of raw table to join on and use appropriate JoinColumns
+		change from first to second index of Raw field of InServiceIdentifierColumn
+	Depending on input READRAW
+		call select on InServiceTable JOIN RawTable where InServiceIdentifierColumn = this OBJ's InServiceIdentifierProperty
+	assign to InServiceIdentifierColumn to .Variable
+# cSQL.join(tab1, col1, tab2, col2, joinOn1, joinOn2)	
+cV.disp: show size of InService.Data, rather than InService
+Error: cV.set.IMO when cV.Database = 'dnvgl'. When should cMID.select functionality be called?
 
 
 
