@@ -159,6 +159,11 @@ for fi = 1:numel(filename)
 %         tabColNames = p.Results.tabColNames;
         SetSQL = p.Results.SetSQL;
         lastrow = p.Results.LastRow;
+        
+        if isscalar(lastrow)
+            
+            lastrow = repmat(lastrow, 1, numel(sheetname));
+        end
 
         % Concatenate all set commands
         SetSQL = [SetSQL, set2_sql];
