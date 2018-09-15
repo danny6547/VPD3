@@ -203,9 +203,10 @@ classdef cVessel < cModelID
                
                % Insert vessel
                currObj = insert@cModelID(currObj);
+               vid = currObj.Model_ID;
+               currObj.Vessel_Id = vid;
                
                % Insert DD
-               vid = currObj.Model_ID;
 %                [currObj.DryDock.Model_ID] = deal(vid);
                [currObj.DryDock.Vessel_Id] = deal(vid);
                currObj.DryDock.insert();
@@ -840,6 +841,14 @@ classdef cVessel < cModelID
                 end
             end
         end
+        
+        function obj = selectInService(obj, varargin)
+            
+            for oi = 1:numel(obj)
+                
+                obj(oi).InService = obj(oi).InService.select(obj(oi), varargin{:});
+            end
+        end
     end
     
     methods(Static, Hidden)
@@ -1231,6 +1240,7 @@ classdef cVessel < cModelID
                 obj(oi).Engine = cVesselEngine(varargin{:});
                 obj(oi).Owner = cVesselOwner(varargin{:});
                 obj(oi).Info = cVesselInfo(varargin{:});
+                obj(oi).InService = cVesselInService(varargin{:});
             end
         end
         
@@ -1274,8 +1284,11 @@ classdef cVessel < cModelID
         obj.Displacement.SavedConnection = dbname;
         obj.Engine.SavedConnection = dbname;
         obj.Owner.SavedConnection = dbname;
+        obj.Info.SavedConnection = dbname;
+        obj.InService.SavedConnection = dbname;
         
         obj.SavedConnection = dbname;
+        obj.Database = dbname;
        end
         
        function obj = set.IMO(obj, IMO)
@@ -1496,34 +1509,44 @@ classdef cVessel < cModelID
         
         function obj = set.InService(obj, ins)
             
-            if isempty(ins)
-                
-                ins = timetable();
-                obj.InService = ins;
-                return
-            end
-            
-            if isa(ins, 'table')
-                
-                % If all timestamps are midnight, times are omitted
-                length_v = cellfun(@length, ins.timestamp);
-                dateformstr = obj.DateFormStr;
-                if all(length_v == 10)
-                    
-                    dateformstr = obj.DateFormStr(1:10);
-                end
-                
-                ins.timestamp = datetime(ins.timestamp,'InputFormat',...
-                    dateformstr);
-                
-%                 ins.timestamp = datetime(ins.timestamp, 'ConvertFrom', 'datenum');
-                ins = table2timetable(ins, 'RowTimes', 'timestamp');
-            end
-            
-            validateattributes(ins, {'timetable'}, {});
-            ins = sortrows(ins);
+%             if isempty(ins)
+%                 
+%                 ins = timetable();
+%                 obj.InService = ins;
+%                 return
+%             end
+%             
+%             if isa(ins, 'table')
+%                 
+%                 % If all timestamps are midnight, times are omitted
+%                 length_v = cellfun(@length, ins.timestamp);
+%                 dateformstr = obj.DateFormStr;
+%                 if all(length_v == 10)
+%                     
+%                     dateformstr = obj.DateFormStr(1:10);
+%                 end
+%                 
+%                 ins.timestamp = datetime(ins.timestamp,'InputFormat',...
+%                     dateformstr);
+%                 
+% %                 ins.timestamp = datetime(ins.timestamp, 'ConvertFrom', 'datenum');
+%                 ins = table2timetable(ins, 'RowTimes', 'timestamp');
+%             end
+%             
+            validateattributes(ins, {'cVesselInService'}, {'scalar'});
+            ins.DateFormStr = obj.DateFormStr;
+%             ins = sortrows(ins);
             obj.InService = ins;
+            if ~isempty(ins)
+                
+                obj.Variable = ins.Variable;
+            end
         end
+        
+%         function ins = get.InService(obj)
+%             
+%             ins = obj.InService.Data;
+%         end
         
         function str = get.DateFormStr(obj)
             
