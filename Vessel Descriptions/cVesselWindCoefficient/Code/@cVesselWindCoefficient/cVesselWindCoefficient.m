@@ -79,39 +79,40 @@ classdef cVesselWindCoefficient < cModelID
        
        function obj = mirrorAlong180(obj)
 
+           for oi = 1:numel(obj)
 
-           % Error if empty, values above 180
-           dir1 = obj.Direction;
-           if any(dir1 > 180)
-               
-              errid = 'cVWC:ValuesExceed180';
-              errmsg = 'Direction values cannot exceed 180 degrees';
-              error(errid, errmsg);
-           end
+               % Error if empty, values above 180
+               dir1 = obj(oi).Direction;
+               if any(dir1 > 180)
 
-           % Ensure that data lies between 0 and 180
-           dir1 = cVesselWindCoefficient.shiftBetween0And360(dir1);
-           
-           % Extend to other side of the symmetry plane by taking from 360
-           dir2 = 360 - dir1;
-           includes180 = ismember(180, dir1);
-           includes0 = ismember(0, dir1);
-           coeffs = obj.Coefficient;
-           coeffs2 = coeffs;
-           
-           startIndex = length(dir2);
-           if includes180
-               startIndex = length(dir2) - 1;
+                  errid = 'cVWC:ValuesExceed180';
+                  errmsg = 'Direction values cannot exceed 180 degrees';
+                  error(errid, errmsg);
+               end
+
+               % Ensure that data lies between 0 and 180
+               dir1 = cVesselWindCoefficient.shiftBetween0And360(dir1);
+
+               % Extend to other side of the symmetry plane by taking from 360
+               dir2 = 360 - dir1;
+               includes180 = ismember(180, dir1);
+               includes0 = ismember(0, dir1);
+               coeffs = obj(oi).Coefficient;
+               coeffs2 = coeffs;
+
+               startIndex = length(dir2);
+               if includes180
+                   startIndex = length(dir2) - 1;
+               end
+
+               finalIndex = 1;
+               if includes0
+                   finalIndex = 2;
+               end
+
+               obj(oi).Direction = [dir1, dir2(startIndex:-1:finalIndex)];
+               obj(oi).Coefficient = [coeffs, coeffs2(startIndex:-1:finalIndex)];
            end
-           
-           finalIndex = 1;
-           if includes0
-               finalIndex = 2;
-           end
-           
-           obj.Direction = [dir1, dir2(startIndex:-1:finalIndex)];
-           obj.Coefficient = [coeffs, coeffs2(startIndex:-1:finalIndex)];
-           
        end
        
        function [obj, plotHandles] = plot(obj)

@@ -34,10 +34,12 @@ var = genvarname([...
         {'DG1 Gen Power (kW)'                          }
         {'DG1 Power [kW] (kW)'                         }
         {'DG2'                                         }
+        {'DG2 Energy Produced Counter'}
         {'DG2 Gen Power'                               }
         {'DG2 Gen Power (kW)'                          }
         {'DG2 Power [kW] (kW)'                         }
         {'DG3'                                         }
+        {'DG3 Energy Produced Counter'}
         {'DG3 Gen Power (kW)'                          }
         {'DG3 Power [kW] (kW)'                         }
         {'Diesel Generators - HFO'                     }
@@ -69,6 +71,7 @@ var = genvarname([...
         {'ME1 Shaft Generator Power (kW)'              }
         {'ME1_LO_Total_Counter_L'                      }
         {'ME1_LO_Total_Counter_L (L)'                  }
+        {'ME Lube Oil [L]'}
         {'Main Engine - HFO'                           }
         {'Main Engine - LSHFO'                         }
         {'Main Engine - LSMGO'                         }

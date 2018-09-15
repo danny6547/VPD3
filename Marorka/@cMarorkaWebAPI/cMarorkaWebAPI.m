@@ -14,6 +14,10 @@ classdef cMarorkaWebAPI
         Options = weboptions('UserName', 'damcl@hempel.com',...
                              'Password', '1lA02353L4L5U7dgl23leieeUO1fyjoD',...
                              'Timeout', 180);
+		CurrentFileName;
+        CurrentRowIdx;
+        CurrentReport;
+        RemainingVessel;
     end
     
     methods
@@ -28,8 +32,6 @@ classdef cMarorkaWebAPI
            validateattributes(directory, {'char'}, {'vector'}, ...
                'cMarorkaWebAPI.saveAllVessels', 'directory', 2);
            
-           % Get all vessels
-           vessels = obj.call('Ships');
            
            % Get all static vessel data
            catDir_f = @(file) fullfile(directory, file);
@@ -49,38 +51,55 @@ classdef cMarorkaWebAPI
 %            sfoc = obj.call('LoadSFOCBaselines');
 %            filename = catDir_f('SFOCBaselines.csv');
 %            obj.saveFile(sfoc.value, filename);
+
+           if isempty(obj.RemainingVessel)
+               
+               % Get all vessels
+               vessels = obj.call('Ships');
+               obj.RemainingVessel = vessels;
+           end
            
            % Iterate vessels
-           for vi = 1:numel(vessels)
+           vi = 1;
+           while ~isempty(obj.RemainingVessel)
            
-%                % High Freq data
-               currIMO = vessels.value(vi).IMONo;
+% %                % High Freq data
+               currIMO = obj.RemainingVessel.value(vi).IMONo;
 %                pivot = obj.inServiceData(currIMO);
 %                vesselName = strcat('Pivot_', vessels.value(vi).ShipName);
 %                currPivotName = catDir_f(vesselName);
+% 			   obj.CurrentFileName = currPivotName;
+%                obj.CurrentRowIdx = 1;
 %                writetable(struct2table(pivot), currPivotName);
                
                % Noon data
-               report = obj.noonReports(currIMO);
-               vesselName = strcat('Reports_', vessels.value(vi).ShipName);
+               vesselName = strcat('Reports_', obj.RemainingVessel.value(vi).ShipName, '.xlsx');
                currReportName = catDir_f(vesselName);
-               writetable(report, currReportName);
+			   obj.CurrentFileName = currReportName;
+               obj.CurrentRowIdx = 1;
+               obj.noonReports(currIMO);
                
                % Departure data
-               report = obj.departureReports(currIMO);
-               vesselName = strcat('Departure_', vessels.value(vi).ShipName);
+               vesselName = strcat('Departure_', obj.RemainingVessel.value(vi).ShipName, '.xlsx');
                currReportName = catDir_f(vesselName);
-               writetable(report, currReportName);
+			   obj.CurrentFileName = currReportName;
+               obj.CurrentRowIdx = 1;
+               obj.departureReports(currIMO);
                
                % Arrival data
-               report = obj.arrivalReports(currIMO);
-               vesselName = strcat('Arrival_', vessels.value(vi).ShipName);
+               vesselName = strcat('Arrival_', obj.RemainingVessel.value(vi).ShipName, '.xlsx');
                currReportName = catDir_f(vesselName);
-               writetable(report, currReportName);
+			   obj.CurrentFileName = currReportName;
+               obj.CurrentRowIdx = 1;
+               obj.arrivalReports(currIMO);
                
                % Report Progress
                fprintf(1, ['Completed vessel ', num2str(vi), ', IMO: ',...
-                   num2str(vessels.value(vi).IMONo) ,'.\n']);
+                   num2str(obj.RemainingVessel.value(vi).IMONo) ,'.\n']);
+               
+               % Re-assign
+               obj.RemainingVessel.value(vi) = [];
+%                vi = vi + 1;
            end
        end
        
@@ -94,6 +113,9 @@ classdef cMarorkaWebAPI
            funcInput = ['$filter=IMONo eq ', num2str(imo), ...
                ' &$orderby=DateTime desc'];
            data = iterLink(obj, funcname, funcInput);
+           tbl = struct2table(data);
+%            writetable(struct2table(pivot), currPivotName);
+           
 %            out = obj.call('ShipPivots', funcInput);
 %            data = out.value;
 %            
@@ -107,7 +129,7 @@ classdef cMarorkaWebAPI
 %            end
        end
        
-       function [tbl, missingReports] = noonReports(obj, imo)
+       function tbl = noonReports(obj, imo)
        % noonReports Table containing all noon reports for a vessel
        
        % Input
@@ -116,13 +138,13 @@ classdef cMarorkaWebAPI
        % Command
        funcname = 'Reports';
        funcInput = ['$filter=IMONo eq ', num2str(imo), ...
-           ' and ReportType eq ''Daily Report'' '...
-           '&$orderby=StartDateTimeGMT desc'];
-       reports = obj.iterLink(funcname, funcInput);
+               ' and ReportType eq ''Daily Report'' '...
+               '&$orderby=StartDateTimeGMT desc'];
+       var = obj.dailyReportVars;
+       tbl = obj.iterLink(funcname, funcInput, var);
        
        % Create output table and assign values
-       var = obj.dailyReportVars;
-       [tbl, missingReports] = obj.tabulateReportData(reports, var);
+       % [tbl, missingReports] = obj.tabulateReportData(reports, var);
        end
        
        function [tbl, missing] = departureReports(obj, imo)
@@ -135,11 +157,8 @@ classdef cMarorkaWebAPI
        funcInput = ['$filter=IMONo eq ', num2str(imo), ...
            ' and ReportType eq ''Departure Report'' '...
            '&$orderby=StartDateTimeGMT desc'];
-       reports = obj.iterLink(funcname, funcInput);
-       
-       % Create table out of all departure reports
        var = obj.departureReportVars;
-       [tbl, missing] = obj.tabulateReportData(reports, var);
+       [tbl, missing] = obj.iterLink(funcname, funcInput, var);
        end
        
        function [tbl, missing] = arrivalReports(obj, imo)
@@ -152,11 +171,11 @@ classdef cMarorkaWebAPI
        funcInput = ['$filter=IMONo eq ', num2str(imo), ...
            ' and ReportType eq ''Arrival Report'' '...
            '&$orderby=StartDateTimeGMT desc'];
-       reports = obj.iterLink(funcname, funcInput);
+       var = obj.arrivalReportVars;
+       [tbl, missing] = obj.iterLink(funcname, funcInput, var, '', false);
        
        % Create table out of all departure reports
-       var = obj.arrivalReportVars;
-       [tbl, missing] = obj.tabulateReportData(reports, var);
+%        [tbl, missing] = obj.tabulateReportData(reports, var);
        end
     end
     
@@ -206,11 +225,19 @@ classdef cMarorkaWebAPI
            out = webread(url, opts);
        end
        
-       function st = iterLink(obj, funcname, funcinput)
+       function [tbl, missing] = iterLink(obj, funcname, funcinput, varargin)
        % iterLink Iteratively call API while links are returned
            
+% 			if nargin > 4
+% 			
+% 				var = varargin{2};
+% 				validateCellStr(var, 'cMarorkaWebAPI.iterLink', 'var', 5);
+% 			end
+		   
            out = obj.call(funcname, funcinput);
-           st = out.value;
+           sti = out.value;
+           
+           [tbl, missing] = obj.tabulateReportData(sti, varargin{:});
            
            while isfield(out, 'odata_nextLink')
                
@@ -218,7 +245,9 @@ classdef cMarorkaWebAPI
                funcinput = strrep(funcinput, funcname, '');
                out = obj.call(funcname, funcinput);
                sti = out.value;
-               st = [st; sti];
+               
+               [tbl, missingi] = obj.tabulateReportData(sti, varargin{:});
+               missing = [missing; missingi];
            end
        end
        
@@ -231,17 +260,25 @@ classdef cMarorkaWebAPI
            'reports', 2);
        
        additionalFuncInput = '';
-       if nargin > 3
+       if nargin > 3 && ~isempty(additionalFuncInput)
            
            additionalFuncInput = varargin{1};
            validateattributes(additionalFuncInput, {'char'}, {'vector'}, ...
                'cMarorkaWebAPI.tabulateReportData', 'funcinput', 4);
        end
        
+       filter_l = true;
+       if nargin > 4
+           
+           filter_l = varargin{2};
+           validateattributes(filter_l, {'logical'}, {'scalar'}, ...
+               'cMarorkaWebAPI.tabulateReportData', 'filter', 5);
+       end
+       
        % Pre-allocate outputs
        emptyReports_l = false(1, numel(reports));
        nVar = numel(var);
-       emptyCell_c = repmat({{}}, numel(reports), nVar);
+       emptyCell_c = repmat({{}}, 1, nVar);
        tbl = cell2table(emptyCell_c, 'VariableNames', var);
        tick = tic;
        
@@ -249,47 +286,125 @@ classdef cMarorkaWebAPI
            
            % Call this reports data
            currReport = reports(ri);
-           fprintf(1, ['\nTime: ', datestr(now), '. ', ...
+           fprintf(1, ['Time: ', datestr(now), '. ', ...
                 'Report number ', num2str(ri),...
                 ' / ', num2str(numel(reports)),...
-               '  ReportId: ', num2str(currReport.ReportId)]);
+               '  ReportId: ', num2str(currReport.ReportId), '\n']);
            seapassage_ch = '''Sea Passage''';
            reporti = obj.call('ReportData', ...
                ['$filter=ReportId eq ' num2str(currReport.ReportId),...
                additionalFuncInput]); % ' and StateName eq' seapassage_ch]);
            
-           % Combine useful data into temporary cell, assign into output
            val = reporti.value;
-           if isempty(val)
-               
-               emptyReports_l(ri) = true;
-               continue
+           if filter_l
+
+               % Combine useful data into temporary cell, assign into output
+               if isempty(val)
+
+                   emptyReports_l(ri) = true;
+                   continue
+               end
+
+               % Deal with case of multiple ValueDescriptions in same report
+               % where some have empty MeasuredValue
+               temp_c = {val.MeasuredValue};
+               empty_l = cellfun(@isempty, temp_c);
+               val(empty_l) = [];
+
+               % Deal with case where values are given for both States of "Sea
+               % Passage" and "Anchor/Waiting"
+               anchor_l = strcmp('Anchor/Waiting', {val.StateName});
+               val(anchor_l) = [];
+
+               % Deal with case of multiple ValueDescriptions in same report
+               % with different LapTimes
+               allLapTime = unique([val.LapTime]);
+               desiredLapTime = max(allLapTime);
+               filter = [val.LapTime] ~= desiredLapTime;
+               val(filter) = [];
+
+               % Skip if report empty
+               if isempty(val)
+
+                   continue
+               end
+
+               % Iterate invalid
+               [~, coli] = ismember(genvarname({val.ValueDescription}), var);
+               invalidI = find(~coli);
+               val2remove_l = false(1, length(val));
+               for ii = 1:numel(invalidI)
+
+                   matchingMeasurements_l = strcmp(...
+                       val(invalidI(ii)).ValueDescription, {val.ValueDescription});
+                   emptyMeasured = cellfun(@(x) isequal(x, '                     0.00'), {val.MeasuredValue});
+                   emptyReported = cellfun(@(x) isequal(x, '                     0.00'), {val.ReportedValue});
+                   val2remove = matchingMeasurements_l & emptyMeasured & emptyReported;
+                   val2remove_l = val2remove_l | val2remove;
+               end
+               val(val2remove_l) = [];
+
+               % Deal with case of multiple ValueDescription with either
+               % non-empty MeasuredValue or ReportedValue at matching Times and
+               % LapTimes
+               [~, idx2keep] = unique({val.ValueDescription});
+               val = val(idx2keep);
            end
            
-           % Deal with case of multiple ValueDescriptions in same report
-           % with different LapTimes
-           allLapTime = unique([val.LapTime]);
-           desiredLapTime = max(allLapTime);
-           filter = [val.LapTime] ~= desiredLapTime;
-           val(filter) = [];
+           if ~isempty([val.ValueDescription])
+               
+               [~, coli] = ismember(genvarname({val.ValueDescription}), var);
+               temp_c = {val.MeasuredValue};
+               tbl(:, coli) = temp_c;
+           end
+           tbl.StartDateTimeGMT(1) = { val(1).StartDateTimeGMT };
+           tbl.EndDateTimeGMT(1) = { val(1).EndDateTimeGMT };
+           tbl.IMONo(1) = {val(1).IMONo};
+           tbl.ReportId(1) = {val(1).ReportId};
            
-           temp_c = {val.MeasuredValue};
-           [~, coli] = ismember(genvarname({val.ValueDescription}), var);
-           tbl(ri, coli) = temp_c;
-           tbl.StartDateTimeGMT(ri) = { val(1).StartDateTimeGMT };
-           tbl.EndDateTimeGMT(ri) = { val(1).EndDateTimeGMT };
-           tbl.IMONo(ri) = {val(1).IMONo};
-           tbl.ReportId(ri) = {val(1).ReportId};
+           % Write into file
+           obj = obj.appendTable(tbl);
        end
        toc(tick);
        
-       % Remove empty rows
-       emptyRows_l = all(cellfun(@isempty, tbl{:, :}), 2);
-       tbl(emptyRows_l, :) = [];
+       % Write column names into fiel
+       obj.writeTableColumns(tbl);
        
        % Assign empty report
        missing = reports(emptyReports_l);
        end
+	   
+	   function obj = appendTable(obj, tbl)
+	   
+			filename = obj.CurrentFileName;
+			
+			% Build range string
+			rowIdx = obj.CurrentRowIdx + 1;
+			range_ch = strcat('A', num2str(rowIdx));
+			
+			% Append
+			writetable(tbl, filename, 'Range', range_ch, ...
+                'WriteVariableNames', false);
+			
+			% Iterate
+			obj.CurrentRowIdx = obj.CurrentRowIdx + 1;
+       end
        
+       function obj = writeTableColumns(obj, tbl)
+           
+		   filename = obj.CurrentFileName;
+           writetable(tbl([], :), filename, 'Range', 'A1',...
+               'WriteVariableNames', true);
+       end
     end
+	
+	methods
+		
+		function obj = set.CurrentFileName(obj, filename)
+			
+			validateattributes(filename, {'char'}, {'vector'});
+			obj.CurrentRowIdx = 1;
+			obj.CurrentFileName = filename;
+		end
+	end
 end
