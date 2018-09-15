@@ -613,14 +613,8 @@ classdef cDB
        end
        
        % Create Database
+       obj = createDatabase(obj, dbname);
        sql = obj.SQL;
-       sql.drop('DATABASE', dbname, true);
-       sql.Database = '';
-       [~, connInput_c] = sql.connectionData;
-       sql = cMySQL(connInput_c{:});
-       sql.createDatabase(dbname, true);
-       sql = cMySQL('SavedConnection', dbname);
-       obj.SQL = sql;
        
        % Build Schema
        topleveldir = obj.TopLevelDir;
@@ -879,8 +873,9 @@ classdef cDB
        % Create database for hull performance data provided by Force Tech.
        
        % Assign DB?
-       database = 'force';
-       obj.Database = database;
+       dbname = 'force';
+       obj = obj.createDatabase(dbname);
+%        obj.Database = database;
        
        if obj.BuildSchema
            
@@ -910,11 +905,11 @@ classdef cDB
            % Create procedures to create tables and functions
            createProc_c = [createFiles3_c; createFiles2_c; createFiles1_c];
            createProc_c = strcat(createProc_c, '.sql');
-           obj.source(createProc_c);
+           obj.SQL.source(createProc_c);
            
            % Call procedures to create tables and functions
            [~, procNames_c, ~] = cellfun(@fileparts, createProc_c, 'Uni', 0);
-           cellfun(@(x) obj.call(x), procNames_c, 'Uni', 0);
+           cellfun(@(x) obj.SQL.call(x), procNames_c, 'Uni', 0);
        end
        
 %        % Insert raw data
@@ -956,14 +951,7 @@ classdef cDB
        if obj.BuildSchema
            
            % Create Database
-           sql = obj.SQL;
-           sql.drop('DATABASE', dbname, true);
-           sql.Database = 'sys';
-           [~, connInput_c] = sql.connectionData;
-           sql = cMySQL(connInput_c{:});
-           sql.createDatabase(dbname, true);
-           sql = cMySQL('SavedConnection', dbname);
-           obj.SQL = sql;
+           obj = obj.createDatabase(dbname);
 
            % Create tables
            topleveldir = obj.TopLevelDir;
@@ -1279,5 +1267,19 @@ classdef cDB
            wind.Direction = 0;
            wind.insert;
        end
+    end
+    
+    methods(Hidden)
+        
+        function obj = createDatabase(obj, dbname)
+           
+           % Create Database
+           emptySQL = cMySQL('SavedConnection', 'Empty');
+           emptySQL.drop('DATABASE', dbname, true);
+           emptySQL = cMySQL('SavedConnection', 'Empty');
+           emptySQL.createDatabase(dbname, true);
+           sql = cMySQL('SavedConnection', dbname);
+           obj.SQL = sql;
+        end
     end
 end
