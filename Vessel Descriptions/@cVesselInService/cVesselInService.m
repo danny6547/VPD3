@@ -5,14 +5,14 @@ classdef cVesselInService < cTableObject
     properties
         
         Limit = 20000;
-        Data;
+        Data = timetable();
         DateFormStr;
         Variable;
     end
     
     properties(Hidden, Constant)
         
-        DataProperty = '';
+        DataProperty = {'Data'};
         TableIdentifier = '';
         EmptyIgnore = '';
     end
@@ -27,14 +27,6 @@ classdef cVesselInService < cTableObject
        function obj = insert(obj)
            
        end
-    end
-    
-    methods(Hidden)
-        
-        function disp(obj)
-            
-            disp(obj.Data);
-        end
     end
     
     methods(Static)

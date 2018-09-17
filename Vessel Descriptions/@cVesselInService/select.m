@@ -2,29 +2,6 @@ function [ obj ] = select(obj, cv, varargin)
 %selectInService Select InService data from database
 %   Detailed explanation goes here
 
-%     % Input
-%     cols = {'Timestamp', obj(oi).Variable};
-%     if nargin > 1 && ~isempty(varargin{1})
-%         
-%         cols = varargin{1};
-%         cols = validateCellStr(cols);
-%         cols = obj(oi).SQL.validateColumnNames(cols);
-%     end
-%     
-%     % Data identified by Vessel Configuration
-%     vcid = [obj(oi).Configuration.Vessel_Configuration_Id];
-%     if isempty(vcid)
-%         
-%         continue
-%     end
-%     vcid_ch = num2str(vcid);
-%     
-%     % Select data and assign
-%     tab = 'CalculatedData c JOIN RawData r ON c.Raw_Data_Id = r.Raw_Data_Id';
-%     % cols = '*';
-%     where = ['c.Vessel_Configuration_Id = ', vcid_ch, ' ORDER BY Timestamp'];
-%     [~, tbl] = obj(oi).SQL.select(tab, cols, where, limit_ch);
-
     % Input
     validateattributes(cv, {'cVessel'}, {'scalar'}, ...
         'cVesselInService.select', 'cv', 1);
@@ -55,9 +32,6 @@ function [ obj ] = select(obj, cv, varargin)
     % Find current database's in-service parameters
     dbname = obj.SQL.Database;
     params = obj.tableParameters(dbname);
-%     params = InServiceParameters;
-%     db_l = cellfun(@(x) ismember(dbname, x), {params.Database});
-%     params = params(db_l);
     
     % Select raw data table based on input
     if rawtable > numel(params.Raw)
@@ -72,7 +46,7 @@ function [ obj ] = select(obj, cv, varargin)
     
     % Call join method
     calcTab = params.InServiceTable;
-    calcJoin = params.InServiceJoinCols; %params.InServiceIdentifierColumn;
+    calcJoin = params.InServiceJoinCols;
     rawTab = rawTabParams.RawTable;
     rawJoin = rawTabParams.JoinCols;
     
@@ -95,13 +69,6 @@ function [ obj ] = select(obj, cv, varargin)
     tbl = obj.SQL.join(calcTab, calcCols, calcJoin, rawTab, rawCols, ...
         rawJoin, where);
     
-%     % Remove redundant columns from table
-%     if allCols_l
-%         
-%         redundant_c = [{'id'}, rawJoin, calcJoin];
-%         redundant_c = lower(redundant_c);
-%     end
-
     if isempty(tbl)
         
         % Check for data in raw table if none found in calcualted
