@@ -71,7 +71,7 @@ classdef cMarorkaWebAPI
 % 			   obj.CurrentFileName = currPivotName;
 %                obj.CurrentRowIdx = 1;
 %                writetable(struct2table(pivot), currPivotName);
-               
+%                
                % Noon data
                vesselName = strcat('Reports_', obj.RemainingVessel.value(vi).ShipName, '.xlsx');
                currReportName = catDir_f(vesselName);
@@ -328,6 +328,11 @@ classdef cMarorkaWebAPI
 
                    continue
                end
+               
+               % Deal with case of empty value description
+               temp_c = {val.ValueDescription};
+               empty_l = cellfun(@isempty, temp_c);
+               val(empty_l) = [];
 
                % Iterate invalid
                [~, coli] = ismember(genvarname({val.ValueDescription}), var);

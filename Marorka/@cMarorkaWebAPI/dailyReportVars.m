@@ -14,6 +14,8 @@ var = genvarname([...
         {'Avg. DG. 1 (From Report)'                    }
         {'Avg. DG. 2'                                  }
         {'Avg. DG. 2 (From Report)'                    }
+        {'Avg. DG. 3'                                  }
+        {'Avg. DG. 3 (From Report)'                    }
         {'Avg. DG1'                                    }
         {'Avg. DG2'                                    }
         {'Avg. DG3'                                    }
@@ -69,6 +71,7 @@ var = genvarname([...
         {'ME1 LO Counter [L] (L)'                      }
         {'ME1 Shaft Generator Energy Delivered Counter'}
         {'ME1 Shaft Generator Power (kW)'              }
+        {'ME1 Shaft Generator Power'              }
         {'ME1_LO_Total_Counter_L'                      }
         {'ME1_LO_Total_Counter_L (L)'                  }
         {'ME Lube Oil [L]'}
