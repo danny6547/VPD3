@@ -57,16 +57,16 @@ obj = obj.inServicePerformance;
 % [obj.EstimatedFuelConsumption] = deal(savings_st);
 while obj.iterateDD
     
-    [~, currVessel, ddi] = obj.currentDD;
+    [~, currVessel, ddi, vi] = obj.currentDD;
 %     obj = obj.regressions(1);
     
-    if numel(currVessel.Report.InServicePerformance) < ddi %isempty(currPerf)
+    if isempty(currVessel.Report(ddi).InServicePerformance) % numel(currVessel.Report.InServicePerformance) < ddi %isempty(currPerf)
         continue
     end
     
     % Get current activity
     if ~activityInput_l
-        activity = currVessel.Report.Activity(ddi);
+        activity = currVessel.Report(ddi).Activity;
     end
     
 %     currPerf = currVessel.Report.InServicePerformance(ddi);
@@ -80,8 +80,8 @@ while obj.iterateDD
     
     speedloss_ma = 0.059;
     siliconeEffect = 0.06;
-    inservice = currVessel.Report.ServiceInterval(ddi).Duration;
-    speedloss_act = currVessel.Report.InServicePerformance(ddi).InservicePerformance;
+    inservice = currVessel.Report(ddi).ServiceInterval.Duration;
+    speedloss_act = currVessel.Report(ddi).InServicePerformance.InservicePerformance;
     fuelSavings = consumptionPerDay*activity * ((inservice - daysPerYear)*(speed2fuel*speedloss_ma - speed2fuel*speedloss_act) + siliconeCoating_l*siliconeEffect*inservice);
     fuelCons_ma = consumptionPerDay*activity*(speed2fuel*speedloss_ma*(inservice - daysPerYear) + inservice);
     fuelCons_act = consumptionPerDay*activity*(speed2fuel*speedloss_act*(inservice - daysPerYear) + inservice); % + siliconeCoating_l*siliconeEffect*inservice);
@@ -109,6 +109,6 @@ while obj.iterateDD
     savings_st.FuelPenaltyMarket = fuelCons_ma * fuelCost;
     
     % Assign struct to output
-    savings.DryDockInterval(ddi) = savings_st;
-    currVessel.Report.EstimatedFuelConsumption(ddi) = savings_st;
+    savings(vi).DryDockInterval(ddi) = savings_st;
+    currVessel.Report(ddi).EstimatedFuelConsumption = savings_st;
 end

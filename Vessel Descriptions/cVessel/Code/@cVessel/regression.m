@@ -5,11 +5,12 @@ function [obj, regStruct] = regression(obj, order)
 % Input
 validateattributes(order, {'numeric'}, {'positive', 'integer'}, 'regressions',...
     'order', 2);
+regStruct = struct('Coefficients', [], 'Order', [], 'Model', '');
 
 % Iterate over performance struct
 while obj.iterateDD
     
-    [currDD_tbl, currObj_cv, ddi] = obj.currentDD;
+    [currDD_tbl, currObj_cv, ddi, vi] = obj.currentDD;
     x = datenum(currDD_tbl.timestamp);
     y = currDD_tbl.(currObj_cv.Variable);
     
@@ -17,15 +18,17 @@ while obj.iterateDD
     y(nany) = [];
     x(nany) = [];
     
+    currObj_cv.Report(ddi).Regression = regStruct;
+    
     for oi = 1:numel(order)
         
         p = polyfit(x, y, order(oi));
         
         % Assign outputs
-        regStruct.Coefficients = p;
-        regStruct.Order = order(oi);
-        regStruct.Model = 'polynomial';
-        currObj_cv.Report.Regression(ddi).Order(oi) = regStruct;
+        regStruct(vi).DryDockInterval(ddi).Order(oi).Coefficients = p;
+        regStruct(vi).DryDockInterval(ddi).Order(oi).Order = order(oi);
+        regStruct(vi).DryDockInterval(ddi).Order(oi).Model = 'polynomial';
+        currObj_cv.Report(ddi).Regression(oi) = regStruct(vi).DryDockInterval(ddi).Order(oi);
     end
 end
 end

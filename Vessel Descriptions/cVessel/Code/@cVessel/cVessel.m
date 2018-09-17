@@ -23,7 +23,6 @@ classdef cVessel < cModelID
         
         Variable = 'speed_loss';
         TimeStep double = 1;
-        InService;
         
         Report = [];
     end
@@ -36,10 +35,12 @@ classdef cVessel < cModelID
         DDIterator = [0, 1, 0];
         Info = [];
         PreviousConfiguration;
+        InServicePreferences;
     end
     
     properties(Dependent)
         
+        InService;
         Propulsive_Efficiency;
         Engine_Model;
         Wind_Reference_Height_Design;
@@ -390,24 +391,24 @@ classdef cVessel < cModelID
         
         % Drop if exists
         tempTab = 'tempDNVGLRaw';
-        obj = obj.drop('TABLE', tempTab, true);
+        obj.SQL = obj.SQL.drop('TABLE', tempTab, true);
         
         % Create temp table
         permTab = 'DNVGLRaw';
-        obj = obj.createLike(tempTab, permTab);
+        obj.SQL = obj.SQL.createLike(tempTab, permTab);
         
         % Drop unique constraint, allowing for duplicates in temporary
         % loading table which will not carry through to final table
         dropCons_sql = ['ALTER TABLE `' tempTab '` DROP INDEX ' ...
             '`UniqueIMODates`'];
-        execute(obj, dropCons_sql);
+        obj.SQL.execute(dropCons_sql);
         
         % Load into temp table
         delimiter_s = ',';
         ignore_s = 1;
         set_s = ['SET Date_UTC = STR_TO_DATE(@Date_UTC, ''%d-%m-%Y''), ', ...
          'Time_UTC = STR_TO_DATE(@Time_UTC, ''%H:%i''), '];
-        setnull_c = {'Date_UTC', 'Time_UTC'};
+        setStr2DateCols_c = {'Date_UTC', 'Time_UTC'};
         cols_c = strsplit(['IMO_Vessel_Number;Date_UTC;Time_UTC;Date_Local;',...
             'Time_Local;Reporting_Time;Voyage_From;Voyage_To;ETA;RTA;',...
             'Reason_For_Schedule_Deviation;No_Of_Tugs;Voyage_Number;',...
@@ -542,20 +543,20 @@ classdef cVessel < cModelID
             'Cooling_Water_System_Pump_Pressure;',...
             'ER_Ventilation_Fans_In_Service;ER_Ventilation_Waste_Air_Temp;',...
             'Remarks;Entry_Made_By_1;Entry_Made_By_2'], ';');
-        [~, setnull_ch] = obj.setNullIfEmpty(setdiff(cols_c, setnull_c), false);
+        [~, setnull_ch] = obj.SQL.setNullIfEmpty(setdiff(cols_c, setStr2DateCols_c), false);
         set_s = [set_s, setnull_ch];
-        obj = obj.loadInFile(filename, tempTab, cols_c, ...
-            delimiter_s, ignore_s, set_s, setnull_c);
+        obj.SQL = obj.SQL.loadInFile(filename, tempTab, cols_c, ...
+            delimiter_s, ignore_s, set_s, 'none');
 		
 	   % Get warnings from load infile statement
-	   [obj, numWarnings] = obj.warnings;
-	   [obj, warn_tbl] = obj.warnings(false, 0, 10);
+	   [obj.SQL, numWarnings] = obj.SQL.warnings;
+	   [obj.SQL, warn_tbl] = obj.SQL.warnings(false, 0, 10);
 	   warnings = warn_tbl;
         
         % Generate DateTime prior to using it for identification
         expr_sql = 'ADDTIME(Date_UTC, Time_UTC)';
         col = 'DateTime_UTC';
-        obj = obj.update(tempTab, col, expr_sql);
+        obj.SQL = obj.SQL.update(tempTab, col, expr_sql);
         
         % Update insert into final table
         tab1 = tempTab;
@@ -563,7 +564,7 @@ classdef cVessel < cModelID
         cols1 = finalCols;
         tab2 = permTab;
         cols2 = finalCols;
-        obj = obj.insertSelectDuplicate(tab1, cols1, tab2, cols2);
+        obj.SQL = obj.SQL.insertSelectDuplicate(tab1, cols1, tab2, cols2);
         
         % Get IMO contained in file
         filename = cellstr(filename);
@@ -584,11 +585,12 @@ classdef cVessel < cModelID
         end
     
         % Insert into RawData table
-        arrayfun(@(x) obj.call('insertFromDNVGLRawIntoRaw', num2str(x)), ...
+        arrayfun(@(x) obj.SQL.call('insertFromDNVGLRawIntoRaw', num2str(x)), ...
             IMO, 'Uni', 0);
         
-        % Drop temp
-        obj = obj.drop('TABLE', tempTab);
+        % Drop temp tables
+        obj.SQL = obj.SQL.drop('TABLE', tempTab);
+        obj.SQL.drop('table', 'tempraw');
         
         end
 
@@ -846,7 +848,7 @@ classdef cVessel < cModelID
             
             for oi = 1:numel(obj)
                 
-                obj(oi).InService = obj(oi).InService.select(obj(oi), varargin{:});
+                obj(oi).InServicePreferences = obj(oi).InServicePreferences.select(obj(oi), varargin{:});
             end
         end
     end
@@ -1240,7 +1242,7 @@ classdef cVessel < cModelID
                 obj(oi).Engine = cVesselEngine(varargin{:});
                 obj(oi).Owner = cVesselOwner(varargin{:});
                 obj(oi).Info = cVesselInfo(varargin{:});
-                obj(oi).InService = cVesselInService(varargin{:});
+                obj(oi).InServicePreferences = cVesselInService(varargin{:});
             end
         end
         
@@ -1285,7 +1287,7 @@ classdef cVessel < cModelID
         obj.Engine.SavedConnection = dbname;
         obj.Owner.SavedConnection = dbname;
         obj.Info.SavedConnection = dbname;
-        obj.InService.SavedConnection = dbname;
+        obj.InServicePreferences.SavedConnection = dbname;
         
         obj.SavedConnection = dbname;
         obj.Database = dbname;
@@ -1301,16 +1303,24 @@ classdef cVessel < cModelID
            if ~isempty(IMO(~isnan(IMO)))
                 validateattributes(IMO, {'numeric'}, ...
                     {'scalar', 'positive', 'real', 'nonnan', 'integer'});
-                return_l = false;
+                returnBecauseEmpty_l = false;
            else
                 validateattributes(IMO, {'numeric'}, {});
                 IMO = [];
-                return_l = true;
+                returnBecauseEmpty_l = true;
            end
            obj.IMO = IMO;
            
-           if return_l
+           if returnBecauseEmpty_l
                
+               return
+           end
+           
+           [~, vesselTableExists_l] = obj.SQL.isTable('Vessel');
+           returnBecauseExternal_l = ~vesselTableExists_l;
+           if returnBecauseExternal_l
+               
+               obj = obj.selectInService;
                return
            end
            
@@ -1398,7 +1408,7 @@ classdef cVessel < cModelID
        function obj = set.Variable(obj, variable)
        % Set property method for Variable
            
-           obj.checkVarname( variable );
+%            obj.checkVarname( variable );
            obj.Variable = variable;
        end
        
@@ -1507,46 +1517,30 @@ classdef cVessel < cModelID
            obj.PreviousConfiguration = config;
         end
         
-        function obj = set.InService(obj, ins)
+        function obj = set.InServicePreferences(obj, ins)
             
-%             if isempty(ins)
-%                 
-%                 ins = timetable();
-%                 obj.InService = ins;
-%                 return
-%             end
-%             
-%             if isa(ins, 'table')
-%                 
-%                 % If all timestamps are midnight, times are omitted
-%                 length_v = cellfun(@length, ins.timestamp);
-%                 dateformstr = obj.DateFormStr;
-%                 if all(length_v == 10)
-%                     
-%                     dateformstr = obj.DateFormStr(1:10);
-%                 end
-%                 
-%                 ins.timestamp = datetime(ins.timestamp,'InputFormat',...
-%                     dateformstr);
-%                 
-% %                 ins.timestamp = datetime(ins.timestamp, 'ConvertFrom', 'datenum');
-%                 ins = table2timetable(ins, 'RowTimes', 'timestamp');
-%             end
-%             
             validateattributes(ins, {'cVesselInService'}, {'scalar'});
             ins.DateFormStr = obj.DateFormStr;
-%             ins = sortrows(ins);
-            obj.InService = ins;
+            obj.InServicePreferences = ins;
             if ~isempty(ins)
                 
                 obj.Variable = ins.Variable;
             end
         end
         
-%         function ins = get.InService(obj)
-%             
-%             ins = obj.InService.Data;
-%         end
+        function obj = set.InService(obj, val)
+            
+            if ~isa(val, 'timetable')
+                
+                return
+            end
+            obj.InServicePreferences.Data = val;
+        end
+        
+        function tbl = get.InService(obj)
+            
+            tbl = obj.InServicePreferences.Data;
+        end
         
         function str = get.DateFormStr(obj)
             

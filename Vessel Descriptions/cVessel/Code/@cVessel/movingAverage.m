@@ -200,6 +200,6 @@ while obj.iterateDD
     end
 
     % Re-assign into Outputs
-    currObj.Report.MovingAverage(ddi).Duration = Duration_st;
+    currObj.Report(ddi).MovingAverage.Duration = Duration_st;
     avgStruct(vi).DryDockInterval(ddi) = Duration_st;
 end

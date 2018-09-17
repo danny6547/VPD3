@@ -52,17 +52,18 @@ while obj.iterateDD
 
    % Skip DDi if empty
 %    if isempty(obj(ii).DryDockingPerformance)
-   if numel(currVessel.Report.DryDockingImprovement) < ddi || ...
-        isempty(currVessel.Report.DryDockingImprovement(ddi).RelDDImprovement) || ...
-           numel(currVessel.Report.Activity) < (ddi)
+   if isempty(currVessel.Report(ddi).DryDockingImprovement)
+%        numel(currVessel.Report.DryDockingImprovement) < ddi || ...
+%         isempty(currVessel.Report(ddi).DryDockingImprovement.RelDDImprovement) || ...
+%            numel(currVessel.Report.Activity) < (ddi)
        continue
    end
    
    % Get this DD Performance Improvement
 %    [~, currVesseli] = obj.ind2sub( ii );
 %    currActivity = activity( currVesseli );
-   currActivity = currVessel.Report.Activity(ddi);
-   currDDPer = currVessel.Report.DryDockingImprovement(ddi).RelDDImprovement / 100;
+   currActivity = currVessel.Report(ddi).Activity;
+   currDDPer = currVessel.Report(ddi).DryDockingImprovement.RelDDImprovement / 100;
    currDDSavings = currDDPer * fuelPricePerTonne * ...
        fuelConsumptionTonnesPerDay * daysPerYear * currActivity;
    savingsDDStruc(1).Savings_MUSD = currDDSavings / 1E6;
@@ -71,6 +72,6 @@ while obj.iterateDD
    
    % Assign
 %    obj(ii).AnnualSavingsDD = savingsDDStruc(ii);
-   currVessel.Report.AnnualSavingsDD(ddi) = savingsDDStruc;
+   currVessel.Report(ddi).AnnualSavingsDD = savingsDDStruc;
 end
 % obj = obj.iterReset;

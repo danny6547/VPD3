@@ -12,23 +12,31 @@ function [ obj, ddPer ] = dryDockingPerformance( obj, varargin )
 % Output
 ddPer = struct('AvgPerPrior', [], 'AvgPerAfter', [], ...
     'AbsDDPerformance', [], 'RelDDPerformance', []);
-szIn = size(obj);
-szIn(1) = szIn(1) - 1;
-ddPer = repmat(ddPer, szIn);
+% szIn = size(obj);
+% szIn(1) = szIn(1) - 1;
+% ddPer = repmat(ddPer, szIn);
 
 % Input
 % validateattributes(obj, {'struct'}, {}, 'performanceMark', 'obj',...
 %     1);
 
 % Get annual averages before and after dry-dockings
-[~, annualAvgAft] = movingAverages(obj, 365.25, false);
-[~, annualAvgBef] = movingAverages(obj, 365.25, true);
+[~, annualAvgAft] = obj.movingAverage(365.25, false);
+[~, annualAvgBef] = obj.movingAverage(365.25, true);
 
 % Iterate over guarantee struct to get averages
 
-while ~obj.iterFinished
+while obj.iterateDD
    
-      [obj, ii, afterDDi, beforeDDi, DDi] = obj.iterDD;
+%       [obj, ii, afterDDi, beforeDDi, DDi] = obj.iterDD;
+      [~, currVessel, DDi, vi] = obj.currentDD;
+      
+      if DDi == 1
+          
+          continue
+      end
+      beforeDDi = DDi - 1;
+      afterDDi = DDi;
    
 % idx_c = cell(1, ndims(obj));
 % for ii = 1:nDDi:numel(obj)
@@ -45,7 +53,7 @@ while ~obj.iterFinished
        end
 
        % Skip DDi if empty
-       if isPerDataEmpty(obj(ii));
+       if isPerDataEmpty(obj(vi))
            continue
        end
        
@@ -67,8 +75,8 @@ while ~obj.iterFinished
            ddPer(ddPeri).AvgPerAfter = avgAfter;
            ddPer(ddPeri).AbsDDPerformance = ddPerAbs;
            ddPer(ddPeri).RelDDPerformance = ddPerRel;
-           obj(ii).DryDockingPerformance = ddPer(ddPeri);
+           currVessel.Report(ddPeri).DryDockingPerformance = ddPer(ddPeri);
        end
 %    end
 end
-obj = obj.iterReset;
+% obj = obj.iterReset;

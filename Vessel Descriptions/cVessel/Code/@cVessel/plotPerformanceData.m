@@ -45,21 +45,21 @@ while obj.iterateDD
 
     avg_l = false;
     numDur = 1;
-    if ~isempty(currVessel.Report.MovingAverage)
+    if ~isempty(currVessel.Report(ddi).MovingAverage)
 
         avg_l = true;
-        avgStruct = currVessel.Report.MovingAverage; % varargin{1};
+        avgStruct = currVessel.Report(ddi).MovingAverage; % varargin{1};
         validateattributes(avgStruct, {'struct'}, {}, 'plotPerformanceData',...
             'avgStruct', 2);
         numDur = numel(avgStruct(1).Duration);
     end
 
     regr_l = false;
-    if ~isempty(currVessel.Report.Regression)
+    if ~isempty(currVessel.Report(ddi).Regression)
 
         regr_l = true;
         regri = 1;
-        regrStruct = currVessel.Report.Regression; %varargin{2};
+        regrStruct = currVessel.Report(ddi).Regression; %varargin{2};
         validateattributes(regrStruct, {'struct'}, {}, 'plotPerformanceData',...
             'regrStruct', 3);
     end
@@ -84,7 +84,7 @@ while obj.iterateDD
     % Plot averages
     if avg_l
 
-       currAvg_st = avgStruct(ddi);
+%        currAvg_st = avgStruct(ddi);
 
        % Make average colors a series of increasingly light orange
        whiteLimit = 0.8;
@@ -93,7 +93,7 @@ while obj.iterateDD
 
        for di = 1:numDur
 
-           currDur = currAvg_st.Duration(di);
+           currDur = avgStruct.Duration(di);
            currStart = currDur.StartDate;
            currEnd = currDur.EndDate;
            currAvg = currDur.Average * convFact;

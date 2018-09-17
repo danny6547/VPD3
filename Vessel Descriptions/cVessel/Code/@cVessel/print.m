@@ -12,7 +12,7 @@ for oi = 1:numel(obj)
     % Write Vessel IMO and Name
     fprintf(fid, '%s\n', '%% VESSEL IDENTIFIER');
     fprintf(fid, '%s: %s\n', 'Vessel Name', obj(oi).Name);
-    fprintf(fid, '%s: %u\n', 'Vessel IMO Number', obj(oi).IMO_Vessel_Number);
+    fprintf(fid, '%s: %u\n', 'Vessel IMO Number', obj(oi).IMO);
 
     % Write Displacement table
     fprintf(fid, '\n%s\n', '%% DISPLACEMENT MODEL');
@@ -55,10 +55,10 @@ for oi = 1:numel(obj)
         for si = 1:numel(obj(oi).SpeedPower)
 
             fprintf(fid, '\n%s\n', 'Click "Add Model Value"');
-            fprintf(fid, '%s: %f\n', 'Coefficient A', obj(oi).SpeedPower(si).Coefficients(1));
-            fprintf(fid, '%s: %f\n', 'Coefficient B', obj(oi).SpeedPower(si).Coefficients(2));
-            fprintf(fid, '%s: %f\n', 'Min Power', min(obj(oi).SpeedPower(si).Power));
-            fprintf(fid, '%s: %f\n', 'Max Power', max(obj(oi).SpeedPower(si).Power));
+            fprintf(fid, '%s: %f\n', 'Coefficient A', obj(oi).SpeedPower(si).Coefficient_A);
+            fprintf(fid, '%s: %f\n', 'Coefficient B', obj(oi).SpeedPower(si).Coefficient_B);
+            fprintf(fid, '%s: %f\n', 'Min Power', min(obj(oi).SpeedPower(si).Minimum_Power));
+            fprintf(fid, '%s: %f\n', 'Max Power', max(obj(oi).SpeedPower(si).Maximum_Power));
             fprintf(fid, '%s: %f\n', 'Trim', obj(oi).SpeedPower(si).Trim);
             fprintf(fid, '%s: %f\n', 'Disp', obj(oi).SpeedPower(si).Displacement / (obj(oi).SpeedPower(si).FluidDensity / 1e3)); % Disp in m3
         end

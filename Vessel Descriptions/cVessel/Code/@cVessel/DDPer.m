@@ -51,9 +51,9 @@ while obj.iterateDD
         annualAvgAft(vi).DryDockInterval(ddi).EndDate(1) - ...
         annualAvgAft(vi).DryDockInterval(ddi).StartDate(1);
     
-    % Assign into obj when all DD done
-    if ddi == currVessel.numDDIntervals
-        
-        currVessel.Report.DryDockingPerformance = ddPer;
-    end
+%     % Assign into obj when all DD done
+%     if ddi == currVessel.numDDIntervals
+%         
+        currVessel.Report(ddi-1).DryDockingPerformance = ddPer(ddi-1);
+%     end
 end

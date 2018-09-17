@@ -1,24 +1,30 @@
-function obj = loadForceTech(obj, filename, imo, varargin)
+function obj = loadForceTech(obj, filename, varargin)
 %loadForceTech Load file downloaded from Force Technologies SeaTrend 
 %   Detailed explanation goes here
 
 % Inputs
 filename = validateCellStr(filename);
-imo_ch = num2str(imo);
-
-acceptableTables_c = {'forceraw', 'performanceData'};
-tab_c = acceptableTables_c;
-if nargin > 3
+imoInput_l = nargin > 2 && ~isempty(varargin{1});
+if imoInput_l
     
-    % Tables
-    if ~isempty(varargin{1})
-        
-        tab_c = varargin{1};
-        tab_c = validateCellStr(tab_c);
-        cellfun(@(x) validatestring(x, acceptableTables_c, 'loadForceTech', ...
-            'tab_c', 3), tab_c);
-    end
+    imo = varargin{1};
+    validateattributes(imo, {'numeric'}, {'scalar', 'positive', 'integer'},...
+        'cVessel.loadForceTech', 'imo', 2);
+    imo_ch = num2str(imo);
 end
+% acceptableTables_c = {'forceraw', 'performanceData'};
+% tab_c = acceptableTables_c;
+% if nargin > 3
+%     
+%     % Tables
+%     if ~isempty(varargin{1})
+%         
+%         tab_c = varargin{1};
+%         tab_c = validateCellStr(tab_c);
+%         cellfun(@(x) validatestring(x, acceptableTables_c, 'loadForceTech', ...
+%             'tab_c', 3), tab_c);
+%     end
+% end
 
 % Convert file decimal separator to that of MySQL
 replaceCommaWithPoint(filename);
@@ -493,7 +499,34 @@ setnull_c = {...
 obj.SQL.loadInFile(filename, tab, cols, delimiter_ch, ignore_ch, set_ch, setnull_c);
 
 % Insert into RawData table
-obj.SQL.call('insertFromForceRawIntoRaw', imo_ch);
+for ii = 1:numel(filename)
+    
+    % Get IMO from file
+    if ~imoInput_l
+
+        fid = fopen([filename{:}], 'r');
+        
+        frewind(fid);
+        firstLine = fgetl(fid);
+        if firstLine == -1
+            
+            continue
+        end
+        
+%         nCols = numel(cols);
+        imoName = 'imo_number';
+        [~, imoIdx] = ismember(imoName, cols);
+%         textscan(fid, '%s', nCols, 'Delimiter', ';');
+        for ii = 1:imoIdx
+
+            val = textscan(fid, '%s', 1, 'Delimiter', ';');
+        end
+        imo_ch = [val{:}{:}];
+        fclose(fid);
+    end
+    
+    obj.SQL.call('insertFromForceRawIntoRaw', imo_ch);
+end
 
     function [success, message] = replaceCommaWithPoint(filename)
         

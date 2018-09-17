@@ -79,7 +79,7 @@ while obj.iterateDD
        ddImp(1).ReferenceCount = annualAvgBef(vi).DryDockInterval(ddi-1).Count(end);
        ddImp(1).EvaluationCount = annualAvgAft(vi).DryDockInterval(ddi).Count(1);
        ddImprove(vi).DryDockingInterval(ddi-1) = ddImp;
-       currVessel.Report.DryDockingImprovement(ddi-1) = ddImp;
+       currVessel.Report(ddi-1).DryDockingImprovement = ddImp;
 %        obj(vi).DryDockingImprovement = ddImp(ddi);
     end
    

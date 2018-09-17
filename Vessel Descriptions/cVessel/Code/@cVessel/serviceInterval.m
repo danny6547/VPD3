@@ -81,10 +81,10 @@ while obj.iterateDD
    servStruct(vi).DryDockInterval(ddi) = interval;
    
    % Assign into obj
-   if ddi == currVessel.numDDIntervals
+%    if ddi == currVessel.numDDIntervals
        
-       currVessel.Report.ServiceInterval = servStruct(vi).DryDockInterval;
-   end
+       currVessel.Report(ddi).ServiceInterval = servStruct(vi).DryDockInterval(ddi);
+%    end
 end
 
 % obj = obj.iterReset;

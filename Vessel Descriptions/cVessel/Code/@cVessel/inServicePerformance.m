@@ -21,7 +21,7 @@ while obj.iterateDD
 % while ~obj.iterFinished
     
 %    [obj, ii] = obj.iter;
-   [currDD_tbl, currVessel, ddi] = obj.currentDD;
+   [currDD_tbl, currVessel, ddi, vi] = obj.currentDD;
 % for si = 1:numel(obj)
     
 %     % Skip if empty
@@ -107,8 +107,8 @@ while obj.iterateDD
         servStruct.EvaluationDuration = Duration_st(2).EndDate - Duration_st(2).StartDate;
         servStruct.EvaluationValue = Duration_st(2).Average;
         servStruct.InservicePerformance = servStruct.EvaluationValue - servStruct.ReferenceValue;
-        inserv(ddi).DryDockInterval = servStruct;
-        currVessel.Report.InServicePerformance(ddi) = servStruct;
+        inserv(vi).DryDockInterval(ddi) = servStruct;
+        currVessel.Report(ddi).InServicePerformance = servStruct;
 %         
 %         % Re-assign into Outputs
 %         if ddi == currVessel.numDDIntervals
