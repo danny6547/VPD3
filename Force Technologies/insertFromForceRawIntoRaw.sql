@@ -1,18 +1,21 @@
-/* Insert data from DNVGLRaw into RawData for a given vessel, after some 
-modification. */
+/* For a given vessel, insert data from Force Database table RawData into current
+ Database table RawData, after some modification. */
 
-DROP PROCEDURE IF EXISTS insertFromDNVGLRawIntoRaw;
+DROP PROCEDURE IF EXISTS insertFromForceRawIntoRaw;
 
 delimiter //
 
-CREATE PROCEDURE insertFromDNVGLRawIntoRaw(imo INT)
+CREATE PROCEDURE insertFromForceRawIntoRaw(imo INT)
 
 BEGIN
 
-CALL createTempRaw(imo);
-CALL updateFromBunkerNote(imo);
+CALL createTempForceRaw(imo);
+/* CALL updateFromBunkerNote(imo); */
 
 INSERT INTO rawdata (IMO_Vessel_Number,
+							Latitude,
+							Longitude,
+							Shaft_Power,
 							Water_Depth, 
 							DateTime_UTC,
 							Relative_Wind_Speed,
@@ -30,6 +33,9 @@ INSERT INTO rawdata (IMO_Vessel_Number,
                              Displacement
                              )
 SELECT IMO_Vessel_Number,
+							Latitude,
+							Longitude,
+							 Shaft_Power,
 							 Water_Depth,
 							 DateTime_UTC,
 							 Relative_Wind_Speed,
@@ -43,11 +49,14 @@ SELECT IMO_Vessel_Number,
 							 Air_Temperature,
 							 Air_Pressure,
 							 Mass_Consumed_Fuel_Oil,
-                             ME_1_Load,
-                             Draft_Displacement_Actual
-							 FROM `dnvgl`.tempRaw
+                             Delivered_Power,
+                             Displacement
+							 FROM tempForceRaw
 								ON DUPLICATE KEY UPDATE 
 									IMO_Vessel_Number = VALUES(IMO_Vessel_Number),
+									Latitude = VALUES(Latitude),
+									Longitude = VALUES(Longitude),
+                                    Shaft_Power = VALUES(Shaft_Power),
                                     Water_Depth = VALUES(Water_Depth),
                                     DateTime_UTC = VALUES(DateTime_UTC),
                                     Relative_Wind_Speed = VALUES(Relative_Wind_Speed),

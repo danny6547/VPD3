@@ -1,20 +1,23 @@
-/* Insert data from DNVGLRaw into RawData for a given vessel, after some 
-modification. */
+/* For a given vessel, insert data from Force Database table RawData into current
+ Database table RawData, after some modification. */
 
-DROP PROCEDURE IF EXISTS insertFromDNVGLRawIntoRaw;
+DROP PROCEDURE IF EXISTS insertFromForceSeaReportsIntoRaw;
 
 delimiter //
 
-CREATE PROCEDURE insertFromDNVGLRawIntoRaw(imo INT)
+CREATE PROCEDURE insertFromForceSeaReportsIntoRaw(imo INT)
 
 BEGIN
 
-CALL createTempRaw(imo);
-CALL updateFromBunkerNote(imo);
+CALL createTempForceRaw_SeaReports(imo);
+/* CALL updateFromBunkerNote(imo); */
 
 INSERT INTO rawdata (IMO_Vessel_Number,
-							Water_Depth, 
 							DateTime_UTC,
+                            Latitude,
+                            Longitude,
+							Shaft_Power,
+							Water_Depth, 
 							Relative_Wind_Speed,
 							 Relative_Wind_Direction,
 							 Speed_Over_Ground,
@@ -27,11 +30,15 @@ INSERT INTO rawdata (IMO_Vessel_Number,
 							 Air_Pressure,
 							 Mass_Consumed_Fuel_Oil,
                              Delivered_Power,
-                             Displacement
+                             Ship_Heading,
+                             Shaft_Torque
                              )
 SELECT IMO_Vessel_Number,
-							 Water_Depth,
 							 DateTime_UTC,
+                             Latitude,
+                             Longitude,
+							 Shaft_Power,
+							 Water_Depth,
 							 Relative_Wind_Speed,
 							 Relative_Wind_Direction,
 							 Speed_Over_Ground,
@@ -43,13 +50,17 @@ SELECT IMO_Vessel_Number,
 							 Air_Temperature,
 							 Air_Pressure,
 							 Mass_Consumed_Fuel_Oil,
-                             ME_1_Load,
-                             Draft_Displacement_Actual
-							 FROM `dnvgl`.tempRaw
+                             Delivered_Power,
+                             Ship_Heading,
+                             Shaft_Torque
+							 FROM tempForceRaw_SR
 								ON DUPLICATE KEY UPDATE 
 									IMO_Vessel_Number = VALUES(IMO_Vessel_Number),
-                                    Water_Depth = VALUES(Water_Depth),
                                     DateTime_UTC = VALUES(DateTime_UTC),
+									Latitude = VALUES(Latitude),
+                                    Longitude = VALUES(Longitude),
+                                    Shaft_Power = VALUES(Shaft_Power),
+                                    Water_Depth = VALUES(Water_Depth),
                                     Relative_Wind_Speed = VALUES(Relative_Wind_Speed),
                                     Relative_Wind_Direction = VALUES(Relative_Wind_Direction),
                                     Speed_Over_Ground = VALUES(Speed_Over_Ground),
@@ -62,6 +73,7 @@ SELECT IMO_Vessel_Number,
                                     Air_Pressure = VALUES(Air_Pressure),
                                     Mass_Consumed_Fuel_Oil = VALUES(Mass_Consumed_Fuel_Oil),
                                     Delivered_Power = VALUES(Delivered_Power),
-                                    Displacement = VALUES(Displacement)
+                                    Ship_Heading = VALUES(Ship_Heading),
+                                    Shaft_Torque = VALUES(Shaft_Torque)
 									;
 END;

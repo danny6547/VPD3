@@ -37,10 +37,11 @@ classdef cDB
 %             '\Vessels\UASC data\Scripts\Insert_Static_Al_Farahidi.m']...
             };
         InsertInServiceScript = {};
-        ForceDir = ['C:\Users\damcl\OneDrive - Hempel Group\Documents'...
-               '\L DRIVE BACKUP\ARCHIVE\External Vessel Data\Force'];
-        DNVGLDir = ['C:\Users\damcl\OneDrive - Hempel Group\Documents\'...
-            'L DRIVE BACKUP\ARCHIVE\External Vessel Data\DNV-GL'];
+        ForceDir = ['\\hempelgroup.sharepoint.com@SSL\DavWWWRoot\sites\'...
+            'HullPerformanceManagementTeam\Vessel Library'];
+        DNVGLDir = ['\\hempelgroup.sharepoint.com@SSL\DavWWWRoot\sites\'...
+            'HullPerformanceManagementTeam\Shared Documents\External '...
+            'Performance Analyses\DNV-GL'];
         ISO19030Parameters = {9288095, 'Only one speed, power curve from Sea Trial and that is of sister vessel New Century. Estimates made for Ta and Anemometer Height. Shaft torsiometer data utilised. Wind coefficients taken from ISO15016 for tanker with conventional bow. No displacement data available prior to 2016.', {};...                    % New Spirit
                               9445631, 'No speed, power curves available so that of New Century, another vessel of the same owner applied. Estimates made for Ta and Anemometer Height. Shaft torsiometer data utilised. Wind coefficients taken from ISO15016 for tanker with conventional bow. No displacement data available prior to 2016.', {}; ...     % New Vanguard
                               9434632, 'No speed, power curves available so that of New Century, another vessel of the same owner applied. Estimates made for Ta and Anemometer Height. Shaft torsiometer data utilised. Wind coefficients taken from ISO15016 for tanker with conventional bow. No displacement data available prior to 2016.', {}; ...     % New Success
@@ -63,9 +64,8 @@ classdef cDB
     end
     
     properties(Hidden)
-        
+       
        TopLevelDir = fileparts(fileparts(fileparts(mfilename('fullpath'))));
-        
     end
     
     methods
@@ -544,6 +544,30 @@ classdef cDB
        
        end
        
+       function loadDNVGL(obj, varargin)
+       % loadDNVGL Load data into DNVGL database
+
+           % Load Performance
+           file_st = rdir([obj.DNVGLDir, '\**\Download.xlsx']);
+           allPerformanceFile_ch = file_st.name;
+           obj_ves = cVessel('Database', 'DNVGL');
+           obj_ves.loadDNVGLPerformance(allPerformanceFile_ch);
+
+           % Load Raw
+           rawFiles_st = rdir([obj.DNVGLDir, '\**\1 Operational reporting*.csv']);
+           rawFiles_c = {rawFiles_st.name};
+           obj_ves.loadDNVGLRaw(rawFiles_c);
+           
+           % Load Bunker
+           bunkerFiles_st = rdir([obj.DNVGLDir, '\**\2 Bunker reporting*.csv']);
+           bunkerFiles_c = {bunkerFiles_st.name};
+           obj_ves = obj_ves.insertBunkerDeliveryNoteDNVGL(bunkerFiles_c);
+
+           % Drop unneeded tables
+           obj_ves.drop('table', 'tempraw');
+           obj_ves.drop('table', 'tempbunkerdeliverynote');
+       end
+       
     end
     
     methods
@@ -873,11 +897,12 @@ classdef cDB
        % Create database for hull performance data provided by Force Tech.
        
        % Assign DB?
-       dbname = 'force';
-       obj = obj.createDatabase(dbname);
+       dbname = 'testforce';
 %        obj.Database = database;
        
        if obj.BuildSchema
+           
+           obj = obj.createDatabase(dbname);
            
            % Create tables
            topleveldir = obj.TopLevelDir;
@@ -891,13 +916,15 @@ classdef cDB
            
            ForceDirect = 'Force Technologies';
            force_c = {'createForceRaw'
-                      'createPerformanceData'
+                      'createTempForceRaw'
+                      'insertFromForceRawIntoRaw'
+                      'convertForceRawToRawData'
                                };
            createFiles2_c = cellfun(@(x) fullfile(topleveldir, ForceDirect, x), ...
                force_c, 'Uni', 0);
            
            createDir = 'Create Tables';
-           create_c = {'createRawData'
+           create_c = {'createDNVGLRawData'
                                };
            createFiles3_c = cellfun(@(x) fullfile(topleveldir, createDir, x), ...
                create_c, 'Uni', 0);
@@ -907,14 +934,17 @@ classdef cDB
            createProc_c = strcat(createProc_c, '.sql');
            obj.SQL.source(createProc_c);
            
+           % Remove scripts which create functions
+           createProc_c(end:-1:end-4) = [];
+           
            % Call procedures to create tables and functions
            [~, procNames_c, ~] = cellfun(@fileparts, createProc_c, 'Uni', 0);
            cellfun(@(x) obj.SQL.call(x), procNames_c, 'Uni', 0);
        end
        
-%        % Insert raw data
-%        if obj.LoadRaw || obj.LoadPerformance
-%            
+       % Insert raw data
+       if obj.LoadRaw || obj.LoadPerformance
+           
 %            % Load Raw
 %            rawDirect = ['C:\Users\damcl\OneDrive - Hempel Group\Documents'...
 %                '\L DRIVE BACKUP\ARCHIVE\External Vessel Data\Force'];
@@ -924,21 +954,9 @@ classdef cDB
 %            obj_ves = cVessel();
 %            obj_ves.Database = database;
 %            obj_ves.loadForceTech(rawFiles_c);
-%            
-% %            obj_ves.drop('table', 'tempforceraw');
-%        end
-       
-%        % Insert Performance
-%        if obj.LoadPerformance
-%            
-%            % Insert performance data
-%            allPerformanceFile_ch = ['L:\Project\MWB-Fuel efficiency\Hull '...
-%                'and propeller performance\External Vessel Data\DNV-GL\'...
-%                'Performance\Download.xlsx'];
-%            obj_ves = cVessel();
-%            obj_ves.Database = database;
-%            obj_ves.loadForcePerformance(allPerformanceFile_ch);
-%        end
+%            obj_ves.drop('table', 'tempforceraw');
+           obj.loadForce('', dbname);
+       end
        end
        
        function createDNVGL(obj)
@@ -946,7 +964,6 @@ classdef cDB
        
        % Assign DB?
        dbname = 'dnvgl';
-%        obj.SQL.Database = database;
        
        if obj.BuildSchema
            
@@ -973,6 +990,8 @@ classdef cDB
                         'createDNVGLRawTable.sql'
                         'createDNVGLRawTempTable.sql'
                         'createRawData.sql'
+                        'createDNVGLBunkerDeliveryNote.sql'
+                        'createDNVGLRawData.sql'
                     };
            createFiles2_c = cellfun(@(x) fullfile(topleveldir, createFiles2Dir_ch, x), ...
                createFiles2_c, 'Uni', 0);
@@ -991,45 +1010,40 @@ classdef cDB
 
            % Create tables
            createProc_c = {...
-                           'createBunkerDeliveryNote'
+                           'createDNVGLBunkerDeliveryNote'
                            'createDNVGLRawTempTable'
                            'createDNVGLRaw'
+                           'createDNVGLRawData'
                            'createPerformanceData'
-%                            'createrawdata'
                            };
 
            % Check there are as many proc as files
            cellfun(@(x) obj.SQL.call(x), createProc_c, 'Uni', 0);
        end
-%        
-%        if obj.LoadPerformance
-%            
-%            % Insert performance data
-%            allPerformanceFile_ch = ['L:\Project\MWB-Fuel efficiency\Hull '...
-%                'and propeller performance\External Vessel Data\DNV-GL\'...
-%                'Performance\Download.xlsx'];
-%            obj_ves = cVessel();
-%            obj_ves.Database = database;
-%            obj_ves.loadDNVGLPerformance(allPerformanceFile_ch);
-%        end
-%        
-%        if obj.LoadRaw
-%            
-%            % Load Raw
-%            rawDirect = 'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\External Vessel Data\DNV-GL\Raw';
-%            rawFiles_st = rdir([rawDirect, '\**\*.csv']);
-%            rawFiles_c = {rawFiles_st.name};
-%            bunkerFile_ch = 'L:\Project\MWB-Fuel efficiency\Hull and propeller performance\External Vessel Data\DNV-GL\Bunker Reporting\2 Bunker reporting 2017-10-31 09_39.csv';
-%            
-%            obj_ves = cVessel();
-%            obj_ves.Database = database;
-%            obj_ves = obj_ves.insertBunkerDeliveryNoteDNVGL(bunkerFile_ch);
-%            obj_ves.loadDNVGLRaw(rawFiles_c);
-%            
-%            obj_ves.drop('table', 'tempraw');
-%            obj_ves.drop('table', 'tempbunkerdeliverynote');
-%        end
-%         
+       
+       if obj.LoadPerformance
+           
+           % Insert performance data
+           allPerformanceFile_ch = fullfile(obj.DNVGLDir, ...
+               'Performance\Download.xlsx');
+           obj_ves = cVessel('SavedConnection', dbname);
+           obj_ves.loadDNVGLPerformance(allPerformanceFile_ch);
+       end
+       
+       if obj.LoadRaw
+           
+           % Load Raw
+           rawDirect = fullfile(obj.DNVGLDir, '\Raw');
+           rawFiles_st = rdir([rawDirect, '\**\*.csv']);
+           rawFiles_c = {rawFiles_st.name};
+           bunkerFile_ch = fullfile(obj.DNVGLDir, ...
+               'Bunker Reporting\2 Bunker reporting 2017-10-31 09_39.csv');
+           
+           obj_ves = cVessel('SavedConnection', dbname);
+           obj_ves = obj_ves.insertBunkerDeliveryNoteDNVGL(bunkerFile_ch);
+           obj_ves.loadDNVGLRaw(rawFiles_c);
+       end
+       
        end
        
        function loadForce(obj, varargin)
@@ -1043,38 +1057,22 @@ classdef cDB
                validateattributes(forceDir, {'char'}, {'vector'}, ...
                    'cDB.loadForce', 'forceDir', 2);
            end
+           dbname = 'force';
+           if nargin > 2 && ~isempty(varargin{2})
+
+               dbname = varargin{2};
+               validateattributes(dbname, {'char'}, {'vector'}, ...
+                   'cDB.loadForce', 'dbname', 3);
+           end
            
            % Find Files
-           rawFiles_st = rdir([forceDir, '\**\*.csv']);
+           rawFiles_st = rdir([forceDir, '\**\export_autologged.csv']);
            rawFiles_c = {rawFiles_st.name};
+%            rawFiles_c = rawFiles_c(4);
            
            % Load Files
-           obj_ves = cVessel('Database', 'Force');
+           obj_ves = cVessel('SavedConnection', dbname);
            obj_ves.loadForceTech(rawFiles_c);
-       end
-       
-       function loadDNVGL(obj, varargin)
-       % loadDNVGL Load data into DNVGL database
-
-           % Load Performance
-           file_st = rdir([obj.DNVGLDir, '\**\Download.xlsx']);
-           allPerformanceFile_ch = file_st.name;
-           obj_ves = cVessel('Database', 'DNVGL');
-           obj_ves.loadDNVGLPerformance(allPerformanceFile_ch);
-
-           % Load Raw
-           rawFiles_st = rdir([obj.DNVGLDir, '\**\1 Operational reporting*.csv']);
-           rawFiles_c = {rawFiles_st.name};
-           obj_ves.loadDNVGLRaw(rawFiles_c);
-           
-           % Load Bunker
-           bunkerFiles_st = rdir([obj.DNVGLDir, '\**\2 Bunker reporting*.csv']);
-           bunkerFiles_c = {bunkerFiles_st.name};
-           obj_ves = obj_ves.insertBunkerDeliveryNoteDNVGL(bunkerFiles_c);
-
-           % Drop unneeded tables
-           obj_ves.drop('table', 'tempraw');
-           obj_ves.drop('table', 'tempbunkerdeliverynote');
        end
        
        function createTestStatic(obj)

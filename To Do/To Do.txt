@@ -920,9 +920,20 @@ cV.selectInService:
 	assign to InServiceIdentifierColumn to .Variable
 # cSQL.join(tab1, col1, tab2, col2, joinOn1, joinOn2)	
 cV.disp: show size of InService.Data, rather than InService
-Error: cV.set.IMO when cV.Database = 'dnvgl'. When should cMID.select functionality be called?
-
-
+# Error: cV.set.IMO when cV.Database = 'dnvgl'. When should cMID.select functionality be called?
+cBuildDB: create Vessel tables for external databases too, add to these when new IMO added to external database, make all RawData tables identical structure
+cBuildDB:
+	only public methods are buildDNVGL, buildForce, buildHempel and buildAll
+	hidden methods: loadForce, loadDNVGL, loadHempel
+	insertStatic: copy relevant code into loadHempel
+		rename all Insert_Static scripts to Insert_Vessel
+	buildAll: call all build_ methods
+# If setting IMO doesn't cause error on external performance databases, can it update InService data and allow simple timetable in property?
+# 	cV.set.IMO: check if table Vessel exists:
+#		if so, continue as currently
+#		if not, select InService data, set value, return
+cVR: each element corresponds to a separate dry-dock interval of cV
+	
 
 
 
