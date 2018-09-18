@@ -119,7 +119,7 @@ while obj.iterateDD
 
        for oi = 1:numel(currVessel.Report.Regression(ddi))
 
-           currRegr_st = currVessel.Report.Regression(ddi).Order(oi);
+           currRegr_st = currVessel.Report(ddi).Regression(oi);
            coeffs = currRegr_st.Coefficients;
 
            % Figure out plotting any order later...
