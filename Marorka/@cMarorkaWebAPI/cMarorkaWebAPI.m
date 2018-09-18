@@ -71,7 +71,7 @@ classdef cMarorkaWebAPI
 % 			   obj.CurrentFileName = currPivotName;
 %                obj.CurrentRowIdx = 1;
 %                writetable(struct2table(pivot), currPivotName);
-%                
+               
                % Noon data
                vesselName = strcat('Reports_', obj.RemainingVessel.value(vi).ShipName, '.xlsx');
                currReportName = catDir_f(vesselName);
@@ -93,12 +93,13 @@ classdef cMarorkaWebAPI
                obj.CurrentRowIdx = 1;
                obj.arrivalReports(currIMO);
                
-               % Report Progress
-               fprintf(1, ['Completed vessel ', num2str(vi), ', IMO: ',...
-                   num2str(obj.RemainingVessel.value(vi).IMONo) ,'.\n']);
-               
                % Re-assign
                obj.RemainingVessel.value(vi) = [];
+               
+               % Report Progress
+               fprintf(1, ['Completed IMO: ', num2str(currIMO), ', ',...
+                   num2str(numel(obj.RemainingVessel.value)) ' remaining.\n']);
+               
 %                vi = vi + 1;
            end
        end
