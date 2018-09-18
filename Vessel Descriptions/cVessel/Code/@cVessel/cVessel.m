@@ -1081,12 +1081,21 @@ classdef cVessel < cModelID
             
             for di = 1:nDDi
                 
+                
                 % Create logical vectors for current interval from index
                 if di == 1
+                    
                     
                     currIntEnd = datetime(...
                         obj(oi).DryDock(di).StartDateNum,...
                         'ConvertFrom', 'datenum');
+                    
+                    % If no dry-docking data, put all data in one interval
+                    if isempty(currIntEnd)
+
+                        currIntEnd = datetime(9999, 12, 31);
+                    end
+                    
                     currInt_l = currDates <= currIntEnd;
                     
                 elseif di == nDDi
@@ -1094,6 +1103,11 @@ classdef cVessel < cModelID
                     currIntEnd = datetime(...
                         obj(oi).DryDock(di-1).EndDateNum,...
                         'ConvertFrom', 'datenum');
+                    % If no dry-docking data, put all data in one interval
+                    if isempty(currIntEnd)
+
+                        currIntEnd = datetime(9999, 12, 31);
+                    end
                     currInt_l = currDates >= currIntEnd;
                     
                 else
