@@ -6,6 +6,7 @@ function [obj, regStruct] = regression(obj, order)
 validateattributes(order, {'numeric'}, {'positive', 'integer'}, 'regressions',...
     'order', 2);
 regStruct = struct('Coefficients', [], 'Order', [], 'Model', '');
+vStruct = struct('DryDockInterval', []);
 
 % Iterate over performance struct
 while obj.iterateDD
@@ -25,10 +26,11 @@ while obj.iterateDD
         p = polyfit(x, y, order(oi));
         
         % Assign outputs
-        regStruct(vi).DryDockInterval(ddi).Order(oi).Coefficients = p;
-        regStruct(vi).DryDockInterval(ddi).Order(oi).Order = order(oi);
-        regStruct(vi).DryDockInterval(ddi).Order(oi).Model = 'polynomial';
-        currObj_cv.Report(ddi).Regression(oi) = regStruct(vi).DryDockInterval(ddi).Order(oi);
+        vStruct(vi).DryDockInterval(ddi).Order(oi) = regStruct;
+        vStruct(vi).DryDockInterval(ddi).Order(oi).Coefficients = p;
+        vStruct(vi).DryDockInterval(ddi).Order(oi).Order = order(oi);
+        vStruct(vi).DryDockInterval(ddi).Order(oi).Model = 'polynomial';
+        currObj_cv.Report(ddi).Regression(oi) = vStruct(vi).DryDockInterval(ddi).Order(oi);
     end
 end
 end
