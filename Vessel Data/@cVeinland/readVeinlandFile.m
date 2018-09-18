@@ -3,17 +3,14 @@ function tbl = readVeinlandFile(obj, filename)
 %   Detailed explanation goes here
 
 filename = validateCellStr(filename, 'cVessel.loadVeinland', 'filename', 2);
-% validateattributes(filename, {'char'},{'vector'},...
-%     'cVessel.loadVeinland', 'filename', 2);
 nFile = numel(filename);
 
 % Create table for Veinland files
-veinlandNames = obj.variableNames;
-tbl = cell2table(cell(0, numel(veinlandNames)), 'VariableNames', veinlandNames);
+[tbl, veinlandNames, veinlandTypes] = obj.veinlandFileTable;
 
 % tbl_c = cell(1, nFile);
 for fi = 1:nFile
-
+    
     currFile = filename{fi};
     
     % Open file and pre-allocate array
@@ -41,36 +38,33 @@ for fi = 1:nFile
             out_c(ri+1, ci+1) = { row_xml.item(ci).getValue };
         end
     end
-
-    % Convert to table
-    charNames_c = {...
-        'fld_upd'
-        'wind_reference'
-        'wind_speed_unit'
-        'true_wind_speed_unit'
-        'report_date'
-        'report_time'
-        'wind_speed_unit'
-        'true_wind_speed_unit'
-        'position_lat'
-        'position_long'
-        };
-    charCols_l = ismember(names, charNames_c);
-    out_c(:, ~charCols_l) = cellfun(@str2double, out_c(:, ~charCols_l), 'Uni', 0);
-    out_c(:, charCols_l) = cellfun(@char, out_c(:, charCols_l), 'Uni', 0);
     
     % Index found names into table
     [tblColIdx_l, tblColIdx_v] = ismember(names, veinlandNames);
-    if any(~tblColIdx_l)
-        
-        % Error
-        errid = 'loadVeinland:NameUnknown';
-        errmsg = ['File ', currFile, ' contains names not found returned '...
-            'by method variableNames'];
-        error(errid, errmsg);
-    end
-    tbl(end+1:end+nRows, tblColIdx_v) = cell2table(out_c, 'VariableNames', names);
-%     names = genvarname(names);
-%     tbl_c{fi} = cell2table(out_c, 'VariableNames', names);
+    
+    % Allow for columns found in file, not in spec, for now
+    tblColIdx_v(~tblColIdx_l) = [];
+    names(~tblColIdx_l) = [];
+    out_c(:, ~tblColIdx_l) = [];
+    
+    % Convert from java to specified MATLAB type
+    fileTypes = veinlandTypes(tblColIdx_v);
+    charCols_l = ismember(fileTypes, 'char');
+    out_c(:, ~charCols_l) = cellfun(@str2double, out_c(:, ~charCols_l), 'Uni', 0);
+    out_c(:, charCols_l) = cellfun(@char, out_c(:, charCols_l), 'Uni', 0);
+    
+%     if any(~tblColIdx_l)
+%         
+%         % Error
+%         errid = 'loadVeinland:NameUnknown';
+%         errmsg = ['File ''%s'' contains names not found returned '...
+%             'by method variableNames.'];
+%         error(errid, errmsg, currFile);
+%     end
+
+    warning('off',  'MATLAB:table:RowsAddedExistingVars');
+    tbl(end+1:end+nRows, tblColIdx_v) = cell2table(out_c, 'VariableNames',...
+        names);
+    warning('on',  'MATLAB:table:RowsAddedExistingVars');
 end
-% tbl = vertcat(tbl_c{:});
+% {'actual_heel_angle', 'flowcounter_me_in', 'foc_boiler_average', 

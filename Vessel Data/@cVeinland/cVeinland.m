@@ -6,7 +6,36 @@ classdef cVeinland < cGetFiles
         
         Server = 'ftp.veinland.net';
         Source = '/PIM_outbox';
-        Destination = '\\hempelgroup.sharepoint.com@SSL\DavWWWRoot\sites\HullPerformanceManagementTeam\Vessel Library\AMCL\Time series data\New Peace';
+        Destination = '';
+    end
+    
+    properties(Hidden)
+        
+        SpecFile = 'C:\Users\damcl\OneDrive - Hempel Group\Desktop\PIMOBU_4.1.1806.3.xsd';
+        DateFormStr = ['yyyyMMdd''T''HH:mm:SS'];
+        UnwantedVariables = {'id'};
+        MissingData = {'N/A', '---'};
+        FileVariables2Keep = {'report_date',...
+                                'log_speed',...
+                                'shaft_power',...
+                                'rel_wind_speed',...
+                                'rel_wind_angle_heading',...
+                                'gps_speed',...
+                                'heading_course',...
+                                'shaft_rpm',...
+                                'draft_forw',...
+                                'draft_aft',...
+                                'water_depth',...
+                                'seawater_temperature',...
+                                'air_temperature',...
+                                'air_pressure',...
+                                'shaft_torque',...
+                                'foc_me_actual',...
+                                'temperature_me_IN',...
+                                'foc_me_actual',...
+                                'displacement',...
+                                'rudder_angle',...
+                                'wind_speed_unit'};
     end
     
     methods
@@ -31,28 +60,71 @@ classdef cVeinland < cGetFiles
             end
         end
         
-        function tbl = readVeinlandDir(obj, direct, filename)
+        function tbl = readVeinlandDir(obj, filename, varargin)
         % convertToCSVDir
         
         % Input
+        filename_l = false;
+        if nargin > 1 && ~isempty(varargin{1})
+            
+            filename = varargin{1};
+            validateattributes(filename, {'char'}, {'vector'}, ...
+                'cVeinland.readVeinlandDir', 'filename', 2);
+            filename_l = true;
+        end
+        direct = obj.Destination;
+        if nargin > 2
+            
+            direct = varargin{2};
+            validateattributes(direct, {'char'}, {'vector'}, ...
+                'cVeinland.readVeinlandDir', 'direct', 3);
+        end
         
         % Iterate Veinland files in dir
-        directWild_ch = fullfile(direct, '*_PIM_*.XML');
+        pimDir = 'PIM_outbox';
+        directWild_ch = fullfile(direct, pimDir, '\*_PIM_*.XML');
         veinFile_st = dir(directWild_ch);
         veinFile_c = {veinFile_st.name};
-        veinFile_c = cellfun(@(x) fullfile(direct, x), veinFile_c, 'Uni', 0);
+        veinFile_c = cellfun(@(x) fullfile(direct, pimDir, x), veinFile_c,...
+            'Uni', 0);
         
         % Generate table
         tbl = obj.readVeinlandFile(veinFile_c);
         
         % Write table to file
-        writetable(tbl, filename);
+        if filename_l
+            
+            writetable(tbl, filename);
+        end
+        end
+        
+        function [raw, proc] = writeInServiceFile(obj, imo, filename)
+        % writeInServiceFile
+        
+        % Input
+        validateattributes(filename, {'char'}, {'vector'}, ...
+            'cVeinland.writeInServiceFile', 'filename', 3);
+        
+        % Get files for given vessel
+        obj.getVessel(imo);
+
+        % Read files into table
+        raw = obj.readVeinlandDir();
+
+        % Clean table
+        proc = obj.cleanTable(raw);
+
+        % Convert table to timetable
+        proc = obj.convertVeinlandTbl2Timetable(proc);
+
+        % Write import file from prepared timetable
+        proc = obj.writeInServiceFileFromTable(proc, filename);
         end
     end
     
     methods(Static)
         
-%         tbl = readVeinlandFile(filename);
         names = variableNames()
+        [out] = writeInServiceFileFromTable(tbl, file)
     end
 end

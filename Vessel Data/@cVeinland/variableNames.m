@@ -37,6 +37,7 @@ names = [...
     {'foc_ae_24h'                 }
     {'true_wind_angle_heading'    }
     {'true_wind_speed'            }
+    {'true_wind_speed_unit'       }
     {'rel_wind_angle_heading'     }
     {'rel_wind_speed'             }
     {'wind_speed_unit'            }
@@ -80,6 +81,9 @@ names = [...
     {'foc_ae1_in'                 }
     {'foc_ae2_in'                 }];
 otherNamesFoundInFiles = [...
+    {'seawater_temp'       }
+    {'depth'               }
+    {'draft_fwd'           }
     {'dcrate_ae1_in'       }
     {'dcrate_ae2_in'       }
     {'density_ae1_in'      }
