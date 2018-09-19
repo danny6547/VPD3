@@ -41,7 +41,7 @@ classdef cVessel < cModelID
         
         InService;
         Propulsive_Efficiency;
-        Engine_Model;
+%         Engine_Model;
         Wind_Reference_Height_Design;
     end
     
@@ -1436,15 +1436,15 @@ classdef cVessel < cModelID
            obj.WindCoefficient = wc;
        end
        
-       function model = get.Engine_Model(obj)
-       % Get method for dependent property Engine_Model
-          
-          model = '';
-          if ~isempty(obj.Engine)
-              
-              model = obj.Engine.Name;
-          end
-       end
+%        function model = get.Engine_Model(obj)
+%        % Get method for dependent property Engine_Model
+%           
+%           model = '';
+%           if ~isempty(obj.Engine)
+%               
+%               model = obj.Engine.Name;
+%           end
+%        end
        
        function windRefHeight = get.Wind_Reference_Height_Design(obj)
            
