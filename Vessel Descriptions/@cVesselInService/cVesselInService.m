@@ -8,6 +8,7 @@ classdef cVesselInService < cTableObject
         Data = timetable();
         DateFormStr;
         Variable;
+        Timestep = 1;
     end
     
     properties(Hidden, Constant)
