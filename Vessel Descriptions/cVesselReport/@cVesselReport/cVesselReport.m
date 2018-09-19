@@ -4,6 +4,7 @@ classdef cVesselReport < cMySQL
     
     properties
         
+        Variable char = '';
         MovingAverage = [];
         Regression = [];
         ServiceInterval = struct('Duration', [], 'Units', [],...

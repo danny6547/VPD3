@@ -20,8 +20,7 @@ classdef cVessel < cModelID
         Engine = [];
         Owner = [];
         
-        Variable = 'speed_loss';
-        TimeStep double = 1;
+%         Variable = 'speed_loss';
         
         Report = [];
     end
@@ -933,7 +932,7 @@ classdef cVessel < cModelID
        function skip = isPerDataEmpty(obj)
        % isPerDataEmpty True if performance data variable empty or NAN.
        
-           vars = {obj.Variable};
+           vars = {obj.Report.Variable};
            skip = arrayfun(@(x, y) isempty(x.InService.(y{:})) || ...
                 all(isnan(x.InService.(y{:}))), obj, vars);
        end
@@ -1423,12 +1422,12 @@ classdef cVessel < cModelID
            obj.SpeedPower.copySQLToArray;
        end
 
-       function obj = set.Variable(obj, variable)
-       % Set property method for Variable
-           
-%            obj.checkVarname( variable );
-           obj.Variable = variable;
-       end
+%        function obj = set.Variable(obj, variable)
+%        % Set property method for Variable
+%            
+% %            obj.checkVarname( variable );
+%            obj.Variable = variable;
+%        end
        
        function obj = set.WindCoefficient(obj, wc)
            
@@ -1542,7 +1541,7 @@ classdef cVessel < cModelID
             obj.InServicePreferences = ins;
             if ~isempty(ins)
                 
-                obj.Variable = ins.Variable;
+                [obj.Report.Variable] = deal(ins.Variable);
             end
         end
         
