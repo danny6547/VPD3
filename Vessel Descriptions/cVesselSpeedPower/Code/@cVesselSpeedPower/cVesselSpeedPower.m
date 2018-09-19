@@ -348,9 +348,11 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
        end
        end
        
-       function [obj, spvmid] = select(obj, varargin)
+       function [obj, spvmid, obj_c] = select(obj, varargin)
        % select Select data from super table, model table and value table
        
+           obj_c = {obj};
+           
            % Input WILL BE GIVEN BY cMID.set.MID, and will include all of 
            % tab, field, mid, alias_c, obj2_c
            callBaseOnly_l = nargin > 6;
@@ -399,10 +401,16 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
                [obj.Sync] = deal(false);
                obj = select@cTableObject(obj, tab, identifier, [], alias_c,  whereVal);
 
-               tab = cVesselSpeedPower.ValueTable{1};
-               identifier = obj(1).TableIdentifier;
-               whereVal = [obj.Model_ID];
-               obj = select@cTableObject(obj, tab, identifier, [], alias_c,  whereVal);
+               % Check if ValueTable exists, currently doesn't in
+               % hullperformance DB
+               [~, isValueTable] = obj(1).SQL.isTable(obj(1).ValueTable{1});
+               if isValueTable
+                   
+                   tab = cVesselSpeedPower.ValueTable{1};
+                   identifier = obj(1).TableIdentifier;
+                   whereVal = [obj.Model_ID];
+                   obj = select@cTableObject(obj, tab, identifier, [], alias_c,  whereVal);
+               end
                [obj.Sync] = deal(true);
 
                tab = cVesselSpeedPower.OtherTable{1};
@@ -418,6 +426,8 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
                
                obj = select@cTableObject(obj, varargin{:});
            end
+           
+           obj_c = num2cell(obj);
        end
     end
     
