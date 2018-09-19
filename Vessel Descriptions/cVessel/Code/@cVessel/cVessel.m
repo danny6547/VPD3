@@ -19,7 +19,6 @@ classdef cVessel < cModelID
         Displacement = [];
         Engine = [];
         Owner = [];
-        FuelType = 'HFO';
         
         Variable = 'speed_loss';
         TimeStep double = 1;
@@ -1305,7 +1304,6 @@ classdef cVessel < cModelID
         obj.InServicePreferences.SavedConnection = dbname;
         
         obj.SavedConnection = dbname;
-%         obj.Database = dbname;
        end
        
        function dbname = get.Database(obj)
