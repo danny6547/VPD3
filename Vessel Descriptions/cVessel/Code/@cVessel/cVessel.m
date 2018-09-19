@@ -2,10 +2,6 @@ classdef cVessel < cModelID
     %CVESSEL Summary of this class goes here
     %   Detailed explanation goes here
     
-    properties(Dependent)
-        
-    end
-    
     properties
         
         IMO double = [];
@@ -19,9 +15,6 @@ classdef cVessel < cModelID
         Displacement = [];
         Engine = [];
         Owner = [];
-        
-%         Variable = 'speed_loss';
-        
         Report = [];
     end
     
@@ -41,8 +34,6 @@ classdef cVessel < cModelID
         
         InService;
         Propulsive_Efficiency;
-%         Engine_Model;
-        Wind_Reference_Height_Design;
     end
     
     properties(Hidden, Dependent)
@@ -1421,38 +1412,12 @@ classdef cVessel < cModelID
            % Apply connection across array, if array was expanded from default
            obj.SpeedPower.copySQLToArray;
        end
-
-%        function obj = set.Variable(obj, variable)
-%        % Set property method for Variable
-%            
-% %            obj.checkVarname( variable );
-%            obj.Variable = variable;
-%        end
        
        function obj = set.WindCoefficient(obj, wc)
            
            validateattributes(wc, {'cVesselWindCoefficient'}, {'scalar'});
            obj.Configuration.Wind_Coefficient_Model_Id = wc.Model_ID;
            obj.WindCoefficient = wc;
-       end
-       
-%        function model = get.Engine_Model(obj)
-%        % Get method for dependent property Engine_Model
-%           
-%           model = '';
-%           if ~isempty(obj.Engine)
-%               
-%               model = obj.Engine.Name;
-%           end
-%        end
-       
-       function windRefHeight = get.Wind_Reference_Height_Design(obj)
-           
-           windRefHeight = [];
-           if ~isempty(obj.WindCoefficient)
-               
-               windRefHeight = obj.WindCoefficient.Wind_Reference_Height_Design;
-           end
        end
        
        function obj = set.DryDock(obj, ddd)
