@@ -1305,7 +1305,12 @@ classdef cVessel < cModelID
         obj.InServicePreferences.SavedConnection = dbname;
         
         obj.SavedConnection = dbname;
-        obj.Database = dbname;
+%         obj.Database = dbname;
+       end
+       
+       function dbname = get.Database(obj)
+           
+           dbname = obj.SQL.Database;
        end
         
        function obj = set.IMO(obj, IMO)
