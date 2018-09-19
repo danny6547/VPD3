@@ -9,7 +9,7 @@ classdef cVessel < cModelID
     properties
         
         IMO double = [];
-        Vessel_Id double = [];
+        Current_Name char = '';
         Database char = '';
         
         Configuration = [];
@@ -29,6 +29,7 @@ classdef cVessel < cModelID
     
     properties(Hidden)
         
+        Vessel_Id double = [];
         DateFormStr char = 'dd-mm-yyyy HH:MM:SS';
         IterFinished = false;
         DryDockIndexDB = [];
@@ -1569,5 +1570,23 @@ classdef cVessel < cModelID
                     str = 'dd-MM-yyyy HH:mm:ss';
             end
         end
+        
+        function name = get.Current_Name(obj)
+            
+           % Order Info by valid_From date
+           dates = datetime({obj.Info.Valid_From}, ...
+               'Format', obj.DateFormStr);
+           [~, sorti] = sort(dates, 'asc');
+           firsti = sorti(1);
+           name = obj.Info(firsti).Vessel_Name;
+        end
+        
+        function obj = set.Current_Name(obj, ~)
+            
+           
+        end
+        
+        
+        
     end
 end
