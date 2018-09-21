@@ -39,8 +39,13 @@ out.Properties.DimensionNames = {'DateTime_UTC', 'Variables'};
 knots_l = strcmpi(tbl.wind_speed_unit, 'k');
 out.Relative_Wind_Speed(knots_l) = out.Relative_Wind_Speed(knots_l)*knots2mps;
 
-% Divide daily fuel consumption by times of each report
+true_l = strcmpi(tbl.wind_reference, 'T');
+relative_l = ~true_l;
+true2relWind_f = @(x) nan;
+out.Relative_Wind_Direction(true_l) = true2relWind_f(tbl.wind_angle_heading(true_l));
+out.Relative_Wind_Direction(relative_l) = tbl.rel_wind_angle_heading(relative_l);
 
+% Divide daily fuel consumption by times of each report
 
 % Generate import file
 writetable(timetable2table(out), file);

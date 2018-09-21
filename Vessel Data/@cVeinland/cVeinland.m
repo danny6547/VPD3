@@ -104,9 +104,11 @@ classdef cVeinland < cGetFiles
         % Input
         validateattributes(filename, {'char'}, {'vector'}, ...
             'cVeinland.writeInServiceFile', 'filename', 3);
-        
-        % Get files for given vessel
-        obj.getVessel(imo);
+        if ~isempty(imo)
+            
+            % Get files for given vessel
+            obj.getVessel(imo);
+        end
 
         % Read files into table
         raw = obj.readVeinlandDir();
