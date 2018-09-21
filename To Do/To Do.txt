@@ -933,6 +933,8 @@ cBuildDB:
 #		if so, continue as currently
 #		if not, select InService data, set value, return
 cVR: each element corresponds to a separate dry-dock interval of cV
+Error when reading vessel DFDS Begonia Seaways from hullperformance DB (message is "Unknown Error")
+cV: Error when iterating and InService empty
 	
 
 
