@@ -117,7 +117,7 @@ while obj.iterateDD
     % Plot regressions
     if regr_l
 
-       for oi = 1:numel(currVessel.Report.Regression(ddi))
+       for oi = 1:numel(currVessel.Report(ddi).Regression)
 
            currRegr_st = currVessel.Report(ddi).Regression(oi);
            coeffs = currRegr_st.Coefficients;
