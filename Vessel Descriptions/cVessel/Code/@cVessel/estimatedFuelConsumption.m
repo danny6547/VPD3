@@ -90,7 +90,7 @@ while obj.iterateDD
 %     fuelSavings = annualConsRef - annualConsEval;
     costSavings = fuelSavings * fuelCost;
     
-    switch currVessel.FuelType
+    switch currVessel.Engine.FuelType
         
         case 'HFO'
             

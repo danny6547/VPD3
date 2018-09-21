@@ -4,11 +4,8 @@ classdef cVesselWindCoefficient < cModelID
     
     properties
         
-%         Name = '';
-%         Description = '';
         Direction double = [];
         Coefficient double = [];
-        Wind_Reference_Height_Design = [];
     end
     
     properties(Hidden, Constant)

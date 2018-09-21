@@ -38,7 +38,7 @@ while obj.iterateDD
     currAx = ax_v(vi);
 
     % Skip DDi if empty
-    varname = currVessel.Variable;
+    varname = currVessel.Report(ddi).Variable;
     if currVessel.isPerDataEmpty
        continue
     end

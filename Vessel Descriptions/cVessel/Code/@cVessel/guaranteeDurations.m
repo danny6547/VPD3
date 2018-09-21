@@ -77,7 +77,7 @@ while obj.iterateDD
    
 %     tstep = unique(diff(dat));
 %     tstep(tstep==0) = [];
-    tstep = currVessel.TimeStep;
+    tstep = currVessel.InServicePreferences.TimeStep;
     tstep_v = repmat(tstep, [1, size(absStartDates, 2)]);
     
     preStartDates = absStartDates - 0.5*tstep_v;
