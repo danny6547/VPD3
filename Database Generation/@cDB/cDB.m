@@ -1057,7 +1057,7 @@ classdef cDB
                validateattributes(forceDir, {'char'}, {'vector'}, ...
                    'cDB.loadForce', 'forceDir', 2);
            end
-           dbname = 'force';
+           dbname = 'testforce';
            if nargin > 2 && ~isempty(varargin{2})
 
                dbname = varargin{2};
@@ -1072,7 +1072,13 @@ classdef cDB
            
            % Load Files
            obj_ves = cVessel('SavedConnection', dbname);
-           obj_ves.loadForceTech(rawFiles_c);
+           
+           for fi = 1:numel(rawFiles_c)
+               
+               obj_ves.loadForceTech(rawFiles_c{fi});
+               fprintf(1, [datestr(now), ': Completed import of file at ',...
+                   fileparts(rawFiles_c{fi}), '\n']);
+           end
        end
        
        function createTestStatic(obj)
