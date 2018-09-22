@@ -7,6 +7,7 @@ classdef cMarorkaWebAPI
         URL = 'https://online.marorka.com/Odata/v1/ODataService.svc';
         UserName = '';
         Password = '';
+        MaxRowsPerFile = 1e5;
     end
     
     properties(Hidden)
@@ -32,25 +33,22 @@ classdef cMarorkaWebAPI
            validateattributes(directory, {'char'}, {'vector'}, ...
                'cMarorkaWebAPI.saveAllVessels', 'directory', 2);
            
-           
            % Get all static vessel data
-           catDir_f = @(file) fullfile(directory, file);
-           
-%            particulars = obj.call('ShipDescriptions');
-%            filename = catDir_f('ShipDescriptions.csv');
-%            obj.saveFile(particulars.value, filename);
-%            sp = obj.call('SpeedPowerBaselines');
-%            filename = catDir_f('SpeedPowerBaselines.csv');
-%            obj.saveFile(sp.value, filename);
-%            events = obj.call('ShipEvents');
-%            filename = catDir_f('ShipEvents.csv');
-%            obj.saveFile(events.value, filename);
-%            events = obj.call('ShipEvents');
-%            filename = catDir_f('ShipEvents.csv');
-%            obj.saveFile(events.value, filename);
-%            sfoc = obj.call('LoadSFOCBaselines');
-%            filename = catDir_f('SFOCBaselines.csv');
-%            obj.saveFile(sfoc.value, filename);
+           particulars = obj.call('ShipDescriptions');
+           filename = obj.catDir('ShipDescriptions.csv');
+           obj.saveFile(particulars.value, filename);
+           sp = obj.call('SpeedPowerBaselines');
+           filename = obj.catDir('SpeedPowerBaselines.csv');
+           obj.saveFile(sp.value, filename);
+           events = obj.call('ShipEvents');
+           filename = obj.catDir('ShipEvents.csv');
+           obj.saveFile(events.value, filename);
+           events = obj.call('ShipEvents');
+           filename = obj.catDir('ShipEvents.csv');
+           obj.saveFile(events.value, filename);
+           sfoc = obj.call('LoadSFOCBaselines');
+           filename = obj.catDir('SFOCBaselines.csv');
+           obj.saveFile(sfoc.value, filename);
 
            if isempty(obj.RemainingVessel)
                
@@ -60,74 +58,76 @@ classdef cMarorkaWebAPI
            end
            
            % Iterate vessels
-           vi = 1;
-           while ~isempty(obj.RemainingVessel)
+           while ~isempty(obj.RemainingVessel.value)
            
-% %                % High Freq data
-               currIMO = obj.RemainingVessel.value(vi).IMONo;
-%                pivot = obj.inServiceData(currIMO);
-%                vesselName = strcat('Pivot_', vessels.value(vi).ShipName);
-%                currPivotName = catDir_f(vesselName);
-% 			   obj.CurrentFileName = currPivotName;
-%                obj.CurrentRowIdx = 1;
-%                writetable(struct2table(pivot), currPivotName);
+               % High Freq data
+               currIMO = obj.RemainingVessel.value(1).IMONo;
+               
+               vesselName = obj.RemainingVessel.value(1).ShipName;
+               filename = fullfile(directory, ['Pivots_', vesselName, '.csv']);
+               filterName = 'IMONo';
+               filterValue = num2str(currIMO);
+               if isempty(currIMO)
+                   
+                   filterName = 'ShipName';
+                   filterValue = ['''', vesselName, ''''];
+               end
+               obj.inServiceData(filename, filterValue, filterName);
                
                % Noon data
-               vesselName = strcat('Reports_', obj.RemainingVessel.value(vi).ShipName, '.xlsx');
-               currReportName = catDir_f(vesselName);
+               vesselName = strcat('Reports_', obj.RemainingVessel.value(1).ShipName, '.xlsx');
+               currReportName = obj.catDir(vesselName);
 			   obj.CurrentFileName = currReportName;
                obj.CurrentRowIdx = 1;
                obj.noonReports(currIMO);
                
                % Departure data
-               vesselName = strcat('Departure_', obj.RemainingVessel.value(vi).ShipName, '.xlsx');
-               currReportName = catDir_f(vesselName);
+               vesselName = strcat('Departure_', obj.RemainingVessel.value(1).ShipName, '.xlsx');
+               currReportName = obj.catDir(vesselName);
 			   obj.CurrentFileName = currReportName;
                obj.CurrentRowIdx = 1;
                obj.departureReports(currIMO);
                
                % Arrival data
-               vesselName = strcat('Arrival_', obj.RemainingVessel.value(vi).ShipName, '.xlsx');
-               currReportName = catDir_f(vesselName);
+               vesselName = strcat('Arrival_', obj.RemainingVessel.value(1).ShipName, '.xlsx');
+               currReportName = obj.catDir(vesselName);
 			   obj.CurrentFileName = currReportName;
                obj.CurrentRowIdx = 1;
                obj.arrivalReports(currIMO);
                
                % Re-assign
-               obj.RemainingVessel.value(vi) = [];
+               obj.RemainingVessel.value(1) = [];
                
                % Report Progress
-               fprintf(1, ['Completed IMO: ', num2str(currIMO), ', ',...
+               fprintf(1, [datestr(now), '. Completed IMO: ', num2str(currIMO), ', ',...
                    num2str(numel(obj.RemainingVessel.value)) ' remaining.\n']);
-               
-%                vi = vi + 1;
            end
        end
        
-       function data = inServiceData(obj, imo)
+       function data = inServiceData(obj, filename, filterval, varargin)
        
            % Input
-           obj.validateimo(imo);
+           validateattributes(filterval, {'char'}, {'vector'},...
+               'cMarorkaWebAPI.inServiceData', 'filterValue', 3);
+           
+           filterName = 'IMONo';
+           if nargin > 3
+               filterName = varargin{1};
+               validateattributes(filterName, {'char'}, {'vector'},...
+                   'cMarorkaWebAPI.inServiceData', 'filterName', 4);
+           end
+           if strcmpi(filterName, 'IMONo')
+               
+               obj.validateimo(str2double(filterval));
+           end
            
            % Command
            funcname = 'ShipPivots';
-           funcInput = ['$filter=IMONo eq ', num2str(imo), ...
+           funcInput = ['$filter=', filterName, ' eq ', filterval, ...
                ' &$orderby=DateTime desc'];
-           data = iterLink(obj, funcname, funcInput);
-           tbl = struct2table(data);
-%            writetable(struct2table(pivot), currPivotName);
-           
-%            out = obj.call('ShipPivots', funcInput);
-%            data = out.value;
-%            
-%            while isfield(out, 'odata_nextLink')
-%                
-%                funcInput = out.odata_nextLink;
-%                funcInput = strrep(funcInput, 'ShipPivots?', '');
-%                out = obj.call('ShipPivots', funcInput);
-%                datai = out.value;
-%                data = [data; datai];
-%            end
+           tabFunc = @(x, y) tabulatePivots(obj, x, y);
+           tabFuncIn = filename;
+           data = iterLink(obj, funcname, funcInput, tabFunc, tabFuncIn);
        end
        
        function tbl = noonReports(obj, imo)
@@ -143,9 +143,6 @@ classdef cMarorkaWebAPI
                '&$orderby=StartDateTimeGMT desc'];
        var = obj.dailyReportVars;
        tbl = obj.iterLink(funcname, funcInput, var);
-       
-       % Create output table and assign values
-       % [tbl, missingReports] = obj.tabulateReportData(reports, var);
        end
        
        function [tbl, missing] = departureReports(obj, imo)
@@ -159,7 +156,10 @@ classdef cMarorkaWebAPI
            ' and ReportType eq ''Departure Report'' '...
            '&$orderby=StartDateTimeGMT desc'];
        var = obj.departureReportVars;
-       [tbl, missing] = obj.iterLink(funcname, funcInput, var);
+       
+       func_f = @(x, y) tabulateReportData(obj, x, y);
+       funcIn_c = var;
+       [tbl, missing] = obj.iterLink(funcname, funcInput, func_f, funcIn_c);
        end
        
        function [tbl, missing] = arrivalReports(obj, imo)
@@ -174,10 +174,8 @@ classdef cMarorkaWebAPI
            '&$orderby=StartDateTimeGMT desc'];
        var = obj.arrivalReportVars;
        [tbl, missing] = obj.iterLink(funcname, funcInput, var, '', false);
-       
-       % Create table out of all departure reports
-%        [tbl, missing] = obj.tabulateReportData(reports, var);
        end
+       
     end
     
     methods(Hidden, Static)
@@ -200,6 +198,40 @@ classdef cMarorkaWebAPI
         [var] = arrivalReportVars()
         [var] = commonReportVars()
         [var] = departureReportVars()
+        tbl = pivotReportEmpty()
+        
+       function filename = nextFileInSeries(filepath)
+           
+           % Get files in directory with stub and wildcard
+           [direct, file, ext] = fileparts(filepath);
+           search_ch = fullfile(direct, [file, '*', ext]);
+           dir_st = dir(search_ch);
+           if isempty(dir_st)
+               
+               % This file will be the first in series
+               [direct, file, ext] = fileparts(filepath);
+               file = strcat(file, '_1');
+               filename = fullfile(direct, [file, ext]);
+               return
+           end
+           direct = fileparts(filepath);
+           files_c = cellfun(@(x) fullfile(direct, x), {dir_st.name},...
+               'Uni', 0);
+           
+           % Get index from last file
+           files_c = sort(files_c);
+           lastFile = files_c{end};
+           [direct, file, ext] = fileparts(lastFile);
+           idx_i = regexp(file, '\d+$');
+           idx = str2double(file(idx_i:end));
+           
+           % Increment index and append to filename
+           idx = idx + 1;
+           filename = file;
+           filename(idx_i:end) = [];
+           filename = strcat(filename, num2str(idx));
+           filename = fullfile(direct, [filename, ext]);
+       end
     end
     
     methods(Hidden)
@@ -226,19 +258,23 @@ classdef cMarorkaWebAPI
            out = webread(url, opts);
        end
        
-       function [tbl, missing] = iterLink(obj, funcname, funcinput, varargin)
+       function [tbl, missing] = iterLink(obj, funcname, funcinput, tabFunc, varargin)
        % iterLink Iteratively call API while links are returned
            
-% 			if nargin > 4
-% 			
-% 				var = varargin{2};
-% 				validateCellStr(var, 'cMarorkaWebAPI.iterLink', 'var', 5);
-% 			end
-		   
+           validateattributes(tabFunc, {'function_handle'}, ...
+               {'scalar'}, 'cMarorkaWebAPI.iterLink', 'tabFunc', 4);
+
            out = obj.call(funcname, funcinput);
            sti = out.value;
            
-           [tbl, missing] = obj.tabulateReportData(sti, varargin{:});
+           if isempty(sti)
+               
+               tbl = table();
+               missing = struct();
+               return
+           end
+           
+           [tbl, missing] = tabFunc(sti, varargin{:});
            
            while isfield(out, 'odata_nextLink')
                
@@ -247,7 +283,7 @@ classdef cMarorkaWebAPI
                out = obj.call(funcname, funcinput);
                sti = out.value;
                
-               [tbl, missingi] = obj.tabulateReportData(sti, varargin{:});
+               [tbl, missingi] = tabFunc(sti, varargin{:});
                missing = [missing; missingi];
            end
        end
@@ -258,7 +294,7 @@ classdef cMarorkaWebAPI
        validateattributes(reports, {'struct'}, {'vector'}, ...
            'cMarorkaWebAPI.tabulateReportData', 'reports', 2);
        validateCellStr(var, 'cMarorkaWebAPI.tabulateReportData',...
-           'reports', 2);
+           'var', 3);
        
        additionalFuncInput = '';
        if nargin > 3 && ~isempty(additionalFuncInput)
@@ -380,6 +416,22 @@ classdef cMarorkaWebAPI
        missing = reports(emptyReports_l);
        end
 	   
+       function [tbl, missing] = tabulatePivots(obj, reports, filename)
+           
+           % Convert to table
+           tbl = struct2table(reports);
+           
+           % Clean table up
+           tbl.Id = [];
+           
+           % Write to next file
+           filename = obj.nextFileInSeries(filename);
+           writetable(tbl, filename);
+           
+           % Output
+           missing = [];
+       end
+       
 	   function obj = appendTable(obj, tbl)
 	   
 			filename = obj.CurrentFileName;
@@ -402,6 +454,35 @@ classdef cMarorkaWebAPI
            writetable(tbl([], :), filename, 'Range', 'A1',...
                'WriteVariableNames', true);
        end
+       
+       function path = catDir(obj, file)
+           
+           % Get all static vessel data
+           directory = obj.Directory;
+           path = fullfile(directory, file);
+       end
+       
+%        function filename = writetableMulti(obj, tbl, filestub)
+%        % writetableMulti Write table into multiple files, limiting rows
+%            
+%            nFile = numel(obj.MaxRowsPerFile:height(tbl));
+%            filename = repmat({filestub}, 1, nFile);
+%            
+%            rowStarts = 1:incr:nFile;
+%            rowEnds = [rowStarts(2:end)-1, nFile];
+%            
+%            for ti = 1:numel(rowStarts)
+%                
+%                % Curr file name
+%                filename{ti} = strcat(filename{ti}, '_', num2str(ti), '.csv');
+%                
+%                % Index table
+%                si = rowStarts(ti);
+%                ei = rowEnds(ti);
+%                writetable(tbl(si:ei, :), filename{ti});
+%            end
+%        end
+       
     end
 	
 	methods

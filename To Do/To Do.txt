@@ -935,6 +935,8 @@ cBuildDB:
 # cVR: each element corresponds to a separate dry-dock interval of cV
 Error in cV.set.InService after the following: obj = cVessel; obj.Database = 'hullperformance'; obj.IMO = 9036442;
 Test InsertVessel, SelectVessel, ISO19030
+Error when reading vessel DFDS Begonia Seaways from hullperformance DB (message is "Unknown Error")
+cV: Error when iterating and InService empty
 Why can the static database not be read by cVessel for some cTO, and other databases for others?
 	
 
