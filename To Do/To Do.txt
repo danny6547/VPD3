@@ -932,7 +932,10 @@ cBuildDB:
 # 	cV.set.IMO: check if table Vessel exists:
 #		if so, continue as currently
 #		if not, select InService data, set value, return
-cVR: each element corresponds to a separate dry-dock interval of cV
+# cVR: each element corresponds to a separate dry-dock interval of cV
+Error in cV.set.InService after the following: obj = cVessel; obj.Database = 'hullperformance'; obj.IMO = 9036442;
+Test InsertVessel, SelectVessel, ISO19030
+Why can the static database not be read by cVessel for some cTO, and other databases for others?
 	
 
 

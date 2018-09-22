@@ -380,6 +380,11 @@ classdef cTableObject < handle
         if ~iscell(idVal_c)
             
             idVal_c = arrayfun(@(x) x, idVal_c, 'Uni', 0);
+            
+            % Danger here
+            idVal_v = [idVal_c{:}];
+            idVal_v = unique(idVal_v);
+            idVal_c = num2cell(idVal_v);
         end
 
         % Iterate over properties of matching obj and assign values

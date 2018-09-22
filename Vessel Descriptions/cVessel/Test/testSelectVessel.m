@@ -5,13 +5,9 @@ classdef testSelectVessel < matlab.unittest.TestCase & testcVessel
 properties
     
     SelectedVessel;
-%     TestDatabase = 'TestStatic';
-%     SQLWhereVessel;
-%     SQLWhereEngine;
-%     SQLWhereSpeedPower;
-%     SQLWhereDisplacement;
-%     SQLWhereWind;
+    SelectedVesselConfiguarationId;
 end
+
 
 methods
 %     
@@ -115,8 +111,17 @@ methods(TestClassSetup)
         imo = testcase.TestIMO;
         dbname = testcase.TestDatabase;
         vessel = cVessel('SavedConnection', dbname);
-        vessel.InServiceDB = testcase.TestInServiceDB;
+%         vessel.InServiceDB = testcase.TestInServiceDB;
         vessel.IMO = imo;
+        
+        % Remove all Model ID so data matches the expected (uninserted) obj
+        testcase.SelectedVesselConfiguarationId = ...
+            vessel.Configuration.Model_ID;
+        vessel.Configuration.Model_ID = [];
+        vessel.Info.Model_ID = [];
+%         [vessel.SpeedPower.Model_ID] = deal([]);
+%         vessel.Displacement.Model_ID = [];
+        
         testcase.SelectedVessel = vessel;
     end
 end
@@ -297,15 +302,17 @@ methods(Test)
     expRawData_m = [times_v; 1, 1; 1, 2; randn(1, 2)*5; randn(1, 2)*10]';
     expRawData_c = num2cell(expRawData_m);
     expRawData_c(:, 1) = cellstr(datestr([expRawData_c{:, 1}], 'yyyy-mm-dd HH:MM:SS'));
-    expCalcCols_c = {'Raw_Data_Id', 'Vessel_Configuration_Id', 'Speed_Loss'};
-    expCalcData_m = [1, 2; 1, 1; randn(1, 2)*100]';
+    expCalcCols_c = {'Raw_Data_Id', 'Vessel_Configuration_Id', 'Speed_Loss', 'Wind_Resistance_Relative'};
+    
+    vcId_v = repmat(double(testcase.SelectedVesselConfiguarationId), 1, 2);
+    expCalcData_m = [1, 2; vcId_v; randn(2, 2)*100]';
     obj = testcase.TestVessel;
     
     tab = 'RawData';
-    obj.InServiceSQLDB.insertValuesDuplicate(tab, expRawCols_c, expRawData_c);
+    obj.SQL.insertValuesDuplicate(tab, expRawCols_c, expRawData_c);
     
     tab = 'CalculatedData';
-    obj.InServiceSQLDB.insertValuesDuplicate(tab, expCalcCols_c, expCalcData_m);
+    obj.SQL.insertValuesDuplicate(tab, expCalcCols_c, expCalcData_m);
     
     expRaw_tbl = array2timetable(expRawData_m(:, 2:end),...
         'RowTimes', times_dt, 'VariableNames', expRawCols_c(2:end));
@@ -332,11 +339,23 @@ methods(Test)
     
     % 2
     % Execute
-    obj = obj.selectInService();
+    obj = obj.selectInService(expCalcCols_c, expRawCols_c);
     
     % Verify
+    % Table columns are ordered by Timestamp, calc, raw
+    x = expRawCols_c;
+    [~, ii] = ismember({'Timestamp', 'Raw_Data_Id'}, expRawCols_c);
+    x(ii) = [];
+    newColOrder = [expCalcCols_c, x];
+    [~, reorder_i] = ismember(newColOrder, expAll_tbl.Properties.VariableNames);
+    expAll_tbl = expAll_tbl(:, reorder_i);
+    
     act_tbl = obj.InService;
+    varNames = act_tbl.Properties.VariableNames;
+    act_tbl = varfun(@double, act_tbl);
+    act_tbl.Properties.VariableNames = varNames;
     act_m = double(table2array(act_tbl));
+    exp_m = double(table2array(expAll_tbl));
     msg_tbl = ['In-Service table should have all RawData and CalculatedData '...
         'for this vessel configuration when called with no inputs.'];
     testcase.verifyEqual(act_m, exp_m, 'RelTol', 0.001, msg_tbl);

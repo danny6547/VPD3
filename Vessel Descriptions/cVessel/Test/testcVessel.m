@@ -25,7 +25,7 @@ methods
         
         testDB = testcase.TestDatabase;
         vessel = cVessel('SavedConnection', testDB);
-        vessel.InServiceDB = testcase.TestInServiceDB;
+%         vessel.InServiceDB = testcase.TestInServiceDB;
         
         % Identity
         vessel.IMO = testcase.TestIMO;
@@ -94,9 +94,12 @@ methods
         
         % Displacement
 %         vessel.Displacement.Model_ID = 1;
+        heightDispTable = 2;
         vessel.Displacement.Draft_Mean = [10, 12];
         vessel.Displacement.Trim = [0, 1];
         vessel.Displacement.Displacement = [1e5, 1.5e5];
+        vessel.Displacement.TPC = nan(1, heightDispTable);
+        vessel.Displacement.LCF = nan(1, heightDispTable);
         
         % Wind
 %         vessel.WindCoefficient.Model_ID = 1;
