@@ -79,6 +79,7 @@ classdef cVessel < cModelID
         p.addParameter('FileName', '');
         p.addParameter('DatabaseStatic', []);
         p.addParameter('DatabaseInService', '');
+        p.addParameter('DB', '');
         p.KeepUnmatched = true;
         p.parse(varargin{:});
         res = p.Results;
@@ -90,17 +91,27 @@ classdef cVessel < cModelID
         obj = obj.assignDefaults(varargin{:});
         
         % Connect to static and in-service db
-        stat = res.DatabaseStatic;
+        dbboth = res.DB;
+        if ~isempty(dbboth)
+            
+            stat = dbboth;
+            ins = dbboth;
+        else
+            
+            stat = res.DatabaseStatic;
+            ins = res.DatabaseInService;
+        end
+        
         if ~isempty(stat)
             
             stat_sql = cSQL.instantiateChildObj('SavedConnection', stat);
             obj.SQLStatic = stat_sql;
         end
-        ins = res.DatabaseInService;
         if ~isempty(ins)
             
-            ins_sql = cSQL.instantiateChildObj('SavedConnection', ins);
-            obj.InServicePreferences.SQL = ins_sql;
+%             ins_sql = cSQL.instantiateChildObj('SavedConnection', ins);
+            obj.DatabaseInService = ins;
+%             obj.InServicePreferences.SQL = ins_sql;
         end
         
         if ~imo_l
@@ -1293,28 +1304,6 @@ classdef cVessel < cModelID
     end
     
     methods
-        
-%        function obj = set.Database(obj, dbname)
-%         % Change database of object and all nested objects
-%         
-%         % Change DB connection for object and nested objects
-%         ddSQL = [obj.DryDock];
-%         dbname_c = repmat({dbname}, 1, numel(ddSQL));
-%         [ddSQL.SavedConnection] = dbname_c{:};
-%         spSQL = [obj.SpeedPower];
-%         dbname_c = repmat({dbname}, 1, numel(spSQL));
-%         [spSQL.SavedConnection] = dbname_c{:};
-%         
-%         obj.Configuration.SavedConnection = dbname;
-%         obj.WindCoefficient.SavedConnection = dbname;
-%         obj.Displacement.SavedConnection = dbname;
-%         obj.Engine.SavedConnection = dbname;
-%         obj.Owner.SavedConnection = dbname;
-%         obj.Info.SavedConnection = dbname;
-%         obj.InServicePreferences.SavedConnection = dbname;
-%         
-%         obj.SavedConnection = dbname;
-%        end
        
        function obj = set.DatabaseStatic(obj, dbname)
         % Change database of object and all nested objects
@@ -1333,9 +1322,8 @@ classdef cVessel < cModelID
         obj.Engine.SavedConnection = dbname;
         obj.Owner.SavedConnection = dbname;
         obj.Info.SavedConnection = dbname;
-%         obj.InServicePreferences.SavedConnection = dbname;
-%         
-%         obj.SavedConnection = dbname;
+        
+        obj.DatabaseStatic = dbname;
         end
        
         function obj = set.DatabaseInService(obj, dbname)
@@ -1343,7 +1331,7 @@ classdef cVessel < cModelID
         
         % Change DB connection for InService object
         obj.InServicePreferences.SavedConnection = dbname;
-%         obj.SavedConnection = dbname;
+        obj.DatabaseInService = dbname;
         end
        
         function obj = set.SQLStatic(obj, sql)
@@ -1352,10 +1340,6 @@ classdef cVessel < cModelID
             obj.SQLStatic = sql;
             obj.DatabaseStatic = sql.SavedConnection;
         end
-%        function dbname = get.Database(obj)
-%            
-%            dbname = obj.SQL.Database;
-%        end
         
        function obj = set.IMO(obj, IMO)
            
