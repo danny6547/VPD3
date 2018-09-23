@@ -5,7 +5,7 @@ classdef cVessel < cModelID
     properties
         
         IMO double = [];
-        Current_Name char = '';
+%         Current_Name char = '';
 %         Database char = '';
         DatabaseStatic char = '';
         DatabaseInService char = '';
@@ -1594,20 +1594,15 @@ classdef cVessel < cModelID
             end
         end
         
-        function name = get.Current_Name(obj)
+        function obj = set.Info(obj, info)
             
-           % Order Info by valid_From date
-           dates = datetime({obj.Info.Valid_From}, ...
-               'Format', obj.DateFormStr);
-           [~, sorti] = sort(dates, 'asc');
-           firsti = sorti(1);
-           name = obj.Info(firsti).Vessel_Name;
-        end
-        
-        function obj = set.Current_Name(obj, ~)
+            validateattributes(info, {'cVesselInfo'}, {'scalar'});
             
-           
+            if ~isempty(info.Vessel_Name)
+                
+                obj.Name = info.Vessel_Name;
+            end
+            obj.Info = info;
         end
-        
     end
 end
