@@ -1,7 +1,5 @@
 /* Updates the wind resistance correction based on equation G2. */
 
-
-
 DROP PROCEDURE IF EXISTS updateWindResistanceCorrection;
 
 delimiter //
@@ -15,16 +13,16 @@ BEGIN
 		Delivered_Power * (1 - (0.7 / (SELECT Propulsive_Efficiency FROM SpeedPower WHERE IMO_Vessel_Number = imo)));
 	*/
     
-UPDATE `inservice`.tempRawISO e 
+UPDATE tempRawISO e 
 	JOIN
-		(SELECT q.id, w.Propulsive_Efficiency, w.Speed, w.Power, q.Delivered_Power FROM `inservice`.tempRawISO q
+		(SELECT q.id, w.Propulsive_Efficiency, w.Speed, w.Power, q.Delivered_Power FROM tempRawISO q
 	JOIN `static`.SpeedPower w
 		JOIN `static`.SpeedPowerCoefficientModelValue t
 			ON 
 				q.Nearest_Displacement = t.Displacement AND
 				q.Nearest_Trim = t.Trim
 					WHERE w.Speed_Power_Coefficient_Model_Value_Id IN 
-						(SELECT Speed_Power_Coefficient_Model_Id FROM `static`.SpeedPowerCoefficientModelValue WHERE Speed_Power_Coefficient_Model_Id =
+						(SELECT Speed_Power_Coefficient_Model_Value_Id FROM `static`.SpeedPowerCoefficientModelValue WHERE Speed_Power_Coefficient_Model_Id =
 							(SELECT Speed_Power_Coefficient_Model_Id FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid)
                                                                         )
 					GROUP BY id) r

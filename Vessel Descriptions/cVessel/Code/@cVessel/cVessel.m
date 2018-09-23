@@ -6,7 +6,9 @@ classdef cVessel < cModelID
         
         IMO double = [];
         Current_Name char = '';
-        Database char = '';
+%         Database char = '';
+        DatabaseStatic char = '';
+        DatabaseInService char = '';
         
         Configuration = [];
         SpeedPower = [];
@@ -20,6 +22,8 @@ classdef cVessel < cModelID
     
     properties(Hidden)
         
+        SQLStatic;
+%         SQLInService;
         Vessel_Id double = [];
         DateFormStr char = 'dd-mm-yyyy HH:MM:SS';
         IterFinished = false;
@@ -73,6 +77,8 @@ classdef cVessel < cModelID
         p = inputParser();
         p.addParameter('IMO', []);
         p.addParameter('FileName', '');
+        p.addParameter('DatabaseStatic', []);
+        p.addParameter('DatabaseInService', '');
         p.KeepUnmatched = true;
         p.parse(varargin{:});
         res = p.Results;
@@ -82,10 +88,24 @@ classdef cVessel < cModelID
         readInputs_c = {imo};
         
         obj = obj.assignDefaults(varargin{:});
+        
+        % Connect to static and in-service db
+        stat = res.DatabaseStatic;
+        if ~isempty(stat)
+            
+            stat_sql = cSQL.instantiateChildObj('SavedConnection', stat);
+            obj.SQLStatic = stat_sql;
+        end
+        ins = res.DatabaseInService;
+        if ~isempty(ins)
+            
+            ins_sql = cSQL.instantiateChildObj('SavedConnection', ins);
+            obj.InServicePreferences.SQL = ins_sql;
+        end
+        
         if ~imo_l
             return
         end
-
 
         if imo_l
 
@@ -1274,7 +1294,29 @@ classdef cVessel < cModelID
     
     methods
         
-       function obj = set.Database(obj, dbname)
+%        function obj = set.Database(obj, dbname)
+%         % Change database of object and all nested objects
+%         
+%         % Change DB connection for object and nested objects
+%         ddSQL = [obj.DryDock];
+%         dbname_c = repmat({dbname}, 1, numel(ddSQL));
+%         [ddSQL.SavedConnection] = dbname_c{:};
+%         spSQL = [obj.SpeedPower];
+%         dbname_c = repmat({dbname}, 1, numel(spSQL));
+%         [spSQL.SavedConnection] = dbname_c{:};
+%         
+%         obj.Configuration.SavedConnection = dbname;
+%         obj.WindCoefficient.SavedConnection = dbname;
+%         obj.Displacement.SavedConnection = dbname;
+%         obj.Engine.SavedConnection = dbname;
+%         obj.Owner.SavedConnection = dbname;
+%         obj.Info.SavedConnection = dbname;
+%         obj.InServicePreferences.SavedConnection = dbname;
+%         
+%         obj.SavedConnection = dbname;
+%        end
+       
+       function obj = set.DatabaseStatic(obj, dbname)
         % Change database of object and all nested objects
         
         % Change DB connection for object and nested objects
@@ -1291,15 +1333,29 @@ classdef cVessel < cModelID
         obj.Engine.SavedConnection = dbname;
         obj.Owner.SavedConnection = dbname;
         obj.Info.SavedConnection = dbname;
-        obj.InServicePreferences.SavedConnection = dbname;
-        
-        obj.SavedConnection = dbname;
-       end
+%         obj.InServicePreferences.SavedConnection = dbname;
+%         
+%         obj.SavedConnection = dbname;
+        end
        
-       function dbname = get.Database(obj)
-           
-           dbname = obj.SQL.Database;
-       end
+        function obj = set.DatabaseInService(obj, dbname)
+        % Change database of object and all nested objects
+        
+        % Change DB connection for InService object
+        obj.InServicePreferences.SavedConnection = dbname;
+%         obj.SavedConnection = dbname;
+        end
+       
+        function obj = set.SQLStatic(obj, sql)
+            
+            obj.SQL = sql;
+            obj.SQLStatic = sql;
+            obj.DatabaseStatic = sql.SavedConnection;
+        end
+%        function dbname = get.Database(obj)
+%            
+%            dbname = obj.SQL.Database;
+%        end
         
        function obj = set.IMO(obj, IMO)
            
@@ -1338,7 +1394,7 @@ classdef cVessel < cModelID
            obj.Vessel_Id = vid;
            
            % Get connection data for this object
-           [~, connInput_c] = obj.SQL.connectionData();
+           [~, connInput_c] = obj.SQLStatic.connectionData();
            
            % Read DD
            if ~isempty(vid)
@@ -1552,8 +1608,6 @@ classdef cVessel < cModelID
             
            
         end
-        
-        
         
     end
 end

@@ -10,7 +10,7 @@ function params = tableParameters(dbname)
 
     switch dbname
         
-        case {'hullperformance', 'static', 'devhempelsqldb'}
+        case {'hullperformance', 'inservice', 'devhempelsqldb'}
 %     params(end).Database = ;
             params(end).InServiceTable = 'CalculatedData';
             params(end).InServiceIdentifierColumn = 'Vessel_Configuration_Id';

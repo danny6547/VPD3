@@ -1,4 +1,4 @@
-classdef testISO19030 < matlab.unittest.TestCase
+classdef testISO19030 < matlab.unittest.TestCase & handle
 %testISO19030 Test suite for the ISO 19030 Database methods
 %   testISO19030 contains a suite of tests for the stored procedures of a
 %   given database. These tests will execute the procedures on table
@@ -23,6 +23,7 @@ properties(Hidden)
     Database = 'test';
     Uid = 'root';
     Pwd = 'HullPerf2016';
+    InsertedTime;
 end
 
 properties(Constant, Hidden)
@@ -43,11 +44,13 @@ methods(TestClassSetup)
     function vessel = insertTestVessel(testcase)
     % insertTestVessel Insert data for test vessel into table "Vessels"
     
-    vessel = cVessel('Database', testcase.TestStaticDatabase);
-    vessel.InServiceDB = testcase.TestInServiceDatabase;
+    vessel = cVessel('DatabaseStatic', testcase.TestStaticDatabase,...
+        'DatabaseInService', testcase.TestInServiceDatabase);
+%     vessel.InServiceDB = testcase.TestInServiceDatabase;
     vessel.IMO = testcase.TestIMO;
     vessel.Configuration.Breadth_Moulded = 42.8;
     vessel.Configuration.Length_Overall = 334;
+    vessel.Configuration.Block_Coefficient = 0.6;
     vessel.Configuration.Transverse_Projected_Area_Design = 1330;
     vessel.Configuration.Draft_Design = 15;
     vessel.Configuration.LBP = 319;
@@ -124,7 +127,7 @@ methods(TestClassSetup)
     % createTable Creates test table in database if none exists
     
     vessel = testcase.TestVessel;
-    vessel.InServiceSQLDB.call('createTempRawISO', num2str(testcase.TestIMO));
+    vessel.InServicePreferences.SQL.call('createTempRawISO', num2str(testcase.TestIMO));
     end
     
 end
@@ -135,7 +138,7 @@ methods(TestClassTeardown)
     % dropTable Drops test table in database if none exists
     
     vessel = obj.TestVessel;
-    vessel.InServiceSQLDB.drop('TABLE', 'tempRawISO');
+    vessel.InServicePreferences.SQL.drop('TABLE', 'tempRawISO');
     
     end
 end
@@ -440,25 +443,27 @@ methods(Test)
     
     % 1
     % Input
+    config = testcase.TestVessel.Configuration;
     in_draftFore = [10, 12, 11]';
     in_draftAft = [10, 11, 13]';
-    in_Length = testcase.AlmavivaLength;
-    in_Breadth = testcase.AlmavivaBreadth;
-    in_Cb = testcase.AlmavivaBlockCoefficient;
-    [startrow, count] = testcase.insert([in_draftFore, in_draftAft],...
-        {'Static_Draught_Fore', 'Static_Draught_Aft'});
+    in_Length = config.Length_Overall;
+    in_Breadth = config.Breadth_Moulded;
+    in_Cb = config.Block_Coefficient;
+    [startrow, count] = testcase.insert(...
+        {'Static_Draught_Fore', 'Static_Draught_Aft'},...
+        [in_draftFore, in_draftAft]);
     
-    exp_disp = num2cell(...
-        mean([in_draftFore'; in_draftAft'])*(in_Length*in_Breadth*in_Cb))';
+    exp_disp = double(mean([in_draftFore'; in_draftAft'])*(in_Length*in_Breadth*in_Cb))';
     
     % Execute
-    testcase.call('updateDisplacement', testcase.AlmavivaIMO);
+    testcase.call('updateDisplacement', num2str(config.Model_ID));
     
     % Verify
-    act_disp = testcase.read('Displacement', startrow, count);
+    act_disp = testcase.select('Displacement', startrow, count);
+    act_disp = [act_disp{:, :}];
     msg_disp = ['Displacement should equal the block coefficient ',...
         'multiplied by the extreme lengths in three dimensions.'];
-    testcase.verifyEqual(act_disp, exp_disp, 'RelTol', 1e-9, msg_disp);
+    testcase.verifyEqual(act_disp, exp_disp, 'RelTol', 1e-7, msg_disp);
     
     end
     
@@ -532,13 +537,13 @@ methods(Test)
     data = [in_sog', in_speedexp'];
     [startrow, count] = testcase.insert(names, data);
     
-    exp_loss = (((in_sog - in_speedexp) ./ in_speedexp) .* 100)';
+    exp_loss = (((in_sog - in_speedexp) ./ in_speedexp))';
     
     % Execute
     testcase.call('updateSpeedLoss')
     
     % Verify
-    act_loss = testcase.read('Speed_Loss', startrow, count);
+    act_loss = testcase.select('Speed_Loss', startrow, count);
     act_loss = [act_loss{:, :}];
     msg_loss = ['Speed loss expected to be relative difference between ',...
         'speed over ground and expected speed, as a percentage.'];
@@ -582,8 +587,8 @@ methods(Test)
     testcase.call('updateExpectedSpeed', testcase.TestVesselIdString);
     
     % Verify
-    act_espeed = testcase.select('Expected_Speed_Through_Water', count, ...
-        startrow);
+    act_espeed = testcase.select('Expected_Speed_Through_Water', startrow, ...
+        count);
     act_espeed = [act_espeed{:, :}];
     msg_espeed = ['Expected speed is expected to be calculated based on ',...
         'the speed-power curve for this vessel.'];
@@ -606,13 +611,15 @@ methods(Test)
     in_B = vessel.SpeedPower.Coefficient_B;
     exp_espeed = (in_DeliveredPower/exp(in_B)).^(1/in_A)';  % in_A.*log(in_DeliveredPower) + in_B;
     
-    dispReference_v = repmat(dispReference, testSz);
-    dispCriteria_l = ~(dispReference_v >= in_Displacement*0.95 & ...
-        dispReference_v <= in_Displacement*1.05);
-    exp_espeed(dispCriteria_l) = exp_espeed(dispCriteria_l)' .*...
-        (in_Displacement(dispCriteria_l).^(2/3) ./ ...
+%     dispReference_v = repmat(dispReference, testSz);
+%     dispCriteria_l = ~(dispReference_v >= in_Displacement*0.95 & ...
+%         dispReference_v <= in_Displacement*1.05);
+%     exp_espeed(dispCriteria_l) = exp_espeed(dispCriteria_l)' .*...
+%         (in_Displacement(dispCriteria_l).^(2/3) ./ ...
+%         dispReference.^(2/3)).^(1/3);
+    exp_espeed = exp_espeed' .* (in_Displacement.^(2/3) ./ ...
         dispReference.^(2/3)).^(1/3);
-    exp_espeed = num2cell(exp_espeed(:));
+    exp_espeed = exp_espeed(:);
     in_times = now + 0.5:1:now + 0.5 + length(in_DeliveredPower)-1;
     in_times = cellstr(datestr(in_times, testcase.DateTimeFormSQL));
     names = {'Timestamp', 'Corrected_Power', 'Displacement', 'Trim'};
@@ -625,8 +632,8 @@ methods(Test)
     testcase.call('updateExpectedSpeed', testcase.TestVesselIdString);
     
     % Verify
-    act_espeed = testcase.select('Expected_Speed_Through_Water', count,...
-        startrow);
+    act_espeed = testcase.select('Expected_Speed_Through_Water', startrow, ...
+        count);
     act_espeed = [act_espeed{:, :}];
     msg_espeed = ['Expected_Speed_Through_Water is expected to be corrected'...
         'for displacement using the Admiralty formula when displacement is '...
@@ -667,7 +674,7 @@ methods(Test)
     testcase.call('updateWindResistanceCorrection', testcase.TestVesselIdString);
     
     % Verify
-    act_wind = testcase.select('Wind_Resistance_Correction', count, startrow);
+    act_wind = testcase.select('Wind_Resistance_Correction', startrow, count);
     act_wind = [act_wind{:, :}];
     msg_wind = ['Wind resistance correction values should match those ',...
         'calculated with Equation G2 in the standard.'];
@@ -707,7 +714,7 @@ methods(Test)
     testcase.call('updateWindResistanceRelative', testcase.TestVesselIdString);
     
     % Verify
-    act_rel = testcase.select({'Wind_Resistance_Relative'}, count, startrow);
+    act_rel = testcase.select({'Wind_Resistance_Relative'}, startrow, count);
     act_rel = [act_rel{:, :}];
     msg_rel = ['Relative wind resistance expected to match definition given',...
         'by equation G2 in the standard.'];
@@ -737,7 +744,7 @@ methods(Test)
     testcase.call('updateAirResistanceNoWind', testcase.TestVesselIdString);
     
     % Verify
-    act_air = testcase.select({'Air_Resistance_No_Wind'}, count, startrow);
+    act_air = testcase.select({'Air_Resistance_No_Wind'}, startrow, count);
     act_air = [act_air{:, :}];
     msg_air = ['Air resistance expected to match definition given',...
         'by equation G2 in the standard.'];
@@ -762,16 +769,14 @@ methods(Test)
     names = {'Static_Draught_Fore', 'Static_Draught_Aft'};
     data = [draftFore', draftAft'];
     [startrow, count] = testcase.insert(names, data);
-    
-    exp_area = (designArea + ...
-        (designDraft - currentDraft).*shipWidth)';
+    exp_area = double(designArea + (designDraft - currentDraft).*shipWidth)';
     
     % Execute
     testcase.call('updateTransProjArea', testcase.TestVesselIdString);
     
     % Verify
-    act_area = testcase.select('Transverse_Projected_Area_Current', count, ...
-        startrow);
+    act_area = testcase.select('Transverse_Projected_Area_Current', startrow, ...
+        count);
     act_area = [act_area{:, :}];
     msg_area = ['Transverse projected area in current loading condition ',...
         'should be calculated from equations G3 and G4 in the standard'];
@@ -787,14 +792,13 @@ methods(Test)
     name = {'Delivered_Power', 'Wind_Resistance_Correction'};
     data = [in_delivered', in_correction'];
     [startrow, count] = testcase.insert(name, data);
-    
     exp_corr = ( in_delivered - in_correction )';
     
     % Execute
     testcase.call('updateCorrectedPower');
-        
+    
     % Verify
-    act_corr = testcase.select('Corrected_Power', count, startrow);
+    act_corr = testcase.select('Corrected_Power', startrow, count);
     act_corr = [act_corr{:, :}];
     msg_corr = ['The corrected power is expected to be the difference ',...
         'between delivered power and wind resistance correction.'];
@@ -826,7 +830,7 @@ methods(Test)
     testcase.call('updateDeliveredPower', testcase.TestVesselIdString);
     
     % Verify
-    act_del = testcase.select('Delivered_Power', count, startrow);
+    act_del = testcase.select('Delivered_Power', startrow, count);
     act_del = [act_del{:, :}];
     act_allNull = all(isnan(act_del));
     msg_del = ['Delivered Power is expected to be equal to shaft power when',...
@@ -855,7 +859,7 @@ methods(Test)
     testcase.call('updateDeliveredPower', testcase.TestVesselIdString);
     
     % Verify
-    act_del = testcase.select('Delivered_Power', count, startrow);
+    act_del = testcase.select('Delivered_Power', startrow, count);
     act_del = [act_del{:, :}];
     act_allNull = all(isnan(act_del));
     msg_brake = ['Delivered Power is expected to be equal to brake power when',...
@@ -909,7 +913,7 @@ methods(Test)
     
     % Verify
 %     [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
-    [~, act_isAvail] = adodb_query(vessel.InServiceSQLDB.Connection, 'SELECT @out;');
+    [~, act_isAvail] = adodb_query(vessel.InServicePreferences.SQL.Connection, 'SELECT @out;');
     act_isAvail = logical(str2double([act_isAvail{:}]));
     msg_isAvail = ['Shaft power is expected to be available when shaft ',...
         'torque and rpm are available.'];
@@ -931,7 +935,7 @@ methods(Test)
         
     % Verify
 %     [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
-    [~, act_isAvail] = adodb_query(vessel.InServiceSQLDB.Connection, 'SELECT @out;');
+    [~, act_isAvail] = adodb_query(vessel.InServicePreferences.SQL.Connection, 'SELECT @out;');
     act_isAvail = logical(str2double([act_isAvail{:}]));
     msg_isAvail = ['Shaft power is expected not to be available when shaft ',...
         'torque and rpm are available.'];
@@ -971,7 +975,7 @@ methods(Test)
     
     % Verify
 %     [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
-    [~, act_isAvail] = adodb_query(vessel.InServiceSQLDB.Connection, 'SELECT @out;');
+    [~, act_isAvail] = adodb_query(vessel.InServicePreferences.SQL.Connection, 'SELECT @out;');
     act_isAvail = logical(str2double([act_isAvail{:}]));
     msg_avail = ['Output expected to be true when MFOC and LCV are both ',...
         'given or can be calculated.'];
@@ -996,7 +1000,7 @@ methods(Test)
     
     % Verify
 %     [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
-    [~, act_isAvail] = adodb_query(vessel.InServiceSQLDB.Connection, 'SELECT @out;');
+    [~, act_isAvail] = adodb_query(vessel.InServicePreferences.SQL.Connection, 'SELECT @out;');
     act_isAvail = logical(str2double([act_isAvail{:}]));
     msg_avail = ['Output expected to be false when either MFOC or LCV cannot ',...
         'be calculated.'];
@@ -1043,8 +1047,8 @@ methods(Test)
     testcase.call('updateFromBunkerNote', testcase.AlmavivaIMO);
     
     % Verify
-    act_lcv = testcase.read('Lower_Caloirifc_Value_Fuel_Oil', startrow, ...
-        count);
+    act_lcv = testcase.select('Lower_Caloirifc_Value_Fuel_Oil', count, ...
+        startrow);
     msg_lcv = ['LCV values expected to match those in table '...
         'BunkerDeliveryNote for the corresponding rows of BDN_Number.'];
     testcase.verifyEqual(act_lcv, exp_lcv, msg_lcv);
@@ -1091,7 +1095,7 @@ methods(Test)
     testcase.call('removeInvalidRecords');
     
     % Verify
-    mfoc_act = testcase.select('Mass_Consumed_Fuel_Oil', count, startrow);
+    mfoc_act = testcase.select('Mass_Consumed_Fuel_Oil', startrow, count);
     mfoc_act = [mfoc_act{:, :}];
     mfoc_act(isnan(mfoc_act)) = [];
     ZeroMfoc_act = EveryElementOf(mfoc_act);
@@ -1099,7 +1103,6 @@ methods(Test)
     ZeroMfoc_Msg = ['All elements of Mass_Consumed_Fuel_Oil are expected '...
             'to be greater than 0.'];
     testcase.verifyThat(ZeroMfoc_act, ZeroMfoc_cons, ZeroMfoc_Msg);
-    
     end
     
     function testremoveFOCBelowMinimum(testcase)
@@ -1131,8 +1134,8 @@ methods(Test)
     testcase.call('removeFOCBelowMinimum', testcase.TestVesselIdString);
     
     % Verify
-    mfoc_act = testcase.select('Mass_Consumed_Fuel_Oil', count, startrow);
-    mfocFilt_act = testcase.select('Filter_SFOC_Out_Range', count, startrow);
+    mfoc_act = testcase.select('Mass_Consumed_Fuel_Oil', startrow, count);
+    mfocFilt_act = testcase.select('Filter_SFOC_Out_Range', startrow, count);
     testcase.assertNotEmpty(mfoc_act, 'MFOC cannot be empty for test to run.')
     
     mfocFilt_act = [mfocFilt_act{:, :}];
@@ -1182,9 +1185,9 @@ methods(Test)
     testcase.call('filterReferenceConditions', testcase.TestVesselIdString);
     
     % Verify
-    temp_act = testcase.select('Seawater_Temperature', count, startrow, 'id');
-    tempFilt_act = testcase.select('Filter_Reference_Seawater_Temp', count,...
-        startrow, 'id');
+    temp_act = testcase.select('Seawater_Temperature', startrow, count, 'id');
+    tempFilt_act = testcase.select('Filter_Reference_Seawater_Temp', startrow, ...
+        count,'id');
     temp_act = [temp_act{:, :}];
     tempFilt_act = logical([tempFilt_act{:, :}]);
     testcase.assertThat(AnyElementOf(tempFilt_act), IsTrue, ['Filt_Reference_Seawater_Temp must '...
@@ -1214,10 +1217,10 @@ methods(Test)
     testcase.call('filterReferenceConditions', testcase.TestVesselIdString);
     
     % Verify
-    rudder_act = testcase.select('Relative_Wind_Speed', count, startrow, ...
+    rudder_act = testcase.select('Relative_Wind_Speed', startrow, count, ...
         'id');
-    rudderFilt_act = testcase.select('Filter_Reference_Wind_Speed', count, ...
-        startrow, 'id');
+    rudderFilt_act = testcase.select('Filter_Reference_Wind_Speed', startrow, ...
+        count, 'id');
     rudderFilt_act = logical([rudderFilt_act{:, :}]);
     testcase.assertThat(AnyElementOf(rudderFilt_act), IsTrue, ...
         ['Filter_Reference_Wind_Speed must have some true values in order '...
@@ -1267,7 +1270,7 @@ methods(Test)
     inputNames_c = [{'Timestamp'}, inputNames_c];
     startrow = testcase.insert(inputNames_c, inputData_m);
     
-    msql = vessel.InServiceSQLDB;
+    msql = vessel.InServicePreferences.SQL;
     [~, id_c] = msql.select('tempRawISO', 'id');
 %     [~, id_c] = adodb_query(testcase.Connection, ...
 %         'SELECT id FROM tempRawISO');
@@ -1299,12 +1302,12 @@ methods(Test)
     testcase.call('filterReferenceConditions', testcase.TestVesselIdString);
     
     % Verify
-    depth5_act = testcase.select('Water_Depth', 2, startrow, 'id');
-    depth6_act = testcase.select('Water_Depth', 2, startrow + 2, 'id');
+    depth5_act = testcase.select('Water_Depth', startrow, 2, 'id');
+    depth6_act = testcase.select('Water_Depth', startrow + 2, 2, 'id');
     depth5Filt_act = testcase.select('Filter_Reference_Water_Depth', ...
-        2, startrow, 'id');
+        startrow, 2, 'id');
     depth6Filt_act = testcase.select('Filter_Reference_Water_Depth', ...
-        2, startrow + 2, 'id');
+        startrow + 2, 2, 'id');
     testcase.assertNotEmpty(depth5_act, ['Water_Depth must not be non-empty ',...
         'to be tested.']);
     testcase.assertNotEmpty(depth6_act, ['Water_Depth must not be non-empty ',...
@@ -1355,8 +1358,8 @@ methods(Test)
     testcase.call('filterReferenceConditions', testcase.TestVesselIdString);
     
     % Verify
-    rudder_act = testcase.select('Rudder_Angle', count, startrow, 'id');
-    rudderFilt_act = testcase.select('Filter_Reference_Rudder_Angle', count, startrow, 'id');
+    rudder_act = testcase.select('Rudder_Angle', startrow, count, 'id');
+    rudderFilt_act = testcase.select('Filter_Reference_Rudder_Angle', startrow, count, 'id');
     testcase.assertNotEmpty(rudder_act, ['Rudder angle must not be non-empty ',...
         'to be tested.']);
     rudder_act = [rudder_act{:, :}];
@@ -1395,7 +1398,7 @@ methods(Test)
     spTrim = vessel.SpeedPower.Trim;
     lbp = vessel.Configuration.LBP;
     
-    spDisp = 114050;
+    spDisp = vessel.SpeedPower.Displacement;
 %     spTrim = testcase.SPTrim;
     [inDisp_v, inTrim_v] = testcase.randDispTrim(testSz, spDisp, spTrim, lbp);
     inDelPower_v = testcase.randOutThreshold(testSz, @gt, 0);
@@ -1432,8 +1435,8 @@ methods(Test)
     testcase.call('filterSpeedPowerLookup', testcase.TestVesselIdString);
     
     % Verify
-    filt_act = testcase.select('Filter_SpeedPower_Disp', count, startrow, 'id');
-    disp_v = testcase.select('Displacement', count, startrow, 'id');
+    filt_act = testcase.select('Filter_SpeedPower_Disp', startrow, count, 'id');
+    disp_v = testcase.select('Displacement', startrow, count, 'id');
     testcase.assertNotEmpty(disp_v, ['Displacement cannot be empty',...
         ' for test.']);
     testcase.assertNotEmpty(filt_act, ['Filter_SpeedPower_Disp_Trim cannot be empty',...
@@ -1458,9 +1461,9 @@ methods(Test)
         'expected to be TRUE.'];
     testcase.verifyThat(disp_act, minDisp_cons, minDisp_msg);
     
-    filt_act = testcase.select('Filter_SpeedPower_Trim', count, startrow, 'id');
+    filt_act = testcase.select('Filter_SpeedPower_Trim', startrow, count, 'id');
     filt_act = [filt_act{:, :}];
-    trim_c = testcase.select('Trim', count, startrow, 'id');
+    trim_c = testcase.select('Trim', startrow, count, 'id');
     trim_v = [trim_c{:, :}];
     filterSpeedPowerTrim_l = filt_act;
     trim_v(filterSpeedPowerTrim_l) = [];
@@ -1509,10 +1512,10 @@ methods(Test)
     testcase.call('filterPowerBelowMinimum', testcase.TestVesselIdString);
     
     % Verify
-    outPower_v = testcase.select('Corrected_Power', count, startrow, 'id');
+    outPower_v = testcase.select('Corrected_Power', startrow, count, 'id');
     outPower_v = [outPower_v{:, :}];
     outPower_v(isnan(outPower_v)) = [];
-    filt_act = testcase.select('Filter_SpeedPower_Below', count, startrow, 'id');
+    filt_act = testcase.select('Filter_SpeedPower_Below', startrow, count, 'id');
     filt_act = [filt_act{:, :}];
     filt_act(isnan(filt_act)) = [];
     size_msg = ['FilterSPBelow is expected to have some values TRUE before ',...
@@ -1554,7 +1557,7 @@ methods(Test)
     testcase.call('normaliseHigherFreq');
     
     % Verify
-    outDepth_c = testcase.select('Water_Depth', count, startrow, 'id');
+    outDepth_c = testcase.select('Water_Depth', startrow, count, 'id');
     outDepth_v = [outDepth_c{:, :}];
     outDepth_v(isnan(outDepth_v)) = [];
     speed_msg = ['High-frequency data is expected to be averaged over the '...
@@ -1589,7 +1592,7 @@ methods(Test)
     testcase.call('normaliseLowerFreq');
     
     % Verify
-    outDepth_c = testcase.select('Water_Depth', count, startrow, 'id');
+    outDepth_c = testcase.select('Water_Depth', startrow, count, 'id');
     outDepth_v = [outDepth_c{:, :}];
     outDepth_v = outDepth_v(:)';
     speed_msg = ['Low-frequency data is expected to be repeated over the '...
@@ -1693,7 +1696,7 @@ methods(Test)
     testcase.call('updateChauvenetCriteria');
     
     % Verify
-    outChauv_c = testcase.select('Chauvenet_Criteria', count, startrow, 'id');
+    outChauv_c = testcase.select('Chauvenet_Criteria', startrow, count, 'id');
     outChauv_v = [outChauv_c{:, :}];
     outChauv_v = outChauv_v(:)';
 %     outChauv_v(isnan(outChauv_v)) = [];
@@ -1819,7 +1822,7 @@ methods(Test)
     testcase.call('updateValidated');
     
     % Verify
-    outValidated_c = testcase.select('Validated', count, startrow, 'id');
+    outValidated_c = testcase.select('Validated', startrow, count, 'id');
     outValidated_v = [outValidated_c{:, :}];
     outValidated_v(isnan(outValidated_v)) = [];
     actValidated = logical(outValidated_v);
@@ -1852,7 +1855,7 @@ methods(Test)
     testcase.call('updateValidated');
     
     % Verify
-    outValidated_c = testcase.select('Validated', count, startrow, 'id');
+    outValidated_c = testcase.select('Validated', startrow, count, 'id');
     outValidated_v = [outValidated_c{:, :}];
     outValidated_v(isnan(outValidated_v)) = [];
     actValidated = logical(outValidated_v);
@@ -1860,9 +1863,9 @@ methods(Test)
         'data frequency is less than once per 10 minutes.'];
     testcase.verifyThat(EveryElementOf(actValidated), IsFalse, validated_msg);
     
-    outSTW_c = testcase.select('Speed_Through_Water', count, startrow, 'id');
-    outSOG_c = testcase.select('Speed_Over_Ground',  count, startrow, 'id');
-    outRA_c = testcase.select('Rudder_Angle',  count, startrow, 'id');
+    outSTW_c = testcase.select('Speed_Through_Water', startrow, count, 'id');
+    outSOG_c = testcase.select('Speed_Over_Ground',  startrow, count, 'id');
+    outRA_c = testcase.select('Rudder_Angle',  startrow, count, 'id');
     
     outSTW = [outSTW_c{:, :}]';
     outSOG = [outSOG_c{:, :}]';
@@ -1908,7 +1911,7 @@ methods(Test)
     testcase.call('filterSFOCOutOfRange', testcase.TestVesselIdString);
     
     % Verify
-    outFilt_c = testcase.select('Filter_SFOC_Out_Range', count, startrow, 'id');
+    outFilt_c = testcase.select('Filter_SFOC_Out_Range', startrow, count, 'id');
     outFilt_v = logical([outFilt_c{:, :}]);
     msgFilt = ['Values at indices where brake power is out of range '...
         'are expected to be TRUE'];
@@ -1937,7 +1940,7 @@ methods(Test)
     testcase.call('updateTrim');
     
     % Verify
-    act_Trimc = testcase.select({'Trim'}, count, startrow);
+    act_Trimc = testcase.select({'Trim'}, startrow, count);
     act_Trim = [act_Trimc{:, :}];
     msg_Trim = ['Trim expected to be the difference between fore and '...
         'aft draft.'];
@@ -2003,47 +2006,47 @@ methods(Test)
     testcase.call('updateWindReference', testcase.TestVesselIdString);
     
     % Verify
-    act_Speedc = testcase.select({'True_Wind_Speed'}, count, startrow);
+    act_Speedc = testcase.select({'True_Wind_Speed'}, startrow, count);
     act_Speed = [act_Speedc{:, :}]';
     msg_Speed = ['True wind speed should be '...
         'calculated according to Annex E.'];
     exp_Speed = vt;
     testcase.verifyEqual(act_Speed, exp_Speed, 'RelTol', 9e-3, msg_Speed);
     
-    act_Dirc = testcase.select({'True_Wind_Direction'}, count, startrow);
+    act_Dirc = testcase.select({'True_Wind_Direction'}, startrow, count);
     act_Dir = [act_Dirc{:, :}]';
     msg_Dir = ['True wind direction at reference height should be '...
         'calculated according to Annex E.'];
     exp_Dir = psit;
     testcase.verifyEqual(act_Dir, exp_Dir, 'RelTol', 9e-3, msg_Dir);
     
-    act_Heightc = testcase.select({'Wind_Reference_Height'}, count, startrow);
+    act_Heightc = testcase.select({'Wind_Reference_Height'}, startrow, count);
     act_Height = [act_Heightc{:, :}]';
     msg_Height = ['Wind reference height should be '...
         'calculated according to Annex E.'];
-    exp_Height = zref;
+    exp_Height = double(zref);
     testcase.verifyEqual(act_Height, exp_Height, 'RelTol', 9e-3, msg_Height);
     
-    act_Speedc = testcase.select({'True_Wind_Speed_Reference'}, count, startrow);
+    act_Speedc = testcase.select({'True_Wind_Speed_Reference'}, startrow, count);
     act_Speed = [act_Speedc{:, :}]';
     msg_Speed = ['True wind speed at reference height should be '...
         'calculated according to Annex E.'];
-    exp_Speed = vtref;
+    exp_Speed = double(vtref);
     testcase.verifyEqual(act_Speed, exp_Speed, 'RelTol', 9e-3, msg_Speed);
     
-    act_Speedc = testcase.select({'Relative_Wind_Speed_Reference'}, count, startrow);
+    act_Speedc = testcase.select({'Relative_Wind_Speed_Reference'}, startrow, count);
     act_Speed = [act_Speedc{:, :}]';
     msg_Speed = ['Relative wind speed at reference height should be '...
         'calculated according to Annex E.'];
-    exp_Speed = vrref;
-    testcase.verifyEqual(act_Speed, exp_Speed, 'RelTol', 9e-3, msg_Speed);
+    exp_Speed = double(vrref);
+    testcase.verifyEqual(act_Speed, exp_Speed, 'RelTol', 1e-2, msg_Speed);
     
-    act_Dirc = testcase.select({'Relative_Wind_Direction_Reference'}, count, startrow);
+    act_Dirc = testcase.select({'Relative_Wind_Direction_Reference'}, startrow, count);
     act_Dir = [act_Dirc{:, :}]';
     msg_Dir = ['Relative wind direction at reference height should be '...
         'calculated according to Annex E.'];
     exp_Dir = psirref;
-    testcase.verifyEqual(act_Dir, exp_Dir, 'RelTol', 9e-3, msg_Dir);
+    testcase.verifyEqual(act_Dir, double(exp_Dir), 'RelTol', 9e-3, msg_Dir);
     
     end
 end
@@ -2061,7 +2064,7 @@ methods
     narginchk(2, 3)
     
     vessel = testcase.TestVessel;
-    msql = vessel.InServiceSQLDB;
+    msql = vessel.InServicePreferences.SQL;
     msql.call(funcname, varargin{:});
     
 %     conn = testcase.Connection;
@@ -2090,7 +2093,7 @@ methods
     % will result in COUNT having no effect.
     
     vessel = obj.TestVessel;
-    msql = vessel.InServiceSQLDB;
+    msql = vessel.InServicePreferences.SQL;
     tab = obj.TableName;
     
     % Input
@@ -2163,7 +2166,7 @@ methods
     
     tab = testcase.TableName;
     vessel = testcase.TestVessel;
-    msql = vessel.InServiceSQLDB;
+    msql = vessel.InServicePreferences.SQL;
     
     sql_numrows = ['SELECT COUNT(*) FROM ' testcase.TableName];
     [~, startrow_c] = adodb_query(msql.Connection, sql_numrows);
@@ -2197,14 +2200,57 @@ methods
         data = [data, vid_c];
     end
     
-    if ~ismember('Timestamp', names)
-        
-        names = [names, {'Timestamp'}];
-        dates = now:1:now+(size(data, 1)-1);
-        vid_c = cellstr(datestr(dates, testcase.DateTimeFormSQL));
-        data = [data, vid_c];
+    form_c = {'dd-mm-yyyy', 'dd-mm-yyyy HH:MM:SS'};
+    isMidnight_f = @(x) cellfun(@(x) length(x) ~= 10, x);
+%     getDateForm_f = @(y) form_c(cellfun(@(x) length(x) ~= 10, y)+1);
+%     form_c(cellfun(@(x) length(x) == 10, insertedTime_c)+1)
+    
+    insertedTime_tbl = testcase.select('Timestamp');
+    if isempty(insertedTime_tbl)
+%         insertedTime_c = {datestr(now, testcase.DateTimeFormSQL)};
+        insertedTime_v = now;
+    else
+        insertedTime_c = [insertedTime_tbl{:,:}];
+%         dateForm_c = getDateForm_f(insertedTime_c);
+        insertedTime_v = nan(1, length(insertedTime_c));
+        isMidnight_l = isMidnight_f(insertedTime_c);
+        if any(isMidnight_l)
+            insertedTime_v(isMidnight_l) = datenum(insertedTime_c(isMidnight_l), form_c{2});
+        end
+        if any(~isMidnight_l)
+            insertedTime_v(~isMidnight_l) = datenum(insertedTime_c(~isMidnight_l), form_c{1});
+        end
+%         insertedTime_v = datenum(insertedTime_c, dateForm_c);
+%         insertedTime_v = datenum(insertedTime_c, testcase.DateTimeFormAdodb);
     end
     
+    if ~ismember('Timestamp', names)
+        
+        latestTime = max(insertedTime_v);
+        startTime = latestTime + 1;
+        names = [names, {'Timestamp'}];
+        dates = startTime:1:startTime+(size(data, 1)-1);
+%         vid_c = cellstr(datestr(dates, testcase.DateTimeFormSQL));
+        timei = size(data, 2) + 1;
+%         data = [data, vid_c];
+%         testcase.InsertedTime = [testcase.InsertedTime, dates];
+    else
+        
+        % If test has defined times, make sure all are after the latest
+        [~, timei] = ismember('Timestamp', names);
+        inTime_c = data(:, timei);
+        dates = datenum(inTime_c, testcase.DateTimeFormSQL);
+        
+        if any(ismember(dates, insertedTime_v))
+            
+            newStartDate = max(insertedTime_v) + 1;
+            dates = dates + newStartDate;
+        end
+    end
+    
+    newTime_c = cellstr(datestr(dates, testcase.DateTimeFormSQL));
+    data(:, timei) = newTime_c;
+%     testcase.InsertedTime = [testcase.InsertedTime, dates(:)'];
     
     msql.insertValues(tab, names, data);
     

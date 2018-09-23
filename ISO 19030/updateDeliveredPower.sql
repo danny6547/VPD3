@@ -5,9 +5,6 @@ calculated and, if so, it will call updateShaftPower. If not, it will check
 whether brake power can be calculated and if so, it will call 
 updateBrakePower. If not, an error will be returned. */
 
-
-
-
 DROP PROCEDURE IF EXISTS updateDeliveredPower;
 
 delimiter //
@@ -21,14 +18,14 @@ proc_label:BEGIN
     /* Check if torsio-metre data available 
     CALL log_msg(concat('isShaftAvail = ', @isShaftAvail));
 		CALL log_msg(concat('UPDATE shaft power called')); */
-        
+    
 	DECLARE powerGiven BOOLEAN Default FALSE;
 	DECLARE powerIncalculable CONDITION FOR SQLSTATE '45000';
     
     DECLARE isShaftRequired BOOLEAN Default TRUE;
     
-    SET powerGiven := (SELECT COUNT(*) FROM `inservice`.tempRawISO WHERE Delivered_Power IS NOT NULL) > 0;
-    SET isShaftRequired := (SELECT COUNT(*) FROM `inservice`.tempRawISO WHERE Shaft_Power IS NOT NULL) = 0;
+    SET powerGiven := (SELECT COUNT(*) FROM tempRawISO WHERE Delivered_Power IS NOT NULL) > 0;
+    SET isShaftRequired := (SELECT COUNT(*) FROM tempRawISO WHERE Shaft_Power IS NOT NULL) = 0;
 	
     /* IF power already given, no need to continue updating */
     IF powerGiven THEN
@@ -40,22 +37,22 @@ proc_label:BEGIN
     
     IF NOT isShaftRequired THEN
     
-		UPDATE `inservice`.tempRawISO SET Delivered_Power = Shaft_Power;
+		UPDATE tempRawISO SET Delivered_Power = Shaft_Power;
     
     ELSEIF @isShaftAvail THEN
 		
-        CALL `inservice`.updateShaftPower(imo);
-        UPDATE `inservice`.tempRawISO SET Delivered_Power = Shaft_Power;
+        CALL updateShaftPower(imo);
+        UPDATE tempRawISO SET Delivered_Power = Shaft_Power;
 		
     /* Check if engine data available */
     ELSEIF @isBrakeAvail THEN
 		
 		IF @isMassNeeded THEN
-			CALL `inservice`.updateMassFuelOilConsumed(imo);
+			CALL updateMassFuelOilConsumed(imo);
         END IF;
 		
-		CALL `inservice`.updateBrakePower(imo);
-        UPDATE `inservice`.tempRawISO SET Delivered_Power = Brake_Power;
+		CALL updateBrakePower(imo);
+        UPDATE tempRawISO SET Delivered_Power = Brake_Power;
 		
     /* Error if value cannot be calculated */
     ELSE

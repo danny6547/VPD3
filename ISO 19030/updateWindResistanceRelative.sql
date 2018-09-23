@@ -1,7 +1,5 @@
 /* Update Wind Resistance Relative based on equation G2. */
 
-
-
 DROP PROCEDURE IF EXISTS updateWindResistanceRelative;
 
 delimiter //
@@ -32,11 +30,11 @@ BEGIN
 				w.Coefficient;
 		/*( SELECT Coefficient FROM WindCoefficientDirection WHERE IMO_Vessel_Number = imo AND Relative_Wind_Direction >= Start_Direction AND Relative_Wind_Direction < End_Direction);*/
 	
-    UPDATE `inservice`.tempRawISO t
+    UPDATE tempRawISO t
 		JOIN (
 				SELECT b.Coefficient, b.tid AS 'id' FROM 
 				(
-					SELECT t.id AS 'tid', MIN(ABS(w.Direction - t.Relative_Wind_Direction_Reference)) AS 'MinDiff', Coefficient, Direction FROM `inservice`.tempRawISO t
+					SELECT t.id AS 'tid', MIN(ABS(w.Direction - t.Relative_Wind_Direction_Reference)) AS 'MinDiff', Coefficient, Direction FROM tempRawISO t
 						JOIN `static`.WindCoefficientModel e
 							JOIN `static`.WindCoefficientModelValue w
 								ON w.Wind_Coefficient_Model_Id = e.Wind_Coefficient_Model_Id
@@ -45,7 +43,7 @@ BEGIN
 						 ) a
 				JOIN 
 				(
-					SELECT t.id AS 'tid', ABS(w.Direction - t.Relative_Wind_Direction_Reference) AS 'Diff', Coefficient, Direction FROM `inservice`.tempRawISO t
+					SELECT t.id AS 'tid', ABS(w.Direction - t.Relative_Wind_Direction_Reference) AS 'Diff', Coefficient, Direction FROM tempRawISO t
 						JOIN `static`.WindCoefficientModel e
 							JOIN `static`.WindCoefficientModelValue w
 								ON w.Wind_Coefficient_Model_Id = e.Wind_Coefficient_Model_Id

@@ -735,29 +735,33 @@ classdef cDB
        function createInService(obj, varargin)
        
        % Input
-       dbname = 'InService';
+       dbname = 'inservice';
        if nargin > 1 && ~isempty(varargin{1})
 
            dbname = varargin{1};
            dbname = obj.validateDBName(dbname);
        end
-       obj.SQL = cMySQL('SavedConnection', dbname);
+%        obj.SQL = cMySQL('SavedConnection', dbname);
        
-       refresh_l = true;
-       if nargin > 2
-           
-           refresh_l = varargin{2};
-           validateattributes(refresh_l, {'logical'}, {'scalar'},...
-               'cDB.createInService', 'refresh', 3);
-       end
-           
        % Create Database
+       obj = createDatabase(obj, dbname);
        sql = obj.SQL;
-       if refresh_l
-           
-           sql.drop('DATABASE', dbname, true);
-           sql.createDatabase(dbname, true);
-       end
+       
+%        refresh_l = true;
+%        if nargin > 2
+%            
+%            refresh_l = varargin{2};
+%            validateattributes(refresh_l, {'logical'}, {'scalar'},...
+%                'cDB.createInService', 'refresh', 3);
+%        end
+%            
+%        % Create Database
+%        sql = obj.SQL;
+%        if refresh_l
+%            
+%            sql.drop('DATABASE', dbname, true);
+%            sql.createDatabase(dbname, true);
+%        end
        
        % Build Schema
 %        obj.Database = dbname;

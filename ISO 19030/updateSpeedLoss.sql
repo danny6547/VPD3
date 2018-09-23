@@ -8,6 +8,6 @@ delimiter //
 CREATE PROCEDURE updateSpeedLoss()
 BEGIN
 
-	UPDATE `inservice`.tempRawISO SET Speed_Loss = (Speed_Through_Water - Expected_Speed_Through_Water) / Expected_Speed_Through_Water;
+	UPDATE tempRawISO SET Speed_Loss = (Speed_Through_Water - Expected_Speed_Through_Water) / Expected_Speed_Through_Water;
 
 END;

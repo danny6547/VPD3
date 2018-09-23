@@ -5,11 +5,11 @@ DROP PROCEDURE IF EXISTS ISO19030;
 
 delimiter //
 
-CREATE PROCEDURE ISO19030(imo int)
+CREATE PROCEDURE ISO19030(vcid int)
 BEGIN
 	
 	/* Get retreived data set 5.3.3 */
-    CALL `inservice`.createTempRawISO(imo);
+    CALL `inservice`.createTempRawISO(vcid);
     CALL `inservice`.removeInvalidRecords();
     CALL `inservice`.sortOnDateTime();
     CALL `inservice`.updateDefaultValues();
@@ -22,9 +22,9 @@ BEGIN
     CALL `inservice`.updateChauvenetCriteria();
     CALL `inservice`.updateValidated();
     
-    CALL `inservice`.updateDisplacement(imo);
+    CALL `inservice`.updateDisplacement(vcid);
     CALL `inservice`.updateTrim();
-    CALL `inservice`.filterSpeedPowerLookup(imo);
+    CALL `inservice`.filterSpeedPowerLookup(vcid);
     
     /* Correct for environmental factors 5.3.5 */
     CALL `inservice`.updateDeliveredPower(imo);

@@ -6,7 +6,6 @@ classdef cVesselInService < cTableObject
         
         Limit = 20000;
         Data = timetable();
-        DateFormStr;
         Variable;
         Timestep = 1;
     end
@@ -16,6 +15,11 @@ classdef cVesselInService < cTableObject
         DataProperty = {'Data'};
         TableIdentifier = '';
         EmptyIgnore = '';
+    end
+    
+    properties(Hidden, Dependent)
+        
+        DateFormStr;
     end
     
     methods
@@ -74,6 +78,27 @@ classdef cVesselInService < cTableObject
             validateattributes(ins, {'timetable'}, {});
             ins = sortrows(ins);
             obj.Data = ins;
+        end
+        
+        function str = get.DateFormStr(obj)
+            
+            % Get params for this database
+            switch class(obj.SQL)
+                
+                case 'cMySQL'
+                    
+                    str = 'dd-MM-yyyy HH:mm:ss.s';
+                    
+                case 'cTSQL'
+                    
+                    str = 'yyyy-MM-dd HH:mm:ss.s';
+                otherwise
+            end
+        end
+        
+        function obj = set.DateFormStr(obj, ~)
+            
+            
         end
     end
 end
