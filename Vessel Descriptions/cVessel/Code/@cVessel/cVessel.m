@@ -5,8 +5,6 @@ classdef cVessel < cModelID
     properties
         
         IMO double = [];
-%         Current_Name char = '';
-%         Database char = '';
         DatabaseStatic char = '';
         DatabaseInService char = '';
         
@@ -23,7 +21,6 @@ classdef cVessel < cModelID
     properties(Hidden)
         
         SQLStatic;
-%         SQLInService;
         Vessel_Id double = [];
         DateFormStr char = 'dd-mm-yyyy HH:MM:SS';
         IterFinished = false;
@@ -126,9 +123,15 @@ classdef cVessel < cModelID
               'IMO', 1);
            
            % Expand into array
-           obj = [obj, arrayfun(@(x) cVessel(), nan([1, numel(imo)-1]))];
-           
-           [obj, ~, ~, indb] = obj.performanceData(readInputs_c{:});
+           obj_c = arrayfun(@(x) cVessel(), nan([1, numel(imo)-1]), 'Uni', 0);
+           obj = [obj, obj_c{:}];
+           imo_c = num2cell(imo);
+           dbstat = obj.DatabaseStatic;
+           dbins = obj.DatabaseInService;
+           [obj.DatabaseStatic] = deal(dbstat);
+           [obj.DatabaseInService] = deal(dbins);
+           [obj.IMO] = deal(imo_c{:});
+%            [obj, ~, ~, indb] = obj.performanceData(readInputs_c{:});
         end
 
         obj = obj.assignDefaults();
