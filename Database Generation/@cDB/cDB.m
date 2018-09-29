@@ -1092,6 +1092,12 @@ classdef cDB
            obj.createInService('TestInService');
        end
        
+       function migrateStatic(obj)
+       
+        remoteDB = 'hullperformance';
+        localDB = 'static';
+        obj.migrateVessels(obj, remoteDB, localDB);
+       end
     end
     
     methods(Static)
@@ -1268,6 +1274,38 @@ classdef cDB
            wind.Coefficient = 0;
            wind.Direction = 0;
            wind.insert;
+       end
+       
+       function migrateVessels(db1, db2)
+        % migrateStatic Migrate all static vessel data to new database
+        
+        % Get all model tables
+        cv = cVessel('DB', db1);
+        tab = cv.getModels('deleted = 0');
+
+        % Iterate models in table
+        for ri = 1:height(tab)
+
+            % Create objects with data from this row
+            obji = cVessel('DatabaseStatic', db1, ...
+                'DatabaseInService', 'Empty');
+            currIMO = str2double(tab.imo{ri});
+            obji.IMO = currIMO;
+
+            % Migrate
+            try obji.migrate(db2);
+                
+                fprintf(1, ['Vessel index %u complete at ', datestr(now), '\n'], ri);
+            catch ee
+                
+                if ~strcmp(ee.identifier, 'cV:EmptyConfig')
+                    
+                    rethrow(ee)
+                end
+                
+                fprintf(1, ['Vessel index %u skipped because of missing configuration at ', datestr(now), '\n'], ri);
+            end
+        end
        end
     end
     
