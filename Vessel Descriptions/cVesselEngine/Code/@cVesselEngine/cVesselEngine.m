@@ -112,6 +112,16 @@ classdef cVesselEngine < cModelID
            end
        end
        end
+       
+       function obj = insert(obj, varargin)
+           
+           % Assign defaults required by local databases, not remote
+           [obj.Minimum_FOC_ph] = deal(0);
+           [obj.Highest_Given_Brake_Power] = deal(0);
+           
+           % Call parent class method
+           insert@cModelID(obj, varargin{:});
+       end
     end
     
     methods(Static)
