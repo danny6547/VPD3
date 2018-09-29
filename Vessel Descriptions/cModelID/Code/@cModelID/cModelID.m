@@ -260,6 +260,43 @@ classdef (Abstract) cModelID < cTableObject & handle
                 obj(1).ModelField'];
         end
         
+        function obj = migrate(obj, db)
+        % migrate Migrate model data to new database
+        
+        % Input
+        validateattributes(db, {'char'}, {'vector'}, 'cModelID.migrate',...
+            'db', 2);
+        
+        % Check non-empty
+        if isempty(obj)
+            
+            errid = 'cMID:migrateEmpty';
+            errmsg = ['Database migration cannot be performed on empty ',...
+                'object cannot be empty'];
+            error(errid, errmsg);
+        end
+        
+        for oi = 1:numel(obj)
+            
+            obji = obj(oi);
+            
+            % Check non-empty
+            if isempty(obji)
+                
+                continue
+            end
+            
+            % Remove current model id and change database
+            obji.Sync = false;
+            obji.Model_ID = [];
+            obji.SavedConnection = db;
+            obji.Sync = true;
+            
+            % Insert into new database
+            obji.insert;
+        end
+        end
+        
     end
     
     methods(Static, Access = protected)
