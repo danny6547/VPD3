@@ -163,6 +163,57 @@ classdef (Abstract) cModelID < cTableObject & handle
        id = double(id_tbl{1, 1});
        [obj.Model_ID] = id;
        end
+       
+       function [varargout] = getModels(obj, varargin)
+       % getModels Get model names and id of this type from database
+       
+       % Input
+       where = '';
+       if nargin > 1 && ~isempty(varargin{1})
+           
+           where = varargin{1};
+           validateattributes(where, {'char'}, ...
+               {'vector'}, 'cModelID.showModels', 'where', 1);
+       end
+       
+       lim = 1000;
+       if nargin > 2  && ~isempty(varargin{2})
+           
+           lim = varargin{2};
+           validateattributes(lim, {'numeric'}, ...
+               {'positive', 'scalar', 'integer'}, 'cModelID.showModels',...
+               'lim', 2);
+       end
+       
+       varargout = cell(1, numel(obj));
+       for oi = 1:numel(obj)
+           
+           tab = obj(oi).ModelTable;
+           sql = obj(oi).SQL;
+           [~, temp_st] = sql.describe(tab);
+           tabCols = temp_st.field;
+           cols = intersect(tabCols, [obj(oi).DataProperty, obj(oi).TableIdentifier]);
+           [~, modelIDi] = ismember(obj(oi).TableIdentifier, cols);
+           if modelIDi == 0
+               
+               tab = obj(oi).OtherTable{1};
+               [~, temp_st] = sql.describe(tab);
+               tabCols = temp_st.field;
+               cols = intersect(tabCols, obj(oi).DataProperty);
+               [~, modelIDi] = ismember(obj(oi).OtherTableIdentifier, cols);
+           end
+           orderI = 1:numel(cols);
+           orderI(modelIDi) = 1;
+           orderI(1) = modelIDi;
+           cols = cols(orderI);
+           [~, currTbl] = sql.select(tab, cols, where, lim);
+           if ~isempty(currTbl)
+               
+               currTbl.Properties.VariableNames{1} = 'Model_ID';
+           end
+           varargout{oi} = currTbl;
+       end
+       end
     end
     
     methods(Access = protected, Hidden)
@@ -434,7 +485,7 @@ classdef (Abstract) cModelID < cTableObject & handle
     end
     
     methods
-       
+        
         function set.Deleted(obj, del)
             
             if isempty(del) && isnumeric(del)
