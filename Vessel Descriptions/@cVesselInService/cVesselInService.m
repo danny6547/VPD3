@@ -36,7 +36,7 @@ classdef cVesselInService < cTableObject
     
     methods(Static)
         
-        params = tableParameters(dbname)
+        [params, tabFound] = tableParameters(dbname)
     end
     
     methods

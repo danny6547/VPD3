@@ -8,7 +8,12 @@ function [ obj ] = select(obj, cv, varargin)
     
     % Find current database's in-service parameters
     dbname = obj.SQL.Database;
-    params = obj.tableParameters(dbname);
+    [params, tabFound] = obj.tableParameters(dbname);
+    
+    if ~tabFound
+        
+        return
+    end
     
     calcCols = params.PerformanceVariable; % '*';
     if nargin > 2 && ~isempty(varargin{1})

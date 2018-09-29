@@ -1,4 +1,4 @@
-function params = tableParameters(dbname)
+function [params, tabFound] = tableParameters(dbname)
 %tableParameters Parameters used to read from database tables
 %   Detailed explanation goes here
 
@@ -7,10 +7,11 @@ function params = tableParameters(dbname)
         'InServiceIdentifierProperty', '',...
         'PerformanceVariable', '',...
         'Raw', '');
+    tabFound = true;
 
     switch dbname
         
-        case {'hullperformance', 'inservice', 'devhempelsqldb'}
+        case {'hullperformance', 'static', 'inservice', 'devhempelsqldb'}
 %     params(end).Database = ;
             params(end).InServiceTable = 'CalculatedData';
             params(end).InServiceIdentifierColumn = 'Vessel_Configuration_Id';
@@ -56,6 +57,10 @@ function params = tableParameters(dbname)
             params(end).Raw(2).JoinCols = {'DateTime_UTC', 'IMO_Vessel_Number'};
             params(end).Raw(2).RawColumn = 'IMO_Vessel_Number';
             params(end).Raw(2).RawIdentifierProperty = 'IMO';
+            
+        otherwise
+            
+            tabFound = false;
     end
 
 end
