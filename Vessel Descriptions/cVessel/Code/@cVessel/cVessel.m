@@ -189,6 +189,13 @@ classdef cVessel < cModelID
                errmsg = 'Vessel cannot be inserted without an IMO number';
                error(errid, errmsg);
            end
+           
+           if isempty(obj.Configuration)
+               
+               errid = 'cV:EmptyConfig';
+               errmsg = 'Vessel cannot be inserted without a configuration';
+               error(errid, errmsg);
+           end
 
            % Insert models that may need to get identifier from DB first
            if ~isempty([obj.SpeedPower])
@@ -233,8 +240,10 @@ classdef cVessel < cModelID
                
                % Insert DD
 %                [currObj.DryDock.Model_ID] = deal(vid);
-               [currObj.DryDock.Vessel_Id] = deal(vid);
-               currObj.DryDock.insert();
+               if ~isempty(currObj.DryDock)
+                   [currObj.DryDock.Vessel_Id] = deal(vid);
+                   currObj.DryDock.insert();
+               end
                
                % Insert owner
 %                [currObj.Owner.Model_ID] = deal(vid);
@@ -1289,14 +1298,30 @@ classdef cVessel < cModelID
             
             imo_ch = num2str(imo);
             [~, vid_tbl] = obj.SQL.select('Vessel', '*', ...
-                ['IMO = ', imo_ch], 1);
+                ['IMO = ', imo_ch]);
             
-            % Vessel not found in DB
+            % Ignore deleted vessels
+            vid_tbl(vid_tbl.deleted, :) = [];
+            
             if isempty(vid_tbl)
+                
+                % Vessel not found in DB
                 vid = []; 
             else
-                vid = vid_tbl.vessel_id;
+                
+                % Take last vessel inserted with this IMO
+                vid = vid_tbl.vessel_id(end);
             end
+        end
+        
+        function obj = migrate(obj, db)
+        % migrate Migrate vessel to another database
+        
+        for oi = 1:numel(obj)
+
+            obj(oi).DatabaseStatic = db;
+            migrate@cModelID(obj(oi), db);
+        end
         end
     end
     
