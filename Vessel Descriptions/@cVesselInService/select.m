@@ -100,5 +100,11 @@ function [ obj ] = select(obj, cv, varargin)
     
     % Assign table and variable
     obj.Data = tbl;
-    obj.Variable = params.PerformanceVariable;
+    if ismember(lower(params.PerformanceVariable), tbl.Properties.VariableNames)
+        
+        obj.Variable = params.PerformanceVariable;
+    else
+        
+        obj.Variable = '';
+    end
 end

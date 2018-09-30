@@ -83,9 +83,17 @@ classdef cVessel < cModelID
 
         imo = res.IMO;
         imo_l = ~isempty(imo);
-        readInputs_c = {imo};
+%         readInputs_c = {imo};
         
-        obj = obj.assignDefaults(varargin{:});
+        % Replace 'DatabaseStatic' with actual static DB for static models
+        if isfield(res, 'DatabaseStatic')
+            
+            res.SavedConnection = res.DatabaseStatic;
+%             res = rmfield(res, 'DatabaseStatic');
+        end
+        defaultInputs = [fieldnames(res), struct2cell(res)]';
+        defaultInputs = defaultInputs(:)';
+        obj = obj.assignDefaults(defaultInputs{:});
         
         % Connect to static and in-service db
         dbboth = res.DB;
@@ -101,8 +109,7 @@ classdef cVessel < cModelID
         
         if ~isempty(stat)
             
-            stat_sql = cSQL.instantiateChildObj('SavedConnection', stat);
-            obj.SQLStatic = stat_sql;
+            obj.DatabaseStatic = stat;
         end
         if ~isempty(ins)
             
@@ -115,46 +122,46 @@ classdef cVessel < cModelID
             return
         end
 
-        if imo_l
+%         if imo_l
 
-           % Read data out from DB
-           validateattributes(imo, {'numeric'},...
-              {'positive', 'real', 'integer'}, 'cVessel constructor',...
-              'IMO', 1);
-           
-           % Expand into array
-           obj_c = arrayfun(@(x) cVessel(), nan([1, numel(imo)-1]), 'Uni', 0);
-           obj = [obj, obj_c{:}];
-           imo_c = num2cell(imo);
-           dbstat = obj.DatabaseStatic;
-           dbins = obj.DatabaseInService;
-           [obj.DatabaseStatic] = deal(dbstat);
-           [obj.DatabaseInService] = deal(dbins);
-           [obj.IMO] = deal(imo_c{:});
+       % Read data out from DB
+       validateattributes(imo, {'numeric'},...
+          {'positive', 'real', 'integer'}, 'cVessel constructor',...
+          'IMO', 1);
+
+       % Expand into array
+       obj_c = arrayfun(@(x) cVessel(), nan([1, numel(imo)-1]), 'Uni', 0);
+       obj = [obj, obj_c{:}];
+       imo_c = num2cell(imo);
+       dbstat = obj.DatabaseStatic;
+       dbins = obj.DatabaseInService;
+       [obj.DatabaseStatic] = deal(dbstat);
+       [obj.DatabaseInService] = deal(dbins);
+       [obj.IMO] = deal(imo_c{:});
+%        obj = obj.assignDefaults(defaultInputs{:});
 %            [obj, ~, ~, indb] = obj.performanceData(readInputs_c{:});
-        end
+%         end
 
-        obj = obj.assignDefaults();
 
-        % Get IMO from struct
-        if ~any(indb)
-
-           size_c = num2cell(size(imo));
-           obj(size_c{:}) = cVessel();
-           imo_c = num2cell(imo);
-           [obj.IMO] = deal(imo_c{:});
-        else
-            
-            % Remove from array any without data
-            obj(~indb) = [];
-
-            % Check that no duplicates were added when concatenating struct
-            % data with that read from DB
-            index_c = 'datetime_utc';
-            prop_c = {'performance_index'...
-                    'speed_index'};
-            obj = obj.filterOnUniqueIndex(index_c, prop_c);
-        end
+%         % Get IMO from struct
+%         if ~any(indb)
+% 
+%            size_c = num2cell(size(imo));
+%            obj(size_c{:}) = cVessel();
+%            imo_c = num2cell(imo);
+%            [obj.IMO] = deal(imo_c{:});
+%         else
+%             
+%             % Remove from array any without data
+%             obj(~indb) = [];
+% 
+%             % Check that no duplicates were added when concatenating struct
+%             % data with that read from DB
+%             index_c = 'datetime_utc';
+%             prop_c = {'performance_index'...
+%                     'speed_index'};
+%             obj = obj.filterOnUniqueIndex(index_c, prop_c);
+%         end
        end
        
        function obj = assignClass(obj, vesselclass)
@@ -963,12 +970,32 @@ classdef cVessel < cModelID
     
     methods(Hidden)
        
-       function skip = isPerDataEmpty(obj)
+       function skip = isPerDataEmpty(obj, varargin)
        % isPerDataEmpty True if performance data variable empty or NAN.
        
-           vars = {obj.Report.Variable};
-           skip = arrayfun(@(x, y) isempty(x.InService.(y{:})) || ...
-                all(isnan(x.InService.(y{:}))), obj, vars);
+       ddi = [];
+       if nargin > 1
+           
+           ddi = varargin{1};
+           validateattributes(ddi, {'numeric'}, ...
+               {'scalar', 'positive', 'integer'}, 'cVessel.isPerDataEmpty',...
+               'ddi', 2);
+       end
+       
+       % Get times for current dry-docking interval
+       ddi_m = obj.DDIntervalsFromDates;
+       if isempty(ddi)
+           
+           ddi_l = true(length(ddi_m), 1);
+       else
+           
+           ddi_l = ddi_m(:, ddi);
+       end
+
+%        vars = {obj.Report.Variable};
+       var = {obj.InServicePreferences.Variable};
+       skip = arrayfun(@(y) isempty(obj.InService.(y{:})(ddi_l)) || ...
+            all(isnan(obj.InService.(y{:})(ddi_l))), var);
        end
        
         function obj = updateWindResistanceRelative(obj)
@@ -1217,6 +1244,13 @@ classdef cVessel < cModelID
                nextVessel = currVessel + 1;
                nextDDINonEmpty_i = 0;
                dataFound_l = false;
+               varEmpty_l = isempty(obj(nextVessel).InServicePreferences.Variable);
+               while varEmpty_l && (nextVessel <= numel(obj))
+                   
+                   nextVessel = nextVessel + 1;
+                   varEmpty_l = isempty(obj(nextVessel).InServicePreferences.Variable);
+               end
+               
                while nextVessel <= numel(obj)
                    
                    % Check for data as before
@@ -1283,7 +1317,7 @@ classdef cVessel < cModelID
                 obj(oi).DryDock = cVesselDryDock(varargin{:});
                 obj(oi).Configuration = cVesselConfiguration(varargin{:});
                 obj(oi).SpeedPower = cVesselSpeedPower(varargin{:});
-                obj(oi).Report = cVesselReport(varargin{:});
+%                 obj(oi).Report = cVesselReport(varargin{:});
                 obj(oi).WindCoefficient = cVesselWindCoefficient(varargin{:});
                 obj(oi).Displacement = cVesselDisplacement(varargin{:});
                 obj(oi).Engine = cVesselEngine(varargin{:});
@@ -1300,17 +1334,24 @@ classdef cVessel < cModelID
             [~, vid_tbl] = obj.SQL.select('Vessel', '*', ...
                 ['IMO = ', imo_ch]);
             
-            % Ignore deleted vessels
-            vid_tbl(vid_tbl.deleted, :) = [];
             
             if isempty(vid_tbl)
                 
                 % Vessel not found in DB
                 vid = []; 
             else
+                % Ignore deleted vessels
+                vid_tbl(logical(vid_tbl.deleted), :) = [];
                 
-                % Take last vessel inserted with this IMO
-                vid = vid_tbl.vessel_id(end);
+                if isempty(vid_tbl)
+
+                    % Vessel not found in DB
+                    vid = []; 
+                else
+                    
+                    % Take last vessel inserted with this IMO
+                    vid = vid_tbl.vessel_id(end);
+                end
             end
         end
         
@@ -1351,6 +1392,8 @@ classdef cVessel < cModelID
         obj.Owner.SavedConnection = dbname;
         obj.Info.SavedConnection = dbname;
         
+        stat_sql = cSQL.instantiateChildObj('SavedConnection', dbname);
+        obj.SQLStatic = stat_sql;
         obj.DatabaseStatic = dbname;
         end
        
@@ -1366,7 +1409,7 @@ classdef cVessel < cModelID
             
             obj.SQL = sql;
             obj.SQLStatic = sql;
-            obj.DatabaseStatic = sql.SavedConnection;
+%             obj.DatabaseStatic = sql.SavedConnection;
         end
         
        function obj = set.IMO(obj, IMO)
@@ -1574,6 +1617,11 @@ classdef cVessel < cModelID
             obj.InServicePreferences = ins;
             if ~isempty(ins)
                 
+                % Report must be refreshed when new data assigned
+                nDDI = size(obj.DDIntervalsFromDates, 2);
+                obj.Report = cVesselReport([1, nDDI]);
+                
+                % Assign variable to report
                 [obj.Report.Variable] = deal(ins.Variable);
             end
         end
