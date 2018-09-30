@@ -1131,7 +1131,7 @@ methods(Test)
     [startrow, count] = testcase.insert({'Mass_Consumed_Fuel_Oil'}, mfoc_v');
     
     % Execute
-    testcase.call('removeFOCBelowMinimum', testcase.TestVesselIdString);
+    testcase.call('removeFOCBelowMinimum', num2str(vessel.Configuration.Model_ID));
     
     % Verify
     mfoc_act = testcase.select('Mass_Consumed_Fuel_Oil', startrow, count);
@@ -1139,6 +1139,8 @@ methods(Test)
     testcase.assertNotEmpty(mfoc_act, 'MFOC cannot be empty for test to run.')
     
     mfocFilt_act = [mfocFilt_act{:, :}];
+    testcase.assertThat(mfocFilt_act, ~HasNaN, ['Filter_SFOC_Out_Range '...
+        'column is expected to have only logical values']);
     mfocFilt_act = logical(mfocFilt_act);
     testcase.assertThat(AnyElementOf(mfocFilt_act), IsTrue, ...
         'Filter_SFOC_Out_Range must have some TRUE values.')
