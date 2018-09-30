@@ -76,6 +76,7 @@ classdef (Abstract) cModelID < cTableObject & handle
        for oi = 1:numel(obj)
            
            alias_c = obj(oi).propertyAlias;
+           aliasIdx = 1;
            model = obj(oi).ModelTable;
 
             % Concat model id alias and value to inputs
@@ -83,14 +84,14 @@ classdef (Abstract) cModelID < cTableObject & handle
             mid_c = {};
             if ~isempty(mid)
 
-                name = alias_c{end, 2};
+                name = alias_c{1, 2};
                 value = mid;
                 mid_c = {name, value};
             end
             
             % Insert into model table
            obj(oi) = insert@cTableObject(obj(oi), model, [], [],...
-               alias_c, mid_c{:});
+               alias_c(aliasIdx, :), mid_c{:});
            
            tables = obj(oi).ValueTable;
            modelField = obj(oi).ModelField;
@@ -100,7 +101,7 @@ classdef (Abstract) cModelID < cTableObject & handle
                modelField = repmat(modelField, [1, numValTable + 1]);
            end
            
-           alias_c = obj.propertyAlias;
+%            alias_c = obj.propertyAlias;
            for ti = 1:numel(tables)
                
                % Insert into "data table"
@@ -116,7 +117,8 @@ classdef (Abstract) cModelID < cTableObject & handle
                    inObjName = obj(oi).ValueObject{ti};
                    inObj = obj(oi).(inObjName);
                end
-               insert@cTableObject(inObj, tab, '',  [], alias_c, currField,...
+               aliasIdx = min([aliasIdx + 1, size(alias_c, 1)]);
+               insert@cTableObject(inObj, tab, '',  [], alias_c(aliasIdx, :), currField,...
                    currFieldVal);
            end
        end

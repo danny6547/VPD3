@@ -52,7 +52,7 @@ classdef cVessel < cModelID
         
         ModelTable = 'Vessel';
         ValueTable = {'VesselConfiguration', 'VesselInfo'};
-        ModelField = {'IMO', 'Vessel_Id', 'Vessel_Id'};
+        ModelField = {'Vessel_Id', 'Vessel_Id', 'Vessel_Id'};
         ValueObject = {'Configuration', 'Info'};
         DataProperty = {'IMO', 'Vessel_Id', 'Deleted', 'Model_ID'};
         OtherTable = {};

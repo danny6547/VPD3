@@ -59,7 +59,7 @@ function [ obj ] = select(obj, cv, varargin)
     propName = params.InServiceIdentifierProperty;
     if strcmpi(propName, 'Vessel_Configuration_Id')
         
-        idVal = cv.Configuration.Vessel_Configuration_Id;
+        idVal = cv.Configuration.Model_ID;
     else
         
         idVal = cv.(propName);

@@ -110,15 +110,15 @@ methods(TestClassSetup)
         
         imo = testcase.TestIMO;
         dbname = testcase.TestDatabase;
-        vessel = cVessel('SavedConnection', dbname);
+        vessel = cVessel('DB', dbname);
 %         vessel.InServiceDB = testcase.TestInServiceDB;
         vessel.IMO = imo;
         
         % Remove all Model ID so data matches the expected (uninserted) obj
         testcase.SelectedVesselConfiguarationId = ...
             vessel.Configuration.Model_ID;
-        vessel.Configuration.Model_ID = [];
-        vessel.Info.Model_ID = [];
+%         vessel.Configuration.Model_ID = [];
+%         vessel.Info.Model_ID = [];
 %         [vessel.SpeedPower.Model_ID] = deal([]);
 %         vessel.Displacement.Model_ID = [];
         
@@ -309,10 +309,10 @@ methods(Test)
     obj = testcase.TestVessel;
     
     tab = 'RawData';
-    obj.SQL.insertValuesDuplicate(tab, expRawCols_c, expRawData_c);
+    obj.InServicePreferences.SQL.insertValuesDuplicate(tab, expRawCols_c, expRawData_c);
     
     tab = 'CalculatedData';
-    obj.SQL.insertValuesDuplicate(tab, expCalcCols_c, expCalcData_m);
+    obj.InServicePreferences.SQL.insertValuesDuplicate(tab, expCalcCols_c, expCalcData_m);
     
     expRaw_tbl = array2timetable(expRawData_m(:, 2:end),...
         'RowTimes', times_dt, 'VariableNames', expRawCols_c(2:end));

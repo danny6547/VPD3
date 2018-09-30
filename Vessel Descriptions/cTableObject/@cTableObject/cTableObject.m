@@ -47,14 +47,14 @@ classdef cTableObject < handle
         end
 
         alias_c = obj.propertyAlias;
-        if nargin > 4
+        if nargin > 4 && ~isempty(varargin{3})
 
             alias_c = varargin{3};
-            if (~isempty(alias_c) && ~any(ismember(alias_c(:, 2), identifier))) ...
-                || (isempty(alias_c) && isnumeric(alias_c))
-                    
-                alias_c = {};
-            end
+%             if (~isempty(alias_c) && ~any(ismember(alias_c(:, 2), identifier))) ...
+%                 || (isempty(alias_c) && isnumeric(alias_c))
+%                     
+%                 alias_c = {};
+%             end
         end
         
         additionalFields_c = {};

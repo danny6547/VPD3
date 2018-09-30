@@ -24,7 +24,7 @@ methods
     function vessel = testVesselInsert(testcase)
         
         testDB = testcase.TestDatabase;
-        vessel = cVessel('SavedConnection', testDB);
+        vessel = cVessel('DB', testDB);
 %         vessel.InServiceDB = testcase.TestInServiceDB;
         
         % Identity
@@ -131,7 +131,7 @@ methods(TestClassSetup)
     
     vessel = testcase.testVesselInsert;
     vessel.insert();
-
+    
     % Assign
     testcase.TestVessel = vessel;
     
@@ -178,7 +178,7 @@ methods(TestClassSetup)
     function deleteCalculated(testcase)
         
         vessel = testcase.testVesselInsert();
-        vid = vessel.Configuration.Vessel_Configuration_Id;
+        vid = vessel.Configuration.Model_ID;
         sql = ['DELETE FROM `', testcase.TestInServiceDB, '`.CalculatedData WHERE Vessel_Configuration_Id = ' num2str(vid)];
         testcase.TestcMySQL.execute(sql);
     end
