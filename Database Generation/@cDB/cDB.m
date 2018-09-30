@@ -859,6 +859,7 @@ classdef cDB
                                 'updateNearestTrim.sql'
                                 'applyFilters.sql'
                                 'bar2Pa.sql'
+                                'insertIntoCalculatedData.sql'
                         };
        iso19030Fullpath_c = cellfun(@(x) fullfile(topleveldir, ISODir, x), ...
            iso19030_c, 'Uni', 0);
@@ -1104,7 +1105,7 @@ classdef cDB
        
         remoteDB = 'hullperformance';
         localDB = 'static';
-        obj.migrateVessels(obj, remoteDB, localDB);
+        obj.migrateVessels(remoteDB, localDB);
        end
     end
     
