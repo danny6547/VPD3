@@ -14,6 +14,7 @@ properties
     TestInServiceDatabase = 'inservice';
     TestIMO = 1234567;
     TestVesselIdString = '';
+    TestVesselConfigIdString = '';
     TestVessel = [];
 end
 
@@ -119,7 +120,8 @@ methods(TestClassSetup)
     vessel.insert();
     
     testcase.TestVessel = vessel;
-    testcase.TestVesselIdString = num2str(vessel.Vessel_Id);
+    testcase.TestVesselIdString = num2str(vessel.Model_ID);
+    testcase.TestVesselConfigIdString = num2str(vessel.Configuration.Model_ID);
     
     end
     
@@ -423,7 +425,7 @@ methods(Test)
     exp_brake = (coeff(3)*x.^2 + coeff(2)*x + coeff(1))';
     
     % Execute
-    testcase.call('updateBrakePower', num2str(vessel.Vessel_Id));
+    testcase.call('updateBrakePower', testcase.TestVesselConfigIdString);
     
     % Verify
     act_brake = testcase.select('Brake_Power', startrow, numrows);
@@ -486,7 +488,7 @@ methods(Test)
     exp_mass = (in_vol.*(in_den15 - in_denChange.*(in_tempFuel - 15)))';
     
     % Execute
-    testcase.call('updateMassFuelOilConsumed', testcase.TestVesselIdString);
+    testcase.call('updateMassFuelOilConsumed');
     
     % Verify
     act_mass = testcase.select('Mass_Consumed_Fuel_Oil', startrow, count);
@@ -513,7 +515,7 @@ methods(Test)
     exp_shaft = ( in_torque.*in_rpm.*(2*pi/60) )';
     
     % Execute
-    testcase.call('updateShaftPower', testcase.TestVesselIdString);
+    testcase.call('updateShaftPower');
     
     % Verify
     act_shaft = testcase.select('Shaft_Power', startrow, count);
@@ -908,8 +910,7 @@ methods(Test)
     vessel = testcase.TestVessel;
     
     % Execute
-    testcase.call('isShaftPowerAvailable', {testcase.TestVesselIdString,...
-        '@out'});
+    testcase.call('isShaftPowerAvailable', '@out');
     
     % Verify
 %     [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
@@ -930,8 +931,7 @@ methods(Test)
     testcase.insert(name, data);
     
     % Execute
-    testcase.call('isShaftPowerAvailable', {testcase.TestVesselIdString,...
-        '@out'});
+    testcase.call('isShaftPowerAvailable', '@out');
         
     % Verify
 %     [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
@@ -970,8 +970,7 @@ methods(Test)
     testcase.insert(names, data);
     
     % Execute
-    testcase.call('isBrakePowerAvailable', {testcase.TestVesselIdString, '@out',...
-        '@needVolume'});
+    testcase.call('isBrakePowerAvailable', {'@out', '@needVolume'});
     
     % Verify
 %     [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');
@@ -995,8 +994,7 @@ methods(Test)
     testcase.insert(names, data);
     
     % Execute
-    testcase.call('isBrakePowerAvailable', {testcase.TestVesselIdString, '@out',...
-        '@needVolume'});
+    testcase.call('isBrakePowerAvailable', {'@out', '@needVolume'});
     
     % Verify
 %     [~, act_isAvail] = adodb_query(testcase.Connection, 'SELECT @out;');

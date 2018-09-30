@@ -5,7 +5,7 @@ DROP PROCEDURE IF EXISTS updateBrakePower;
 
 delimiter //
 
-CREATE PROCEDURE updateBrakePower(vid INT)
+CREATE PROCEDURE updateBrakePower(vcid INT)
 BEGIN
 	
     /* Declare variables */
@@ -16,13 +16,13 @@ BEGIN
     /* Get coefficients of SFOC reference curve for engine of this vessel */
     SELECT `static`.enginemodel.X0 INTO X0 FROM `static`.enginemodel
 			WHERE Engine_Model_Id = 
-				(SELECT Engine_Model_Id FROM `static`.VesselConfiguration WHERE Vessel_Id = vid);
+				(SELECT Engine_Model_Id FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid);
     SELECT `static`.enginemodel.X1 INTO X1 FROM `static`.enginemodel
 			WHERE Engine_Model_Id = 
-				(SELECT Engine_Model_Id FROM `static`.VesselConfiguration WHERE Vessel_Id = vid);
+				(SELECT Engine_Model_Id FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid);
     SELECT `static`.enginemodel.X2 INTO X2 FROM `static`.enginemodel
 			WHERE Engine_Model_Id = 
-				(SELECT Engine_Model_Id FROM `static`.VesselConfiguration WHERE Vessel_Id = vid);
+				(SELECT Engine_Model_Id FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid);
     
     /* Perform calculation of Brake Power */
     UPDATE tempRawISO SET Brake_Power = 

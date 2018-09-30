@@ -6,7 +6,7 @@ DROP PROCEDURE IF EXISTS isShaftPowerAvailable;
 
 delimiter //
 
-CREATE PROCEDURE isShaftPowerAvailable(vcid INT, OUT isAvailable BOOLEAN)
+CREATE PROCEDURE isShaftPowerAvailable(OUT isAvailable BOOLEAN)
 BEGIN
 	
     SET isAvailable = FALSE;

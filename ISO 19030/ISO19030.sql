@@ -9,41 +9,41 @@ CREATE PROCEDURE ISO19030(vcid int)
 BEGIN
 	
 	/* Get retreived data set 5.3.3 */
-    CALL `inservice`.createTempRawISO(vcid);
-    CALL `inservice`.removeInvalidRecords();
-    CALL `inservice`.sortOnDateTime();
-    CALL `inservice`.updateDefaultValues();
+    CALL createTempRawISO(vcid);
+    CALL removeInvalidRecords();
+    CALL sortOnDateTime();
+    CALL updateDefaultValues();
     
     /* Normalise frequency rates 5.3.3.1 */
-    CALL `inservice`.normaliseHigherFreq();
-    CALL `inservice`.normaliseLowerFreq();
+    CALL normaliseHigherFreq();
+    CALL normaliseLowerFreq();
     
     /* Get validated data set 5.3.4 */
-    CALL `inservice`.updateChauvenetCriteria();
-    CALL `inservice`.updateValidated();
+    CALL updateChauvenetCriteria();
+    CALL updateValidated();
     
-    CALL `inservice`.updateDisplacement(vcid);
-    CALL `inservice`.updateTrim();
-    CALL `inservice`.filterSpeedPowerLookup(vcid);
+    CALL updateDisplacement(vcid);
+    CALL updateTrim();
+    CALL filterSpeedPowerLookup(vcid);
     
     /* Correct for environmental factors 5.3.5 */
-    CALL `inservice`.updateDeliveredPower(imo);
-    CALL `inservice`.updateAirDensity();
-    CALL `inservice`.updateTransProjArea(imo);
-    CALL `inservice`.updateWindReference();
-    CALL `inservice`.updateWindResistanceRelative(imo);
-	CALL `inservice`.updateAirResistanceNoWind(imo);
-	CALL `inservice`.updateWindResistanceCorrection(imo);
-    CALL `inservice`.updateCorrectedPower();
+    CALL updateDeliveredPower(vcid);
+    CALL updateAirDensity();
+    CALL updateTransProjArea(vcid);
+    CALL updateWindReference(vcid);
+    CALL updateWindResistanceRelative(vcid);
+	CALL updateAirResistanceNoWind(vcid);
+	CALL updateWindResistanceCorrection(vcid);
+    CALL updateCorrectedPower();
     
     /* Calculate Performance Values, Expected Speed 5.3.6.2 */
-    CALL `inservice`.updateExpectedSpeed(imo);
+    CALL updateExpectedSpeed(vcid);
     
     /* Calculate Performance Values, Percentage speed loss 5.3.6.1 */
-    CALL `inservice`.updateSpeedLoss();
+    CALL updateSpeedLoss();
     
     /* Calculate filter */
-    CALL `inservice`.filterSFOCOutOfRange(imo);
-    CALL `inservice`.filterPowerBelowMinimum(imo);
-    CALL `inservice`.filterReferenceConditions(imo);
+    CALL filterSFOCOutOfRange(vcid);
+    CALL filterPowerBelowMinimum(vcid);
+    CALL filterReferenceConditions(vcid);
 END;

@@ -11,7 +11,7 @@ DROP PROCEDURE IF EXISTS isBrakePowerAvailable;
 
 delimiter //
 
-CREATE PROCEDURE isBrakePowerAvailable(imo INT, OUT isAvailable BOOLEAN, OUT isMassNeeded BOOLEAN)
+CREATE PROCEDURE isBrakePowerAvailable(OUT isAvailable BOOLEAN, OUT isMassNeeded BOOLEAN)
 BEGIN
 	
     DECLARE MfocAvail BOOLEAN;

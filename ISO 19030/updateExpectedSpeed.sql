@@ -1,14 +1,11 @@
 /* Calculate expected speed from delivered power and speed,power,draft,trim 
 data */
 
-
-
-
 DROP PROCEDURE IF EXISTS updateExpectedSpeed;
 
 delimiter //
 
-CREATE PROCEDURE updateExpectedSpeed(vid INT)
+CREATE PROCEDURE updateExpectedSpeed(vcid INT)
 BEGIN
 	
     /* Calculate expected speed from fitted speed-power curve
@@ -44,7 +41,7 @@ BEGIN
                WHERE s.Speed_Power_Coefficient_Model_Id IN (SELECT Speed_Power_Coefficient_Model_Id FROM `static`.SpeedPowerCoefficientModelValue 
 																WHERE Speed_Power_Coefficient_Model_Id = 
 																	(SELECT Speed_Power_Coefficient_Model_Id FROM `static`.VesselConfiguration 
-																		WHERE Vessel_Id = vid))
+																		WHERE Vessel_Configuration_Id = vcid))
                ) si
 	ON ii.id = si.id
 	SET Expected_Speed_Through_Water = POWER(Corrected_Power / EXP(Coefficient_B), (1 / Coefficient_A)) * POWER(ii.Displacement / ii.Nearest_Displacement, 2/9);

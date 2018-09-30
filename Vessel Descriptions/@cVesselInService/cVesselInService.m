@@ -87,7 +87,7 @@ classdef cVesselInService < cTableObject
                 
                 case 'cMySQL'
                     
-                    str = 'dd-MM-yyyy HH:mm:ss.s';
+                    str = 'dd-MM-yyyy HH:mm:ss';
                     
                 case 'cTSQL'
                     
