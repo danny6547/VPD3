@@ -68,6 +68,11 @@ classdef cDB
        TopLevelDir = fileparts(fileparts(fileparts(mfilename('fullpath'))));
     end
     
+    properties(Hidden, Access=private)
+        
+        LibraryAccessible;
+    end
+    
     methods
     % Methods to delete
        
@@ -75,6 +80,9 @@ classdef cDB
        % cDB Constructor method for class cDB.
        
            obj.SQL = cMySQL(varargin{:});
+           
+           % Check if vessel library is available
+           obj.LibraryAccessible = ~isempty(dir(obj.VesselDirectory));
        end
        
        function create(obj, name, varargin)
@@ -1025,7 +1033,7 @@ classdef cDB
            cellfun(@(x) obj.SQL.call(x), createProc_c, 'Uni', 0);
        end
        
-       if obj.LoadPerformance
+       if obj.LoadPerformance && obj.LibraryAccessible
            
            % Insert performance data
            allPerformanceFile_ch = fullfile(obj.DNVGLDir, ...
@@ -1034,7 +1042,7 @@ classdef cDB
            obj_ves.loadDNVGLPerformance(allPerformanceFile_ch);
        end
        
-       if obj.LoadRaw
+       if obj.LoadRaw && obj.LibraryAccessible
            
            % Load Raw
            rawDirect = fullfile(obj.DNVGLDir, '\Raw');
