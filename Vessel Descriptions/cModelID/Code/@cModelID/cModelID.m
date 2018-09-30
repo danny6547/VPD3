@@ -256,8 +256,24 @@ classdef (Abstract) cModelID < cTableObject & handle
         function alias = propertyAlias(obj)
         % propertyAlias Alias to relate table fields with object properties
             
+        if isempty(obj(1).ValueObject)
+            
             alias = [repmat({'Model_ID'}, [size(obj(1).ModelField, 2), 1]),...
                 obj(1).ModelField'];
+        else
+            
+            aliasL = repmat({'Model_ID'}, [size(obj(1).ModelField, 2), 1]);
+            aliasR = cell(numel(obj(1).ValueObject)+1, 1);
+            aliasR(1) = obj(1).ModelField(1);
+            for vi = 1:numel(obj(1).ValueObject)
+                
+                currValObj = obj(1).ValueObject{vi};
+                currAlias = obj(1).(currValObj).ModelField;
+                aliasR(vi+1) = currAlias;
+            end
+            
+            alias = [aliasL, aliasR];
+        end
         end
         
         function obj = migrate(obj, db)
@@ -406,9 +422,9 @@ classdef (Abstract) cModelID < cTableObject & handle
         if isempty(alias_c)
             
             alias_c = cell([lenVect_v, 1]);
-        else
+        elseif size(alias_c, 1) == 1 && lenVect_v ~= 1
             
-            alias_c = repmat({alias_c}, [lenVect_v, 1]);
+            alias_c = repmat(alias_c, [lenVect_v, 1]);
         end
         
         allObj = cell(1, numel(dataObj_c));
@@ -419,7 +435,7 @@ classdef (Abstract) cModelID < cTableObject & handle
             currTab = tab{oi};
             currField = field{oi};
 
-            currAlias_c = alias_c{oi, :};
+            currAlias_c = alias_c(oi, :);
             midi = mid{oi};
             expand_l = true;
             

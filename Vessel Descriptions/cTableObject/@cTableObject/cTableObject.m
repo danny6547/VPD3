@@ -228,22 +228,28 @@ classdef cTableObject < handle
             validateattributes(alias_c, {'cell'}, {'2d', 'ncols', 2}, ...
                 'cMySQL.readFromTable', 'alias', 5);
             alias_c = validateCellStr(alias_c);
+            
+            aliasProp_ch = alias_c{1, 2};
+            identifierProp_ch = alias_c{1, 1};
+            
+            [~, identifier_i] = ismember(identifierProp_ch, prop_c);
+            prop_c{identifier_i} = aliasProp_ch;
 
-            identifier_l = ismember(alias_c(:, 2), identifier);
-            identifierProp_ch = alias_c{identifier_l, 1};
-
-            % Replace property names with aliases
-            [isprop, propi] = ismember(alias_c(:, 1), prop_c);
-            if any(~isprop)
-                
-                errid = 'readTable:AliasMissing';
-                errmsg = ['The first column of input ALIAS must all be '...
-                    'properties of OBJ'];
-                error(errid, errmsg);
-            end
-            prop_c(propi) = alias_c(:, 2);
-            whereValue = {obj.(identifierProp_ch)};
-            aliasProp_ch = alias_c{identifier_l, 2};
+%             identifier_l = ismember(alias_c(:, 2), identifier);
+%             identifierProp_ch = alias_c{identifier_l, 1};
+% 
+%             % Replace property names with aliases
+%             [isprop, propi] = ismember(alias_c(:, 1), prop_c);
+%             if any(~isprop)
+%                 
+%                 errid = 'readTable:AliasMissing';
+%                 errmsg = ['The first column of input ALIAS must all be '...
+%                     'properties of OBJ'];
+%                 error(errid, errmsg);
+%             end
+%             prop_c(propi) = alias_c(:, 2);
+%             whereValue = {obj.(identifierProp_ch)};
+%             aliasProp_ch = alias_c{identifier_l, 2};
         end
         
         whereValueInput = false;
@@ -415,8 +421,14 @@ classdef cTableObject < handle
                     % Error is attempt to write to dependent property
                     disp('hello');
                 end
+                
+                
+                % Quick hack: assign the model id given by TableIdentifier
+%                 obj(oi).Model_ID = table_st.(lower(obj(oi).TableIdentifier));
             end
         end
+        
+        
         end
        
        function [log, propDiff] = isequal(obj, obj2)

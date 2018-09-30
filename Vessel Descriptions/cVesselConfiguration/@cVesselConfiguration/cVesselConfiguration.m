@@ -59,7 +59,7 @@ classdef cVesselConfiguration < matlab.mixin.Copyable & cModelID & cDateConvert
         ModelTable = 'VesselConfiguration';
         ValueTable = {};
         ValueObject = {};
-        ModelField = {'Vessel_Id'};
+        ModelField = {'Vessel_Configuration_Id'};
         OtherTable = {};
         OtherTableIdentifier = {};
         TableIdentifier = 'Vessel_Configuration_Id';
