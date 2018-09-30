@@ -31,6 +31,22 @@ classdef cVesselInService < cTableObject
        
        function obj = insert(obj)
            
+           sql = obj.SQL;
+           
+           % Create flat file
+           filename = fullfile(userpath, 'tempImportFile.csv');
+           obj.printImportFile2(filename);
+           
+           % Insert file
+           cols = obj.Data.Properties.VariableNames;
+           tempTab = 'tempRaw';
+           permTab = 'RawData';
+           delim = ',';
+           ignore = 1;
+           sql.loadInFileDuplicate(filename, cols, tempTab, permTab, delim, ignore);
+           
+           % Delete file
+           delete(filename);
        end
     end
     
