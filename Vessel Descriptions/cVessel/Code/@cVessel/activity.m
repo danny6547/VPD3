@@ -17,7 +17,8 @@ if nargin > 1
 end
 
 % Raw data
-obj = obj.rawData;
+% obj = obj.rawData;
+obj = obj.selectInService('', '*');
 
 while obj.iterateDD
     
@@ -32,7 +33,7 @@ while obj.iterateDD
 %     dataTimeStep = uniDiff_v(mostCommonDiff_i);
     
     % Calculate for specified duration only
-    dates_v = currDD_tbl.datetime_utc;
+    dates_v = currDD_tbl.timestamp;
     if dur_l
         
         minTime = max(dates_v) - dur;
@@ -127,6 +128,6 @@ while obj.iterateDD
     end
     
     % Assign
-    currObj.Report.Activity(ddi) = activity(ddi);
+    currObj.Report(ddi).Activity = activity(ddi);
     act = activity(ddi);
 end

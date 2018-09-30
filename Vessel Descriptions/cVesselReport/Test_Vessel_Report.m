@@ -1,5 +1,4 @@
 % Load in vessel data into static from files, not require access to DB
-
 % Set up
 imo_v = [9036442
         9280603
@@ -9,7 +8,9 @@ obj = cVessel('DatabaseStatic', 'static',...
             'IMO', imo_v);
 
 % Execute each report method
-obj = obj.activityFromVesselTrackerXLSX(filename, dd);
+filename = fullfile(fileparts(mfilename('fullpath')), 'all_analytics.xlsx');
+dd = datetime(2017, 6, 5);
+tbl = obj.activityFromVesselTrackerXLSX(filename, dd);
 obj = obj.activity();
 obj = obj.annualSavingsDD();
 obj = obj.DDPer();
@@ -26,7 +27,6 @@ obj = obj.movingAverage(365.25, true, true, true);
 obj = obj.performanceMark();
 obj = obj.regression(1);
 obj = obj.serviceInterval();
-% obj = obj.tradingSummary();
 obj = obj.plotPerformanceData();
+obj.applySHAPEPlotFormat();
 obj = obj.speedHistogram();
-obj = obj.applySHAPEPlotFormat();

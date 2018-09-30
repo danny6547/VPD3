@@ -54,8 +54,8 @@ while obj.iterateDD
 %    end
    
    % Indices to data
-   dat = currTable.datetime_utc; % unique(datenum(currData.DateTime_UTC, 'dd-mm-yyyy'));
-   per = currTable.(currVessel.Variable) * 100;
+   dat = currTable.timestamp; % unique(datenum(currData.DateTime_UTC, 'dd-mm-yyyy'));
+   per = currTable.(currVessel.InServicePreferences.Variable) * 100;
    [dat, dati] = sort(dat);
    per = per(dati);
    relStartDates = ( guarStruct.StartMonth - 1)*avgMonthDuration;
@@ -77,7 +77,7 @@ while obj.iterateDD
    
 %     tstep = unique(diff(dat));
 %     tstep(tstep==0) = [];
-    tstep = currVessel.InServicePreferences.TimeStep;
+    tstep = currVessel.InServicePreferences.Timestep;
     tstep_v = repmat(tstep, [1, size(absStartDates, 2)]);
     
     preStartDates = absStartDates - 0.5*tstep_v;
@@ -107,7 +107,7 @@ while obj.iterateDD
 %    guarantee(vi).DryDockInterval(ddi).Difference = dif;
 %    guarantee(vi).DryDockInterval(ddi).RelativeDifference = reldif;
    guarantee(vi).DryDockInterval(ddi) = guarStruct;
-   currVessel.Report.GuaranteeDurations(ddi) = guarStruct; 
+   currVessel.Report(ddi).GuaranteeDurations = guarStruct; 
 %    if ddi == currVessel.numDDIntervals
 %        
 %        currVessel.Report.GuaranteeDurations = guarantee(vi).DryDockInterval;

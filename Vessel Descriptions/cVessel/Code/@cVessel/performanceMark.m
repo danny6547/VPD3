@@ -52,7 +52,7 @@ while obj.iterateDD
 %    [idx_c{:}] = ind2sub(sz, ii);
    % currData = guarStruct(idx_c{:});
 %    currData = obj(ii).GuaranteeDurations;
-   currData = currVessel.Report.GuaranteeDurations(ddi);
+   currData = currVessel.Report(ddi).GuaranteeDurations;
    
    if all(isnan(currData.Difference)) || all(isnan(currData.RelativeDifference))
        continue
@@ -70,9 +70,9 @@ while obj.iterateDD
     perfMark(vi).DryDockInterval(ddi) = markStruct;
 %     obj(ii).PerformanceMark = grade_s;
     
-    if ddi == currVessel.numDDIntervals
+%     if ddi == currVessel.numDDIntervals
         
-        currVessel.Report.PerformanceMark = perfMark(vi).DryDockInterval;
-    end
+        currVessel.Report(ddi).PerformanceMark = perfMark(vi).DryDockInterval(ddi);
+%     end
 end
 % obj = obj.iterReset;

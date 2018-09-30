@@ -58,14 +58,14 @@ while obj.iterateDD
        end
        
        % If there are at least one years worth of data either side of DD
-       if ~isempty(annualAvgBef(beforeDDi).Duration) && ...
-               ~isempty(annualAvgAft(afterDDi).Duration) && ...
-                   ~isempty(annualAvgBef(beforeDDi).Duration(1).Average) && ...
-                       ~isempty(annualAvgAft(afterDDi).Duration(1).Average)
+       if numel(annualAvgBef(vi).DryDockInterval) >= beforeDDi && ...
+               numel(annualAvgAft(vi).DryDockInterval) >= afterDDi && ...
+                   ~isempty(annualAvgBef(vi).DryDockInterval(beforeDDi).Average) && ...
+                       ~isempty(annualAvgAft(vi).DryDockInterval(afterDDi).Average)
            
            % Compare with previous dry docking
-           avgBefore = annualAvgBef(beforeDDi).Duration(1).Average(end);
-           avgAfter = annualAvgAft(afterDDi).Duration(1).Average(1);
+           avgBefore = annualAvgBef(vi).DryDockInterval(beforeDDi).Average(end);
+           avgAfter = annualAvgAft(vi).DryDockInterval(afterDDi).Average(1);
            ddPerAbs = (avgAfter - avgBefore) * 100;
            ddPerRel = - ((avgBefore - avgAfter) / avgBefore) * 100;
         

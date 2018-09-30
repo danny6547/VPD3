@@ -800,89 +800,89 @@ classdef cVessel < cModelID
             end
         end
         
-        function [obj, rawTable] = rawData(obj, varargin)
-        % rawData Get raw data for this vessel at this dry-docking interval
-        
-            cols = '*';
-            if nargin > 1 && ~isempty(varargin{1})
-                
-                cols = varargin{1};
-                cols = validateCellStr(cols);
-            end
-            
-            start_l = false;
-            if nargin > 2 && ~isempty(varargin{2})
-                
-                start_dt = varargin{2};
-                startCondition_sql = ['DateTime_UTC >= ''',...
-                    datestr(start_dt, 'yyyy-mm-dd HH:MM:SS''')];
-                start_l = true;
-            end
-            
-            end_l = false;
-            if nargin > 3 && ~isempty(varargin{3})
-                
-                end_dt = varargin{3};
-                endCondition_sql = ['DateTime_UTC <= ''',...
-                    datestr(end_dt, 'yyyy-mm-dd HH:MM:SS''')];
-                end_l = true;
-            end
-            
-            for oi = 1:numel(obj)
-                
-                % Get dry dock interval dates
-%                 [startDate, endDate, whereSQL] = obj(oi).DDIntervalDates();
-                
-                % Read from rawdata table with dates
-                tab = 'RawData';
-                where_sql = ['IMO_Vessel_Number = ', ...
-                    num2str(obj(oi).IMO_Vessel_Number)];
-                if start_l
-                    [~, where_sql] = obj(oi).combineSQL(where_sql, 'AND', ...
-                        startCondition_sql);
-                end
-                if end_l
-                    [~, where_sql] = obj(oi).combineSQL(where_sql, 'AND', ...
-                        endCondition_sql);
-                end
-                
-                % Columns read out must include date time
-                if ~isequal(cols, '*')
-                    cols = union(cols, 'datetime_utc');
-                end
-                
-                % Read data and convert to timetable
-                [~, rawTable] = obj(oi).select(tab, cols, where_sql);
-                rawTable.datetime_utc = datetime(rawTable.datetime_utc,...
-                    'ConvertFrom', 'datenum');
-                rawTable = table2timetable(rawTable, 'RowTimes', ...
-                    'datetime_utc');
-                
-                % Remove variables which don't support empty values for
-                % auto-filling
-                rawVars = rawTable.Properties.VariableNames;
-                if ismember('imo_vessel_number', rawVars)
-                    
-                    rawTable.imo_vessel_number = [];
-                end
-                if ismember('id', rawVars)
-                    
-                    rawTable.id = [];
-                end
-                
-                % Get out performance data again, so table is re-created
-%                 obj(oi) = obj(oi).performanceData(obj(oi).IMO_Vessel_Number);
-                
-                if isempty(obj(oi).InService)
-                    
-                    obj(oi).InService = rawTable;
-                else
-                    
-                    % Synchronise raw table with InService data
-                    obj(oi).InService = synchronize(obj(oi).InService, rawTable);
-                end
-            end
-        end
+%         function [obj, rawTable] = rawData(obj, varargin)
+%         % rawData Get raw data for this vessel at this dry-docking interval
+%         
+%             cols = '*';
+%             if nargin > 1 && ~isempty(varargin{1})
+%                 
+%                 cols = varargin{1};
+%                 cols = validateCellStr(cols);
+%             end
+%             
+%             start_l = false;
+%             if nargin > 2 && ~isempty(varargin{2})
+%                 
+%                 start_dt = varargin{2};
+%                 startCondition_sql = ['DateTime_UTC >= ''',...
+%                     datestr(start_dt, 'yyyy-mm-dd HH:MM:SS''')];
+%                 start_l = true;
+%             end
+%             
+%             end_l = false;
+%             if nargin > 3 && ~isempty(varargin{3})
+%                 
+%                 end_dt = varargin{3};
+%                 endCondition_sql = ['DateTime_UTC <= ''',...
+%                     datestr(end_dt, 'yyyy-mm-dd HH:MM:SS''')];
+%                 end_l = true;
+%             end
+%             
+%             for oi = 1:numel(obj)
+%                 
+%                 % Get dry dock interval dates
+% %                 [startDate, endDate, whereSQL] = obj(oi).DDIntervalDates();
+%                 
+%                 % Read from rawdata table with dates
+%                 tab = 'RawData';
+%                 where_sql = ['IMO_Vessel_Number = ', ...
+%                     num2str(obj(oi).IMO_Vessel_Number)];
+%                 if start_l
+%                     [~, where_sql] = obj(oi).combineSQL(where_sql, 'AND', ...
+%                         startCondition_sql);
+%                 end
+%                 if end_l
+%                     [~, where_sql] = obj(oi).combineSQL(where_sql, 'AND', ...
+%                         endCondition_sql);
+%                 end
+%                 
+%                 % Columns read out must include date time
+%                 if ~isequal(cols, '*')
+%                     cols = union(cols, 'datetime_utc');
+%                 end
+%                 
+%                 % Read data and convert to timetable
+%                 [~, rawTable] = obj(oi).select(tab, cols, where_sql);
+%                 rawTable.datetime_utc = datetime(rawTable.datetime_utc,...
+%                     'ConvertFrom', 'datenum');
+%                 rawTable = table2timetable(rawTable, 'RowTimes', ...
+%                     'datetime_utc');
+%                 
+%                 % Remove variables which don't support empty values for
+%                 % auto-filling
+%                 rawVars = rawTable.Properties.VariableNames;
+%                 if ismember('imo_vessel_number', rawVars)
+%                     
+%                     rawTable.imo_vessel_number = [];
+%                 end
+%                 if ismember('id', rawVars)
+%                     
+%                     rawTable.id = [];
+%                 end
+%                 
+%                 % Get out performance data again, so table is re-created
+% %                 obj(oi) = obj(oi).performanceData(obj(oi).IMO_Vessel_Number);
+%                 
+%                 if isempty(obj(oi).InService)
+%                     
+%                     obj(oi).InService = rawTable;
+%                 else
+%                     
+%                     % Synchronise raw table with InService data
+%                     obj(oi).InService = synchronize(obj(oi).InService, rawTable);
+%                 end
+%             end
+%         end
         
         function obj = selectInService(obj, varargin)
             
