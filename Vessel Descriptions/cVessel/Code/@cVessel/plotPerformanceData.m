@@ -28,8 +28,10 @@ numColours = size(lineColours_m, 1);
 DDColourOrder = repmat(1:numColours, [1, ceil(nDDi/numColours)]);
 
 nFigs = numel(obj);
-figHandles = arrayfun(@(x) figure, nan(1, nFigs));
-ax_v = arrayfun(@(x) axes('Parent', x), figHandles);
+figHandles = arrayfun(@(x) figure, nan(1, nFigs), 'Uni', 0);
+figHandles = [figHandles{:}];
+ax_c = arrayfun(@(x) axes('Parent', x), figHandles, 'Uni', 0);
+ax_v = [ax_c{:}];
 set(ax_v, 'NextPlot', 'add');
 
 while obj.iterateDD
@@ -38,8 +40,8 @@ while obj.iterateDD
     currAx = ax_v(vi);
 
     % Skip DDi if empty
-    varname = currVessel.Report(ddi).Variable;
-    if currVessel.isPerDataEmpty
+    varname = currVessel.InServicePreferences.Variable;
+    if currVessel.isPerDataEmpty(ddi)
        continue
     end
 
@@ -70,7 +72,7 @@ while obj.iterateDD
     % Plot data
     xdata = currDD_tbl.timestamp;
     convFact = 1;
-    if ismember(currVessel.Variable, {'speed_loss', 'speed_index'})
+    if ismember(varname, {'speed_loss', 'speed_index'})
        convFact = 1e2;
     end
     ydata = currDD_tbl.(varname) * convFact;
@@ -153,7 +155,7 @@ for vi = 1:nFigs
    
    % Labels
    labFontsz = 12;
-   varname = obj(vi).Variable;
+   varname = obj(vi).InServicePreferences.Variable;
    ylabel(currAx, [strrep(varname, '_', ' '), ' ( % )'], 'fontsize', labFontsz);
    
    % Get vessel name
