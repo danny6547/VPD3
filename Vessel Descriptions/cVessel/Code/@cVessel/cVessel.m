@@ -1540,6 +1540,9 @@ classdef cVessel < cModelID
        % Assign object
        obj.DryDock = ddd;
        
+       % Sort on dates
+       obj.DryDock = obj.DryDock.sort;
+       
        % Apply connection across array, if array was expanded from default
        obj.DryDock.copySQLToArray;
        
