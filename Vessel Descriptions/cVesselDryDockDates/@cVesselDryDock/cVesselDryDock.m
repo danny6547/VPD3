@@ -233,6 +233,30 @@ classdef cVesselDryDock < cModelID & cDateConvert
         
             str(str == '?') = [];
         end
+        
+    end
+    
+    methods(Hidden)
+        
+        function obj = sort(obj)
+        % sort Sort dry-docks by date, error if overlap
+        
+        startEnd_m = horzcat([obj.StartDateNum]', [obj.EndDateNum]');
+        
+        % Sort on start date
+        [~, sortI] = sort(startEnd_m(:, 1));
+        startEnd_m = startEnd_m(sortI, :);
+            
+        % Check if dates overlap
+        overlap_l = any(startEnd_m(2:end, 1) - startEnd_m(1:end-1, 2) < 0);
+        if overlap_l
+            
+            errid = 'cVDD:DatesOverlap';
+            errmsg = 'Cannot sort dry-dock by dates because at least two overlap';
+            error(errid, errmsg);
+        end
+        
+        end
     end
     
     methods
