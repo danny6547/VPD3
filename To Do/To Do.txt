@@ -960,9 +960,13 @@ cMID.migrateModels:
 #	move to cDB, rename to migrateStatic
 # Decide what to do with vessels missing certain data when insert called
 # 	error when IMO or configuration empty
-cVDD.sort: sort based on dates, check no overlap	
+# cVDD.sort: sort based on dates, check no overlap	
 # cV: skip obj with no InServicePreferences.Variable in iteration
 cVR: write all methods to generate report tables
+cV.ISO19030Analysis: rename to ProcessISO19030, call ProcessISO19030.sql and not insertIntoPerformanceData
+cV.ISO19030((proc)): where proc is a struct with fields procedure, input and isSQL, containing all procedures to be called on this vessel's data, their inputs
+	and whether or not they are SQL procedures (otherwise methods of cVessel)
+[obj, proc] = cV.ISO19030(): when 2 outputs requested, do not process, return defaults structure of procedures
 
 
 
