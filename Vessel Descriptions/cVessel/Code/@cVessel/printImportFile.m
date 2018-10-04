@@ -7,7 +7,7 @@ validateattributes(filename, {'char'}, {'vector'}, ...
     'cVessel.printImportFile', 'filename', 2);
 
 nonNull = {'Relative_Wind_Direction', 'Relative_Wind_Speed', ...
-    'Static_Draught_Fore', 'Static_Draught_Aft', 'Delivered_Power'};
+    'Static_Draught_Fore', 'Static_Draught_Aft', 'Delivered_Power', 'Speed_Through_Water'};
 if nargin > 2
     
     nonNull = varargin{1};
@@ -15,7 +15,7 @@ if nargin > 2
 end
 
 gtZero = {'Relative_Wind_Direction', 'Relative_Wind_Speed',...
-    'Static_Draught_Fore', 'Static_Draught_Aft', 'Delivered_Power'};
+    'Static_Draught_Fore', 'Static_Draught_Aft', 'Delivered_Power', 'Speed_Through_Water'};
 if nargin > 3
     
     gtZero = varargin{2};
