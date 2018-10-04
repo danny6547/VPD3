@@ -2,7 +2,6 @@
 /* Assumptions: */
 /* 1.  */
 
-
 DROP PROCEDURE IF EXISTS normaliseLowerFreq;
 
 delimiter //
@@ -18,7 +17,7 @@ BEGIN
     /* Get primary parameter timestep */
     
     /* Average all secondary parameters to this value */
-    UPDATE `inservice`.tempRawISO AS t1
+    UPDATE tempRawISO AS t1
 		INNER JOIN
 			(SELECT id, Timestamp, Vessel_Id, Vessel_Configuration_Id, Raw_Data_Id, Speed_Over_Ground, @lastb := IFNULL(Relative_Wind_Speed, @lastb) AS Relative_Wind_Speed, @lastc := IFNULL(Relative_Wind_Direction, @lastc) AS Relative_Wind_Direction, @laste := IFNULL(Ship_Heading, @laste) AS Ship_Heading, @lastf := IFNULL(Shaft_Revolutions, @lastf) AS Shaft_Revolutions, @lastg := IFNULL(Static_Draught_Fore, @lastg) AS Static_Draught_Fore, @lasth := IFNULL(Static_Draught_Aft, @lasth) AS Static_Draught_Aft, @lasti := IFNULL(Water_Depth, @lasti) AS Water_Depth, @lastj := IFNULL(Rudder_Angle, @lastj) AS Rudder_Angle, @lastk := IFNULL(Seawater_Temperature, @lastk) AS Seawater_Temperature, @lastl := IFNULL(Air_Temperature, @lastl) AS Air_Temperature, @lastm := IFNULL(Air_Pressure, @lastm) AS Air_Pressure, @lastn := IFNULL(Air_Density, @lastn) AS Air_Density, @lasto := IFNULL(Speed_Through_Water, @lasto) AS Speed_Through_Water, @lastq := IFNULL(Shaft_Power, @lastq) AS Shaft_Power, @lastr := IFNULL(Brake_Power, @lastr) AS Brake_Power, @lasts := IFNULL(Shaft_Torque, @lasts) AS Shaft_Torque, @lastt := IFNULL(Mass_Consumed_Fuel_Oil, @lastt) AS Mass_Consumed_Fuel_Oil, @lastu := IFNULL(Volume_Consumed_Fuel_Oil, @lastu) AS Volume_Consumed_Fuel_Oil, @lastdd := IFNULL(Displacement, @lastdd) AS Displacement
 				FROM (SELECT id, Timestamp, Vessel_Id, Vessel_Configuration_Id, Raw_Data_Id, Speed_Over_Ground, Relative_Wind_Speed, Relative_Wind_Direction, Ship_Heading, Shaft_Revolutions, Static_Draught_Fore, Static_Draught_Aft, Water_Depth, Rudder_Angle, Seawater_Temperature, Air_Temperature, Air_Pressure, Air_Density, Speed_Through_Water, Delivered_Power, Shaft_Power, Brake_Power, Shaft_Torque, Mass_Consumed_Fuel_Oil, Volume_Consumed_Fuel_Oil, Displacement FROM tempRawISO) AS q

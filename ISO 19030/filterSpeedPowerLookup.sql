@@ -1,9 +1,6 @@
 /* Detect rows where displacement is outside the range of +/-5% of the 
 nearest value in the SpeedPower table. */
 
-
-
-
 DROP PROCEDURE IF EXISTS filterSpeedPowerLookup;
 
 delimiter //
@@ -275,7 +272,7 @@ BEGIN
 	UPDATE tempRawISO SET Filter_SpeedPower_Disp_Trim = FALSE WHERE Filter_SpeedPower_Disp_Trim IS NULL;
     
     /* Get valid displacement and nearest displacement */
-    UPDATE `inservice`.tempRawISO t
+    UPDATE tempRawISO t
 		JOIN (
 			SELECT z.id, z.ValidDisplacement, z.SPDisplacement AS 'Nearest_Displacement'
 				FROM
@@ -295,8 +292,8 @@ BEGIN
 								   Displacement,
 								  (Displacement*0.95) AS 'Lower Displacement',
 								  (Displacement*1.05) AS 'Upper Displacement'
-							FROM `inservice`.tempRawISO) AS b
-						WHERE a.Speed_Power_Coefficient_Model_Id IN (SELECT Speed_Power_Coefficient_Model_Value_Id FROM `static`.SpeedPowerCoefficientModelValue 
+							FROM tempRawISO) AS b
+						WHERE a.Speed_Power_Coefficient_Model_Id IN (SELECT Speed_Power_Coefficient_Model_Id FROM `static`.SpeedPowerCoefficientModelValue 
 																		WHERE Speed_Power_Coefficient_Model_Id = 
 																			(SELECT Speed_Power_Coefficient_Model_Id FROM `static`.VesselConfiguration 
 																				WHERE Vessel_Configuration_Id = vcid))) AS z
@@ -319,8 +316,8 @@ BEGIN
 								   Displacement,
 								  (Displacement*0.95) AS 'Lower Displacement',
 								  (Displacement*1.05) AS 'Upper Displacement'
-							FROM `inservice`.tempRawISO) AS b
-						WHERE a.Speed_Power_Coefficient_Model_Id IN (SELECT Speed_Power_Coefficient_Model_Value_Id FROM `static`.SpeedPowerCoefficientModelValue 
+							FROM tempRawISO) AS b
+						WHERE a.Speed_Power_Coefficient_Model_Id IN (SELECT Speed_Power_Coefficient_Model_Id FROM `static`.SpeedPowerCoefficientModelValue 
 																		WHERE Speed_Power_Coefficient_Model_Id = 
 																			(SELECT Speed_Power_Coefficient_Model_Id FROM `static`.VesselConfiguration 
 																				WHERE Vessel_Configuration_Id = vcid))) AS d
@@ -344,7 +341,7 @@ BEGIN
 				SELECT t.id, s.Trim, s.Displacement FROM `static`.SpeedPowerCoefficientModelValue s
 					JOIN tempRawISO t
 						ON s.Displacement = t.Nearest_Displacement
-							WHERE s.Speed_Power_Coefficient_Model_Id IN (SELECT Speed_Power_Coefficient_Model_Value_Id FROM `static`.SpeedPowerCoefficientModelValue 
+							WHERE s.Speed_Power_Coefficient_Model_Id IN (SELECT Speed_Power_Coefficient_Model_Id FROM `static`.SpeedPowerCoefficientModelValue 
 																		WHERE Speed_Power_Coefficient_Model_Id = 
 																			(SELECT Speed_Power_Coefficient_Model_Id FROM `static`.VesselConfiguration 
 																				WHERE Vessel_Configuration_Id = vcid))
@@ -365,7 +362,7 @@ BEGIN
 				SELECT t.id, s.Trim, s.Displacement FROM `static`.SpeedPowerCoefficientModelValue s
 					JOIN tempRawISO t
 						ON s.Displacement = t.Nearest_Displacement
-							WHERE s.Speed_Power_Coefficient_Model_Id IN (SELECT Speed_Power_Coefficient_Model_Value_Id FROM `static`.SpeedPowerCoefficientModelValue 
+							WHERE s.Speed_Power_Coefficient_Model_Id IN (SELECT Speed_Power_Coefficient_Model_Id FROM `static`.SpeedPowerCoefficientModelValue 
 																		WHERE Speed_Power_Coefficient_Model_Id = 
 																			(SELECT Speed_Power_Coefficient_Model_Id FROM `static`.VesselConfiguration 
 																				WHERE Vessel_Configuration_Id = vcid))

@@ -1,14 +1,11 @@
 /* Calculate expected speed from delivered power and speed,power,draft,trim 
 data */
 
-
-
-
 DROP PROCEDURE IF EXISTS updateExpectedSpeed;
 
 delimiter //
 
-CREATE PROCEDURE updateExpectedSpeed(vid INT)
+CREATE PROCEDURE updateExpectedSpeed(vcid INT)
 BEGIN
 	
     /* Calculate expected speed from fitted speed-power curve
@@ -32,25 +29,24 @@ BEGIN
     UPDATE tempRawISO SET Displacement_Correction_Needed = TRUE WHERE Nearest_Displacement > Displacement*1.05 OR Nearest_Displacement < Displacement*0.95;*/
     
     /* This is a quick hack to prevent errors where the a high, negative value in the POWER function causes an out-of-range error*/
-    DELETE FROM `inservice`.tempRawISO WHERE Corrected_Power < 0;
+    DELETE FROM tempRawISO WHERE Corrected_Power < 0;
     
     /* Get coefficients of speed, power curve for nearest diplacement, trim */ 
-    UPDATE IGNORE `inservice`.tempRawISO ii JOIN
-	(SELECT i.id, Nearest_Displacement, Nearest_Trim, i.Displacement, i.Trim, s.Coefficient_A, s.Coefficient_B FROM `inservice`.tempRawISO i
+    UPDATE IGNORE tempRawISO ii JOIN
+	(SELECT i.id, Nearest_Displacement, Nearest_Trim, i.Displacement, i.Trim, s.Coefficient_A, s.Coefficient_B FROM tempRawISO i
 		JOIN `static`.speedpowercoefficientmodelvalue s
 			ON
 			   i.Nearest_Displacement = s.Displacement AND
 			   i.Nearest_Trim = s.Trim
-               WHERE s.Speed_Power_Coefficient_Model_Id IN (SELECT Speed_Power_Coefficient_Model_Value_Id FROM `static`.SpeedPowerCoefficientModelValue 
-																		WHERE Speed_Power_Coefficient_Model_Id = 
-																			(SELECT Speed_Power_Coefficient_Model_Id FROM `static`.VesselConfiguration 
-																				WHERE Vessel_Id = vid))
+               WHERE s.Speed_Power_Coefficient_Model_Id IN (SELECT Speed_Power_Coefficient_Model_Id FROM `static`.SpeedPowerCoefficientModelValue 
+																WHERE Speed_Power_Coefficient_Model_Id = 
+																	(SELECT Speed_Power_Coefficient_Model_Id FROM `static`.VesselConfiguration 
+																		WHERE Vessel_Configuration_Id = vcid))
                ) si
 	ON ii.id = si.id
-	SET Expected_Speed_Through_Water =  POWER(Corrected_Power / EXP(Coefficient_B), (1 / Coefficient_A));
-    
-		/*Displacement_Correction = POWER(ii.Displacement / ii.Nearest_Displacement, 2/9); 
-    UPDATE `inservice`.tempRawISO SET Expected_Speed_Through_Water = Expected_Speed_Through_Water * Displacement_Correction;
+	SET Expected_Speed_Through_Water = POWER(Corrected_Power / EXP(Coefficient_B), (1 / Coefficient_A)) * POWER(ii.Displacement / ii.Nearest_Displacement, 2/9);
+		/*Displacement_Correction = POWER(ii.Displacement / ii.Nearest_Displacement, 2/9); */
+    /*UPDATE tempRawISO SET Expected_Speed_Through_Water = Expected_Speed_Through_Water * Displacement_Correction;*/
     
     /* Get coefficients of speed, power curve for nearest diplacement, trim */ 
 /*    UPDATE IGNORE tempRawISO ii JOIN

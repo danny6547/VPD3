@@ -13,7 +13,7 @@ while obj.iterateDD
     
     [currDD_tbl, currObj_cv, ddi, vi] = obj.currentDD;
     x = datenum(currDD_tbl.timestamp);
-    y = currDD_tbl.(currObj_cv.Report(ddi).Variable);
+    y = currDD_tbl.(currObj_cv.InServicePreferences.Variable);
     
     nany = isnan(y);
     y(nany) = [];

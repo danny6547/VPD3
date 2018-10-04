@@ -6,19 +6,28 @@ function [ obj ] = select(obj, cv, varargin)
     validateattributes(cv, {'cVessel'}, {'scalar'}, ...
         'cVesselInService.select', 'cv', 1);
     
-    calcCols = '*';
+    % Find current database's in-service parameters
+    dbname = obj.SQL.Database;
+    [params, tabFound] = obj.tableParameters(dbname);
+    
+    if ~tabFound
+        
+        return
+    end
+    
+    calcCols = params.PerformanceVariable; % '*';
     if nargin > 2 && ~isempty(varargin{1})
         
         calcCols = varargin{1};
-        calcCols = validateCellStr(calcCols, 'cVessel.selectInService', 'calcCols', 2);
     end
+    calcCols = validateCellStr(calcCols, 'cVessel.selectInService', 'calcCols', 2);
     
-    rawCols = '*';
+    rawCols = '';
     if nargin > 3 && ~isempty(varargin{2})
         
         rawCols = varargin{2};
-        rawCols = validateCellStr(rawCols, 'cVessel.selectInService', 'rawCols', 3);
     end
+    rawCols = validateCellStr(rawCols, 'cVessel.selectInService', 'rawCols', 3);
     
     rawtable = 1;
     if nargin > 4 && ~isempty(varargin{3})
@@ -28,10 +37,6 @@ function [ obj ] = select(obj, cv, varargin)
             {'scalar', 'positive', 'integer', 'real'}, ...
             'cVessel.selectInService', 'rawtable', 2);
     end
-    
-    % Find current database's in-service parameters
-    dbname = obj.SQL.Database;
-    params = obj.tableParameters(dbname);
     
     % Select raw data table based on input
     if rawtable > numel(params.Raw)
@@ -54,7 +59,7 @@ function [ obj ] = select(obj, cv, varargin)
     propName = params.InServiceIdentifierProperty;
     if strcmpi(propName, 'Vessel_Configuration_Id')
         
-        idVal = cv.Configuration.Vessel_Configuration_Id;
+        idVal = cv.Configuration.Model_ID;
     else
         
         idVal = cv.(propName);
@@ -66,8 +71,18 @@ function [ obj ] = select(obj, cv, varargin)
     end
     idVal_ch = num2str(idVal);
     [~, where] = obj.SQL.combineSQL(['t1.',params.InServiceIdentifierColumn], '=', idVal_ch);
+    
+    % Check time column is being selected
+    timeName = params.InServiceTimeCol;
+    colWithoutAlias = '';
+    if ~ismember(timeName, calcCols) && ~ismember(timeName, rawCols)
+        
+        colWithoutAlias = timeName;
+    end
+    
+    % Call SQL join method
     tbl = obj.SQL.join(calcTab, calcCols, calcJoin, rawTab, rawCols, ...
-        rawJoin, where);
+        rawJoin, where, colWithoutAlias);
     
     if isempty(tbl)
         
@@ -79,10 +94,17 @@ function [ obj ] = select(obj, cv, varargin)
         [~, where_sql] = obj.SQL.combineSQL(whereCol, '=', whereIdVal_ch);
         
         limit = obj.Limit;
+        rawCols = '*';
         [~, tbl] = obj.SQL.select(rawTab, rawCols, where_sql, limit);
     end
     
     % Assign table and variable
     obj.Data = tbl;
-    obj.Variable = params.PerformanceVariable;
+    if ismember(lower(params.PerformanceVariable), tbl.Properties.VariableNames)
+        
+        obj.Variable = params.PerformanceVariable;
+    else
+        
+        obj.Variable = '';
+    end
 end

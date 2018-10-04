@@ -76,6 +76,7 @@ classdef (Abstract) cModelID < cTableObject & handle
        for oi = 1:numel(obj)
            
            alias_c = obj(oi).propertyAlias;
+           aliasIdx = 1;
            model = obj(oi).ModelTable;
 
             % Concat model id alias and value to inputs
@@ -83,14 +84,14 @@ classdef (Abstract) cModelID < cTableObject & handle
             mid_c = {};
             if ~isempty(mid)
 
-                name = alias_c{end, 2};
+                name = alias_c{1, 2};
                 value = mid;
                 mid_c = {name, value};
             end
             
             % Insert into model table
            obj(oi) = insert@cTableObject(obj(oi), model, [], [],...
-               alias_c, mid_c{:});
+               alias_c(aliasIdx, :), mid_c{:});
            
            tables = obj(oi).ValueTable;
            modelField = obj(oi).ModelField;
@@ -100,7 +101,7 @@ classdef (Abstract) cModelID < cTableObject & handle
                modelField = repmat(modelField, [1, numValTable + 1]);
            end
            
-           alias_c = obj.propertyAlias;
+%            alias_c = obj.propertyAlias;
            for ti = 1:numel(tables)
                
                % Insert into "data table"
@@ -116,7 +117,8 @@ classdef (Abstract) cModelID < cTableObject & handle
                    inObjName = obj(oi).ValueObject{ti};
                    inObj = obj(oi).(inObjName);
                end
-               insert@cTableObject(inObj, tab, '',  [], alias_c, currField,...
+               aliasIdx = min([aliasIdx + 1, size(alias_c, 1)]);
+               insert@cTableObject(inObj, tab, '',  [], alias_c(aliasIdx, :), currField,...
                    currFieldVal);
            end
        end
@@ -163,6 +165,57 @@ classdef (Abstract) cModelID < cTableObject & handle
        id = double(id_tbl{1, 1});
        [obj.Model_ID] = id;
        end
+       
+       function [varargout] = getModels(obj, varargin)
+       % getModels Get model names and id of this type from database
+       
+       % Input
+       where = '';
+       if nargin > 1 && ~isempty(varargin{1})
+           
+           where = varargin{1};
+           validateattributes(where, {'char'}, ...
+               {'vector'}, 'cModelID.showModels', 'where', 1);
+       end
+       
+       lim = 1000;
+       if nargin > 2  && ~isempty(varargin{2})
+           
+           lim = varargin{2};
+           validateattributes(lim, {'numeric'}, ...
+               {'positive', 'scalar', 'integer'}, 'cModelID.showModels',...
+               'lim', 2);
+       end
+       
+       varargout = cell(1, numel(obj));
+       for oi = 1:numel(obj)
+           
+           tab = obj(oi).ModelTable;
+           sql = obj(oi).SQL;
+           [~, temp_st] = sql.describe(tab);
+           tabCols = temp_st.field;
+           cols = intersect(tabCols, [obj(oi).DataProperty, obj(oi).TableIdentifier]);
+           [~, modelIDi] = ismember(obj(oi).TableIdentifier, cols);
+           if modelIDi == 0
+               
+               tab = obj(oi).OtherTable{1};
+               [~, temp_st] = sql.describe(tab);
+               tabCols = temp_st.field;
+               cols = intersect(tabCols, obj(oi).DataProperty);
+               [~, modelIDi] = ismember(obj(oi).OtherTableIdentifier, cols);
+           end
+           orderI = 1:numel(cols);
+           orderI(modelIDi) = 1;
+           orderI(1) = modelIDi;
+           cols = cols(orderI);
+           [~, currTbl] = sql.select(tab, cols, where, lim);
+           if ~isempty(currTbl)
+               
+               currTbl.Properties.VariableNames{1} = 'Model_ID';
+           end
+           varargout{oi} = currTbl;
+       end
+       end
     end
     
     methods(Access = protected, Hidden)
@@ -205,8 +258,61 @@ classdef (Abstract) cModelID < cTableObject & handle
         function alias = propertyAlias(obj)
         % propertyAlias Alias to relate table fields with object properties
             
+        if isempty(obj(1).ValueObject)
+            
             alias = [repmat({'Model_ID'}, [size(obj(1).ModelField, 2), 1]),...
                 obj(1).ModelField'];
+        else
+            
+            aliasL = repmat({'Model_ID'}, [size(obj(1).ModelField, 2), 1]);
+            aliasR = cell(numel(obj(1).ValueObject)+1, 1);
+            aliasR(1) = obj(1).ModelField(1);
+            for vi = 1:numel(obj(1).ValueObject)
+                
+                currValObj = obj(1).ValueObject{vi};
+                currAlias = obj(1).(currValObj).ModelField;
+                aliasR(vi+1) = currAlias;
+            end
+            
+            alias = [aliasL, aliasR];
+        end
+        end
+        
+        function obj = migrate(obj, db)
+        % migrate Migrate model data to new database
+        
+        % Input
+        validateattributes(db, {'char'}, {'vector'}, 'cModelID.migrate',...
+            'db', 2);
+        
+        % Check non-empty
+        if isempty(obj)
+            
+            errid = 'cMID:migrateEmpty';
+            errmsg = ['Database migration cannot be performed on empty ',...
+                'object cannot be empty'];
+            error(errid, errmsg);
+        end
+        
+        for oi = 1:numel(obj)
+            
+            obji = obj(oi);
+            
+            % Check non-empty
+            if isempty(obji)
+                
+                continue
+            end
+            
+            % Remove current model id and change database
+            obji.Sync = false;
+            obji.Model_ID = [];
+            obji.SavedConnection = db;
+            obji.Sync = true;
+            
+            % Insert into new database
+            obji.insert;
+        end
         end
         
     end
@@ -318,9 +424,9 @@ classdef (Abstract) cModelID < cTableObject & handle
         if isempty(alias_c)
             
             alias_c = cell([lenVect_v, 1]);
-        else
+        elseif size(alias_c, 1) == 1 && lenVect_v ~= 1
             
-            alias_c = repmat({alias_c}, [lenVect_v, 1]);
+            alias_c = repmat(alias_c, [lenVect_v, 1]);
         end
         
         allObj = cell(1, numel(dataObj_c));
@@ -331,7 +437,7 @@ classdef (Abstract) cModelID < cTableObject & handle
             currTab = tab{oi};
             currField = field{oi};
 
-            currAlias_c = alias_c{oi, :};
+            currAlias_c = alias_c(oi, :);
             midi = mid{oi};
             expand_l = true;
             
@@ -434,7 +540,7 @@ classdef (Abstract) cModelID < cTableObject & handle
     end
     
     methods
-       
+        
         function set.Deleted(obj, del)
             
             if isempty(del) && isnumeric(del)

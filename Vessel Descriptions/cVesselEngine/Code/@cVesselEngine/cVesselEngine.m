@@ -116,6 +116,19 @@ classdef cVesselEngine < cModelID
            end
        end
        end
+       
+       function obj = insert(obj, varargin)
+           
+           % Assign defaults required by local databases, not remote
+           fillVal_f = @(x) isempty(x) || (isscalar(x) && isnan(x));
+           fillVal_l = cellfun(fillVal_f, {obj.Minimum_FOC_ph});
+           [obj(fillVal_l).Minimum_FOC_ph] = deal(0);
+           fillVal_l = cellfun(fillVal_f, {obj.Highest_Given_Brake_Power});
+           [obj(fillVal_l).Highest_Given_Brake_Power] = deal(0);
+           
+           % Call parent class method
+           insert@cModelID(obj, varargin{:});
+       end
     end
     
     methods(Static)

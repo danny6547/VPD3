@@ -5,8 +5,8 @@ DROP PROCEDURE IF EXISTS updateShaftPower;
 
 delimiter //
 
-CREATE PROCEDURE updateShaftPower(IMO INT)
+CREATE PROCEDURE updateShaftPower()
 BEGIN
 	
-	UPDATE `inservice`.tempRawISO SET Shaft_Power = Shaft_Torque * Shaft_Revolutions * (2 * PI() / 60);
+	UPDATE tempRawISO SET Shaft_Power = Shaft_Torque * Shaft_Revolutions * (2 * PI() / 60);
 END

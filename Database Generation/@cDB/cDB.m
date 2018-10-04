@@ -68,6 +68,11 @@ classdef cDB
        TopLevelDir = fileparts(fileparts(fileparts(mfilename('fullpath'))));
     end
     
+    properties(Hidden, Access=private)
+        
+        LibraryAccessible;
+    end
+    
     methods
     % Methods to delete
        
@@ -75,6 +80,9 @@ classdef cDB
        % cDB Constructor method for class cDB.
        
            obj.SQL = cMySQL(varargin{:});
+           
+           % Check if vessel library is available
+           obj.LibraryAccessible = ~isempty(dir(obj.VesselDirectory));
        end
        
        function create(obj, name, varargin)
@@ -735,29 +743,33 @@ classdef cDB
        function createInService(obj, varargin)
        
        % Input
-       dbname = 'InService';
+       dbname = 'inservice';
        if nargin > 1 && ~isempty(varargin{1})
 
            dbname = varargin{1};
            dbname = obj.validateDBName(dbname);
        end
-       obj.SQL = cMySQL('SavedConnection', dbname);
+%        obj.SQL = cMySQL('SavedConnection', dbname);
        
-       refresh_l = true;
-       if nargin > 2
-           
-           refresh_l = varargin{2};
-           validateattributes(refresh_l, {'logical'}, {'scalar'},...
-               'cDB.createInService', 'refresh', 3);
-       end
-           
        % Create Database
+       obj = createDatabase(obj, dbname);
        sql = obj.SQL;
-       if refresh_l
-           
-           sql.drop('DATABASE', dbname, true);
-           sql.createDatabase(dbname, true);
-       end
+       
+%        refresh_l = true;
+%        if nargin > 2
+%            
+%            refresh_l = varargin{2};
+%            validateattributes(refresh_l, {'logical'}, {'scalar'},...
+%                'cDB.createInService', 'refresh', 3);
+%        end
+%            
+%        % Create Database
+%        sql = obj.SQL;
+%        if refresh_l
+%            
+%            sql.drop('DATABASE', dbname, true);
+%            sql.createDatabase(dbname, true);
+%        end
        
        % Build Schema
 %        obj.Database = dbname;
@@ -847,6 +859,7 @@ classdef cDB
                                 'updateNearestTrim.sql'
                                 'applyFilters.sql'
                                 'bar2Pa.sql'
+                                'insertIntoCalculatedData.sql'
                         };
        iso19030Fullpath_c = cellfun(@(x) fullfile(topleveldir, ISODir, x), ...
            iso19030_c, 'Uni', 0);
@@ -1021,7 +1034,7 @@ classdef cDB
            cellfun(@(x) obj.SQL.call(x), createProc_c, 'Uni', 0);
        end
        
-       if obj.LoadPerformance
+       if obj.LoadPerformance && obj.LibraryAccessible
            
            % Insert performance data
            allPerformanceFile_ch = fullfile(obj.DNVGLDir, ...
@@ -1030,7 +1043,7 @@ classdef cDB
            obj_ves.loadDNVGLPerformance(allPerformanceFile_ch);
        end
        
-       if obj.LoadRaw
+       if obj.LoadRaw && obj.LibraryAccessible
            
            % Load Raw
            rawDirect = fullfile(obj.DNVGLDir, '\Raw');
@@ -1092,6 +1105,12 @@ classdef cDB
            obj.createInService('TestInService');
        end
        
+       function migrateStatic(obj)
+       
+        remoteDB = 'hullperformance';
+        localDB = 'static';
+        obj.migrateVessels(remoteDB, localDB);
+       end
     end
     
     methods(Static)
@@ -1268,6 +1287,38 @@ classdef cDB
            wind.Coefficient = 0;
            wind.Direction = 0;
            wind.insert;
+       end
+       
+       function migrateVessels(db1, db2)
+        % migrateStatic Migrate all static vessel data to new database
+        
+        % Get all model tables
+        cv = cVessel('DB', db1);
+        tab = cv.getModels('deleted = 0');
+
+        % Iterate models in table
+        for ri = 1:height(tab)
+
+            % Create objects with data from this row
+            obji = cVessel('DatabaseStatic', db1, ...
+                'DatabaseInService', 'Empty');
+            currIMO = str2double(tab.imo{ri});
+            obji.IMO = currIMO;
+
+            % Migrate
+            try obji.migrate(db2);
+                
+                fprintf(1, ['Vessel index %u complete at ', datestr(now), '\n'], ri);
+            catch ee
+                
+                if ~strcmp(ee.identifier, 'cV:EmptyConfig')
+                    
+                    rethrow(ee)
+                end
+                
+                fprintf(1, ['Vessel index %u skipped because of missing configuration at ', datestr(now), '\n'], ri);
+            end
+        end
        end
     end
     

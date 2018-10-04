@@ -19,12 +19,12 @@ BEGIN
         ; */
     
 	/* Get the minimum power of the power curve corresponding to delivered power, then whether DeliveredPower is less than this value. */
-	UPDATE `inservice`.tempRawISO y JOIN
+	UPDATE tempRawISO y JOIN
 		(SELECT q.id, MinPower, MaxPower,
 											IFNULL(q.Corrected_Power > MaxPower, FALSE) AS PHigh,
 											IFNULL(q.Corrected_Power < MinPower, FALSE) AS PLow FROM
 		(SELECT r.id, r.Corrected_Power, p.Maximum_Power, r.Nearest_Displacement, r.Nearest_Trim, r.Speed_Through_Water
-			FROM `inservice`.tempRawISO r
+			FROM tempRawISO r
 				JOIN `static`.SpeedPowerCoefficientModelValue p
 					ON
 					 /* r.IMO_Vessel_Number = p.IMO_Vessel_Number AND */
@@ -35,7 +35,7 @@ BEGIN
 		INNER JOIN
 			(SELECT id, Corrected_Power, Minimum_Power AS MinPower, Maximum_Power AS MaxPower
 			FROM
-				(SELECT t.id, t.Corrected_Power, p.Maximum_Power, p.Minimum_Power FROM `inservice`.tempRawISO t
+				(SELECT t.id, t.Corrected_Power, p.Maximum_Power, p.Minimum_Power FROM tempRawISO t
 					JOIN `static`.SpeedPowerCoefficientModelValue p
 						ON
 						/* t.IMO_Vessel_Number = p.IMO_Vessel_Number AND */
@@ -53,12 +53,12 @@ BEGIN
 			;
     
     /* Filter variable when STW is NULL */
-	/*UPDATE `inservice`.tempRawISO SET Filter_SpeedPower_Below  = IFNULL(Filter_SpeedPower_Below, TRUE);
-	UPDATE `inservice`.tempRawISO SET Filter_SpeedPower_Above  = IFNULL(Filter_SpeedPower_Above, TRUE);
-	UPDATE `inservice`.tempRawISO SET Filter_SpeedPower_Below  = TRUE WHERE Speed_Through_Water IS NULL;
-	UPDATE `inservice`.tempRawISO SET Filter_SpeedPower_Above  = TRUE WHERE Speed_Through_Water IS NULL;*/
+	/*UPDATE tempRawISO SET Filter_SpeedPower_Below  = IFNULL(Filter_SpeedPower_Below, TRUE);
+	UPDATE tempRawISO SET Filter_SpeedPower_Above  = IFNULL(Filter_SpeedPower_Above, TRUE);
+	UPDATE tempRawISO SET Filter_SpeedPower_Below  = TRUE WHERE Speed_Through_Water IS NULL;
+	UPDATE tempRawISO SET Filter_SpeedPower_Above  = TRUE WHERE Speed_Through_Water IS NULL;*/
     
-	UPDATE `inservice`.tempRawISO SET Filter_SpeedPower_Below  = NULL WHERE Corrected_Power IS NULL;
-	UPDATE `inservice`.tempRawISO SET Filter_SpeedPower_Above  = NULL WHERE Corrected_Power IS NULL;
+	UPDATE tempRawISO SET Filter_SpeedPower_Below  = NULL WHERE Corrected_Power IS NULL;
+	UPDATE tempRawISO SET Filter_SpeedPower_Above  = NULL WHERE Corrected_Power IS NULL;
             
 END

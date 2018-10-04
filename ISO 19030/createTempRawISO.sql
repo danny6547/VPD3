@@ -4,7 +4,7 @@ DROP PROCEDURE IF EXISTS createTempRawISO;
 
 delimiter //
 
-CREATE PROCEDURE createTempRawISO(vid INT)
+CREATE PROCEDURE createTempRawISO(vcid INT)
 BEGIN
 	
 	DROP TABLE IF EXISTS tempRawISO;
@@ -100,6 +100,6 @@ BEGIN
 	
 	INSERT INTO tempRawISO (Raw_Data_Id, Timestamp, Vessel_Id, Latitude, Longitude, Relative_Wind_Speed, Relative_Wind_Direction, Speed_Over_Ground, Ship_Heading, Shaft_Revolutions, Static_Draught_Fore, Static_Draught_Aft, Water_Depth, Rudder_Angle, Seawater_Temperature, Air_Temperature, Air_Pressure, Speed_Through_Water, Air_Density, Delivered_Power, Shaft_Power, Brake_Power, Shaft_Torque, Mass_Consumed_Fuel_Oil, Volume_Consumed_Fuel_Oil, Temp_Fuel_Oil_At_Flow_Meter, Displacement)
 		SELECT Raw_Data_Id, Timestamp, Vessel_Id, Latitude, Longitude, Relative_Wind_Speed, Relative_Wind_Direction, Speed_Over_Ground, Ship_Heading, Shaft_Revolutions, Static_Draught_Fore, Static_Draught_Aft, Water_Depth, Rudder_Angle, Seawater_Temperature, Air_Temperature, Air_Pressure, Speed_Through_Water, Air_Density, Delivered_Power, Shaft_Power, Brake_Power, Shaft_Torque, Mass_Consumed_Fuel_Oil, Volume_Consumed_Fuel_Oil, Temp_Fuel_Oil_At_Flow_Meter, Displacement
-			FROM rawdata WHERE Vessel_Id = vid;
+			FROM rawdata WHERE Vessel_Id = (SELECT Vessel_Id from VesselConfiguration WHERE Vessel_Configuration_Id = vcid);
     
 END

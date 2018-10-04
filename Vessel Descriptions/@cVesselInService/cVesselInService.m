@@ -6,7 +6,6 @@ classdef cVesselInService < cTableObject
         
         Limit = 20000;
         Data = timetable();
-        DateFormStr;
         Variable;
         Timestep = 1;
     end
@@ -18,6 +17,11 @@ classdef cVesselInService < cTableObject
         EmptyIgnore = '';
     end
     
+    properties(Hidden, Dependent)
+        
+        DateFormStr;
+    end
+    
     methods
            
        function obj = cVesselInService(varargin)
@@ -27,12 +31,28 @@ classdef cVesselInService < cTableObject
        
        function obj = insert(obj)
            
+           sql = obj.SQL;
+           
+           % Create flat file
+           filename = fullfile(userpath, 'tempImportFile.csv');
+           obj.printImportFile2(filename);
+           
+           % Insert file
+           cols = obj.Data.Properties.VariableNames;
+           tempTab = 'tempRaw';
+           permTab = 'RawData';
+           delim = ',';
+           ignore = 1;
+           sql.loadInFileDuplicate(filename, cols, tempTab, permTab, delim, ignore);
+           
+           % Delete file
+           delete(filename);
        end
     end
     
     methods(Static)
         
-        params = tableParameters(dbname)
+        [params, tabFound] = tableParameters(dbname)
     end
     
     methods
@@ -74,6 +94,27 @@ classdef cVesselInService < cTableObject
             validateattributes(ins, {'timetable'}, {});
             ins = sortrows(ins);
             obj.Data = ins;
+        end
+        
+        function str = get.DateFormStr(obj)
+            
+            % Get params for this database
+            switch class(obj.SQL)
+                
+                case 'cMySQL'
+                    
+                    str = 'dd-MM-yyyy HH:mm:ss';
+                    
+                case 'cTSQL'
+                    
+                    str = 'yyyy-MM-dd HH:mm:ss.s';
+                otherwise
+            end
+        end
+        
+        function obj = set.DateFormStr(obj, ~)
+            
+            
         end
     end
 end

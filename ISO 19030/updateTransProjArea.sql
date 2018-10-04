@@ -11,7 +11,5 @@ BEGIN
 	SET @D := (SELECT Draft_Design FROM `static`.vesselconfiguration WHERE Vessel_Configuration_Id = vcid);
 	SET @B := (SELECT Breadth_Moulded FROM `static`.vesselconfiguration WHERE Vessel_Configuration_Id = vcid);
 	
-	UPDATE `inservice`.tempRawISO
-	SET Transverse_Projected_Area_Current =  @T + (( @D - (Static_Draught_Fore + Static_Draught_Aft)/2) * @B );
-	
+	UPDATE tempRawISO SET Transverse_Projected_Area_Current =  @T + (( @D - (Static_Draught_Fore + Static_Draught_Aft)/2) * @B );
 END;

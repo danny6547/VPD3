@@ -1,4 +1,4 @@
-classdef cVesselReport < cMySQL
+classdef cVesselReport
     %CVESSELREPORT Data used in reporting and visualisation
     %   Detailed explanation goes here
     
@@ -56,7 +56,14 @@ classdef cVesselReport < cMySQL
     
        function obj = cVesselReport(varargin)
             
-           obj = obj@cMySQL(varargin{:});
+           if nargin > 0
+               
+               sz = varargin{1};
+               obj_c = cell(sz);
+               obj_c = cellfun(@(x) cVesselReport, obj_c, 'Uni', 0);
+               obj = [obj_c{:}];
+               obj = reshape(obj, sz);
+           end
        end
        
        function [obj, tbl] = performanceTable(obj, cv, varargin)
@@ -177,4 +184,15 @@ classdef cVesselReport < cMySQL
            ref = table();
        end
     end
+    
+%     methods(Hidden)
+%         
+%         function log = isempty(obj)
+%             
+%             [~, sqlInput_c] = obj.connectionData;
+%             emptyReport = cVesselReport(sqlInput_c{:});
+%             emptyReport.Variable = obj.Variable;
+%             log = isequal(obj, emptyReport);
+%         end
+%     end
 end

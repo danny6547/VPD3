@@ -16,7 +16,7 @@ classdef cVesselInfo < cModelID & cDateConvert
         ModelTable = 'VesselInfo';
         ValueTable = {};
         ValueObject = {};
-        ModelField = {'Vessel_Id'};
+        ModelField = {'Vessel_Info_Id'};
         TableIdentifier = 'Vessel_Info_Id';
         NameAlias = 'Vessel_Name';
         OtherTable = '';

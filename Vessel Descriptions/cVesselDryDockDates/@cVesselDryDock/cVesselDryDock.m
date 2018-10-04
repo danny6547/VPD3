@@ -201,30 +201,6 @@ classdef cVesselDryDock < cModelID & cDateConvert
        end
     end
     
-    methods(Hidden)
-        
-        function empty = isempty(obj) 
-            
-            if any(size(obj) == 0)
-                empty = true;
-                return
-            end
-            
-            props2skipDD_c = {'IMO_Vessel_Number', 'DateStrFormat'};
-            props2skip_c = union(properties('cMySQL'), props2skipDD_c);
-            props = setdiff(properties(obj), props2skip_c);
-            empty = false(numel(props), numel(obj));
-            for oi = 1:numel(obj)
-                for pi = 1:numel(props)
-                    
-                    prop = props{pi};
-                    empty(pi, oi) = isempty(obj(oi).(prop));
-                end
-            end
-            empty = all(all(empty));
-        end
-    end
-    
     methods(Hidden, Static, Access=private)
         
         function ch = oneCellToString(c)
@@ -242,7 +218,7 @@ classdef cVesselDryDock < cModelID & cDateConvert
             % Allow for NaN (NULL) values
             isScalarNanCell_l = iscell(c) && isscalar(c) && ...
                 isscalar([c{:}]) && isnan([c{:}]);
-            if (isnumeric(c) && isnan(c)) || isScalarNanCell_l
+            if (isnumeric(c) && (isempty(c) || isnan(c)) || isScalarNanCell_l)
                 ch = nan;
                 return
             end
@@ -256,6 +232,34 @@ classdef cVesselDryDock < cModelID & cDateConvert
         % removeQuestionMarks Fix bizarre MATLAB error where '?' prepended
         
             str(str == '?') = [];
+        end
+        
+    end
+    
+    methods(Hidden)
+        
+        function obj = sort(obj)
+        % sort Sort dry-docks by date, error if overlap
+        
+        if isempty(obj)
+            
+            return
+        end
+        
+        % Sort on start date
+        startEnd_m = horzcat([obj.StartDateNum]', [obj.EndDateNum]');
+        [~, sortI] = sort(startEnd_m(:, 1));
+        obj = obj(sortI);
+            
+        % Check if dates overlap
+        startEnd_m = startEnd_m(sortI, :);
+        overlap_l = any(startEnd_m(2:end, 1) - startEnd_m(1:end-1, 2) < 0);
+        if overlap_l
+            
+            errid = 'cVDD:DatesOverlap';
+            errmsg = 'Cannot sort dry-dock by dates because at least two overlap';
+            error(errid, errmsg);
+        end
         end
     end
     
