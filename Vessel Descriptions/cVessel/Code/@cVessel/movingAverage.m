@@ -98,7 +98,7 @@ while obj.iterateDD
     
     % Index into input and get dates
     currDate = currDD_tbl.timestamp;
-    currPerf = currDD_tbl.(currObj.Variable);
+    currPerf = currDD_tbl.(currObj.InServicePreferences.Variable);
 
     % Remove duplicate date data (redundant when no duplicates in db)
     [currDate, udi] = unique(currDate);

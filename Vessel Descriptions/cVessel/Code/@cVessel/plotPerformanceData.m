@@ -70,7 +70,7 @@ while obj.iterateDD
     % Plot data
     xdata = currDD_tbl.timestamp;
     convFact = 1;
-    if ismember(currVessel.Variable, {'speed_loss', 'speed_index'})
+    if ismember(currVessel.Report.Variable, {'speed_loss', 'speed_index'})
        convFact = 1e2;
     end
     ydata = currDD_tbl.(varname) * convFact;
@@ -153,7 +153,7 @@ for vi = 1:nFigs
    
    % Labels
    labFontsz = 12;
-   varname = obj(vi).Variable;
+   varname = obj(vi).InServicePreferences.Variable;
    ylabel(currAx, [strrep(varname, '_', ' '), ' ( % )'], 'fontsize', labFontsz);
    
    % Get vessel name
