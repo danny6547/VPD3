@@ -1068,16 +1068,14 @@ classdef cDB
            % Find Files
            rawFiles_st = rdir([forceDir, '\**\export_autologged.csv']);
            rawFiles_c = {rawFiles_st.name};
-%            rawFiles_c = rawFiles_c(4);
            
            % Load Files
            obj_ves = cVessel('SavedConnection', dbname);
-           
            for fi = 1:numel(rawFiles_c)
                
                obj_ves.loadForceTech(rawFiles_c{fi});
-               fprintf(1, [datestr(now), ': Completed import of file at ',...
-                   fileparts(rawFiles_c{fi}), '\n']);
+               fprintf(1, [datestr(now), ': Completed import of file at %s\n'],...
+                   fileparts(rawFiles_c{fi}));
            end
        end
        
