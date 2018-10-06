@@ -31,6 +31,11 @@ classdef cVesselISO19030 < cVesselAnalysis & cConnectSQLDB
        proc = procedureDefault(obj);
     end
     
+    methods(Hidden, Static)
+        
+       [ cols, data ] = catNonNullCols(cols, data, vc);
+    end
+    
     methods 
         
         function obj = set.Procedure(obj, proc)

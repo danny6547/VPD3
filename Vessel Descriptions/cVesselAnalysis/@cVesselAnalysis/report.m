@@ -6,10 +6,10 @@ function [ rep ] = report(obj, jobname, jobidx, njob)
 
 % Generate report string
 report_c = {};
-report_c{end+1} = '\n';
 report_c{end+1} = datestr(now);
 report_c{end+1} = ': Analysis progress: %u/%u (%4.2f%%) complete.'; 
 report_c{end+1} = ['Procedure ', jobname, ' completed.'];
+report_c{end+1} = '\n';
 report_ch = strjoin(report_c, ' ');
 jobpc = (jobidx/njob)*100;
 

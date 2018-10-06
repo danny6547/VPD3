@@ -1,23 +1,27 @@
-function obj = updateWindResistanceRelative(obj)
+function obj = updateWindResistanceRelative(obj, vc)
 % 
 
 % Get Variables
 tab = 'tempRawISO';
-cols_c = {'IMO_Vessel_Number', 'DateTime_UTC', 'Air_Density', ...
+cols_c = {'Timestamp', 'Air_Density', ...
     'Transverse_Projected_Area_Current',...
     'Relative_Wind_Speed_Reference',...
     'Relative_Wind_Direction_Reference'};
-[~, iso_tbl] = obj.select(tab, cols_c);
+[~, iso_tbl] = obj.SQL.select(tab, cols_c);
 
 % Find nearest coefficient
-currIMO = iso_tbl.imo_vessel_number(1);
+% currIMO = iso_tbl.vessel_id(1);
+windId = vc.Wind_Coefficient_Model_Id;
 windCols_c = {'Direction', 'Coefficient'};
-whereModel_sql = ['ModelID = (SELECT Wind_Model_ID FROM Vessels '...
-    'WHERE IMO_Vessel_Number = ', num2str(currIMO), ')'];
-windTab = 'windcoefficientdirection';
-[~, wind_tbl] = obj.select(windTab, windCols_c, whereModel_sql);
+whereModel_sql = ['Wind_Coefficient_Model_Id = ', num2str(windId)];
+windTab = 'WindCoefficientModelValue';
+[~, wind_tbl] = vc.SQL.select(windTab, windCols_c, whereModel_sql);
 if isempty(wind_tbl)
-    return
+    
+    errid = 'cVISO:NoWindCoeffsFound';
+    errmsg = ['Cannot update wind resistance coefficients because wind resistance model with '...
+        'id ', num2str(modelID), ' is empty'];
+    error(errid, errmsg);
 end
 reldir = iso_tbl.relative_wind_direction_reference;
 dir = wind_tbl.direction;
@@ -32,18 +36,20 @@ relspeed = iso_tbl.relative_wind_speed_reference;
 res = 0.5 .* rho .* At .* coeff .* relspeed.^2;
 
 % Insert update resistance
-resCol = {'IMO_Vessel_Number', 'DateTime_UTC', ...
-    'Wind_Resistance_Relative'};
-midnights_l = cellfun(@(x) length(x) == 10, iso_tbl.timestamp);
-sqldates_c = iso_tbl.timestamp;
-sqldates_c(midnights_l) = cellfun(@(x) [x, ' 00:00:00'], ...
-    iso_tbl.timestamp(midnights_l), 'Uni', 0);
-
-sqldates_ch = datestr(datenum(sqldates_c, obj(1).DateFormStr),...'dd-mm-yyyy HH:MM:SS'),...
-    'yyyy-mm-dd HH:MM');
+resCol = {'Timestamp', 'Wind_Resistance_Relative'};
+% midnights_l = cellfun(@(x) length(x) == 10, iso_tbl.timestamp);
+% sqldates_c = iso_tbl.timestamp;
+% sqldates_c(midnights_l) = cellfun(@(x) [x, ' 00:00:00'], ...
+%     iso_tbl.timestamp(midnights_l), 'Uni', 0);
+% 
+% sqldates_ch = datestr(datenum(sqldates_c, obj(1).SQL.DateFormStr),...'dd-mm-yyyy HH:MM:SS'),...
+%     'yyyy-mm-dd HH:MM');
+sqldates_dt = datetime(iso_tbl.timestamp);
+sqldates_ch = datestr(sqldates_dt, 'yyyy-mm-dd HH:MM');
 sqldates_c = cellstr(sqldates_ch);
-resData_c = [num2cell(iso_tbl.imo_vessel_number),...
-    sqldates_c, num2cell(res)];
+resData_c = [sqldates_c, num2cell(res)];
+
+[ resCol, resData_c ] = obj.catNonNullCols(resCol, resData_c, vc);
 
 % Create temp file and load, if data too big
 if size(resData_c, 1) > 5e4
@@ -56,8 +62,8 @@ if size(resData_c, 1) > 5e4
        tempTab.resData_c3 = num2cell(tempTab.resData_c3);
        tempTab.resData_c3(nan_l) = {'NULL'};
        tempTabName = 'tempTempRawISO';
-       obj = obj.drop('TABLE', tempTabName, true);
-       obj.createLike('tempTempRawISO', 'tempRawISO');
+       obj.SQL = obj.SQL.drop('TABLE', tempTabName, true);
+       obj.SQL.createLike('tempTempRawISO', 'tempRawISO');
        writetable(tempTab, tempFile, 'WriteVariableNames', false);
 
    catch ee
@@ -66,11 +72,11 @@ if size(resData_c, 1) > 5e4
        rethrow(ee);
    end
 
-   obj.loadInFileDuplicate(tempFile, resCol, tempTabName, 'tempRawISO');
+   obj.SQL.loadInFileDuplicate(tempFile, resCol, tempTabName, 'tempRawISO');
    delete(tempFile);
 
 else
 
-   obj.insertValuesDuplicate(tab, resCol, resData_c);
+   obj.SQL.insertValuesDuplicate(tab, resCol, resData_c);
 end
 end
