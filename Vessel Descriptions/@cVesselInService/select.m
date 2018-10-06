@@ -90,16 +90,17 @@ function [ obj ] = select(obj, cv, varargin)
     
     if isempty(tbl)
         
-        % Check for data in raw table if none found in calcualted
-        whereId = rawTabParams.RawIdentifierProperty;
-        whereIdVal = cv.(whereId);
-        whereIdVal_ch = num2str(whereIdVal);
-        whereCol = rawTabParams.RawColumn;
-        [~, where_sql] = obj.SQL.combineSQL(whereCol, '=', whereIdVal_ch);
-        
-        limit = obj.Limit;
-        rawCols = '*';
-        [~, tbl] = obj.SQL.select(rawTab, rawCols, where_sql, limit);
+%         % Check for data in raw table if none found in calcualted
+%         whereId = rawTabParams.RawIdentifierProperty;
+%         whereIdVal = cv.(whereId);
+%         whereIdVal_ch = num2str(whereIdVal);
+%         whereCol = rawTabParams.RawColumn;
+%         [~, where_sql] = obj.SQL.combineSQL(whereCol, '=', whereIdVal_ch);
+%         
+%         limit = obj.Limit;
+%         rawCols = '*';
+%         [~, tbl] = obj.SQL.select(rawTab, rawCols, where_sql, limit);
+        [~, tbl] = obj.selectRaw();
     end
     
     % Assign table and variable
