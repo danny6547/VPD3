@@ -1,16 +1,16 @@
-classdef cVesselAnalysis
+classdef cVesselAnalysis < handle
     %CVESSELANALYSIS Summary of this class goes here
     %   Detailed explanation goes here
     
-    properties
+    properties (Abstract)
         
-        Vessel_Configuration_Id;
+        Procedure;
     end
     
     methods
     
        function obj = cVesselAnalysis()
-    
+           
        end
     end
 end
