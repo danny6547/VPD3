@@ -8,14 +8,14 @@ CREATE PROCEDURE updateDefaultValues()
 
 BEGIN
 	
-    IF (SELECT COUNT(Air_Temperature) FROM `inservice`.tempRawISO) = 0 THEN
+    IF (SELECT COUNT(Air_Temperature) FROM tempRawISO) = 0 THEN
     
-		UPDATE `inservice`.tempRawISO SET Air_Temperature = 15;
+		UPDATE tempRawISO SET Air_Temperature = 15;
     END IF;
     
-    IF (SELECT COUNT(Air_Pressure) FROM `inservice`.tempRawISO) = 0 THEN
+    IF (SELECT COUNT(Air_Pressure) FROM tempRawISO) = 0 THEN
     
-		UPDATE `inservice`.tempRawISO SET Air_Pressure = 101325;
+		UPDATE tempRawISO SET Air_Pressure = 101325;
     END IF;
     
 END;
