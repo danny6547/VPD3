@@ -15,6 +15,7 @@ BEGIN
 							 Timestamp DATETIME NOT NULL,
 							 Vessel_Id INT(10) NOT NULL,
                              Vessel_Configuration_Id int(10) NOT NULL,
+							 Raw_Data_Id	bigint(19),
 							 Latitude FLOAT(15, 5),
 							 Longitude FLOAT(15, 5),
 							 Relative_Wind_Speed FLOAT(15, 5),
@@ -97,8 +98,8 @@ BEGIN
 						 CONSTRAINT UniqueDates UNIQUE(Timestamp)
 						 ) ENGINE = MYISAM;
 	
-	INSERT INTO tempRawISO (Timestamp, Vessel_Id, Vessel_Configuration_Id, Latitude, Longitude, Relative_Wind_Speed, Relative_Wind_Direction, Speed_Over_Ground, Ship_Heading, Shaft_Revolutions, Static_Draught_Fore, Static_Draught_Aft, Water_Depth, Rudder_Angle, Seawater_Temperature, Air_Temperature, Air_Pressure, Speed_Through_Water, Air_Density, Delivered_Power, Shaft_Power, Brake_Power, Shaft_Torque, Mass_Consumed_Fuel_Oil, Volume_Consumed_Fuel_Oil, Temp_Fuel_Oil_At_Flow_Meter, Displacement)
-		SELECT Timestamp, Vessel_Id, vcid, Latitude, Longitude, Relative_Wind_Speed, Relative_Wind_Direction, Speed_Over_Ground, Ship_Heading, Shaft_Revolutions, Static_Draught_Fore, Static_Draught_Aft, Water_Depth, Rudder_Angle, Seawater_Temperature, Air_Temperature, Air_Pressure, Speed_Through_Water, Air_Density, Delivered_Power, Shaft_Power, Brake_Power, Shaft_Torque, Mass_Consumed_Fuel_Oil, Volume_Consumed_Fuel_Oil, Temp_Fuel_Oil_At_Flow_Meter, Displacement
+	INSERT INTO tempRawISO (Timestamp, Vessel_Id, Vessel_Configuration_Id, Raw_Data_Id, Latitude, Longitude, Relative_Wind_Speed, Relative_Wind_Direction, Speed_Over_Ground, Ship_Heading, Shaft_Revolutions, Static_Draught_Fore, Static_Draught_Aft, Water_Depth, Rudder_Angle, Seawater_Temperature, Air_Temperature, Air_Pressure, Speed_Through_Water, Air_Density, Delivered_Power, Shaft_Power, Brake_Power, Shaft_Torque, Mass_Consumed_Fuel_Oil, Volume_Consumed_Fuel_Oil, Temp_Fuel_Oil_At_Flow_Meter, Displacement)
+		SELECT Timestamp, Vessel_Id, vcid, Raw_Data_Id, Latitude, Longitude, Relative_Wind_Speed, Relative_Wind_Direction, Speed_Over_Ground, Ship_Heading, Shaft_Revolutions, Static_Draught_Fore, Static_Draught_Aft, Water_Depth, Rudder_Angle, Seawater_Temperature, Air_Temperature, Air_Pressure, Speed_Through_Water, Air_Density, Delivered_Power, Shaft_Power, Brake_Power, Shaft_Torque, Mass_Consumed_Fuel_Oil, Volume_Consumed_Fuel_Oil, Temp_Fuel_Oil_At_Flow_Meter, Displacement
 			FROM rawdata WHERE Vessel_Id = (SELECT Vessel_Id from `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid);
     
 END
