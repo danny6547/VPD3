@@ -44,7 +44,6 @@ classdef cVesselISO19030 < cVesselAnalysis & cConnectSQLDB
            % Input
            
            % Assign
-%            obj.Vessel_Configuration_Id = num2str(vcid);
            obj.VesselConfiguration = vc;
            
            % Update procedure calls with new config id

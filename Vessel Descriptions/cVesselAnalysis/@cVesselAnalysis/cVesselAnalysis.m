@@ -5,6 +5,12 @@ classdef cVesselAnalysis < handle
     properties (Abstract)
         
         Procedure;
+        
+    end
+    
+    properties
+        
+        Report = true;
     end
     
     methods
