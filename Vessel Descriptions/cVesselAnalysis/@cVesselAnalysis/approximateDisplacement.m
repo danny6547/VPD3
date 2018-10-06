@@ -1,18 +1,18 @@
-function [ obj, dates_v, disp_v ] = approximateDisplacement(obj, disp_tbl)
+function [ obj, dates_v, disp_v ] = approximateDisplacement(obj, vc, disp_tbl)
 %approximateDisplacement Summary of this function goes here
 %   Detailed explanation goes here
 
     % Get LPP
-    lbp = obj.LBP;
+    lbp = vc.LBP;
     
     % Get time-series data
     evalTab_ch = 'tempRawISO';
-    evalCols_c = {'DateTime_UTC', 'Static_Draught_Fore', ...
+    evalCols_c = {'Timestamp', 'Static_Draught_Fore', ...
         'Static_Draught_Aft', 'Trim'};
-    [~, eval_tbl] = obj.select(evalTab_ch, evalCols_c);
+    [~, eval_tbl] = obj.SQL.select(evalTab_ch, evalCols_c);
     
     % Filter mysterious rows of all nan values from table
-    filter_l = cellfun(@(x) isnumeric(x) && isnan(x), eval_tbl.datetime_utc);
+    filter_l = cellfun(@(x) isnumeric(x) && isnan(x), eval_tbl.timestamp);
     eval_tbl(filter_l, :) = [];
     
     % Get time-series columns
@@ -30,7 +30,9 @@ function [ obj, dates_v, disp_v ] = approximateDisplacement(obj, disp_tbl)
     [~, nearDraftI_v, diffDraft_v] = FindNearestInVector(evalDraft_v, refDraft_v);
     
     % Output dates
-    dates_v = datenum(eval_tbl.datetime_utc, obj(1).DateFormStr); % 'dd-mm-yyyy HH:MM:SS');
+%     dates_v = datenum(eval_tbl.timestamp, obj.SQL.DateFormStr); % 'dd-mm-yyyy HH:MM:SS');
+    dates_dt = datetime(eval_tbl.timestamp, 'ConvertFrom', 'datestr');
+    dates_v = datenum(dates_dt);
     disp_v = nan(height(eval_tbl), 1);
     
     for di = 1:height(eval_tbl)

@@ -8,10 +8,10 @@ function [obj, dates_v, disp_v ] = interpolateDisplacement(obj, disp_tbl )
     refDraft_v = disp_tbl.draft_mean;
     
     evalTab_ch = 'tempRawISO';
-    evalCols_c = {'DateTime_UTC', 'Static_Draught_Fore', ...
+    evalCols_c = {'Timestamp', 'Static_Draught_Fore', ...
         'Static_Draught_Aft', 'Trim'};
     
-    [~, eval_tbl] = obj.select(evalTab_ch, evalCols_c);
+    [~, eval_tbl] = obj.SQL.select(evalTab_ch, evalCols_c);
     evalDraft_v = mean([eval_tbl.static_draught_fore, ...
         eval_tbl.static_draught_aft], 2);
     evalTrim_v = eval_tbl.trim;
