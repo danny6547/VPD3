@@ -22,6 +22,12 @@ classdef cVesselInService < cTableObject
         DateFormStr;
     end
     
+    properties(Hidden)
+        
+        Vessel_Id;
+        IMO;
+    end
+    
     methods
            
        function obj = cVesselInService(varargin)
@@ -31,18 +37,31 @@ classdef cVesselInService < cTableObject
        
        function obj = insert(obj)
            
-           sql = obj.SQL;
+           % Check if raw data has been read
+           if ~obj.canWriteImportFile()
+
+%                % Check if raw data can be read
+%                obj = obj.selectRaw();
+%                if ~obj.canWriteImportFile()
+%                    
+                   return
+%                end
+           end
+           
+           % Input
            
            % Create flat file
            filename = fullfile(userpath, 'tempImportFile.csv');
-           obj.printImportFile2(filename);
+           obj.printImportFile2(filename, true);
            
            % Insert file
-           cols = obj.Data.Properties.VariableNames;
+           cols = obj.importFileVars;
+           cols = [{'Timestamp'}, cols, {'Vessel_Id'}];
            tempTab = 'tempRaw';
            permTab = 'RawData';
            delim = ',';
            ignore = 1;
+           sql = obj.SQL;
            sql.loadInFileDuplicate(filename, cols, tempTab, permTab, delim, ignore);
            
            % Delete file
@@ -53,6 +72,7 @@ classdef cVesselInService < cTableObject
     methods(Static)
         
         [params, tabFound] = tableParameters(dbname)
+        vars = importFileVars()
     end
     
     methods
