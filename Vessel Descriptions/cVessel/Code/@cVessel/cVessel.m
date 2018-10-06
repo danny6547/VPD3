@@ -259,28 +259,6 @@ classdef cVessel < cModelID
            end
        end
        
-%        function obj = insertIntoVessels(obj)
-%        % insertIntoVessels Insert vessel data into table 'Vessels'.
-%        
-%        % If wind model given, assign id to particulars
-%        wind_cvw = [obj.WindCoefficient];
-%        hasWind_l = ~cellfun(@isempty, {wind_cvw.Name});
-%        wind_cv = obj(hasWind_l);
-%        
-%        for oi = 1:numel(wind_cv)
-%            
-%            wind_cv(oi).Particulars.Wind_Model_ID = ...
-%                wind_cv(oi).WindCoefficient.Models_id;
-%        end
-%        
-%        % Insert
-%        parts = [obj.Particulars];
-%        parts.insertIntoTable();
-%            
-%        obj.insertIntoTable();
-%        
-%        end
-
        function written = reportTable(obj, filename)
        % reportTable Write tables for report into xlsx file
        % written = reportTable(obj, filename) will write into partial or
@@ -1330,6 +1308,9 @@ classdef cVessel < cModelID
         function [obj, vid] = vessel_Id(obj, imo)
         % vessel_Id DB identifier for vessel, increment if necessary
             
+%         vid = nan(1, numel(obj));
+%         for oi = 1:numel(obj)
+            
             imo_ch = num2str(imo);
             [~, vid_tbl] = obj.SQL.select('Vessel', '*', ...
                 ['IMO = ', imo_ch]);
@@ -1363,7 +1344,25 @@ classdef cVessel < cModelID
             obj(oi).DatabaseStatic = db;
             migrate@cModelID(obj(oi), db);
         end
+%         end
         end
+        
+       function obj = insertIntoVesselDuplicate(obj)
+       % insertIntoVesselDuplicate Insert object into table 'Vessel' only
+       
+       % Error if IMO empty
+       for oi = 1:numel(obj)
+           
+           imo = obj(oi).IMO;
+           [obj(oi), vid] = vessel_Id(obj(oi), imo);
+           if isempty(vid)
+
+               obj(oi).SQL.insertValues('Vessel', {'IMO'}, imo);
+           end
+           
+           obj(oi).Vessel_Id = vid;
+       end
+       end
     end
     
     methods(Static)

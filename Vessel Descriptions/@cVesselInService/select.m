@@ -80,7 +80,11 @@ function [ obj ] = select(obj, cv, varargin)
         colWithoutAlias = timeName;
     end
     
-    % Call SQL join method
+%     % Call SQL join method
+%     if isequal(rawCols, {''})
+%         
+%         rawTab = '';
+%     end
     tbl = obj.SQL.join(calcTab, calcCols, calcJoin, rawTab, rawCols, ...
         rawJoin, where, colWithoutAlias);
     

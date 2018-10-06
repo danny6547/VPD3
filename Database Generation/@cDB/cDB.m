@@ -1070,7 +1070,7 @@ classdef cDB
                validateattributes(forceDir, {'char'}, {'vector'}, ...
                    'cDB.loadForce', 'forceDir', 2);
            end
-           dbname = 'force';
+           dbname = 'testforce';
            if nargin > 2 && ~isempty(varargin{2})
 
                dbname = varargin{2};
@@ -1081,11 +1081,15 @@ classdef cDB
            % Find Files
            rawFiles_st = rdir([forceDir, '\**\export_autologged.csv']);
            rawFiles_c = {rawFiles_st.name};
-%            rawFiles_c = rawFiles_c(4);
            
            % Load Files
            obj_ves = cVessel('SavedConnection', dbname);
-           obj_ves.loadForceTech(rawFiles_c);
+           for fi = 1:numel(rawFiles_c)
+               
+               obj_ves.loadForceTech(rawFiles_c{fi});
+               fprintf(1, [datestr(now), ': Completed import of file at %s\n'],...
+                   fileparts(rawFiles_c{fi}));
+           end
        end
        
        function createTestStatic(obj)

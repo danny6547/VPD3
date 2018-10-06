@@ -71,7 +71,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
     end
     
     dateCols_c = {''};
-    if nargin > 8
+    if nargin > 8 && ~isempty(varargin{3})
         
         dateForm_c = varargin{3};
         if ~isempty(dateForm_c)
@@ -83,7 +83,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
     end
     
     lastRow_l = false;
-    if nargin > 9
+    if nargin > 9 && ~isempty(varargin{4})
         
         lastRow = varargin{4};
         validateattributes(lastRow, {'numeric'}, {'vector'}, ...
@@ -105,6 +105,16 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
         
         % Reduce by one to fit data in Berge Blanc 2017 xlsx
         lastRow = lastRow - 1;
+    end
+    
+    opts_c = {};
+    if nargin > 10
+        
+        opts = varargin{5};
+        validateattributes(opts, ...
+            {'matlab.io.spreadsheet.SpreadsheetImportOptions'}, ...
+            {'scalar'}, 'cVessel.loadXLSX', 'opts', 12);
+        opts_c = {opts};
     end
     
     readCols_l = iscellstr(fileColID);
@@ -176,7 +186,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
         % Read only specified columns from file
         currFile = filename{fi};
         currSheet = sheet{si};
-        file_tbl = readtable(currFile, 'Sheet', currSheet, ...
+        file_tbl = readtable(currFile, opts_c{:}, 'Sheet', currSheet, ...
             'ReadVariableNames', readCols_l);
         if ~lastRow_l
             lastRow = height(file_tbl);

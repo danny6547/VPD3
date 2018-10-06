@@ -932,41 +932,10 @@ cBuildDB:
 # 	cV.set.IMO: check if table Vessel exists:
 #		if so, continue as currently
 #		if not, select InService data, set value, return
-# cVR: each element corresponds to a separate dry-dock interval of cV
-Error in cV.set.InService after the following: obj = cVessel; obj.Database = 'hullperformance'; obj.IMO = 9036442;
-Test InsertVessel, SelectVessel, ISO19030
+cVR: each element corresponds to a separate dry-dock interval of cV
 Error when reading vessel DFDS Begonia Seaways from hullperformance DB (message is "Unknown Error")
 cV: Error when iterating and InService empty
-Why can the static database not be read by cVessel for some cTO, and other databases for others?
-# cMID.displayModels:
-# 	table of model id and names, number of rows limited
-# cMID.migrate(newDB)
-#	set Sync false, empty all Model_ID, change DB, set Sync true, insert
-cMID.migrateModels:
-	migrate each model returned by displayModels with optional limit
-cMID.set.Database:
-	when DB changes and Sync true, read out data for Model_ID from new DB
-cMID.migrateModels:
-	need checks to ensure other identifiers are not confused, e.g. dry docks refer to vessel_id, so 
-	migrating dry dock table requires also migrating vessels. This requires that:
-		no vessels already in new db have same id as those being inserted,
-		no existing model of any kind is referred to by any new vessel ids,
-	Could write complicated series of checks, or only allow migrations into empty db. This could be 
-	done when local static created, or large offset in model ids on local could keep them separated.
-# cDB.migrateStatic: migrate all static data from remote DB
-#	iterate all cV in cV.getModels
-#	call migrateVessel on each
-# Decide what to do with migrateModels
-#	move to cDB, rename to migrateStatic
-# Decide what to do with vessels missing certain data when insert called
-# 	error when IMO or configuration empty
-# cVDD.sort: sort based on dates, check no overlap	
-# cV: skip obj with no InServicePreferences.Variable in iteration
-cVR: write all methods to generate report tables
-cV.ISO19030Analysis: rename to ProcessISO19030, call ProcessISO19030.sql and not insertIntoPerformanceData
-cV.ISO19030((proc)): where proc is a struct with fields procedure, input and isSQL, containing all procedures to be called on this vessel's data, their inputs
-	and whether or not they are SQL procedures (otherwise methods of cVessel)
-[obj, proc] = cV.ISO19030(): when 2 outputs requested, do not process, return defaults structure of procedures
+	
 
 
 

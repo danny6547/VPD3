@@ -72,7 +72,7 @@ while obj.iterateDD
     % Plot data
     xdata = currDD_tbl.timestamp;
     convFact = 1;
-    if ismember(varname, {'speed_loss', 'speed_index'})
+    if ismember({currVessel.Report(ddi).Variable}, {'speed_loss', 'speed_index'})
        convFact = 1e2;
     end
     ydata = currDD_tbl.(varname) * convFact;

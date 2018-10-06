@@ -59,6 +59,10 @@ classdef cVesselEngine < cModelID
        
        function obj = fitData2Quadratic(obj, mcr, sfoc, powerPCT)
        % fitData2Quadratic Assign coefficients of quadratic fit of data
+       % obj = fitData2Quadratic(obj, mcr, sfoc, powerPCT) where MCR is the
+       % maximum continuous rating of the engine in kW, SFOC is the
+       % specific fuel oil consumption in g/kWh and POWERPCT is the power
+       % expressed as a percentage of MCR
        
        for oi = 1:numel(obj)
             
