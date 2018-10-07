@@ -1289,12 +1289,17 @@ classdef cDB
            wind.insert;
        end
        
-       function migrateVessels(db1, db2)
+       function imo = migrateVessels(db1, db2)
         % migrateStatic Migrate all static vessel data to new database
+        % imo = migrateVessels(db1, db2) Migrates the static vessel data
+        % from the database DB1 into DB2, where DB1 and DB2 are strings 
+        % giving the database's SavedConnection. IMO is a vector of IMO
+        % numbers of the successfully migrated vessels.
         
         % Get all model tables
         cv = cVessel('DB', db1);
         tab = cv.getModels('deleted = 0');
+        imo = nan(height(tab), 1);
 
         % Iterate models in table
         for ri = 1:height(tab)
@@ -1309,6 +1314,7 @@ classdef cDB
             try obji.migrate(db2);
                 
                 fprintf(1, ['Vessel index %u complete at ', datestr(now), '\n'], ri);
+                imo(ri) = obj.IMO;
             catch ee
                 
                 if ~strcmp(ee.identifier, 'cV:EmptyConfig')
@@ -1319,6 +1325,8 @@ classdef cDB
                 fprintf(1, ['Vessel index %u skipped because of missing configuration at ', datestr(now), '\n'], ri);
             end
         end
+        
+        imo(isnan(imo)) = [];
        end
     end
     

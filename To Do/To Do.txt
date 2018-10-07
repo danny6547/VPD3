@@ -945,6 +945,10 @@ cVA.report: report progress, somehow
 		for each procedure: datetime, name, duration, total progress, total progress pct
 # cVISO inherit from cCSQLDB
 # cVISO.analyse: wrap 'sql.call' around isSQL procedures
+InstallSHAPE: script
+	Report only when execution interrupted
+cDB.createStatic: remove in-service procedures
+
 
 
 
