@@ -5,7 +5,7 @@ classdef testcVessel < matlab.unittest.TestCase
 properties
     
     TestDatabase = 'static';
-    TestInServiceDB = 'static';
+    TestInServiceDB = 'inservice';
     TestIMO = 1234567;
     TestVessel;
     TestcMySQL;
@@ -24,7 +24,8 @@ methods
     function vessel = testVesselInsert(testcase)
         
         testDB = testcase.TestDatabase;
-        vessel = cVessel('DB', testDB);
+        vessel = cVessel('DatabaseStatic', testcase.TestDatabase,...
+                'DatabaseInService', testcase.TestInServiceDB);
 %         vessel.InServiceDB = testcase.TestInServiceDB;
         
         % Identity
@@ -44,6 +45,7 @@ methods
         vessel.Configuration.Vessel_Configuration_Description = 'Test Config';
         vessel.Configuration.Apply_Wind_Calculations = true;
         vessel.Configuration.Fuel_Type = 'HFO';
+        vessel.Configuration.LBP = 250;
 %         vessel.Configuration.Speed_Power_Coefficient_Model_Id = 1;
         
         % Vessel Info
@@ -103,8 +105,8 @@ methods
         
         % Wind
 %         vessel.WindCoefficient.Model_ID = 1;
-        vessel.WindCoefficient.Direction = [10, 45];
-        vessel.WindCoefficient.Coefficient = [0.5, 1];
+        vessel.WindCoefficient.Direction = [0, 10, 45];
+        vessel.WindCoefficient.Coefficient = [0.3, 0.5, 1];
         
 %         vessel.Vessel_Id = 1;
     end

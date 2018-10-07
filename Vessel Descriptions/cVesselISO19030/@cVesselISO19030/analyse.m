@@ -3,8 +3,10 @@ function [ obj ] = analyse(obj)
 %   Detailed explanation goes here
 
 % Analyse
-obj = analyse@cVesselAnalysis(obj);
-
-% Insert
-obj.SQL.call('insertIntoCalculatedData');
+for oi = obj
+    
+    analyse@cVesselAnalysis(oi);
+    
+    % Insert
+    oi.SQL.call('insertIntoCalculatedData');
 end

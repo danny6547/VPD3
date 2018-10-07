@@ -1,4 +1,4 @@
-classdef testISO19030 < matlab.unittest.TestCase & handle
+classdef testISO19030 < testcVessel & matlab.unittest.TestCase
 %testISO19030 Test suite for the ISO 19030 Database methods
 %   testISO19030 contains a suite of tests for the stored procedures of a
 %   given database. These tests will execute the procedures on table
@@ -10,12 +10,8 @@ classdef testISO19030 < matlab.unittest.TestCase & handle
 properties
     
     TableName = 'tempRawISO';
-    TestStaticDatabase = 'static';
-    TestInServiceDatabase = 'inservice';
-    TestIMO = 1234567;
     TestVesselIdString = '';
     TestVesselConfigIdString = '';
-    TestVessel = [];
 end
 
 properties(Hidden)
@@ -31,7 +27,6 @@ properties(Constant, Hidden)
     
     DateTimeFormSQL = 'yyyy-mm-dd HH:MM:SS';
     DateTimeFormAdodb = 'dd-mm-yyyy HH:MM:SS';
-%     InvalidIMO = sprintf('%u', [1:6, 8]);
     minTemp = 2;
     MinWind = 0;
     MaxWind = 7.9;
@@ -41,88 +36,12 @@ properties(Constant, Hidden)
 end
 
 methods(TestClassSetup)
-    
-    function vessel = insertTestVessel(testcase)
-    % insertTestVessel Insert data for test vessel into table "Vessels"
-    
-    vessel = cVessel('DatabaseStatic', testcase.TestStaticDatabase,...
-        'DatabaseInService', testcase.TestInServiceDatabase);
-%     vessel.InServiceDB = testcase.TestInServiceDatabase;
-    vessel.IMO = testcase.TestIMO;
-    vessel.Configuration.Breadth_Moulded = 42.8;
-    vessel.Configuration.Length_Overall = 334;
-    vessel.Configuration.Block_Coefficient = 0.6;
-    vessel.Configuration.Transverse_Projected_Area_Design = 1330;
-    vessel.Configuration.Draft_Design = 15;
-    vessel.Configuration.LBP = 319;
-    vessel.Configuration.Anemometer_Height = 40;
-    vessel.Configuration.Wind_Reference_Height_Design = 15;
-    vessel.Configuration.Vessel_Configuration_Description = 'Test Config';
-    vessel.Configuration.Fuel_Type = 'HFO';
-    vessel.Configuration.Speed_Power_Source = 'Sea Trial';
-    
-    coeffs_v = [-0.67766500
-                    -0.74222815
-                    -0.77252740
-                    -0.73429870
-                    -0.66942290
-                    -0.40641463
-                    -0.25761423
-                    -0.22303768
-                    -0.27221212
-                    -0.06631846
-                    0.34516430
-                    0.67289070
-                    0.88259417
-                    0.83342505
-                    0.64720550];
-    dirs_v = linspace(0, 180, length(coeffs_v));
-    wind_cvw = vessel.WindCoefficient;
-    wind_cvw.Direction = dirs_v;
-    wind_cvw.Coefficient = coeffs_v;
-    wind_cvw = wind_cvw.mirrorAlong180();
-    vessel.WindCoefficient = wind_cvw;
-    
-    engine = vessel.Engine;
-    engine.Lowest_Given_Brake_Power = 22840.84;
-    engine.Highest_Given_Brake_Power = 67544.40;
-    SFOCCoefficients = [-6949.127353, 7.918354135, -0.000132468];
-    engine.X0 = SFOCCoefficients(1);
-    engine.X1 = SFOCCoefficients(2);
-    engine.X2 = SFOCCoefficients(3);
-    engine.Minimum_FOC_ph = 3989.96;
-    engine.Engine_Model = 'Test Vessel Engine';
-    vessel.Engine = engine;
-    
-    sp = vessel.SpeedPower;
-    sp.Coefficient_A = 7.07170;
-    sp.Coefficient_B = -50.54008;
-    sp.Displacement = 114050;
-    sp.Trim = 0;
-    sp.Minimum_Power = 28534;
-    sp.Maximum_Power = 9e4;
-    sp.Propulsive_Efficiency = 2;
-    vessel.SpeedPower = sp;
-    
-    % Insert displacement so won't error
-    disp = vessel.Displacement;
-    disp.Draft_Mean = 1:5;
-    disp.Trim = zeros(1, 5);
-    disp.Displacement = 1e5:1e4:1.4e5;
-    vessel.Displacement = disp;
-    
-    % Insert dry-dock so won't error
-    dd = vessel.DryDock;
-    dd.Start_Date = '2000-01-01';
-    dd.End_Date = '2000-01-14';
-    vessel.DryDock = dd;
-    
-    vessel.insert();
-    
-    testcase.TestVessel = vessel;
-    testcase.TestVesselIdString = num2str(vessel.Model_ID);
-    testcase.TestVesselConfigIdString = num2str(vessel.Configuration.Model_ID);
-    
+
+    function assignDefaultProps(testcase)
+
+        vessel = testcase.TestVessel;
+        testcase.TestVesselIdString = num2str(vessel.Model_ID);
+        testcase.TestVesselConfigIdString = num2str(vessel.Configuration.Model_ID);
     end
     
     function createTable(testcase)
@@ -141,7 +60,6 @@ methods(TestClassTeardown)
     
     vessel = obj.TestVessel;
     vessel.InServicePreferences.SQL.drop('TABLE', 'tempRawISO');
-    
     end
 end
 
@@ -568,12 +486,14 @@ methods(Test)
     
     % 1
     % Input
-    in_DeliveredPower = 30e4:10e4:50e4;
-    in_Displacement = 114049:114051;
-    in_Trim = zeros(1, 3);
     vessel = testcase.TestVessel;
-    in_A = vessel.SpeedPower.Coefficient_A;
-    in_B = vessel.SpeedPower.Coefficient_B;
+    in_DeliveredPower = 30e4:10e4:50e4;
+    in_Displacement = vessel.SpeedPower(1).Displacement-1:...
+        vessel.SpeedPower(1).Displacement+1; % 114049:114051;
+    in_Trim = repmat(vessel.SpeedPower(1).Trim, size(in_DeliveredPower)); % zeros(1, 3);
+    vessel = testcase.TestVessel;
+    in_A = vessel.SpeedPower(1).Coefficient_A;
+    in_B = vessel.SpeedPower(1).Coefficient_B;
     in_times = now:1:now+length(in_DeliveredPower)-1 + 0.5;
     in_times = cellstr(datestr(in_times, testcase.DateTimeFormSQL));
     names = {'Timestamp', 'Corrected_Power', 'Displacement', 'Trim'};
@@ -585,8 +505,8 @@ methods(Test)
     % ( in_A(1).*log(in_DeliveredPower) + in_B )';
     
     % Execute
-    testcase.call('filterSpeedPowerLookup', testcase.TestVesselIdString);
-    testcase.call('updateExpectedSpeed', testcase.TestVesselIdString);
+    testcase.call('filterSpeedPowerLookup', testcase.TestVesselConfigIdString);
+    testcase.call('updateExpectedSpeed', testcase.TestVesselConfigIdString);
     
     % Verify
     act_espeed = testcase.select('Expected_Speed_Through_Water', startrow, ...
@@ -630,8 +550,8 @@ methods(Test)
     [startrow, count] = testcase.insert(names, data);
     
     % Execute
-    testcase.call('filterSpeedPowerLookup', testcase.TestVesselIdString);
-    testcase.call('updateExpectedSpeed', testcase.TestVesselIdString);
+    testcase.call('filterSpeedPowerLookup', testcase.TestVesselConfigIdString);
+    testcase.call('updateExpectedSpeed', testcase.TestVesselConfigIdString);
     
     % Verify
     act_espeed = testcase.select('Expected_Speed_Through_Water', startrow, ...
@@ -654,11 +574,11 @@ methods(Test)
     vessel = testcase.TestVessel;
     in_DeliveredPower = 10e3:1e3:12e3;
     in_SOG = 15:2:19;
-    in_PropulsCalm = repmat(2, size(in_SOG)); % vessel.SpeedPower.Propulsive_Efficiency; %testcase.AlmavivaPropulsiveEfficiency;
+    in_PropulsCalm = repmat(0.7, size(in_SOG)); % vessel.SpeedPower.Propulsive_Efficiency; %testcase.AlmavivaPropulsiveEfficiency;
     in_PropulsActual = repmat(0.7, size(in_PropulsCalm));
     testSz = [1, 3];
-    in_NearDisp = repmat(114050, testSz);
-    in_NearTrim = zeros(testSz);
+    in_NearDisp = repmat(vessel.SpeedPower(1).Displacement, testSz);
+    in_NearTrim = repmat(vessel.SpeedPower(1).Trim, testSz);
 %     in_IMO = repmat(str2double(testcase.AlmavivaIMO), testSz);
     
     airResist = 0.1:0.1:0.3;
@@ -669,11 +589,11 @@ methods(Test)
     data = [windResist', airResist', in_SOG', in_DeliveredPower', in_NearDisp',...
         in_NearTrim'];
     [startrow, count] = testcase.insert(names, data);
-    exp_wind = (((windResist - airResist).*in_SOG)./ in_PropulsCalm + ...
-        in_DeliveredPower.*(1 - in_PropulsActual./in_PropulsCalm))';
+    exp_wind = ((((windResist - airResist).*in_SOG)./ in_PropulsCalm + ...
+        (in_DeliveredPower/1E3).*(1 - in_PropulsActual./in_PropulsCalm))')/1E3;
     
     % Execute
-    testcase.call('updateWindResistanceCorrection', testcase.TestVesselIdString);
+    testcase.call('updateWindResistanceCorrection', testcase.TestVesselConfigIdString);
     
     % Verify
     act_wind = testcase.select('Wind_Resistance_Correction', startrow, count);
@@ -693,11 +613,12 @@ methods(Test)
     vessel = testcase.TestVessel;
     Coeffs = vessel.WindCoefficient.Coefficient(:)';
     Dirs = vessel.WindCoefficient.Direction(:)';
-    dirStep = Dirs(2) - Dirs(1);
+%     dirStep = Dirs(2) - Dirs(1);
     
     RelWindDir = [30, 44, 0];
-    CoeffDirEdges = -dirStep/2 : dirStep : 360;
-    [~, relwind_i] = histc(RelWindDir, CoeffDirEdges);
+%     CoeffDirEdges = -dirStep/2 : dirStep : 360;
+%     [~, relwind_i] = histc(RelWindDir, CoeffDirEdges);
+    [~, relwind_i] = FindNearestInVector(RelWindDir, Dirs);
     CoeffRelWind = Coeffs(relwind_i);
     
     Air_Dens = [1.22, 1.21, 1.23];
@@ -713,7 +634,7 @@ methods(Test)
     
     % Execute
 %     testcase.call('updateTransProjArea', testcase.AlmavivaIMO);
-    testcase.call('updateWindResistanceRelative', testcase.TestVesselIdString);
+    testcase.call('updateWindResistanceRelative', testcase.TestVesselConfigIdString);
     
     % Verify
     act_rel = testcase.select({'Wind_Resistance_Relative'}, startrow, count);
@@ -729,11 +650,18 @@ methods(Test)
     % 1: Test that the air resistance in no-wind condition is calculated
     % according to equation G2 in the ISO 19030-2 standard.
     
+    import matlab.unittest.constraints.IsEmpty;
+    
     % Input
     vessel = testcase.TestVessel;
+    dir_v = vessel.WindCoefficient.Coefficient(:)';
     Coeffs = vessel.WindCoefficient.Coefficient(:)';
     Air_Dens = [1.22, 1.21, 1.23];
     SOG = [10, 15, 25];
+    headWindCoeff_l = dir_v == 0;
+    testcase.assertThat(headWindCoeff_l, ~IsEmpty, ['Coefficients for '...
+        'head-wind direction must be given for air resistance in no-wind '...
+        'to be calculated']);
     CoeffHeadWind = Coeffs(1);
     TransArea = abs(randn(1, 3))*1000;
     
@@ -743,7 +671,7 @@ methods(Test)
     [startrow, count] = testcase.insert(names, data);
     
     % Execute
-    testcase.call('updateAirResistanceNoWind', testcase.TestVesselIdString);
+    testcase.call('updateAirResistanceNoWind', testcase.TestVesselConfigIdString);
     
     % Verify
     act_air = testcase.select({'Air_Resistance_No_Wind'}, startrow, count);
@@ -774,7 +702,7 @@ methods(Test)
     exp_area = double(designArea + (designDraft - currentDraft).*shipWidth)';
     
     % Execute
-    testcase.call('updateTransProjArea', testcase.TestVesselIdString);
+    testcase.call('updateTransProjArea', testcase.TestVesselConfigIdString);
     
     % Verify
     act_area = testcase.select('Transverse_Projected_Area_Current', startrow, ...
@@ -829,7 +757,7 @@ methods(Test)
     [startrow, count] = testcase.insert(names, data);
     
     % Execute
-    testcase.call('updateDeliveredPower', testcase.TestVesselIdString);
+    testcase.call('updateDeliveredPower', testcase.TestVesselConfigIdString);
     
     % Verify
     act_del = testcase.select('Delivered_Power', startrow, count);
@@ -858,7 +786,7 @@ methods(Test)
     [startrow, count] = testcase.insert(names, data);
     
     % Execute
-    testcase.call('updateDeliveredPower', testcase.TestVesselIdString);
+    testcase.call('updateDeliveredPower', testcase.TestVesselConfigIdString);
     
     % Verify
     act_del = testcase.select('Delivered_Power', startrow, count);
@@ -882,7 +810,7 @@ methods(Test)
     testcase.insert(names, data)
     
     % Execute
-    exec_f = @() testcase.call('updateDeliveredPower', testcase.TestVesselIdString);
+    exec_f = @() testcase.call('updateDeliveredPower', testcase.TestVesselConfigIdString);
     
     % Verify
     exp_errid = 'MATLAB:COM:E2147500037';
@@ -1005,72 +933,72 @@ methods(Test)
     testcase.verifyFalse(act_isAvail, msg_avail);
     end
     
-    function testupdateFromBunkerNote(testcase)
-    % Test that LCV and density of fuel are read from table appropriately 
-    % 1: Test that values of column Lower_Caloirifc_Value_Fuel_Oil will be
-    % updated based on the corresponding value under column
-    % Lower_Heating_Value in table BunkerDeliveryNote of the column
-    % BDN_Number.
-    % 2: Test that values of column Density_Fuel_Oil_15C will be updated
-    % based on the corresponding value under column Density_At_15dg in
-    % table BunkerDeliveryNote of the column
-    % BDN_Number.
-    
-    % Change table name and create tempraw for this procedure
-    originalTable_s = testcase.TableName;
-    testcase.TableName = 'tempRaw';
-    adodb_query(testcase.Connection, 'DROP TABLE IF EXISTS tempRaw;'); 
-    adodb_query(testcase.Connection, 'CREATE TABLE tempRaw LIKE dnvglraw;');
-    testcase.call('convertDNVGLRawToRawData');
-    
-    % 1:
-    % Input
-    LCV_v = [40.5, 42.8, 49.32, 46.5, 40.5, 42.7, 42.7];
-    bdnAll_c = {'Default_HFO'
-                'Default_LFO'
-                'Default_LNG'
-                'Default_LPG'
-                'Default_LSHFO'
-                'Default_MDO'
-                'Default_MGO'};
-    bdn_c = {'Default_HFO', 'Default_LNG'};
-    bdn_l = ismember(bdnAll_c, bdn_c);
-    
-%     sqlAddCol_s = 'ALTER TABLE tempRawISO ADD ME_Fuel_BDN VARCHAR(40);';
-    
-    [startrow, count] = testcase.insert(bdn_c', {'ME_Fuel_BDN'});
-    exp_lcv = num2cell( LCV_v(bdn_l) )';
-    
-    % Execute
-    testcase.call('updateFromBunkerNote', testcase.AlmavivaIMO);
-    
-    % Verify
-    act_lcv = testcase.select('Lower_Caloirifc_Value_Fuel_Oil', count, ...
-        startrow);
-    msg_lcv = ['LCV values expected to match those in table '...
-        'BunkerDeliveryNote for the corresponding rows of BDN_Number.'];
-    testcase.verifyEqual(act_lcv, exp_lcv, msg_lcv);
-    
-    % 2:
-    % Input
-    dens_v = [0.991, 0.98, 0.44, 0.58, 0.986, 0.9, 0.89];
-    bdn_l = ismember(bdnAll_c, bdn_c);
-    [startrow, count] = testcase.insert(bdn_c', {'ME_Fuel_BDN'});
-    exp_lcv = num2cell( dens_v(bdn_l) )';
-    
-    % Execute
-    testcase.call('updateFromBunkerNote', testcase.AlmavivaIMO);
-    
-    % Verify
-    act_lcv = testcase.read('Density_Fuel_Oil_15C', startrow, count);
-    msg_lcv = ['LCV values expected to match those in table '...
-        'BunkerDeliveryNote for the corresponding rows of BDN_Number.'];
-    testcase.verifyEqual(act_lcv, exp_lcv, msg_lcv);
-    
-    % Reassign table name
-    testcase.TableName = originalTable_s;
-    
-    end
+%     function testupdateFromBunkerNote(testcase)
+%     % Test that LCV and density of fuel are read from table appropriately 
+%     % 1: Test that values of column Lower_Caloirifc_Value_Fuel_Oil will be
+%     % updated based on the corresponding value under column
+%     % Lower_Heating_Value in table BunkerDeliveryNote of the column
+%     % BDN_Number.
+%     % 2: Test that values of column Density_Fuel_Oil_15C will be updated
+%     % based on the corresponding value under column Density_At_15dg in
+%     % table BunkerDeliveryNote of the column
+%     % BDN_Number.
+%     
+%     % Change table name and create tempraw for this procedure
+%     originalTable_s = testcase.TableName;
+%     testcase.TableName = 'tempRaw';
+%     adodb_query(testcase.Connection, 'DROP TABLE IF EXISTS tempRaw;'); 
+%     adodb_query(testcase.Connection, 'CREATE TABLE tempRaw LIKE dnvglraw;');
+%     testcase.call('convertDNVGLRawToRawData');
+%     
+%     % 1:
+%     % Input
+%     LCV_v = [40.5, 42.8, 49.32, 46.5, 40.5, 42.7, 42.7];
+%     bdnAll_c = {'Default_HFO'
+%                 'Default_LFO'
+%                 'Default_LNG'
+%                 'Default_LPG'
+%                 'Default_LSHFO'
+%                 'Default_MDO'
+%                 'Default_MGO'};
+%     bdn_c = {'Default_HFO', 'Default_LNG'};
+%     bdn_l = ismember(bdnAll_c, bdn_c);
+%     
+% %     sqlAddCol_s = 'ALTER TABLE tempRawISO ADD ME_Fuel_BDN VARCHAR(40);';
+%     
+%     [startrow, count] = testcase.insert(bdn_c', {'ME_Fuel_BDN'});
+%     exp_lcv = num2cell( LCV_v(bdn_l) )';
+%     
+%     % Execute
+%     testcase.call('updateFromBunkerNote', testcase.AlmavivaIMO);
+%     
+%     % Verify
+%     act_lcv = testcase.select('Lower_Caloirifc_Value_Fuel_Oil', count, ...
+%         startrow);
+%     msg_lcv = ['LCV values expected to match those in table '...
+%         'BunkerDeliveryNote for the corresponding rows of BDN_Number.'];
+%     testcase.verifyEqual(act_lcv, exp_lcv, msg_lcv);
+%     
+%     % 2:
+%     % Input
+%     dens_v = [0.991, 0.98, 0.44, 0.58, 0.986, 0.9, 0.89];
+%     bdn_l = ismember(bdnAll_c, bdn_c);
+%     [startrow, count] = testcase.insert(bdn_c', {'ME_Fuel_BDN'});
+%     exp_lcv = num2cell( dens_v(bdn_l) )';
+%     
+%     % Execute
+%     testcase.call('updateFromBunkerNote', testcase.AlmavivaIMO);
+%     
+%     % Verify
+%     act_lcv = testcase.read('Density_Fuel_Oil_15C', startrow, count);
+%     msg_lcv = ['LCV values expected to match those in table '...
+%         'BunkerDeliveryNote for the corresponding rows of BDN_Number.'];
+%     testcase.verifyEqual(act_lcv, exp_lcv, msg_lcv);
+%     
+%     % Reassign table name
+%     testcase.TableName = originalTable_s;
+%     
+%     end
     
     function testremoveInvalidRecords(testcase)
     % Test that records marked invalid based on conditions are removed
@@ -1172,6 +1100,7 @@ methods(Test)
     import matlab.unittest.constraints.IsLessThan;
     import matlab.unittest.constraints.IsTrue;
     import matlab.unittest.constraints.AnyElementOf;
+    import matlab.unittest.constraints.HasNaN;
     testSz = [1, 2];
     
     mintemp = testcase.minTemp;
@@ -1182,7 +1111,7 @@ methods(Test)
     [startrow, count] = testcase.insert(inputNames_c, inputData_m);
     
     % Execute
-    testcase.call('filterReferenceConditions', testcase.TestVesselIdString);
+    testcase.call('filterReferenceConditions', testcase.TestVesselConfigIdString);
     
     % Verify
     temp_act = testcase.select('Seawater_Temperature', startrow, count, 'id');
@@ -1214,7 +1143,7 @@ methods(Test)
     [startrow, count] = testcase.insert(inputNames_c, inputData_m);
     
     % Execute
-    testcase.call('filterReferenceConditions', testcase.TestVesselIdString);
+    testcase.call('filterReferenceConditions', testcase.TestVesselConfigIdString);
     
     % Verify
     rudder_act = testcase.select('Relative_Wind_Speed', startrow, count, ...
@@ -1299,7 +1228,7 @@ methods(Test)
     adodb_query(msql.Connection, update4_s);
     
     % Execute
-    testcase.call('filterReferenceConditions', testcase.TestVesselIdString);
+    testcase.call('filterReferenceConditions', testcase.TestVesselConfigIdString);
     
     % Verify
     depth5_act = testcase.select('Water_Depth', startrow, 2, 'id');
@@ -1318,6 +1247,8 @@ methods(Test)
     depth6_act(isnan(depth6_act)) = [];
     
     depth5Filt_act = [depth5Filt_act{:, :}];
+    testcase.assertThat(depth5Filt_act, ~HasNaN, ['Filter_Reference_Water_Depth '...
+        'column is expected to have only logical values']);
     depth5Filt_act = logical(depth5Filt_act);
     depth5_act = depth5_act(~depth5Filt_act);
     depth6Filt_act = [depth6Filt_act{:, :}];
@@ -1355,7 +1286,7 @@ methods(Test)
     [startrow, count] = testcase.insert(inputNames_c, inputData_m);
     
     % Execute
-    testcase.call('filterReferenceConditions', testcase.TestVesselIdString);
+    testcase.call('filterReferenceConditions', testcase.TestVesselConfigIdString);
     
     % Verify
     rudder_act = testcase.select('Rudder_Angle', startrow, count, 'id');
@@ -1395,10 +1326,10 @@ methods(Test)
     import matlab.unittest.constraints.IsLessThanOrEqualTo;
     testSz = [1, 4];
     vessel = testcase.TestVessel;
-    spTrim = vessel.SpeedPower.Trim;
+    spTrim = vessel.SpeedPower(1).Trim;
     lbp = vessel.Configuration.LBP;
     
-    spDisp = vessel.SpeedPower.Displacement;
+    spDisp = vessel.SpeedPower(1).Displacement;
 %     spTrim = testcase.SPTrim;
     [inDisp_v, inTrim_v] = testcase.randDispTrim(testSz, spDisp, spTrim, lbp);
     inDelPower_v = testcase.randOutThreshold(testSz, @gt, 0);
@@ -1432,7 +1363,7 @@ methods(Test)
     [startrow, count] = testcase.insert(inputNames_c, inputData_m);
     
     % Execute
-    testcase.call('filterSpeedPowerLookup', testcase.TestVesselIdString);
+    testcase.call('filterSpeedPowerLookup', testcase.TestVesselConfigIdString);
     
     % Verify
     filt_act = testcase.select('Filter_SpeedPower_Disp', startrow, count, 'id');
@@ -1502,14 +1433,14 @@ methods(Test)
     vessel = testcase.TestVessel;
     lowerPower = vessel.SpeedPower.Minimum_Power;
     inPower_v = testcase.randOutThreshold(testSz, @lt, lowerPower);
-    inNearTrim_v = zeros(testSz);
-    inNearDisp_v = repmat(114050, testSz);
+    inNearTrim_v = repmat(vessel.SpeedPower(1).Trim, testSz);
+    inNearDisp_v = repmat(vessel.SpeedPower(1).Displacement, testSz);
     names = {'Corrected_Power', 'Nearest_Trim', 'Nearest_Displacement'};
     data = [inPower_v', inNearTrim_v', inNearDisp_v'];
     [startrow, count] = testcase.insert(names, data);
     
     % Execute
-    testcase.call('filterPowerBelowMinimum', testcase.TestVesselIdString);
+    testcase.call('filterPowerBelowMinimum', testcase.TestVesselConfigIdString);
     
     % Verify
     outPower_v = testcase.select('Corrected_Power', startrow, count, 'id');
@@ -1908,7 +1839,7 @@ methods(Test)
     [startrow, count] = testcase.insert({'Timestamp', 'Brake_Power'}, data_m);
     
     % Execute
-    testcase.call('filterSFOCOutOfRange', testcase.TestVesselIdString);
+    testcase.call('filterSFOCOutOfRange', testcase.TestVesselConfigIdString);
     
     % Verify
     outFilt_c = testcase.select('Filter_SFOC_Out_Range', startrow, count, 'id');
@@ -2000,10 +1931,10 @@ methods(Test)
         'Relative_Wind_Direction', 'Static_Draught_Fore', ...
         'Static_Draught_Aft', 'Speed_Over_Ground', 'Ship_Heading'};
     [startrow, count] = testcase.insert(in_Names, in_Data);
-    testcase.call('updateTransProjArea', testcase.TestVesselIdString);
+    testcase.call('updateTransProjArea', testcase.TestVesselConfigIdString);
     
     % Execute
-    testcase.call('updateWindReference', testcase.TestVesselIdString);
+    testcase.call('updateWindReference', testcase.TestVesselConfigIdString);
     
     % Verify
     act_Speedc = testcase.select({'True_Wind_Speed'}, startrow, count);
@@ -2039,7 +1970,7 @@ methods(Test)
     msg_Speed = ['Relative wind speed at reference height should be '...
         'calculated according to Annex E.'];
     exp_Speed = double(vrref);
-    testcase.verifyEqual(act_Speed, exp_Speed, 'RelTol', 1e-2, msg_Speed);
+    testcase.verifyEqual(act_Speed, exp_Speed, 'RelTol', 2e-2, msg_Speed);
     
     act_Dirc = testcase.select({'Relative_Wind_Direction_Reference'}, startrow, count);
     act_Dir = [act_Dirc{:, :}]';
@@ -2066,17 +1997,6 @@ methods
     vessel = testcase.TestVessel;
     msql = vessel.InServicePreferences.SQL;
     msql.call(funcname, varargin{:});
-    
-%     conn = testcase.Connection;
-%     inputs_s = '()';
-%     if nargin > 2
-%         v = varargin;
-%         v = cellfun(@cellstr, v);
-%         inputs_s = ['(' strjoin(v, ', ') ')'];
-%     end
-%     
-%     sql_s = ['CALL ' funcname, inputs_s, ';'];
-%     adodb_query(conn, sql_s);
     
     end
     
@@ -2114,47 +2034,7 @@ methods
     data(cellfun(@isnumeric, data)) = ...
         num2cell(cellfun(@double, data(cellfun(@isnumeric, data))));
     data = cell2table(data);
-    
-%     singleCols_l = varfun(@(x) isa(x, 'single'), data, 'OutputFormat', 'Uni');
-%     dbl_tbl = varfun(@double, data(:, singleCols_l));
-%     data(:, singleCols_l) = [];
-%     data = [data, dbl_tbl];
     data.Properties.VariableNames = colnames;
-    
-%         start_s = '';
-%         if nargin > 2
-%             start_row = varargin{2};
-%             start_s = num2str(start_row);
-%         end
-%         
-%         count_s = '1';
-%         if nargin > 3
-%             count_d = varargin{3};
-%             count_s = num2str(count_d);
-%         end
-%         
-%         order_s = '';
-%         if nargin > 4
-%             order_s = varargin{4};
-%             if ~isempty(order_s)
-%                 order_s = [' ORDER BY ', order_s];
-%             end
-%         end
-%         
-%         % Establish Connection
-%         sqlConn = obj.Connection;
-%         
-%         % Read command
-%         sql_read = ['SELECT ', names_s, ' FROM ' obj.TableName, order_s];
-%         if ~isempty(start_s)
-%             sql_read = [sql_read, ' LIMIT ', start_s, ', ', count_s];
-%         end
-%         [~, out] = adodb_query(sqlConn, sql_read);
-%         
-%         % Output
-%         colnames = names_c;
-%         data = out;
-        
     end
     
     function [startrow, numrows] = insert(testcase, names, data, varargin)
@@ -2253,69 +2133,7 @@ methods
 %     testcase.InsertedTime = [testcase.InsertedTime, dates(:)'];
     
     msql.insertValues(tab, names, data);
-    
-%     % Establish Connection
-%     sqlConn = testcase.Connection;
-%     
-%     update_l = false;
-%     if nargin > 3
-%         update_l = varargin{1};
-%     end
-%         
-%     % Insert command
-%     if isnumeric(data)
-%         
-%         w = mat2str(data);
-%         e = strrep(w, ' ', ', ');
-%         r = strrep(e, ';', '),(');
-%         t = strrep(r, '[', '(');
-%         data_str = strrep(t, ']', ')');
-%         
-%         if isscalar(data)
-%             data_str = ['(', data_str, ')'];
-%         end
-%         
-%     elseif iscell(data)
-%         
-%         % Assume first column is date data
-%         data(:, 1) = strcat('''', data(:, 1), '''');
-%         
-%         data(:, 2:end) = cellfun(@num2str, data(:, 2:end), 'Uni', 0);
-%         for qi = 1:size(data, 1)
-%             data(qi, 1) = { strjoin(data(qi, :), ', ') };
-%         end
-%         data(:, 2:end) = [];
-%         
-%         data_c = cellfun(@(x) ['(' strrep(x, '  ', ', ') '),'],...
-%             data, 'Uni', 0);
-%         data_c = data_c(:)';
-%         data_str = [data_c{:}];
-%         data_str(end) = [];
-%     end
-%     
-%     names_str = ['(', strjoin(names, ', '), ')'];
-%     
-%     
-%     if update_l
-%         nameNoBracker_str = strrep(names_str, '(', '');
-%         nameNoBracker_str = strrep(nameNoBracker_str, ')', '');
-%         sql_insert = ['UPDATE ' testcase.TableName ' SET ' nameNoBracker_str, ...
-%             ' ', data_str, ';'];
-%     else
-%         sql_insert = ['INSERT INTO ' testcase.TableName ' ' names_str ' VALUES ' , ...
-%             ' ', data_str, ';'];
-%     end
-%     sql_insert = strrep(sql_insert, 'NaN', 'NULL');
-%     adodb_query(sqlConn, sql_insert);
-%     
     end
     
 end
-
-    % 1
-    % Input
-    
-    % Execute
-    
-    % Verify
 end

@@ -939,16 +939,16 @@ cV: Error when iterating and InService empty
 # cV.analyse(cVA): assign config id to cVA, call cVA.analyse, call insertIntoCalculatedData
 # cVISO: inherit from cVA
 # cVISO.procedureDefault: call cVA.procedureDefault but include new field 'isSQL', remove 'obj.SQL.call' from proc names
-cVA.report: report progress, somehow
-	if cVA.Report = true
-		print to screen inital and final messages
-		for each procedure: datetime, name, duration, total progress, total progress pct
+#cVA.report: report progress, somehow
+#	if cVA.Report = true
+#		print to screen inital and final messages
+#		for each procedure: datetime, name, duration, total progress, total progress pct
 # cVISO inherit from cCSQLDB
 # cVISO.analyse: wrap 'sql.call' around isSQL procedures
-InstallSHAPE: script
-	Report only when execution interrupted
+# InstallSHAPE: script
+#	Report only when execution interrupted
 cDB.createStatic: remove in-service procedures
-
+# testcVISO: find why randDispTrim hangs in testfilterSpeedPowerLookup
 
 
 

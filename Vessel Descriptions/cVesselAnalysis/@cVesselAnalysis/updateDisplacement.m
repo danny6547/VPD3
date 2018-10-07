@@ -50,5 +50,9 @@ function [ obj ] = updateDisplacement(obj, vc )
     evalTab_ch = 'tempRawISO';
     
     [ outCols_c, outData_m ] = obj.catNonNullCols(outCols_c, outData_m, vc);
-    obj = obj.SQL.insertValuesDuplicate(evalTab_ch, outCols_c, outData_m);
+    obj.SQL = obj.SQL.insertValuesDuplicate(evalTab_ch, outCols_c, outData_m);
+    
+    % Temp code to deal with issue where Timestamp '0000-00-00 00:00:00' is
+    % sometimes in table after insert duplicate
+    obj.SQL.call('removeInvalidRecords');
 end

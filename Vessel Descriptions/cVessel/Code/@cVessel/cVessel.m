@@ -138,30 +138,6 @@ classdef cVessel < cModelID
        [obj.DatabaseStatic] = deal(dbstat);
        [obj.DatabaseInService] = deal(dbins);
        [obj.IMO] = deal(imo_c{:});
-%        obj = obj.assignDefaults(defaultInputs{:});
-%            [obj, ~, ~, indb] = obj.performanceData(readInputs_c{:});
-%         end
-
-
-%         % Get IMO from struct
-%         if ~any(indb)
-% 
-%            size_c = num2cell(size(imo));
-%            obj(size_c{:}) = cVessel();
-%            imo_c = num2cell(imo);
-%            [obj.IMO] = deal(imo_c{:});
-%         else
-%             
-%             % Remove from array any without data
-%             obj(~indb) = [];
-% 
-%             % Check that no duplicates were added when concatenating struct
-%             % data with that read from DB
-%             index_c = 'datetime_utc';
-%             prop_c = {'performance_index'...
-%                     'speed_index'};
-%             obj = obj.filterOnUniqueIndex(index_c, prop_c);
-%         end
        end
        
        function obj = assignClass(obj, vesselclass)
@@ -258,7 +234,9 @@ classdef cVessel < cModelID
                currObj.Owner.insert();
                
                % Insert In-Service
-               currObj.InServicePreferences.insert();
+               if ~isempty(currObj.InServicePreferences)
+                    currObj.InServicePreferences.insert();
+               end
            end
        end
        
@@ -1261,15 +1239,38 @@ classdef cVessel < cModelID
             end
         end
         
-        function obj = migrate(obj, db)
+        function obj = migrate(obj, dbstat, varargin)
         % migrate Migrate vessel to another database
+        
+        % Input
+        dbins = '';
+        if nargin > 2 && ~isempty(varargin{1})
+            
+            dbins = varargin{1};
+            validateattributes(dbins, {'char'}, {'vector'},...
+                'cVessel.migrate', 'dbins', 3);
+        end
         
         for oi = 1:numel(obj)
 
-            obj(oi).DatabaseStatic = db;
-            migrate@cModelID(obj(oi), db);
+            if ~isempty(dbstat)
+                
+                obj(oi).DatabaseStatic = dbstat;
+
+                % Remove InService temporarily, to prevent attempt to insert
+                ins = obj(oi).InServicePreferences;
+                obj(oi).InServicePreferences = cVesselInService();
+                migrate@cModelID(obj(oi), dbstat);
+                obj(oi).InServicePreferences = ins;
+            end
+            
+            % Migrate in-service data if requested
+            if ~isempty(dbins)
+                obj(oi).DatabaseInService = dbins;
+                obj(oi).InServicePreferences.insert();
+%                 migrate@cModelID(obj(oi).InServicePreferences, dbins);
+            end
         end
-%         end
         end
         
        function obj = insertIntoVesselDuplicate(obj)

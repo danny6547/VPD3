@@ -1289,40 +1289,78 @@ classdef cDB
            wind.insert;
        end
        
-       function imo = migrateVessels(db1, db2)
+       function imo = migrateVessels(db1, db2, varargin)
         % migrateStatic Migrate all static vessel data to new database
         % imo = migrateVessels(db1, db2) Migrates the static vessel data
         % from the database DB1 into DB2, where DB1 and DB2 are strings 
         % giving the database's SavedConnection. IMO is a vector of IMO
         % numbers of the successfully migrated vessels.
         
+        % Input
+        db1Ins = 'Empty';
+        if nargin > 2 && ~isempty(varargin{1})
+            
+            db1Ins = varargin{1};
+            validateattributes(db1Ins, {'char'}, {'vector'}, ...
+                'cDB.migrateVessels', 'db1Ins', 3);
+        end
+        
+        db2Ins = '';
+        if nargin > 3 && ~isempty(varargin{2})
+            
+            db2Ins = varargin{2};
+            validateattributes(db2Ins, {'char'}, {'vector'}, ...
+                'cDB.migrateVessels', 'db2Ins', 4);
+        end
+        
+        imo2migrate = [];
+        if nargin > 4 && ~isempty(varargin{3})
+            
+            imo2migrate = varargin{3};
+            validateattributes(imo2migrate, {'numeric'}, {'vector'}, ...
+                'cDB.migrateVessels', 'imo2migrate', 5);
+        end
+        
         % Get all model tables
         cv = cVessel('DB', db1);
         tab = cv.getModels('deleted = 0');
         imo = nan(height(tab), 1);
+        
+        % Subset selected IMO
+        if ~isempty(imo2migrate)
+            
+            imoDB_v = cellfun(@str2double, tab.imo);
+            [~, tabRows_i] = intersect(imoDB_v, imo2migrate);
+            tab = tab(tabRows_i, :);
+        end
 
         % Iterate models in table
         for ri = 1:height(tab)
 
             % Create objects with data from this row
             obji = cVessel('DatabaseStatic', db1, ...
-                'DatabaseInService', 'Empty');
+                'DatabaseInService', db1Ins);
             currIMO = str2double(tab.imo{ri});
             obji.IMO = currIMO;
+            if ~isempty(db2Ins)
+                
+                obji = obji.selectInService('', '*');
+            end
 
             % Migrate
-            try obji.migrate(db2);
+            try obji.migrate(db2, db2Ins);
                 
                 fprintf(1, ['Vessel index %u complete at ', datestr(now), '\n'], ri);
-                imo(ri) = obj.IMO;
+                imo(ri) = obji.IMO;
             catch ee
                 
-                if ~strcmp(ee.identifier, 'cV:EmptyConfig')
+                if ~(strcmp(ee.identifier, 'cV:EmptyConfig') || ...
+                        strcmp(ee.identifier, 'cVSP:EmptySpeedPower'))
                     
                     rethrow(ee)
                 end
                 
-                fprintf(1, ['Vessel index %u skipped because of missing configuration at ', datestr(now), '\n'], ri);
+                fprintf(1, ['Vessel index %u skipped because of missing required data at ', datestr(now), '\n'], ri);
             end
         end
         

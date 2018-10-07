@@ -2,14 +2,19 @@
 % FileAndDirectory
 % MATLAB Type Extension
 % mMySQL
-% Toolboxes
 % Vessel Performance Database
+% Toolboxes
+    % adodb
+    % nansuite
+    
 %% Update MATLAB paths with top-level direcory of working copies
 
 %% Create Databases
 stage = 'Create SHAPE DB';
-report_f = @(stage) fprintf(1, ['\n', datestr(now), ' SHAPE installation '...
+report_f = @(stage) fprintf(1, ['\n', datestr(now), ' SHAPEDev installation '...
     'failed to: ', stage, '\n']);
+success_f = @() fprintf(1, ['\n', datestr(now), ' SHAPEDev installation '...
+    'succeeded.\n']);
 
 try  % Create local SHAPE DB
     
@@ -55,7 +60,7 @@ stage = 'Migrate';
 imoMigrated = [];
 try % Migrate
     
-    obj.migrateVessels('hullperformance', 'static')
+    imoMigrated = obj.migrateVessels('hullperformance', 'static');
 catch ee
     
     report_f(stage);
@@ -65,7 +70,7 @@ end
 stage = 'Run ISO19030';
 try % Run ISO
     
-    imo4ISO = [9036442];
+    imo4ISO = [9036442, 9500728, 9411305, 9330874];
     imoMigrated_l = ismember(imo4ISO, imoMigrated);
     imo4ISO = imo4ISO(imoMigrated_l);
     if isempty(imo4ISO)
@@ -76,6 +81,8 @@ try % Run ISO
         error(errid, errmsg)
     else
         
+        obj.migrateVessels('hullperformance', '',...
+            'hullperformance', 'inservice', imo4ISO);
         obj = cVessel('DatabaseStatic', 'static',...
                         'DatabaseInService', 'inservice',...
                         'IMO', imo4ISO);
@@ -92,6 +99,7 @@ stage = 'Report Generation Methods';
 try % Report Generation Methods
     
     run('Test_Vessel_Report');
+    success_f();
 catch ee
     
     report_f(stage);

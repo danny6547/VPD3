@@ -145,46 +145,53 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
        function insert(obj)
        % insertIntoTable Insert into tables SpeedPower and SpeedPowerCoeffs
        
-           hasSpeedPower = arrayfun(...
-                @(x) ~isempty(x.Speed) && ~isempty(x.Power), obj);
-           obj(hasSpeedPower) = obj(hasSpeedPower).fit;
-           obj(hasSpeedPower) = obj(hasSpeedPower).powerExtents;
+       if any(ismember({'No Speed Power Model'}, {obj.Name}))
+           
+           errid = 'cVSP:EmptySpeedPower';
+           errmsg = 'Cannot insert empty speed power model';
+           error(errid, errmsg);
+       end
 
-           % Check model name, description are same throughout array
-           name = {obj.Name};
-           desc = {obj.Description};
-           firstName = name(find(~cellfun(@isempty, name), 1, 'first'));
-           if ~isempty(firstName)
-               
-               [obj.Name] = deal(firstName{:});
-           end
-           firstDesc = desc(find(~cellfun(@isempty, desc), 1, 'first'));
-           if ~isempty(firstDesc)
-               
-               [obj.Description] = deal(firstDesc{:});
-           end
-           
-           % Insert into super-model table, get super-ID
-           superID = obj(1).Speed_Power_Coefficient_Model_Id;
-           if isempty(superID)
-               
-               superID = obj(1).incrementID('SpeedPowerCoefficientModel', ...
-                   'Speed_Power_Coefficient_Model_Id');
-           end
-           [obj.Speed_Power_Coefficient_Model_Id] = deal(superID);
-           insert@cTableObject(obj(1),...
-               'SpeedPowerCoefficientModel', {}, ...
-               'Speed_Power_Coefficient_Model_Id', {}, ...
-               'Speed_Power_Coefficient_Model_Id', superID);
-           
-           % Insert into models
-           mid = [obj.Model_ID];
-           insertInputs_c = {};
-           if ~isempty(mid)
-               
-               insertInputs_c = {'Speed_Power_Coefficient_Model_Value_Id', mid};
-           end
-           insert@cModelID(obj, insertInputs_c{:});
+       hasSpeedPower = arrayfun(...
+            @(x) ~isempty(x.Speed) && ~isempty(x.Power), obj);
+       obj(hasSpeedPower) = obj(hasSpeedPower).fit;
+       obj(hasSpeedPower) = obj(hasSpeedPower).powerExtents;
+
+       % Check model name, description are same throughout array
+       name = {obj.Name};
+       desc = {obj.Description};
+       firstName = name(find(~cellfun(@isempty, name), 1, 'first'));
+       if ~isempty(firstName)
+
+           [obj.Name] = deal(firstName{:});
+       end
+       firstDesc = desc(find(~cellfun(@isempty, desc), 1, 'first'));
+       if ~isempty(firstDesc)
+
+           [obj.Description] = deal(firstDesc{:});
+       end
+
+       % Insert into super-model table, get super-ID
+       superID = obj(1).Speed_Power_Coefficient_Model_Id;
+       if isempty(superID)
+
+           superID = obj(1).incrementID('SpeedPowerCoefficientModel', ...
+               'Speed_Power_Coefficient_Model_Id');
+       end
+       [obj.Speed_Power_Coefficient_Model_Id] = deal(superID);
+       insert@cTableObject(obj(1),...
+           'SpeedPowerCoefficientModel', {}, ...
+           'Speed_Power_Coefficient_Model_Id', {}, ...
+           'Speed_Power_Coefficient_Model_Id', superID);
+
+       % Insert into models
+       mid = [obj.Model_ID];
+       insertInputs_c = {};
+       if ~isempty(mid)
+
+           insertInputs_c = {'Speed_Power_Coefficient_Model_Value_Id', mid};
+       end
+       insert@cModelID(obj, insertInputs_c{:});
        end
        
        function [obj, h] = plot(obj)

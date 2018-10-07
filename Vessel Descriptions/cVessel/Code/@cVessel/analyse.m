@@ -24,10 +24,10 @@ else
 end
 
 % Assign data needed by analysis methods
-sql_c = {obj.InServicePreferences.SQL};
+sql_c = arrayfun(@(x) x.InServicePreferences.SQL, obj, 'Uni', 0);
 [analysis.SQL] = deal(sql_c{:});
-vcid_v = [obj.Configuration];
-[analysis.VesselConfiguration] = deal(vcid_v);
+vcid_c = {obj.Configuration};
+[analysis.VesselConfiguration] = deal(vcid_c{:});
 
 % Error if vessel not inserted into static
 

@@ -16,7 +16,9 @@ function [obj, dates_v, disp_v ] = interpolateDisplacement(obj, disp_tbl )
         eval_tbl.static_draught_aft], 2);
     evalTrim_v = eval_tbl.trim;
 %     dates_v = datenum(eval_tbl.datetime_utc, 'dd-mm-yyyy HH:MM:SS');
-    [~, dates_v] = obj(1).sql2matlabdates(eval_tbl.datetime_utc);
+%     [~, dates_v] = obj(1).SQL.sql2matlabdates(eval_tbl.timestamp);
+    dates_dt = datetime(eval_tbl.timestamp, 'ConvertFrom', 'datestr');
+    dates_v = datenum(dates_dt);
     
     nearDraft_v = FindNearestInVector(evalDraft_v, refDraft_v);
     
