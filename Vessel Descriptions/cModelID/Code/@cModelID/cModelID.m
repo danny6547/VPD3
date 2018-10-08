@@ -306,7 +306,7 @@ classdef (Abstract) cModelID < cTableObject & handle
             
             % Remove current model id and change database
             obji.Sync = false;
-            obji.Model_ID = [];
+%             obji.Model_ID = [];
             obji.SavedConnection = db;
             obji.Sync = true;
             

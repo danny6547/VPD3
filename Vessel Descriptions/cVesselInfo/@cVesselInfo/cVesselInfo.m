@@ -12,7 +12,7 @@ classdef cVesselInfo < cModelID & cDateConvert
         StartDateProp = 'Valid_From';
         EndDateProp = 'Valid_To';
         DataProperty = {'Valid_From', 'Vessel_Name', 'Deleted',...
-                        'Model_ID', 'Vessel_Info_Id'};
+                        'Vessel_Info_Id'};
         ModelTable = 'VesselInfo';
         ValueTable = {};
         ValueObject = {};

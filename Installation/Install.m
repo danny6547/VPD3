@@ -98,7 +98,11 @@ end
 stage = 'Report Generation Methods';
 try % Report Generation Methods
     
+    existingFig = findall(0, 'type', 'figure');
     run('Test_Vessel_Report');
+    allFig = findall(0, 'type', 'figure');
+    newFig = setdiff(allFig, existingFig);
+    delete(newFig);
     success_f();
 catch ee
     

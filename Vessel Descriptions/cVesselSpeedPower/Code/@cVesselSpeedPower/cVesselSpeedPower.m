@@ -21,7 +21,6 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
     properties(Dependent, Hidden)
         
         SpeedPowerDraftTrim double = [];
-        Speed_Power_Coefficient_Model_Value_Id
     end
     
     properties(Hidden)
@@ -30,6 +29,7 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
         Draft_Fore = [];
         Draft_Aft = [];
         Speed_Power_Coefficient_Model_Id;
+        Speed_Power_Coefficient_Model_Value_Id
     end
     
     properties(Hidden, Constant)
@@ -52,10 +52,10 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
                         'Speed_Power_Source',...
                         'Maximum_Power',...
                         'Minimum_Power',...
-                        'Model_ID',...
                         'Name',...
                         'Description',...
                         'Deleted',...
+                        'Speed_Power_Coefficient_Model_Value_Id',...
                         'Speed_Power_Coefficient_Model_Id'};
         OtherTable = {'SpeedPowerCoefficientModel'};
         OtherTableIdentifier = {'Speed_Power_Coefficient_Model_Id'};
@@ -386,6 +386,8 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
                expand_l = true;
                obj = select@cTableObject(obj, tab, ident, [], alias_c, [], expand_l,...
                    oident, spmID);
+%                spmvid_c = {obj.Model_ID};
+%                [obj.Speed_Power_Coefficient_Model_Value_Id] = deal(spmvid_c{:});
                
                % Check if ValueTable exists, currently doesn't in
                % hullperformance DB
@@ -604,13 +606,13 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
             obj.Draft_Aft = d;
         end
         
-        function val = get.Speed_Power_Coefficient_Model_Value_Id(obj)
-            
-            val = obj.Model_ID;
-        end
-        
-        function obj = set.Speed_Power_Coefficient_Model_Value_Id(obj, ~)
-            
-        end
+%         function val = get.Speed_Power_Coefficient_Model_Value_Id(obj)
+%             
+%             val = obj.Model_ID;
+%         end
+%         
+%         function obj = set.Speed_Power_Coefficient_Model_Value_Id(obj, ~)
+%             
+%         end
     end
 end

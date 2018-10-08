@@ -222,7 +222,8 @@ classdef cTableObject < handle
         identifierProp_ch = identifier;
         whereValue = {};
         aliasProp_ch = '';
-        if nargin > 4 && ~isempty(varargin{2})
+        useAlias_l = nargin > 4 && ~isempty(varargin{2});
+        if useAlias_l
 
             alias_c = varargin{2};
             validateattributes(alias_c, {'cell'}, {'2d', 'ncols', 2}, ...
@@ -232,8 +233,10 @@ classdef cTableObject < handle
             aliasProp_ch = alias_c{1, 2};
             identifierProp_ch = alias_c{1, 1};
             
-            [~, identifier_i] = ismember(identifierProp_ch, prop_c);
-            prop_c{identifier_i} = aliasProp_ch;
+%             prop_c = [prop_c; {identifierProp_ch}];
+            
+%             [~, identifier_i] = ismember(identifierProp_ch, prop_c);
+%             prop_c{identifier_i} = aliasProp_ch;
 
 %             identifier_l = ismember(alias_c(:, 2), identifier);
 %             identifierProp_ch = alias_c{identifier_l, 1};
@@ -319,7 +322,16 @@ classdef cTableObject < handle
 
         % No need to read data for identifier, given in input
         matchField_c = intersect(matchField_c, fields_c);
-
+        if useAlias_l
+            
+            useAlias_l = ismember(aliasProp_ch, matchField_c);
+        end
+        
+        if useAlias_l
+            
+            matchField_c = [matchField_c; {identifierProp_ch}];
+        end
+            
         % Select table where rows match identifier values in object
         if whereValueInput
             
@@ -397,17 +409,24 @@ classdef cTableObject < handle
         for ii = 1:length(matchField_c)
 
             currField = matchField_c{ii};
-            lowerField = lower(currField);
+            
+            if useAlias_l && strcmp(currField, identifierProp_ch)
+                
+                lowerField = lower(aliasProp_ch);
+            else
+                
+                lowerField = lower(currField);
+            end
             currData = table_st.(lowerField);
             if ~iscell(currData)
                 
                 currData = num2cell(currData);
             end
             
-            if strcmp(currField, aliasProp_ch)
-                
-                currField = identifierProp_ch;
-            end
+%             if strcmp(currField, aliasProp_ch)
+%                 
+%                 currField = identifierProp_ch;
+%             end
             
             for oi = 1:numel(obj)
                 
