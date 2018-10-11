@@ -3,7 +3,7 @@ function obj = loadOmanShippingNoon(obj, filename, varargin)
 %   Detailed explanation goes here
 
 % Prep inputs to loadXLSX
-
+% obj.IMO = 9500728;
 
 
 % 
@@ -29,17 +29,17 @@ fileColName = { 'Date', ...
                 'Rudder_Angle',  ...
                 'Water_Depth'};
 tab = 'RawData';
-SetSQL = {'DateTime_UTC = DATE_ADD(STR_TO_DATE(@Date, ''%d-%m-%Y''), INTERVAL @Time*24 HOUR)',...
+SetSQL = {'Timestamp = DATE_ADD(STR_TO_DATE(@Date, ''%d-%m-%Y''), INTERVAL @Time*24 HOUR)',...
           'Mass_Consumed_Fuel_Oil = @Steaming_Time*@Fuel_Cons_Per_Hour',...
           'Speed_Over_Ground = knots2mps(@Speed_Over_Ground)',...
           'Speed_Through_Water = knots2mps(@Speed_Through_Water)',...
           'Relative_Wind_Speed = knots2mps(@Relative_Wind_Speed)',...
-          'IMO_Vessel_Number = 9500728'};
+          };
 
 [obj, numWarnings, warnings] = obj.loadXLSX(filename, mainSheet, firstRowIdx, fileColID, fileColName, tab, SetSQL);
 
-obj.execute('DELETE FROM RawData WHERE IMO_Vessel_Number = 9500728 AND Relative_Wind_Direction IS NULL;');
-obj.execute('DELETE FROM RawData WHERE IMO_Vessel_Number = 9500728 AND DateTime_UTC < ''2016-11-20 00:00:00.000'';');
+obj.SQL.execute(['DELETE FROM RawData WHERE Vessel_Id = 0 AND Relative_Wind_Direction IS NULL;']);
+obj.SQL.execute('DELETE FROM RawData WHERE Vessel_Id = 0  AND Timestamp < ''2016-11-20 00:00:00.000'';');
 % obj.execute('UPDATE RawData SET Displacement = 1e5 WHERE IMO_Vessel_Number = 9500728 AND (Static_Draught_Fore + Static_Draught_Aft)/2 <= 10;');
 % obj.execute('UPDATE RawData SET Displacement = 2e5 WHERE IMO_Vessel_Number = 9500728 AND (Static_Draught_Fore + Static_Draught_Aft)/2 > 10;');
 

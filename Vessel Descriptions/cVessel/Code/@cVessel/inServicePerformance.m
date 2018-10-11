@@ -24,7 +24,7 @@ while obj.iterateDD
 % while ~obj.iterFinished
     
 %    [obj, ii] = obj.iter;
-   [currDD_tbl, currVessel, ddi] = obj.currentDD;
+   [currDD_tbl, currVessel, ddi, vi] = obj.currentDD;
 % for si = 1:numel(obj)
     
 %     % Skip if empty
@@ -34,8 +34,8 @@ while obj.iterateDD
     
     % Index into input and get dates
 %     currDate = datenum(char(currStruct.DateTime_UTC), 'dd-mm-yyyy');
-    currDate = currDD_tbl.datetime_utc;
-    currVar = currVessel.Variable;
+    currDate = currDD_tbl.timestamp;
+    currVar = currVessel.Report(ddi).Variable;
     currPerf = currDD_tbl.(currVar);
 %     [ri, ci] = ind2sub(sizeStruct, si);
     
@@ -109,15 +109,9 @@ while obj.iterateDD
         servStruct.ReferenceValue = Duration_st(1).Average;
         servStruct.EvaluationDuration = Duration_st(2).EndDate - Duration_st(2).StartDate;
         servStruct.EvaluationValue = Duration_st(2).Average;
-        servStruct.InservicePerformance = servStruct.ReferenceValue - servStruct.EvaluationValue;
-        
-        servStruct.ReferenceDates = currDate(firstYear_l);
-        servStruct.ReferenceValues = currPerf(firstYear_l);
-        servStruct.EvaluationDates = currDate(remainingYears_l);
-        servStruct.EvaluationValues = currPerf(remainingYears_l);
-        
-        inserv(ddi).DryDockInterval = servStruct;
-        currVessel.Report.InServicePerformance(ddi) = servStruct;
+        servStruct.InservicePerformance = servStruct.EvaluationValue - servStruct.ReferenceValue;
+        inserv(vi).DryDockInterval(ddi) = servStruct;
+        currVessel.Report(ddi).InServicePerformance = servStruct;
 %         
 %         % Re-assign into Outputs
 %         if ddi == currVessel.numDDIntervals

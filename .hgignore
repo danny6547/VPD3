@@ -62,6 +62,9 @@ ISO 19030/test ISO 19030/3. Filtering/validateISOOut_03_Validated.csv
 ISO 19030/test ISO 19030/3. Filtering/validateISOOut_04_Corrected.csv
 ISO 19030/test ISO 19030/3. Filtering/validateISOOut_05_PV.csv
 ISO 19030/test ISO 19030/External Validation/validateISOOut_09_Research.csv
+Vessel Descriptions/cVessel/Code/@cVessel/plotPerformanceData.m.orig
+Vessel Descriptions/cVessel/Code/@cVessel/cVessel.m.orig
+Vessel Descriptions/cVesselReport/~$all_analytics.xlsx
 syntax: regexp
 (?i)\.asv
 convertEcoInsightXLS2tab.asv

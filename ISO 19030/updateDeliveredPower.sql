@@ -5,14 +5,11 @@ calculated and, if so, it will call updateShaftPower. If not, it will check
 whether brake power can be calculated and if so, it will call 
 updateBrakePower. If not, an error will be returned. */
 
-
-
-
 DROP PROCEDURE IF EXISTS updateDeliveredPower;
 
 delimiter //
 
-CREATE PROCEDURE updateDeliveredPower(imo INT)
+CREATE PROCEDURE updateDeliveredPower(vcid INT)
 proc_label:BEGIN
 	
     /* DECLARATIONS */
@@ -21,7 +18,7 @@ proc_label:BEGIN
     /* Check if torsio-metre data available 
     CALL log_msg(concat('isShaftAvail = ', @isShaftAvail));
 		CALL log_msg(concat('UPDATE shaft power called')); */
-        
+    
 	DECLARE powerGiven BOOLEAN Default FALSE;
 	DECLARE powerIncalculable CONDITION FOR SQLSTATE '45000';
     
@@ -35,8 +32,8 @@ proc_label:BEGIN
 		LEAVE proc_label;
     END IF;
     
-    CALL isShaftPowerAvailable(imo, @isShaftAvail);
-    CALL isBrakePowerAvailable(imo, @isBrakeAvail, @isMassNeeded);
+    CALL isShaftPowerAvailable(@isShaftAvail);
+    CALL isBrakePowerAvailable(@isBrakeAvail, @isMassNeeded);
     
     IF NOT isShaftRequired THEN
     
@@ -44,17 +41,17 @@ proc_label:BEGIN
     
     ELSEIF @isShaftAvail THEN
 		
-        CALL updateShaftPower(imo);
+        CALL updateShaftPower();
         UPDATE tempRawISO SET Delivered_Power = Shaft_Power;
 		
     /* Check if engine data available */
     ELSEIF @isBrakeAvail THEN
 		
 		IF @isMassNeeded THEN
-			CALL updateMassFuelOilConsumed(imo);
+			CALL updateMassFuelOilConsumed();
         END IF;
 		
-		CALL updateBrakePower(imo);
+		CALL updateBrakePower(vcid);
         UPDATE tempRawISO SET Delivered_Power = Brake_Power;
 		
     /* Error if value cannot be calculated */

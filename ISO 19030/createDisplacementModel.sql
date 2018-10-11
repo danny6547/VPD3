@@ -17,10 +17,10 @@ CREATE PROCEDURE createDisplacementModel()
 
 	BEGIN
 	
-	CREATE TABLE DisplacementModel (Displacement_Model_Id INT NOT NULL UNIQUE PRIMARY KEY AUTO_INCREMENT,
+	CREATE TABLE `static`.DisplacementModel (Displacement_Model_Id INT NOT NULL UNIQUE PRIMARY KEY AUTO_INCREMENT,
 								 Name NVARCHAR(100),
 								 Description TEXT,
-								 Deleted BINARY
+								 Deleted BOOL
                                  );
 								 
 	END;

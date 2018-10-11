@@ -471,7 +471,7 @@ cDB
 	DNVGL.PerformanceData: table matching contents of perf files downloaded from EcoInsight
 	Force.RawData: table matching contents of raw files downloaded from SeaTrend, without performance values
 	Force.PerformanceData: table matching contents of perf files downloaded from EcoInsight, only performance values
-	Static: all static ship data
+# 	Static: all static ship data
 	TestStatic: all static ship data
 	Hempel: ISO-ready raw data, Hempel performance data, Analysis tables, constants and functions
 	TestHempel: ISO-ready raw data, Hempel performance data, Analysis tables
@@ -486,24 +486,31 @@ Authentication
 
 Change vessel identificiation to vessel config id from IMO
 cMN: remove class
-cMID: just like cMN but with Name functionally replaced by Model_ID. Name no longer a property.
-	cModelID abstract class with abstract props FieldName, ModelTable, ValueTable, Column (to replace Type)
+# cMID: just like cMN but with Name functionally replaced by Model_ID. Name no longer a property.
+#	cModelID abstract class with abstract props FieldName, ModelTable, ValueTable, Column (to replace Type)
 	cV inherits from cMID
-		cV.ModelTable = 'Vessel', .FieldName = 'Vessel_Id'
-		cV.DBTable = {'VesselConfiguration', 'VesselInfo', 'BunkerDeliveryNote'}
+		cV.ModelTable = 'Vessel', .ModelField = 'Vessel_Id'
+		cV.ValueTable = {'VesselConfiguration', 'VesselInfo', 'BunkerDeliveryNote'}
 			when IMO value assigned to cV.ModelID,
-				cMID.set.MID reads OBJ data from all DBTable
+				cMID.set.MID reads OBJ data from all ValueTable
 				for each cV property which is a cMID,
 					assign _Model_Id value read from VesselConfiguration to .MID property
-	cVD inherits from cMID
-		cVD.ModelTable = 'DisplacementModel', .FieldName = 'Displacment_Model_Id', .DBTable = 'Displacment_Model_Value'
-	cVSP inherits from cMID
-		cVSP.ModelTable = 'SpeedPowerCoefficientModel', .FieldName = 'Speed_Power_Coefficient_Model_Id', .DBTable = 'Speed_Power_Coefficient_Model_Value'
-	cVWC inherits from cMID
-		cVWC.ModelTable = 'WindCoefficientModel', .FieldName = 'Wind_Coefficient_Model_Id', .DBTable = 'Wind_Coefficient_Model_Value'
-			when IMO value assigned to cV.ModelID not in DB,
-				reserve value in DBTable
-				if no values added, clear reserved value
+#	cVD inherits from cMID
+#		cVD.ModelTable = 'DisplacementModel', .ModelField = 'Displacment_Model_Id', .ValueTable = 'Displacment_Model_Value'
+#	cVSP inherits from cMID
+#		cVSP.ModelTable = 'SpeedPowerCoefficientModel', .ModelField = 'Speed_Power_Coefficient_Model_Id', .ValueTable = 'Speed_Power_Coefficient_Model_Value'
+#	cVWC inherits from cMID
+#		cVWC.ModelTable = 'WindCoefficientModel', .ModelField = 'Wind_Coefficient_Model_Id', .ValueTable = 'Wind_Coefficient_Model_Value'
+#			when IMO value assigned to cV.ModelID not in DB,
+#				reserve value in ValueTable
+#				if no values added, clear reserved value
+				
+cCMSQLDB.ReadOnly: set parameters of connection to read-only
+cMN: rename to cMID
+cMID.Name: remove prop
+cMID.set.Name: replace all references to Name with Model_ID
+cMID.set.MID: read any data from all ValueTable identified by Model_ID
+cMID.set.MID: reserve Model_ID in ModelTable if not found and if ReadOnly is FALSE
 
 cVesselEvent:
 	cVE: an event with a defined start and end where performance values are statistically dissimilar before and after
@@ -578,3 +585,397 @@ write sql script: ImportJob.rpt                      '
 cV.loadForceTech(... dateAutologged):
 	assign into RawData table columns from noon reports up to datetime 
 	dateAutologged, and autologged columns afterwards
+Split all insert_data scripts into model and time
+Add all insert_model and insert_time scripts to cDB.runHempel
+cCMYSQLDB: Figure out default DB
+cWC.properties: remove, or implement for all cV_ classes?
+cV.Name: make Name dependent, set value when Info added
+
+To sync data between an object with a model table and multiple nested objects referencing same table:
+	cV.IMO = imo:
+		1. Find most recent configuration for imo, return corresponding Vessel_Id
+		2. cV.Vessel_: call cMySQL.readFromTable(tab, 'vessel_id')
+	cTO.readFromTable: as cMySQL
+	cTO.checkModel(obj, table, field, mid): read out data if found, 
+		increment model id otherwise (as cModelID.set.ModelID) 
+		all input can be same size and corresponding elements will be taken 
+		together, otherwise obj, field can be scalar and table cellstr and 
+		obj will be assigned to from multiple table identified by same field
+	cMID: inherit from cTO
+	cMID.set.ModelID: extract method checkModel(obj, [{ModelTable}, ValueTable], ModelField) call checkModel on ModelTable and ValueTable
+	cV: don't inherit from cMID, inherit from cTO
+	cV.set.IMO(imo):
+		cV.mostRecentConfiguration(imo)
+		cV.checkModel on all sub-classes
+	cMID.insertIntoModels: insert method into reserveModel?
+	cTO.reserveModel: copy method from cMID, new input TABLE
+	cTO.releaseModel: copy method from cMID, new input TABLE
+	cMID.reserveModel, releaseModel: call with appropriate table
+
+?alias_c = obj.propertyAlias;
+?reserveModelID calls insertIntoTable
+?cTO.Deleted
+cVSP.insert:
+	if mid empty, increment
+	call cMID.insertIntoTable on sp, spcm, spcmv
+cDateConvert: find how to have subclasses Start, End properties reflect DateFormStr always
+
+# cMYSQL.cMYSQL: allow for Connection to be input
+# cMYSQL.connect: check if any conn in Connections has input properties, index or create
+# cV.cV: pass connection inputs to cMYSQL/cTableObject
+# cV.set.DatabaseName: pass Connection to cVSP, cVD ... (all nested cMYSQL children)
+# cV.cV: call assignDefaults after connection made
+cTO.isempty: ignore properties in Props2Ignore, pass to cMYSQL.isempty
+cDDD.Props2Ignore = 'DateStrFormat'
+
+SpeedPowerModelValue table has many empty rows
+	
+%% What if we remove reserving/releasing?
+	cTO are assigned to, inserted on insert command.
+	cMID.set.ModelID: reads out data if ModelID found in ModelTable
+	cVSP.insert:
+		inserts into SpeedPowerCoefficientModel
+					SpeedPowerCoefficientModelValue
+					SpeedPowerModel				(if table exists)
+					SpeedPowerModelValue		(if table exists)
+					(cVSP could have new properties to describe SpeedPowerModel)
+	cVSP.set.ModelID:
+		checks SpeedPowerCoefficientModel
+			if found, read out [Speed_Power_Coefficient_Model_Id] as ModelID
+				read obj data from SpeedPowerCoefficientModel
+				select all Model_Value_ID where ModelID
+				read obj data from SpeedPower where Model_Value_ID
+				
+	cVWC.set.ModelID:
+		read out data if ModelID found in ModelTable
+	cVWC.insert: insert into ModelTable and ValueTable
+	
+	ACTIONS
+	# Remove methods cMID.reserveModelID, cMID.releaseModelID, cMID.delete
+	# Move cTO.checkModel to cMID.checkModel
+	# Rename cMID.checkModel to cMID.readFromTable
+	# Rename method cMID.insertModel to .insert
+	# Rename cTO.insertIntoTable to insert
+	# Rename cV.insertIntoTable to insert
+	# cTO.readFromTable: return unmodified object if identifier value not found (also return flag indicating such)
+	# Remove method cMID.isModelInDB
+	# Rename method cTO.readFromTable to cTO.select
+	# cMID.insert:
+	#	if ModelID empty, increment
+	#	insert into ModelTable, ValueTables
+	#cMID.set.ModelID
+	#	if ModelID found in DB, read obj data from ModelTable and ValueTables
+			call cMID.readOthersIfExist(
+	#	else assign
+	# cV < cMID
+	# cV.ModelTable = 'Vessel';
+	# cV.ModelField = 'Vessel_Id';
+	# cV.ValueTable = {'VesselConfiguration', 'VesselInfo', 'BunkerDelivery'};
+	#Test with cVessel
+	#cMID.OtherTable
+	#cMID.OtherTableIdentifier
+	#cMID.readOthersIfExist(obj)
+	#	call obj.readFromTable on .OtherTable with .OtherTableIdentifier iff .OtherTable exists
+	#Test with cVSP
+Remove Vessel_Id field from VesselOwner table
+Implement VesselOwner select/insert.
+
+User creates cV
+	cV.cVC has empty Speed_Power_Coefficient_Model_Id
+	cVC.insert will error because Speed_Power_Coefficient_Model_Id cannot be NULL in DB
+User assigns data to cV.SP props
+	User calls cV.insert
+		cVSP inserts into all tables (otherTable)
+		cTO.insert returns object with all data read out from DB (including any auto-incremented values)
+			(rename to cTO.sync ?)
+		cVSP has new Speed_Power_Coefficient_Model_Id value
+		cV assigns cVSP.Speed_Power_Coefficient_Model_Id into cVC.Speed_Power_Coefficient_Model_Id
+cVC.Vessel (Hidden): prop storing corresponding vessel handle
+User assigns cV.Configuration.Speed_Power_Coefficient_Model_Id = id
+	cVC.set.Speed_Power_Coefficient_Model_Id:
+		cheap SQL hack to get all [Speed_Power_Coefficient_Model_Value_Id] for this id
+		create cVSP vector with input ModelID found from above
+		assign vector into cV.cVSP
+
+# Make Speed_Power_Coefficient_Model_Id in VesselConfiguration non NULL
+cTO.TableIdentifier: char that would be passed to cTO.select as IDENTIFIER
+Write cTO.select call into cTO.insert
+	both apply only to DataProperty of object
+	THIS REQUIRES cTO.SELECT TO RETURN OBJ (NO ERROR) WHEN IDENTIFIER DATA NOT FOUND
+cV.insert: assign cVSP.Speed_Power_Coefficient_Model_Id into cVC.Speed_Power_Coefficient_Model_Id after acquiring value from DB
+# cVSP.incrementSPModel: add 1 to maximum value of Speed_Power_Coefficient_Model_Id in DB table and assign to all elements of array
+# cVSP.insert: call cVSP.incrementSPModel if property empty
+# cMID.ModelField: if scalar, cMID.insert will repeat to length of ValueTable plus one
+cTO.PropertyAlias: DB field names corresponding to DataProperty names
+cVC.VesselConfigurationDescription: make property alias to Description (or Name)
+DB.SpeedPower: remove Disp, Trim
+DB.VesselConfig: make all model_id fields required non null
+testcVessel: test cases where nested objects are empty
+cV.set: set access methods for all nested objects
+cTableObject.lastInsertID: return the last auto-incremented identifier value
+# cTO.insert:
+#	if obj.Identifier is empty
+#		call id = cTableObject.lastInsertID;
+#		insert id into additionalInputs
+#	call obj.select
+testcVessel: Test both cases where modelID is either given or not
+While Model_ID is only identifying value for any cMID, and Model_ID can be input empty, Model_ID must be specified explicitly in scripts
+cTO.isequal(a, b): iterate over DataProperty and compare, true if all equal
+cV.cV: rename input property Database to DatabaseName 
+cVSP can insert, but how to read?
+	Needs spmID before mID. Must come from cVC.
+	cVSP.readSuper(spmID)
+		call cTO.select on super table, get spmvID
+		if cVSP empty, expand array to number of spmvID found
+		elseif cVSP same size as spmvID found, assign
+		else error
+	Acquire spmID from current cMID select call inputs ?
+		cVSP requires spmID before it can get Model_ID
+		
+cVSP.insert:
+	calls cTO.insert into super-table
+		cTO calls select, 
+		could work if cModelID.select reached
+cVSP.selectSuper:
+	needs to call cVSP.select, not cTO.select
+	needs spmID, from somewhere.
+		If not in prop, return
+cVSP.insert:
+	needs to insert into super first
+		then into model and value
+	needs cTO.insert calls to call select, to get all incremented values
+	needs cVSP.select to select from all tables at identifiers used to insert
+cVSP.select:
+	if spmid empty, return
+	select from all tables at identifiers input from insert call
+		select from super table if spmid non-empty
+		select from model table if spmvid non-empty
+		select from value table if spmvid non-empty
+		
+	Process:
+		cVSP.insert:
+			inserts into super
+				gets id from last_inserted_id
+				calls select with last_inserted_id
+			selects from super
+				returns
+			inserts into model
+				calls select with last_inserted_id
+			selects from model AND value
+			inserts into value
+				calls select with last_inserted_id
+			selects from model AND value
+			
+		cV.set.IMO:
+		CASE 1: cV.SP empty before
+			 if cVC.spmID non-empty
+				assign smpID into cVSP
+				assign fieldname, smpID into appropriate elements of inputs
+				call cVSP.select(inputs) (expand array to size, assign super values)
+				call cVSP.select(inputs) again (assign model values)
+		CASE 2: cV.SP non-empty before
+				assign smpID into cVSP
+				assign fieldname, smpID into appropriate elements of inputs
+				call cVSP.select(inputs) (expand array to size, assign super values)
+				call cVSP.select(inputs) again (assign model values)
+		
+include cMID.incrementModelID in cMID.insert
+cTO.select(..., identifier, ...: make an optional input indicating rows of any found table identifying each object for which data is assigned
+cTO.select(..., whereField_c,...: optional parameter value pairs to indicate part of table where object data found
+# cTSQL: class to generate t-sql statements inherites from cSQL
+# cSQL: abstract class for generating SQL statements with abstract methods select, ...
+# cMySQL: inherit from cSQL
+# cVessel: new (hidden) property SQL containing a cSQL, replaces all former calls to cMySQL methods from OBJ
+#	cTO doesn't know which SQL to create from inputs yet
+#	Can have standard set of credentials (no password), together with SQL implementation?
+#		conn = savedConnections('Database', 'hullperformance') returns in conn inputs 
+#		needed to connect with cCMYSQLDB. Data stored in script.
+#	savedConnections called by cMID constructor, returning cSQL sub-class
+#	cTO assigns cSQL to property SQL
+#cCMYSQLDB.savedConnections: return input cell and cSQL from database name
+#SavedConnections: script with saved connnections
+	Error "Field 'Speed_Power_Coefficient_Model_Id' doesn't have a default value" at testVessel.insert;
+	Seems that cModelID.insert or matchingFields isn't writing in the additional data required by the table, which was happening on the work laptop.
+# $ Attempt connection to hullperformance through cVessel again (Works! apart from DryDock property)
+$ Verify read only mode working on hullperformance
+Write testcVessel.testselectRaw:
+	test that all raw data read when called without inputs
+	test that multiple calls with smae inputs do not generate duplicate columns or rows
+	test with input dateFrom, dateTo
+	test with input Cols
+EXTRACT METHODS FROM CVESSEL TO CVESSELANALYSIS
+WRITE MATLAB WRAPPERS TO MYSQL ISO19030 PROCEDURES
+cVSP: make ValueTable SpeedPower optional part of inserting, selecting data
+cV.selectInService: method currently uses different datestring format than obj.DateFormStr. Need way to make adodb return desired format.
+cSQL.tableFromQueryResult: convert cell cols to numerical columns where possible
+cV.set.IMO: check if multiplie cVSP being read from hullperformance
+cV.set.IMO: cVDD not being read from hullpeformance 
+cTO: try removing TableIdentifier
+cTO: try removing ModelField
+cTO.select(tab, objID, alias, whereFields, whereVals)
+	objID: property/field name identifying all data in query belonging to this OBJ
+	alias: cell of property alias names
+	whereFields, whereVals: property/field name and values identifying data in DB belonging to this OBJ array
+	
+Can "additionalFields" just be used to identify obj array data in DB?
+	Assume that any additionalFields identify the array
+	Make whereValueInput redundant
+	Have objID and whereFields by "select table" step
+		If additionalFields input, whereFields = additionalFields
+		else whereFields = objID
+	Use whereFields in select statement
+	Use objID to identify each OBJ within query results
+Make order of cV.DD irrelevant? (currently DDIntervalsFromDates needs chronological)
+cV.Configuration: currently allows more than one configuration. Need solution for "previous configurations" to be kept in some property. cV code currently expects one Config.
+	
+1.TESTCVESSEL
+2.TEST AND WRAP ISO19030 PROCEDURES
+3.WRITE INSERT SCRIPT TEMPLATE AND EXAMPLES
+4.GIVE CVESSELANALYSIS METHODS INPUTS SO DATA NOT NEEDED IN .INSERVICE
+# CVESSEL.STATICDB, .INSERVICEDB
+CISO19030.FILTER
+EXTRACT METHODS FROM CVESSEL TO CVESSELANALYSIS
+IMPLEMENT ENCRYPTED PASSWORD DIALOG
+WRITE STATIC CLASS CVESSELLOADINSERVICE (loadOman, loadForce etc)
+
+# CVESSEL.STATICDB, .INSERVICEDB
+# 	cV.set.StaticDB: assigns connection object to cV.StaticSQLDB
+# 		if value is cConnectSQLDB, assign to StaticSQLDB
+# 		if value is char, try to load from savedConnections
+#	cV.set.InserviceDB: assigns connection object to cV.InserviceSQLDB
+# cConnectSQLDB.cConnectSQLDB:
+# 	new input parameter 'Saved', indicating saved connection is to be loaded
+# 	if 'Saved' given, load instead of create
+# Append 'testInService' to savedConnections.m
+# testcVessel.insertVessel:
+# 	cV.InserviceDB = 'testInService';
+
+# cDB.insertStaticScripts: find all *.m files under TOPDIR whose names start with "Insert_Static_"
+# cDB.createStatic:
+#	create DB named 'static' (vessel, configs, models...)
+# cDB.createInService:
+#	create DB named 'inservice' (raw, calculated)
+# cDB.loadStatic: load insert static scripts into Static DB
+# 	extract from cDB.createStatic
+# cDB.loadInService: load insert inservice scripts into InService DB
+# cDB.createForce:
+# cDB.createDNVGL:	
+# cDB.loadForce: run scripts to insert Force inservice files into Force DB
+#	extract from createForce
+# cDB.loadDNVGL: run scripts to insert DNVGL inservice files into DNVGL DB
+# 	extract from createDNVGL
+cDB.runISO: run ISO analyses to fill CalculatedData table of InService DB
+# cDB.createTestStatic:
+# cDB.createTestInService:
+cDB.createExternal: create Force, DNVGL and load
+cDB.createInternal: create Static, InService, test DB's and load
+cDB.createAll: create external and internal and load
+Remove folder "\Database Generation\Insert_Static" from repo since insert static scripts found in cDB.VesselLibrary
+
+cDB.createInService: create procedure "createTempRawISO"
+createTempRawISO: create empty table, 
+	insert from RawData all rows for input IMO,
+	calculate all columns
+	insert update from tempRawISO into Calculated
+testProject:
+	run testInsertVessel
+	run testSelectVessel
+	run testtestISO19030
+testISO19030:
+	remove all properties Almaviva_, replace with TestVessel
+	testVessel method returns cV obj with previous Almaviva properties, test name and IMO
+	replace calls to methods call, insert, read with those of cMySQL (read becomes select)
+	insertTestVessel: assign 'inservice', 'static' as databases
+	remove all calls to insert vessel data within test methods
+	replace calls to testcase.Connection with calls to testVessel.SQL
+#ISO19030 procedures:
+# 	replace all call to tables with 'dbname'.'tablename'
+#testSelectVessel, testInsertVessel:
+# 	change test vessel database from 'teststatic' to 'static', 'testinservice' to 'inservice'
+# 	ensure test vessel is clearly identified as not real (IMO, name)
+#	write conditional into deleteRaw and deleteCalculated so only test vessel deleted
+whats wrong with updateDisplacementFromDraftTrim.sql?
+how does ISO19030.sql get data from bunker delivery notes?
+Error when cV.IMO = imo after cV.insert with empty cV.Displacement (VesselConfiguration.Displacement_Model_ID empty, NaN returned for cV.Disp.Model_Id)
+cVSP.insert: When Speed, Power empty large number of NULLs in SpeedPower table
+ISO19030: take vessel configuration id as input and pass to all sub-procedures
+Process ISO19030: keep analysis administration tables and procedures? (what was analysed, what was compliant etc)
+# error: vessels with multiple configurations cannot be selected (error when obj.IMO =imo)
+?How to "check-out" vessel from one DB to another? (problems start with conflicting modelIDs. Wipe all ModelIDs?)
+error: too many connections with 10 or so vessels. What is global variable code doing?
+DB: replace force.rawdata with delegate spec rawdata table
+Error: cV.selectInService when DAY(Timestamp) = 0
+cV.Name: allow user to set and get cV.Info.Name via this property
+Error: cV.insert when any cTO has an empty string for property value and cV not in DB already (otherwise, it will have NaN after selection)
+Error: cVD.insert fails to write data for more than one trim value when "grid" displacements given (at least one constraint will have to be removed, probably Draft_Mean, Model_Id)
+Error: cVSP.selectByName() fails for Berge Kinabalu model.
+Store data for each savedConnection:
+	e.g. DNVGL, hullperformance
+	InServiceTable: PerformanceData, CalculatedData
+	InServiceIdentifierColumn: IMO_Vessel_Number, Vessel_Id
+	InServiceIdentifierProperty: IMO_Vessel_Number, Vessel_Id
+cV.selectInService:
+	find .Database in InServiceParameters, error if not found
+	input RAWTABLE logical scalar, if true, change name of raw table to join on and use appropriate JoinColumns
+		change from first to second index of Raw field of InServiceIdentifierColumn
+	Depending on input READRAW
+		call select on InServiceTable JOIN RawTable where InServiceIdentifierColumn = this OBJ's InServiceIdentifierProperty
+	assign to InServiceIdentifierColumn to .Variable
+# cSQL.join(tab1, col1, tab2, col2, joinOn1, joinOn2)	
+cV.disp: show size of InService.Data, rather than InService
+# Error: cV.set.IMO when cV.Database = 'dnvgl'. When should cMID.select functionality be called?
+cBuildDB: create Vessel tables for external databases too, add to these when new IMO added to external database, make all RawData tables identical structure
+cBuildDB:
+	only public methods are buildDNVGL, buildForce, buildHempel and buildAll
+	hidden methods: loadForce, loadDNVGL, loadHempel
+	insertStatic: copy relevant code into loadHempel
+		rename all Insert_Static scripts to Insert_Vessel
+	buildAll: call all build_ methods
+# If setting IMO doesn't cause error on external performance databases, can it update InService data and allow simple timetable in property?
+# 	cV.set.IMO: check if table Vessel exists:
+#		if so, continue as currently
+#		if not, select InService data, set value, return
+cVR: each element corresponds to a separate dry-dock interval of cV
+Error when reading vessel DFDS Begonia Seaways from hullperformance DB (message is "Unknown Error")
+cV: Error when iterating and InService empty
+# cVA.analyse: iterare procedure struct, calling all with inputs
+# cV.analyse(cVA): assign config id to cVA, call cVA.analyse, call insertIntoCalculatedData
+# cVISO: inherit from cVA
+# cVISO.procedureDefault: call cVA.procedureDefault but include new field 'isSQL', remove 'obj.SQL.call' from proc names
+#cVA.report: report progress, somehow
+#	if cVA.Report = true
+#		print to screen inital and final messages
+#		for each procedure: datetime, name, duration, total progress, total progress pct
+# cVISO inherit from cCSQLDB
+# cVISO.analyse: wrap 'sql.call' around isSQL procedures
+# InstallSHAPE: script
+#	Report only when execution interrupted
+cDB.createStatic: remove in-service procedures
+# testcVISO: find why randDispTrim hangs in testfilterSpeedPowerLookup
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

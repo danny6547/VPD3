@@ -1,6 +1,6 @@
 /* Calculate 10 minute averages */
 
-INSERT INTO mu10Mins (
+INSERT INTO `inservice`.mu10Mins (
 						DateTime_UTC,
 						Rudder_Angle,
 						Relative_Wind_Direction,
@@ -28,5 +28,5 @@ INSERT INTO mu10Mins (
                  AVG(Seawater_Temperature) AS Seawater_Temperature,
                  AVG(Air_Temperature) AS Air_Temperature,
                  COUNT(*) AS N
-			FROM tempRawISO
+			FROM `inservice`.tempRawISO
 				GROUP BY FLOOR((TO_SECONDS(DateTime_UTC) - TO_SECONDS(@startTime))/(600)));

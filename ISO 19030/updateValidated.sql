@@ -8,11 +8,11 @@ CREATE PROCEDURE updateValidated()
 
 BEGIN
 	
-SET @startTime := (SELECT TO_SECONDS(MIN(DateTime_UTC)) FROM tempRawISO);
+SET @startTime := (SELECT TO_SECONDS(MIN(Timestamp)) FROM `inservice`.tempRawISO);
 
 UPDATE tempRawISO t7
 JOIN
-(SELECT t6.id, t6.DateTime_UTC,
+(SELECT t6.id, t6.Timestamp,
 			Std_Shaft_Revolutions,
 			Std_Speed_Through_Water,
 			Std_Speed_Over_Ground,
@@ -22,7 +22,7 @@ JOIN
 			@lastk := IFNULL(Std_Speed_Over_Ground > 0.5, @lastk) AS InvalidSOG
 	FROM tempRawISO t6
 	LEFT JOIN
-	(SELECT id, DateTime_UTC, 
+	(SELECT id, Timestamp, 
 			SQRT(AVG(POWER(Delta_Rudder_Angle, 2))) AS Std_Rudder_Angle,
             Delta_Rudder_Angle,
 			Std_Shaft_Revolutions,
@@ -34,7 +34,7 @@ JOIN
 			@lastk := IFNULL(Std_Speed_Over_Ground > 0.5, @lastk) AS InvalidSOG
             FROM
 		(SELECT
-			t2.id, t2.DateTime_UTC,
+			t2.id, t2.Timestamp,
 			CASE mod(ABS(t2.Rudder_Angle - atan2r), 360) > 180
 				WHEN TRUE THEN 360 - mod(ABS(t2.Rudder_Angle - atan2r), 360)
 				WHEN FALSE THEN mod(ABS(t2.Rudder_Angle - atan2r), 360)
@@ -43,7 +43,7 @@ JOIN
 			Std_Speed_Through_Water,
 			Std_Speed_Over_Ground
 		FROM
-		(SELECT t1.id, t1.DateTime_UTC,
+		(SELECT t1.id, t1.Timestamp,
 					@lasta := IFNULL(Sinr, @lasta) AS Sinr,
 					@lastb := IFNULL(Cosr, @lastb) AS Cosr,
 					@lastc := IFNULL(atan2r, @lastc) AS atan2r,
@@ -53,7 +53,7 @@ JOIN
 					@lastg := IFNULL(Std_Speed_Over_Ground, @lastg)   AS Std_Speed_Over_Ground,
 					t1.Rudder_Angle, ri
 				FROM
-					(SELECT id, DateTime_UTC,
+					(SELECT id, Timestamp,
 						 AVG(SIN(Rudder_Angle)) AS Sinr,
 						 AVG(COS(Rudder_Angle)) AS Cosr,
 						 ATAN2(AVG(SIN(Rudder_Angle)), AVG(COS(Rudder_Angle))) AS atan2r,
@@ -65,7 +65,7 @@ JOIN
 						 STD(Speed_Through_Water) AS Std_Speed_Through_Water,
 						 STD(Speed_Over_Ground)   AS Std_Speed_Over_Ground
 					FROM tempRawISO
-						GROUP BY FLOOR((TO_SECONDS(DateTime_UTC) - @startTime)/(600))) t0
+						GROUP BY FLOOR((TO_SECONDS(Timestamp) - @startTime)/(600))) t0
 					RIGHT JOIN tempRawISO t1
 						ON t0.id = t1.id
 							CROSS JOIN (SELECT @lasta := 0) AS var_a
@@ -75,7 +75,7 @@ JOIN
 							CROSS JOIN (SELECT @laste := 0) AS var_e
 							CROSS JOIN (SELECT @lastf := 0) AS var_f
 							CROSS JOIN (SELECT @lastg := 0) AS var_g) t2) t3
-							GROUP BY FLOOR((TO_SECONDS(DateTime_UTC) - @startTime)/(600))) t5
+							GROUP BY FLOOR((TO_SECONDS(Timestamp) - @startTime)/(600))) t5
 								ON t5.id = t6.id
 								CROSS JOIN (SELECT @lasth := 0) AS var_h
 								CROSS JOIN (SELECT @lasti := 0) AS var_i
@@ -89,21 +89,21 @@ JOIN
 																	;
 
 /* Mark analysis as Validated */
-SET @timeStep := (SELECT (SELECT to_seconds(DateTime_UTC) FROM tempRawISO WHERE Speed_Over_Ground IS NOT NULL LIMIT 1, 1) - 
-	(SELECT to_seconds(DateTime_UTC) FROM tempRawISO WHERE Speed_Over_Ground IS NOT NULL LIMIT 0, 1) );
+SET @timeStep := (SELECT (SELECT to_seconds(Timestamp) FROM tempRawISO WHERE Speed_Over_Ground IS NOT NULL LIMIT 1, 1) - 
+	(SELECT to_seconds(Timestamp) FROM tempRawISO WHERE Speed_Over_Ground IS NOT NULL LIMIT 0, 1) );
 IF @timeStep < 600 THEN
 	SET @Validated := TRUE;
 ELSE
 	SET @Validated := FALSE;
     UPDATE tempRawISO SET Validated = FALSE;
 END IF;
-
+/*
 CALL IMOStartEnd(@imo, @startd, @endd);
 IF @imo IS NOT NULL AND @startd IS NOT NULL AND @endd IS NOT NULL THEN
-	INSERT INTO Analysis (IMO_Vessel_Number, StartDate, EndDate, Validated)
+	INSERT INTO `inservice`.Analysis (IMO_Vessel_Number, StartDate, EndDate, Validated)
 	VALUES (@imo, @startd, @endd, @Validated) ON DUPLICATE KEY UPDATE Validated = VALUES(Validated);
 END IF;
-
+*/
 
 /* UPDATE tempRawISO t3
     INNER JOIN
@@ -113,16 +113,16 @@ END IF;
 			@lastd := IFNULL(Std_Speed_Over_Ground, @lastd) AS Std_Speed_Over_Ground,
 			@lastf := IFNULL(SQRT(AVG(POWER(Delta_Rudder_Angle, 2))), @lastf) AS Std_Rudder_Angle
 			FROM
-				(SELECT t1.id, DateTime_UTC, Std_Shaft_Revolutions, Std_Speed_Through_Water, Std_Speed_Over_Ground, Avg_Rudder_Angle, Std_Rudder_Angle, Delta_Rudder_Angle
+				(SELECT t1.id, Timestamp, Std_Shaft_Revolutions, Std_Speed_Through_Water, Std_Speed_Over_Ground, Avg_Rudder_Angle, Std_Rudder_Angle, Delta_Rudder_Angle
 				FROM
-					(SELECT id, DateTime_UTC,
+					(SELECT id, Timestamp,
 						STD(Shaft_Revolutions) AS    Std_Shaft_Revolutions,
 						STD(Speed_Through_Water) AS  Std_Speed_Through_Water,
 						STD(Speed_Over_Ground) AS    Std_Speed_Over_Ground,
 						ATAN2(AVG(SIN(Rudder_Angle)), AVG(COS(Rudder_Angle))) AS Avg_Rudder_Angle,
 						STD(Rudder_Angle) AS         Std_Rudder_Angle
 							FROM tempRawISO
-								GROUP BY FLOOR((TO_SECONDS(DateTime_UTC) - @startTime)/(600))) t1
+								GROUP BY FLOOR((TO_SECONDS(Timestamp) - @startTime)/(600))) t1
 					JOIN
 						(SELECT id,
 							CASE mod(ABS(Rudder_Angle - ATAN2(AVG(SIN(Rudder_Angle)), AVG(COS(Rudder_Angle)))), 360) > 180
@@ -130,7 +130,7 @@ END IF;
 								WHEN FALSE THEN mod(ABS(Rudder_Angle - ATAN2(AVG(SIN(Rudder_Angle)), AVG(COS(Rudder_Angle)))), 360)
 							END AS Delta_Rudder_Angle
 							FROM tempRawISO
-								GROUP BY FLOOR((TO_SECONDS(DateTime_UTC) - @startTime)/(600))) t0
+								GROUP BY FLOOR((TO_SECONDS(Timestamp) - @startTime)/(600))) t0
 					ON t1.id = t0.id)
 						RIGHT JOIN tempRawISO t2
 						ON t1.id = t2.id

@@ -4,10 +4,10 @@ DROP PROCEDURE IF EXISTS updateAirResistanceNoWind;
 
 delimiter //
 
-CREATE PROCEDURE updateAirResistanceNoWind(imo INT)
+CREATE PROCEDURE updateAirResistanceNoWind(vcid INT)
 BEGIN
 
-	SET @currModel = (SELECT Wind_Model_ID FROM Vessels WHERE IMO_Vessel_Number = imo);
+	SET @currModel = (SELECT Wind_Coefficient_Model_Id FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid);
 
 	UPDATE tempRawISO
 	SET Air_Resistance_No_Wind = 
@@ -15,7 +15,5 @@ BEGIN
 		Air_Density * 
 		POWER(Speed_Over_Ground, 2) *
         Transverse_Projected_Area_Current * 
-		( SELECT Coefficient FROM WindCoefficientDirection WHERE ModelID = @currModel AND Direction = 0 );
-
-        
+		( SELECT Coefficient FROM `static`.WindCoefficientModelValue WHERE Wind_Coefficient_Model_Id = @currModel AND Direction = 0 );
 END;

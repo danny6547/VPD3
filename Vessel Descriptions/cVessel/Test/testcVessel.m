@@ -4,720 +4,233 @@ classdef testcVessel < matlab.unittest.TestCase
 
 properties
     
-    MySQL = cMySQL();
-    ReadFromTableInputs = { {'testReadFrom', 'IMO_Vessel_Number'} };
-    ReadFromTableVales = struct('Owner', {'A', 'B'}, ...
-                                'Draft_Design', num2cell([1.2345, -1]),...
-                                'IMO_Vessel_Number', num2cell([1234567, 7654321]));
-    InsertIntoTableInputs = { {'testInsertInto' } };
-    InsertIntoDryDockDatesValues = struct('IMO_Vessel_Number', num2cell([1234567, 7654321])', ...
-                                'StartDate', cellstr(datestr(now:now+1, 'yyyy-mm-dd')),...
-                                'EndDate', cellstr(datestr(now+2:now+3, 'yyyy-mm-dd')));
-    InsertIntoSpeedPowerValues = struct('IMO_Vessel_Number', ...
-                                num2cell([1234567, 1234567, 1234567, 7654321, 7654321])', ...
-                                'Speed', ...
-                                num2cell([5, 10, 5, 7, 12])', ...
-                                'Power', ...
-                                num2cell([1e4, 5e4, 3e4, 2e4, 9e4])', ...
-                                'Trim', ...
-                                num2cell([1, 1, 0, -1.5, -1.5])', ...
-                                'Displacement', ...
-                                num2cell([1e5, 1e5, 2e5, 1e4, 1e4])');
-    InsertIntoSpeedPowerCoefficientsValues = ...
-                                struct('IMO_Vessel_Number', ...
-                                num2cell([1234567, 1234567, 7654321])', ...
-                                'Exponent_A', ...
-                                num2cell(0.7:0.1:0.9)', ...
-                                'Exponent_B', ...
-                                num2cell(100:100:300)', ...
-                                'R_Squared', ...
-                                num2cell(0.9:0.03:0.96)', ...
-                                'Trim', ...
-                                num2cell([1, 0, -1.5])', ...
-                                'Displacement', ...
-                                num2cell([1e5, 1e5, 2e5])');
-    InsertIntoWindCoefficientsValues = ...
-                                struct('IMO_Vessel_Number', ...
-                                num2cell([1234567, 7654321])', ...
-                                'Start_Direction', ...
-                                num2cell([45, 90])', ...
-                                'End_Direction', ...
-                                num2cell([90, 135])', ...
-                                'Coefficient', ...
-                                num2cell([2, 3])');
-    InsertIntoSFOCCoefficientsValues = ...
-                                struct('Engine_Model', ...
-                                {'Test Engine 1', 'Test Engine 2'}', ...
-                                'X0', ...
-                                num2cell([1, 1.5])', ...
-                                'X1', ...
-                                num2cell([0, 1])', ...
-                                'X2', ...
-                                num2cell([2, 3])',...
-                                'Minimum_FOC_ph', ...
-                                num2cell([450, 90])', ...
-                                'Lowest_Given_Brake_Power', ...
-                                num2cell([9000, 1350])', ...
-                                'Highest_Given_Brake_Power', ...
-                                num2cell([2e4, 1.5e4])');
+    TestDatabase = 'static';
+    TestInServiceDB = 'inservice';
+    TestIMO = 1234567;
+    TestVessel;
+    TestcMySQL;
+    SQLWhereVessel;
+    SQLWhereEngine;
+    SQLWhereSpeedPower;
+    SQLWhereSpeedPowerModel;
+    SQLWhereDisplacement;
+    SQLWhereWind;
+    SQLWhereOwner;
+    SQLWhereToOwner;
 end
 
 methods
     
-    function vessel = testVessel(testcase)
-    % Return cVessel object connected to test database
-    
-        vessel = cVessel();
-        vessel = vessel.test;
-        vessel = vessel.disconnect;
-        vessel.Connection = testcase.MySQL.Connection;
-    end
-    
-    function requirementsReadFromTable(testcase)
-    % Create DB requirements for method testreadFromTable
-    
-        table = 'testReadFrom';
-        cols{1} = 'Owner';
-        cols{2} = 'Draft_Design';
-        cols{3} = 'IMO_Vessel_Number';
-        types{1} = 'TEXT';
-        types{2} = 'DOUBLE(10, 5)';
-        types{3} = 'INT(7)';
+    function vessel = testVesselInsert(testcase)
         
-        tblExist_ch = ['Table ''' lower(table) ''' already exists'];
+        testDB = testcase.TestDatabase;
+        vessel = cVessel('DatabaseStatic', testcase.TestDatabase,...
+                'DatabaseInService', testcase.TestInServiceDB);
+%         vessel.InServiceDB = testcase.TestInServiceDB;
         
-        % Drop table
-        testcase.MySQL.drop('TABLE', table, true);
+        % Identity
+        vessel.IMO = testcase.TestIMO;
         
-        % Create table
-        try
-            testcase.MySQL.createTable(table, cols, types);
-            
-        catch e
-            
-            if isempty(strfind(e.message, tblExist_ch))
-                
-                rethrow(e);
-            end
-        end
+        % Configuration
+        vessel.Configuration.Transverse_Projected_Area_Design = 1000;
+        vessel.Configuration.Length_Overall = 300;
+        vessel.Configuration.Breadth_Moulded = 50;
+        vessel.Configuration.Draft_Design = 10;
+        vessel.Configuration.Anemometer_Height = 50;
+        vessel.Configuration.Valid_From = '2000-01-01 00:00:00';
+        vessel.Configuration.Valid_To = '2018-01-01 00:00:00';
+        vessel.Configuration.Default_Configuration = true;
+        vessel.Configuration.Speed_Power_Source = 'Sea Trial';
+        vessel.Configuration.Wind_Reference_Height_Design = 30;
+        vessel.Configuration.Vessel_Configuration_Description = 'Test Config';
+        vessel.Configuration.Apply_Wind_Calculations = true;
+        vessel.Configuration.Fuel_Type = 'HFO';
+        vessel.Configuration.LBP = 250;
+%         vessel.Configuration.Speed_Power_Coefficient_Model_Id = 1;
         
-        % Insert data
-        testcase.MySQL.insertValues(table, cols, ...
-            [{testcase.ReadFromTableVales.Owner}', ...
-            {testcase.ReadFromTableVales.Draft_Design}', ...
-            {testcase.ReadFromTableVales.IMO_Vessel_Number}'])
+        % Vessel Info
+        vessel.Info.Vessel_Name = 'Test vessel'; 
+        vessel.Info.Valid_From = '2000-01-01 00:00:00'; 
         
-    end
-    
-    function requirementsInsertIntoTable(testcase)
-    % Create DB requirements for method testinsertIntoTable
+        % Owner
+        vessel.Owner.Vessel_Owner_Name = 'Hempel';
+        vessel.Owner.Ownership_Start = '2000-01-01 00:00:00';
+        vessel.Owner.Ownership_End = '2018-01-01 00:00:00';
         
-        table = testcase.InsertIntoTableInputs{1}{1};
-        cols{1} = 'Owner';
-        cols{2} = 'Draft_Design';
-        cols{3} = 'IMO_Vessel_Number';
-        types{1} = 'TEXT';
-        types{2} = 'DOUBLE(10, 5)';
-        types{3} = 'INT(7)';
+        % Engine
+        vessel.Engine.Engine_Model = 'Test Engine';
+        vessel.Engine.X0 = 3;
+        vessel.Engine.X1 = 2;
+        vessel.Engine.X2 = 1;
+        vessel.Engine.Minimum_FOC_ph = 4;
+        vessel.Engine.Lowest_Given_Brake_Power = 5;
+        vessel.Engine.Highest_Given_Brake_Power = 6;
         
-        % Drop table
-        testcase.MySQL.drop('TABLE', table, true);
+        % Speed Power
+        sp = cVesselSpeedPower('Size', [1, 2], 'SavedConnection', testDB);
+        sp(1).Speed = [10, 15];
+        sp(1).Power = [10, 15]*1e4;
+        sp(1).Trim = 1;
+        sp(1).Displacement = 1e5;
+%         sp(1).Model_ID = 1;
+        sp(1).Name = 'Speed Power test 1';
+        sp(1).Description = 'the first one';
+        sp(2).Speed = [5, 10, 15];
+        sp(2).Power = [7, 9.5, 15]*1e4;
+        sp(2).Trim = 0;
+        sp(2).Displacement = 2e5;
+%         sp(2).Model_ID = 2;
+        sp(2).Name = 'Speed Power test 1';
+        sp(2).Description = 'the first one';
+        vessel.SpeedPower = sp;
         
-        % Create table
-        testcase.MySQL.createTable(table, cols, types);
-    end
-    
-    function requirementsinsertIntoDryDockDates(testcase)
-    % Create DB requirements for method testinsertIntoDryDockDates
+        % Dry Dock
+        ddd = cVesselDryDock('Size', [1, 2], 'SavedConnection', testDB);
+        ddd(1).Start_Date = '2000-01-01';
+        ddd(1).End_Date = '2000-01-14';
+%         ddd(1).Model_ID = 1;
+        ddd(2).Start_Date = '2001-01-01';
+        ddd(2).End_Date = '2001-01-14';
+%         ddd(2).Model_ID = 2;
+        vessel.DryDock = ddd;
         
-        % Delete any existing rows in the test table for test vessels
-        testIMO_c = {testcase.InsertIntoDryDockDatesValues.IMO_Vessel_Number};
-        testIMO_ch = strjoin(cellfun(@num2str, testIMO_c, 'Uni', 0), ', ');
-        testcase.MySQL.execute(['DELETE FROM DryDockDates WHERE '...
-            'IMO_Vessel_Number IN (', testIMO_ch ,')']);
+        % Displacement
+%         vessel.Displacement.Model_ID = 1;
+        heightDispTable = 2;
+        vessel.Displacement.Draft_Mean = [10, 12];
+        vessel.Displacement.Trim = [0, 1];
+        vessel.Displacement.Displacement = [1e5, 1.5e5];
+        vessel.Displacement.TPC = nan(1, heightDispTable);
+        vessel.Displacement.LCF = nan(1, heightDispTable);
         
-    end
-    
-    function requirementsinsertIntoSpeedPower(testcase)
-    % Create DB requirements for method testinsertIntoDryDockDates
+        % Wind
+%         vessel.WindCoefficient.Model_ID = 1;
+        vessel.WindCoefficient.Direction = [0, 10, 45];
+        vessel.WindCoefficient.Coefficient = [0.3, 0.5, 1];
         
-        % Delete any existing rows in the test table for test vessels
-        testIMO_c = {testcase.InsertIntoSpeedPowerValues.IMO_Vessel_Number};
-        testIMO_ch = strjoin(cellfun(@num2str, testIMO_c, 'Uni', 0), ', ');
-        testcase.MySQL.execute(['DELETE FROM vesselspeedpowermodel WHERE '...
-            'IMO_Vessel_Number IN (', testIMO_ch ,')']);
-    end
-    
-    function requirementsinsertIntoSpeedPowerCoefficients(testcase)
-    % Create DB requirements for method testinsertIntoDryDockDates
-        
-        % Delete any existing rows in the test table for test vessels
-        testIMO_c = {testcase...
-            .InsertIntoSpeedPowerValuesCoefficients.IMO_Vessel_Number};
-        testIMO_ch = strjoin(cellfun(@num2str, testIMO_c, 'Uni', 0), ', ');
-        testcase.MySQL.execute(['DELETE FROM SpeedPowerCoefficients WHERE '...
-            'IMO_Vessel_Number IN (', testIMO_ch ,')']);
-        
-    end
-    
-    function requirementsinsertIntoSFOCCoefficients(testcase)
-    % Create DB requirements for method testinsertIntoDryDockDates
-        
-        % Delete any existing rows in the test table for test vessels
-        testModel_c = {testcase...
-            .InsertIntoSpeedPowerValuesCoefficients.Engine_Model};
-        testModel_ch = strjoin(testModel_c, ', ');
-        testcase.MySQL.execute(['DELETE FROM SFOCCoefficients WHERE '...
-            'Engine_Model IN (', testModel_ch ,')']);
-        
+%         vessel.Vessel_Id = 1;
     end
 end
 
 methods(TestClassSetup)
+
+    function createDB(testcase)
+    % createDB Create database for Vessel if it doesn't exist
     
-    function connect(testcase)
-    % Create connection object to test DB
+    testDB = testcase.TestDatabase;
+    obj = cDB('SavedConnection', testDB);
+    [obj, isDB] = obj.SQL.existDB(testcase.TestDatabase);
     
-        testcase.MySQL = testcase.MySQL.test;
-        
+    if ~isDB
+
+        obj.InsertStatic = false;
+        obj.createStatic();
+    end
     end
     
-    function requirements(testcase)
-    % Ensure requirements for all methods are met
+    function insertVessel(testcase)
+    % Insert test vessel into DB
     
-        requirementsReadFromTable(testcase);
-        requirementsInsertIntoTable(testcase);
-        requirementsinsertIntoDryDockDates(testcase);
-        requirementsinsertIntoSpeedPower(testcase);
+    vessel = testcase.testVesselInsert;
+    vessel.insert();
+    
+    % Assign
+    testcase.TestVessel = vessel;
+    
+    % Assign cMySQL object
+    testDB = testcase.TestDatabase;
+    testcase.TestcMySQL = cMySQL('SavedConnection', testDB);
+
+    % Assign where SQL
+    vid = vessel.Model_ID;
+    spid = [vessel.SpeedPower.Model_ID];
+    did = vessel.Displacement.Model_ID;
+    wid = vessel.WindCoefficient.Model_ID;
+    spmid = vessel.Configuration.Speed_Power_Coefficient_Model_Id;
+    oid = vessel.Owner.Vessel_Owner_Id;
+    void = vessel.Owner.Vessel_To_Vessel_Owner_Id;
+    where_sql = ['Vessel_Id = ', num2str(vid)];
+    whereEngine_sql = ['Engine_Model = ''', vessel.Engine.Engine_Model, ''''];
+    whereSP_sql = ['Speed_Power_Coefficient_Model_Value_Id IN (', sprintf('%u, %u', spid), ')'];
+    whereSPModel_sql = ['Speed_Power_Coefficient_Model_Id = ', num2str(spmid)];
+    whereDisp_sql = ['Displacement_Model_Id = ', num2str(did)];
+    whereWind_sql = ['Wind_Coefficient_Model_Id = ', num2str(wid)];
+    whereOwner_sql = ['Vessel_Owner_Id = ', num2str(oid)];
+    whereToOwner_sql = ['Vessel_To_Vessel_Owner_Id = ', num2str(void)];
+
+    testcase.SQLWhereVessel = where_sql;
+    testcase.SQLWhereEngine = whereEngine_sql;
+    testcase.SQLWhereSpeedPower = whereSP_sql;
+    testcase.SQLWhereSpeedPowerModel = whereSPModel_sql;
+    testcase.SQLWhereDisplacement = whereDisp_sql;
+    testcase.SQLWhereWind = whereWind_sql;
+    testcase.SQLWhereOwner = whereOwner_sql;
+    testcase.SQLWhereToOwner = whereToOwner_sql;
+    
+    end
+    
+    function deleteRaw(testcase)
+        
+        vessel = testcase.testVesselInsert();
+        vid = vessel.Vessel_Id;
+        sql = ['DELETE FROM `', testcase.TestInServiceDB, '`.RawData WHERE Vessel_Id = ' num2str(vid) ];
+        testcase.TestcMySQL.execute(sql);
+    end
+    
+    function deleteCalculated(testcase)
+        
+        vessel = testcase.testVesselInsert();
+        vid = vessel.Configuration.Model_ID;
+        sql = ['DELETE FROM `', testcase.TestInServiceDB, '`.CalculatedData WHERE Vessel_Configuration_Id = ' num2str(vid)];
+        testcase.TestcMySQL.execute(sql);
+    end
+end
+
+methods(TestMethodSetup)
+    
+    function insertVessel2Read(testcase)
+    % Ensure that vessel for testing read methods is in DB
+        
         
     end
 end
 
 methods(TestClassTeardown)
+
+    function deleteTestVessel(testcase)
+    % Ensure that vessel for testing insert methods is not in DB
     
-    function disconnect(testcase)
-    % Create connection object to test DB
-    
-        testcase.MySQL = testcase.MySQL.disconnect;
+        vessel = testcase.testVesselInsert;
+        deleteFromDB(vessel);
+%     vessel = testcase.testVesselInsert;
+%     
+%     where_sql = testcase.SQLWhereVessel;
+%     whereEngine_sql = testcase.SQLWhereEngine;
+%     whereSP_sql = testcase.SQLWhereSpeedPower;
+%     whereSPModel_sql = testcase.SQLWhereSpeedPowerModel;
+%     whereDisp_sql = testcase.SQLWhereDisplacement;
+%     whereWind_sql = testcase.SQLWhereWind;
+%     whereOwner_sql = testcase.SQLWhereOwner;
+%     
+%     vessel.SQL.deleteSQL('EngineModel', whereEngine_sql);
+%     vessel.SQL.deleteSQL('SpeedPower', whereSP_sql);
+%     vessel.SQL.deleteSQL('SpeedPowerCoefficientModel', whereSPModel_sql);
+%     vessel.SQL.deleteSQL('SpeedPowerCoefficientModelValue', whereSPModel_sql);
+%     vessel.SQL.deleteSQL('DisplacementModel', whereDisp_sql);
+%     vessel.SQL.deleteSQL('DisplacementModelValue', whereDisp_sql);
+%     vessel.SQL.deleteSQL('WindCoefficientModel', whereWind_sql);
+%     vessel.SQL.deleteSQL('WindCoefficientModelValue', whereWind_sql);
+%     
+%     vessel.SQL.deleteSQL('Vessel', where_sql);
+%     vessel.SQL.deleteSQL('VesselInfo', where_sql);
+%     vessel.SQL.deleteSQL('VesselConfiguration', where_sql);
+%     vessel.SQL.deleteSQL('VesselToVesselOwner', where_sql);
+%     vessel.SQL.deleteSQL('BunkerDeliveryNote', where_sql);
+%     vessel.SQL.deleteSQL('DryDock', where_sql);
+%     vessel.SQL.deleteSQL('VesselOwner', whereOwner_sql);
+%     vessel.SQL.deleteSQL('VesselToVesselOwner', whereOwner_sql);
     
     end
+    
 end
-
-methods(Test)
-
-    function testfilterOnUniqueIndex(testcase)
-    % testfilterOnUniqueIndex Test that method will remove duplicate values
-    % of the index data and the corresponding elements of the other data.
-    % 1. Test that, when duplicate elements exist for the data in property
-    % given by input UNIQUE, the duplicates will be removed and the
-    % corresponding elements from the properties given by PROPS will also
-    % be deleted.
-    
-    % 1
-    % Input
-    inputIndex = 'DateTime_UTC';
-    inputProp = {'Speed_Index', 'Performance_Index'};
-    nonUniDate = repmat(now-1:now+1, [3, 1]);
-    nonUniDate = nonUniDate(:);
-    szData = [9, 1];
-    shipdata = repmat(struct('DateTime_UTC', nonUniDate, 'Speed_Index', ...
-        randn(szData), 'Performance_Index', randn(szData), ...
-        'IMO_Vessel_Number', 1234567), [2, 2]);
-    inputObj = cVessel('ShipData', shipdata, 'Name', 'Example Vessel');
-    expUni = inputObj;
-    actUni = inputObj;
-    uniqueData = unique(nonUniDate);
-    [expUni.(inputIndex)] = deal(uniqueData);
-    expUni = expUni.iterReset;
-    
-    % Execute
-    actUni = actUni.filterOnUniqueIndex(inputIndex, inputProp);
-    
-    % Verify
-    msgUni = ['Non-unique elements are expected to be removed from data in '...
-        'properties given by UNIQUE and PROPS'];
-    testcase.verifyEqual(actUni, expUni, msgUni);
-    
-    end
-    
-    function testreadFromTable(testcase)
-    % Test that method will read from DB table into object properties
-    % 1. Test that, for the given database, method will read values from
-    % the table given by input string TABLE into the properties of object
-    % given by OBJ which match the column names of TABLE at the rows where
-    % values match those of OBJ property IDENTIFIER.
-    
-    % 1
-    % Input
-    expObj = testcase.testVessel;
-    expObj = repmat(expObj, size(testcase.ReadFromTableVales));
-    actObj = testcase.testVessel;
-    value_c = struct2cell(testcase.ReadFromTableVales);
-    prop_c = fieldnames(testcase.ReadFromTableVales);
-    
-    for ii = 1:numel(testcase.ReadFromTableVales)
-        for pi = 1:length(prop_c)
-            
-            expObj(ii).(prop_c{pi}) = value_c{pi, ii};
-        end
-    end
-    
-    inputs_c = testcase.ReadFromTableInputs{1};
-    actObj = repmat(actObj, [1, 2]);
-    actObj(1).IMO_Vessel_Number = ...
-        testcase.ReadFromTableVales(1).IMO_Vessel_Number;
-    actObj(2).IMO_Vessel_Number = ...
-        testcase.ReadFromTableVales(2).IMO_Vessel_Number;
-    
-    % Execute
-    actObj = actObj.readFromTable(inputs_c{:});
-    
-    % Verify
-    msgObj = ['Objects properties which match those of the fields of '...
-        'TABLE are expected to be populated with data from TABLE.'];
-    testcase.verifyEqual(actObj, expObj, msgObj);
-    
-    end
-    
-    function testinsertIntoTable(testcase)
-    % Test that method will insert data from object into table
-    % 1. Test that method will, for each property of OBJ matching the field
-    % names of input TABLE, insert values into the appropriate rows.
-    
-    % 1
-    % Input
-    expTable = struct2table(testcase.ReadFromTableVales);
-    testDBTable = testcase.ReadFromTableInputs{1}{1};
-    inputObj = testcase.testVessel;
-    prop_c = fieldnames(testcase.ReadFromTableVales);
-    value_c = struct2cell(testcase.ReadFromTableVales);
-    
-    for ii = 1:numel(testcase.ReadFromTableVales)
-        for pi = 1:length(prop_c)
-            
-            inputObj(ii).(prop_c{pi}) = value_c{pi, ii};
-        end
-    end
-    
-    input_c = testcase.InsertIntoTableInputs{1};
-    
-    % Execute
-    inputObj.insertIntoTable(input_c{:});
-    
-    % Verify
-    [~, actTable] = testcase.MySQL.select(testDBTable, ...
-        expTable.Properties.VariableNames);
-    expTable.Properties.VariableNames = ...
-        lower(expTable.Properties.VariableNames);
-    msgTable = ['Data read from DB table is expected to match that in input'...
-        ' OBJ properties.'];
-    testcase.verifyEqual(actTable, expTable, msgTable);
-    
-    end
-    
-    function testinsertIntoDryDockDates(testcase)
-    % Test that method will insert all dry docking dates given into table
-    % "DryDockDates".
-    % 1. Test that each cVesselDryDock in property DryDockDates of input
-    % OBJ will have its property data assigned to the similarly-named field
-    % of table "DryDockDates".
-    
-    % 1.
-    % Input
-    expTable = struct2table(testcase.InsertIntoDryDockDatesValues);
-    testDBTable = 'DryDockDates';
-    inputObj = testcase.testVessel;
-    
-    numDDi = numel(testcase.InsertIntoDryDockDatesValues);
-    inputDDD(numDDi) = cVesselDryDockDates();
-    for si = 1:numDDi
-        
-        inputDDD(si).IMO_Vessel_Number = ...
-            testcase.InsertIntoDryDockDatesValues(si).IMO_Vessel_Number;
-        inputDDD(si) = inputDDD(si).assignDates(...
-            testcase.InsertIntoDryDockDatesValues(si).StartDate,...
-            testcase.InsertIntoDryDockDatesValues(si).EndDate, ...
-            'yyyy-mm-dd');
-    end
-    inputObj.DryDockDates = inputDDD;
-    
-    [inputObj, ~, sql] = inputObj.select(testDBTable, ...
-        {'imo_vessel_number', 'startdate', 'enddate'});
-    [~, sql] = inputObj.determinateSQL(sql);
-    sql = [sql, ' ORDER BY id DESC LIMIT 2;'];
-    
-    % Execute
-    inputObj = inputObj.insertIntoDryDockDates();
-    
-    % Verify
-    [outSt, outC] = inputObj.executeIfOneOutput(nargout, sql, 1);
-    actTable = cell2table(outC, 'VariableNames', fieldnames(outSt));
-    expTable.Properties.VariableNames = ...
-        lower(expTable.Properties.VariableNames);
-    
-    [inputDDD(:).DateStrFormat] = deal('dd-mm-yyyy');
-    expTable.startdate = {inputDDD.StartDate}';
-    expTable.enddate = {inputDDD.EndDate}';
-    expTable = flipud(expTable);
-    msgTable = 'Table of dry docking dates should match that input.';
-    testcase.verifyEqual(actTable, expTable, msgTable);
-    
-    end
-    
-    function testinsertIntoSpeedPower(testcase)
-    % Test that method will insert all speed, power data given into tables
-    % "SpeedPower".
-    % 1. Test that each cSpeedPower in property SpeedPower of input
-    % OBJ will have its property data assigned to the similarly-named field
-    % of table "SpeedPower" for all elements of OBJ.
-    
-    % Input
-    expTable = struct2table(testcase.InsertIntoSpeedPowerValues);
-    testDBTable = 'SpeedPower';
-    inputObj = testcase.testVessel;
-    numVessels = 2;
-    
-    inputObj = repmat(inputObj, [numVessels, 1]);
-    SPi_c = {1:2, 3, 4:5};
-    ObjSPi_c = {1:2, 3};
-    ObjIMOi_c = {1, 4};
-    numSP = numel(SPi_c);
-    inputSP(numSP) = cVesselSpeedPower();
-    for si = 1:numSP
-        
-        inputSP(si).Speed = ...
-            [testcase.InsertIntoSpeedPowerValues(SPi_c{si}).Speed];
-        inputSP(si).Power = ...
-            [testcase.InsertIntoSpeedPowerValues(SPi_c{si}).Power];
-        inputSP(si).Trim = ...
-            [testcase.InsertIntoSpeedPowerValues(SPi_c{si}(1)).Trim];
-        inputSP(si).Displacement = ...
-            [testcase.InsertIntoSpeedPowerValues(SPi_c{si}(1)).Displacement];
-    end
-    
-    for oi = 1:numel(inputObj)
-        
-        inputObj(oi).IMO_Vessel_Number = ...
-            testcase.InsertIntoSpeedPowerValues(ObjIMOi_c{oi}).IMO_Vessel_Number;
-        inputObj(oi).SpeedPower = inputSP(ObjSPi_c{oi});
-    end
-    
-    % Execute
-    inputObj = inputObj.insertIntoSpeedPower();
-    
-    % Verify
-    [inputObj, ~, sql] = inputObj.select(testDBTable, ...
-        {'imo_vessel_number', 'Speed', 'Power', 'Trim', 'Displacement'});
-    [~, sql] = inputObj.determinateSQL(sql);
-    sql = [sql, ' ORDER BY id DESC LIMIT 5;'];
-    
-    [outSt, outC] = inputObj(1).executeIfOneOutput(nargout, sql, 1);
-    actTable = cell2table(outC, 'VariableNames', fieldnames(outSt));
-    expTable.Properties.VariableNames = ...
-        lower(expTable.Properties.VariableNames);
-    expTable = flipud(expTable);
-    msgTable = 'Table of speed, power data should match that input.';
-    testcase.verifyEqual(actTable, expTable, msgTable);
-    
-    end
-    
-    function testinsertIntoSpeedPowerCoefficients(testcase)
-    % Test that method will insert all speed, power data given into table
-    % "SpeedPowerCoefficients".
-    % 1. Test that each cSpeedPower in property SpeedPower of input
-    % OBJ will have its property data assigned to the similarly-named field
-    % of table "SpeedPowerCoefficients" for all elements of OBJ.
-    
-    % Input
-    expTable = struct2table(testcase.InsertIntoSpeedPowerCoefficientsValues);
-    testDBTable = 'speedpowercoefficients';
-    inputObj = testcase.testVessel;
-    numVessels = 2;
-    
-    inputObj = repmat(inputObj, [numVessels, 1]);
-    numSP = numel(testcase.InsertIntoSpeedPowerCoefficientsValues);
-    inputSP(numSP) = cVesselSpeedPower();
-    for si = 1:numSP
-        
-        inputSP(si).Exponent_A = ...
-            testcase.InsertIntoSpeedPowerCoefficientsValues(si).Exponent_A;
-        inputSP(si).Exponent_B = ...
-            testcase.InsertIntoSpeedPowerCoefficientsValues(si).Exponent_B;
-        inputSP(si).R_Squared = ...
-            testcase.InsertIntoSpeedPowerCoefficientsValues(si).R_Squared;
-        inputSP(si).Trim = ...
-            testcase.InsertIntoSpeedPowerCoefficientsValues(si).Trim;
-        inputSP(si).Displacement = ...
-            testcase.InsertIntoSpeedPowerCoefficientsValues(si).Displacement;
-    end
-    
-    ObjSPi_c = {1:2, 3};
-    ObjIMOi_c = {1, 3};
-    for oi = 1:numel(inputObj)
-        
-        inputObj(oi).IMO_Vessel_Number = ...
-            testcase...
-            .InsertIntoSpeedPowerCoefficientsValues(ObjIMOi_c{oi})...
-            .IMO_Vessel_Number;
-        inputObj(oi).SpeedPower = inputSP(ObjSPi_c{oi});
-    end
-    
-    % Execute
-    inputObj = inputObj.insertIntoSpeedPowerCoefficients();
-    
-    % Verify
-    [inputObj, ~, sql] = inputObj.select(testDBTable, ...
-        {'imo_vessel_number', 'Exponent_A', 'Exponent_B', 'R_Squared', ...
-        'Trim', 'Displacement'});
-    [~, sql] = inputObj.determinateSQL(sql);
-    sql = [sql, ' ORDER BY id DESC LIMIT 3;'];
-    [outSt, outC] = inputObj(1).executeIfOneOutput(nargout, sql, 1);
-    actTable = cell2table(outC, 'VariableNames', fieldnames(outSt));
-    actTable = varfun(@double, actTable);
-    expTable = varfun(@double, expTable);
-    actTable = table2array(actTable);
-    expTable = table2array(expTable);
-    expTable = flipud(expTable);
-    
-    msgTable = 'Table speedpowercoefficients data should match that input.';
-    testcase.verifyEqual(actTable, expTable, 'RelTol', 1e-14, msgTable);
-    
-    end
-    
-    function testinsertIntoWindCoefficient(testcase)
-    % Test that method will insert all wind coefficient data given into 
-    % tables "WindCoefficient".
-    % 1. Test that each cVesselWindCoefficient in property 
-    % VesselWindCoefficient of input OBJ will have its property data 
-    % assigned to the similarly-named field of table "WindCoefficient" for 
-    % all elements of OBJ.
-    
-    % Input
-    expTable = struct2table(testcase.InsertIntoWindCoefficientsValues);
-    testDBTable = 'windcoefficientdirection';
-    inputObj = testcase.testVessel;
-    
-    numVessels = numel(testcase.InsertIntoWindCoefficientsValues);
-    inputObj = repmat(inputObj, [numVessels, 1]);
-    inputWC(numVessels) = cVesselWindCoefficient();
-    for si = 1:numVessels
-        
-        inputWC(si).Start_Direction = ...
-            testcase.InsertIntoWindCoefficientsValues(si).Start_Direction;
-        inputWC(si).End_Direction = ...
-            testcase.InsertIntoWindCoefficientsValues(si).End_Direction;
-        inputWC(si).Coefficient = ...
-            testcase.InsertIntoWindCoefficientsValues(si).Coefficient;
-        inputObj(si).WindResistance = inputWC(si);
-        inputObj(si).IMO_Vessel_Number = ...
-            testcase.InsertIntoWindCoefficientsValues(si).IMO_Vessel_Number;
-    end
-    
-    % Execute
-    inputObj = inputObj.insertIntoWindCoefficients();
-    
-    % Verify
-    [inputObj, ~, sql] = inputObj.select(testDBTable, ...
-        {'imo_vessel_number', 'Start_Direction', 'End_Direction', ...
-        'Coefficient'});
-    [~, sql] = inputObj.determinateSQL(sql);
-    sql = [sql, ' ORDER BY id DESC LIMIT 2;'];
-    [outSt, outC] = inputObj(1).executeIfOneOutput(nargout, sql, 1);
-    actTable = cell2table(outC, 'VariableNames', fieldnames(outSt));
-    actTable = varfun(@double, actTable);
-    expTable = varfun(@double, expTable);
-    actTable = table2array(actTable);
-    expTable = table2array(expTable);
-    expTable = flipud(expTable);
-    
-    msgTable = 'Table WindCoefficient data should match that input.';
-    testcase.verifyEqual(actTable, expTable, 'RelTol', 1e-14, msgTable);
-    
-    end
-    
-    function testinsertIntoSFOCCoefficient(testcase)
-    % Test that SFOC coefficients are inserted into appropriate table.
-    % 1. Test that, each cVesselEngine in property Engine of input OBJ will
-    % have its property data assigned to the similarly-named fields of 
-    % table "SFOCCoefficient" for all elements of OBJ.
-    
-    % 1.
-    % Input
-    expTable = struct2table(testcase.InsertIntoSFOCCoefficientsValues);
-    testDBTable = 'SFOCcoefficients';
-    inputObj = testcase.testVessel;
-    
-    numVessels = numel(testcase.InsertIntoSFOCCoefficientsValues);
-    inputObj = repmat(inputObj, [numVessels, 1]);
-    input_Engine(numVessels) = cVesselEngine();
-    for si = 1:numVessels
-        
-        input_Engine(si).Name = ...
-            testcase.InsertIntoSFOCCoefficientsValues(si).Engine_Model;
-        input_Engine(si).X0 = ...
-            testcase.InsertIntoSFOCCoefficientsValues(si).X0;
-        input_Engine(si).X1 = ...
-            testcase.InsertIntoSFOCCoefficientsValues(si).X1;
-        input_Engine(si).X2 = ...
-            testcase.InsertIntoSFOCCoefficientsValues(si).X2;
-        input_Engine(si).Minimum_FOC_ph = ...
-            testcase.InsertIntoSFOCCoefficientsValues(si).Minimum_FOC_ph;
-        input_Engine(si).Lowest_Given_Brake_Power = ...
-            testcase.InsertIntoSFOCCoefficientsValues(si).Lowest_Given_Brake_Power;
-        input_Engine(si).Highest_Given_Brake_Power = ...
-            testcase.InsertIntoSFOCCoefficientsValues(si).Highest_Given_Brake_Power;
-        
-        inputObj(si).Engine = input_Engine(si);
-    end
-    
-    % Execute
-    inputObj = inputObj.insertIntoSFOCCoefficients();
-    
-    % Verify
-    fieldNames_c = fieldnames(testcase.InsertIntoSFOCCoefficientsValues);
-    [inputObj, ~, sql] = inputObj.select(testDBTable, fieldNames_c);
-    [~, sql] = inputObj.determinateSQL(sql);
-    sql = [sql, ' ORDER BY id DESC LIMIT 2;'];
-    [outSt, outC] = inputObj(1).executeIfOneOutput(nargout, sql, 1);
-    actTable = cell2table(outC, 'VariableNames', fieldnames(outSt));
-    
-    expFieldNames_c = [{''}];
-    expTable(:, 2:end) = varfun(@double, expTable, 'InputVariables', fieldNames_c(2:end));
-    actTable = table2cell(actTable);
-    expTable = table2cell(expTable);
-    expTable = flipud(expTable);
-    
-    msgTable = 'Table SFOCCoefficient data should match that input.';
-    testcase.verifyEqual(actTable, expTable, 'RelTol', 1e-14, msgTable);
-    
-    end
-    
-    function testDDIntervalsFromDates(testcase)
-    % testDDIntervalsFromDates Test logical matrix of dry dock intervals
-    % 1. Test that the logical matrix returned by the method will have one
-    % more columns than there are dry dockings and as many rows as data
-    % values.
-    % 2. Test that in each column, the only TRUE values are those
-    % corresponding to dates in OBJ.DateTime_UTC which fall within the
-    % dry-docking interval given by the column's index.
-    
-    % 1.
-    % Input
-    nDD = 2;
-    nData = 10;
-    ddd(nDD) = cVesselDryDockDates();
-    ddd(1).StartDate = '0000-01-02';
-    ddd(1).EndDate = '0000-01-03';
-    ddd(2).StartDate = '0000-01-06';
-    ddd(2).EndDate = '0000-01-08';
-    
-    input_obj = cVessel();
-    input_obj.DryDockDates = ddd;
-    input_dates = 1:nData;
-    input_obj.DateTime_UTC = input_dates;
-    
-    exp_size = [nData, nDD + 1];
-    
-    % Execute
-    act_mat = input_obj.DDIntervalsFromDates;
-    
-    % Verify
-    act_size = size(act_mat);
-    msg_size = ['Size of ouput is expected to be the number of '...
-        'datetime_utc values by the number of dry-dockings plus one.'];
-    testcase.verifyEqual(act_size, exp_size, msg_size);
-    
-    % 2.
-    % Input
-    exp_mat = false(nData, nDD + 1);
-    exp_mat(1:2, 1) = true;
-    exp_mat(3:6, 2) = true;
-    exp_mat(8:10, 3) = true;
-    
-    % Verify
-    msg_size = ['Output is expected to match logical matrix whose columns '...
-        'correspond to dry dock intervals defined by data in property '...
-        '''DryDockDates''.'];
-    testcase.verifyEqual(act_mat, exp_mat, msg_size);
-    end
-    
-    function testiterateDD(testcase)
-    % testiterateDD Test outputs relate to successive dry dock intervals
-    
-    % 1.
-    % Input
-    nData = 10;
-    ddd1(2) = cVesselDryDockDates();
-    ddd1(1).StartDate = '0000-01-02';
-    ddd1(1).EndDate = '0000-01-03';
-    ddd1(2).StartDate = '0000-01-06';
-    ddd1(2).EndDate = '0000-01-08';
-    
-    ddd2(1) = cVesselDryDockDates();
-    ddd2(1).StartDate = '0000-01-05';
-    ddd2(1).EndDate = '0000-01-06';
-    
-    input_obj(2) = cVessel();
-    input_obj(1).DryDockDates = ddd1;
-    input_obj(2).DryDockDates = ddd2;
-    
-    input_dates = 1:nData;
-    [input_obj(1:2).DateTime_UTC] = deal(input_dates);
-    si1 = randn(1, nData);
-    si2 = randn(1, nData);
-    input_obj(1).Speed_Index = si1;
-    input_obj(2).Speed_Index = si2;
-    
-    expobj_c = [input_obj(1), input_obj(1), input_obj(1), input_obj(2),...
-        input_obj(2)];
-    exptbl_c = {table(input_dates(1:2)', si1(1:2)', ...
-        'VariableNames', {'DateTime_UTC', 'Speed_Index'}), ...
-        table(input_dates(3:6)', si1(3:6)', ...
-        'VariableNames', {'DateTime_UTC', 'Speed_Index'}), ...
-        table(input_dates(8:10)', si1(8:10)', ...
-        'VariableNames', {'DateTime_UTC', 'Speed_Index'}), ...
-        table(input_dates(1:5)', si2(1:5)', ...
-        'VariableNames', {'DateTime_UTC', 'Speed_Index'}), ...
-        table(input_dates(6:10)', si2(6:10)', ...
-        'VariableNames', {'DateTime_UTC', 'Speed_Index'})};
-    
-    % Execute
-    nDDI = 5;
-%     obj_c = cell(1, nDDI);
-    tbl_c = cell(1, nDDI);
-%     for di = 1:nDDI
-%         
-%         [act_tbl, act_obj] = input_obj.iterateDD;
-%         obj_c(di) = act_obj;
-%         tbl_c{di} = act_tbl;
-%     end
-    
-    di = 1;
-    while input_obj.iterateDD
-        
-        [tbl_c{di}, obj_v(di)] = input_obj.currentDD;
-%         obj_v(di) = act_obj;
-%         tbl_c{di} = act_obj.In_Service;
-        di = di + 1;
-    end
-    
-    % Verify
-    msg_obj = ['Method is expected to return in the first output the '...
-        'cVessel object which has the corresponding dry-docking of this '...
-        'iteration.'];
-    testcase.verifyEqual(obj_v, expobj_c, msg_obj);
-    
-    msg_tbl = ['Method is expected to return in the second output a table '...
-        'containing the corresponding dry-docking of this iteration.'];
-    testcase.verifyEqual(tbl_c, exptbl_c, msg_tbl);
-    
-    end
-end
-
-% Input
-
-% Execute
-
-% Verify
-
 end

@@ -4,7 +4,7 @@ DROP PROCEDURE IF EXISTS updateWindReference;
 
 delimiter //
 
-CREATE PROCEDURE updateWindReference()
+CREATE PROCEDURE updateWindReference(vcid INT)
 
 BEGIN
 
@@ -29,42 +29,49 @@ BEGIN
 	END;
     
     /* Calculate reference height in current loading condition */
-    SET @imo = (SELECT DISTINCT(IMO_Vessel_Number) FROM tempRawISO);
-    SET @Tref = (SELECT Draft_Design FROM Vessels WHERE IMO_Vessel_Number = @imo);
-    SET @Zrefref = ( SELECT Wind_Reference_Height_Design FROM Vessels WHERE IMO_Vessel_Number = @imo );
-    SET @B = ( SELECT Breadth_Moulded FROM Vessels WHERE IMO_Vessel_Number = @imo );
-    SET @A = ( SELECT Transverse_Projected_Area_Design FROM Vessels WHERE IMO_Vessel_Number = @imo );
+    SET @Tref = (SELECT Draft_Design FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid);
+    SET @Zrefref = ( SELECT Wind_Reference_Height_Design FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid);
+    SET @B = ( SELECT Breadth_Moulded FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid);
+    SET @A = ( SELECT Transverse_Projected_Area_Design FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid);
     
     UPDATE tempRawISO SET Wind_Reference_Height = (@A*(@Zrefref + (@Tref - (Static_Draught_Fore + Static_Draught_Aft)/2 ))
 		+ 0.5*@B*POWER(@Tref - ((Static_Draught_Fore + Static_Draught_Aft)/2), 2)) / Transverse_Projected_Area_Current;
     
 	/* True wind at reference height */
-    SET @Za = ( SELECT Anemometer_Height FROM Vessels WHERE IMO_Vessel_Number = @imo );
+    SET @Za = ( SELECT Anemometer_Height FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid);
 	UPDATE tempRawISO SET True_Wind_Speed_Reference = True_Wind_Speed * POWER((Wind_Reference_Height / (@Za + @Tref - (Static_Draught_Fore + Static_Draught_Aft)/2)), 0.142857142857143);
     
 	/* Relative wind at reference height */
-	UPDATE tempRawISO SET WVX = True_Wind_Speed_Reference * COS((True_Wind_Direction - Ship_Heading) * PI()/180);
-	UPDATE tempRawISO SET WVY = True_Wind_Speed_Reference * SIN((True_Wind_Direction - Ship_Heading) * PI()/180);
+	/*UPDATE tempRawISO SET WVX = True_Wind_Speed_Reference * COS((True_Wind_Direction - Ship_Heading) * PI()/180);
+	UPDATE tempRawISO SET WVY = True_Wind_Speed_Reference * SIN((True_Wind_Direction - Ship_Heading) * PI()/180);*/
     /* 
     SET WVX = (SELECT True_Wind_Speed FROM tempRawISO) * COS(((SELECT True_Wind_Direction FROM tempRawISO) - (SELECT Ship_Heading FROM tempRawISO))*PI()/180);
     SET WVY = (SELECT True_Wind_Speed FROM tempRawISO) * SIN(((SELECT True_Wind_Direction FROM tempRawISO) - (SELECT Ship_Heading FROM tempRawISO))*PI()/180);
     */
-    UPDATE tempRawISO SET Relative_Wind_Speed_Reference = SQRT(POWER(WVX + Speed_Over_Ground, 2) + POWER(WVY, 2));
-    UPDATE tempRawISO SET Relative_Wind_Direction_Reference = 
+    UPDATE tempRawISO SET Relative_Wind_Speed_Reference = SQRT(POWER(True_Wind_Speed_Reference * COS((True_Wind_Direction - Ship_Heading) * PI()/180) + Speed_Over_Ground, 2) + POWER(True_Wind_Speed_Reference * SIN((True_Wind_Direction - Ship_Heading) * PI()/180), 2));
+    /*UPDATE tempRawISO SET Relative_Wind_Direction_Reference = 
     MOD(
 		ATAN2(
-				WVY, WVX + Speed_Over_Ground
+				True_Wind_Speed_Reference * COS((True_Wind_Direction - Ship_Heading) * PI()/180), True_Wind_Speed_Reference * SIN((True_Wind_Direction - Ship_Heading) * PI()/180) + Speed_Over_Ground
 			  )
 		+ 2*PI(),
 			2*PI()
 				)*180/PI()
         ;
-        
+        */
+    UPDATE tempRawISO SET Relative_Wind_Direction_Reference = 
+        ATAN(
+			(True_Wind_Speed_Reference*SIN((True_Wind_Direction - Ship_Heading) * PI()/180)) / (Speed_Over_Ground + True_Wind_Speed_Reference*COS((True_Wind_Direction - Ship_Heading) * PI()/180))
+            ) * 180/PI();
+    UPDATE tempRawISO SET Relative_Wind_Direction_Reference = Relative_Wind_Direction_Reference + 180 
+		WHERE Speed_Over_Ground + True_Wind_Speed_Reference*COS((True_Wind_Direction - Ship_Heading) * PI()/180) < 0;
+    
+    
 	/* Set Direction in range 0 to 360 degrees */
-    UPDATE tempRawISO SET Relative_Wind_Direction_Reference = CASE
+    /*UPDATE tempRawISO SET Relative_Wind_Direction_Reference = CASE
 		WHEN Relative_Wind_Direction_Reference >= 0 THEN MOD(Relative_Wind_Direction_Reference, 360)
 		WHEN Relative_Wind_Direction_Reference < 0 THEN 360 + MOD(Relative_Wind_Direction_Reference, 360)
-	END;
+	END;*/
         
 	/* Relative wind at reference height */
     /* 

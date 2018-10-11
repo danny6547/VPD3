@@ -1,0 +1,9 @@
+This package is dependent on:
+
+Toolboxes
+
+adodb
+
+Repositories:
+
+mMySQL

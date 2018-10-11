@@ -11,7 +11,7 @@ CREATE PROCEDURE updateDisplacementFromDraftTrim()
 
 BEGIN
 
-CREATE TABLE Displacement (id INT PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE `static`.Displacement (id INT PRIMARY KEY AUTO_INCREMENT,
 							 ModelID INT NOT NULL,
 							 Draft_Aft DOUBLE(5, 3),
 							 Draft_Fore DOUBLE(5, 3),

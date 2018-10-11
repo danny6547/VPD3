@@ -1,7 +1,5 @@
 /* Update trim based on fore and aft draft */
 
-
-
 DROP PROCEDURE IF EXISTS updateTrim;
 
 delimiter //

@@ -1,10 +1,10 @@
-classdef cVesselEngine < handle
+classdef cVesselEngine < cModelID
     %CVESSELENGINE Ship Engine details and SFOC curve.
     %   Detailed explanation goes here
     
     properties
         
-        Name char = '';
+        Engine_Model char = '';
         MCR double = [];
         Power double = [];
         SFOC double = [];
@@ -14,19 +14,54 @@ classdef cVesselEngine < handle
         Minimum_FOC_ph double = [];
         Lowest_Given_Brake_Power double = [];
         Highest_Given_Brake_Power double = [];
+        Fuel_Type char = '';
+    end
+    
+    properties(Hidden, Constant)
         
+        DBTable = 'EngineModel';
+        ModelTable = 'EngineModel';
+        ValueTable = {};
+        ModelField = {'Engine_Model_Id'};
+        DataProperty = {'Engine_Model',...
+                        'MCR',...
+                        'X0',...
+                        'X1',...
+                        'X2',...
+                        'Minimum_FOC_ph',...
+                        'Lowest_Given_Brake_Power',...
+                        'Highest_Given_Brake_Power',...
+                        'Fuel_Type',...
+                        'Name',...
+                        'Description',...
+                        'Engine_Model_Id', ...
+                        'Deleted'};
+        ValueObject = {};
+        OtherTable = {};
+        OtherTableIdentifier = {};
+        TableIdentifier = 'Engine_Model_Id';
+        NameAlias = 'Engine_Model';
+        EmptyIgnore = {'Deleted'};
+    end
+    
+    properties(Hidden, Dependent)
+        
+        Engine_Model_Id;
     end
     
     methods
     
-       function obj = cVesselEngine()
+       function obj = cVesselEngine(varargin)
            
-           
-           
+           obj = obj@cModelID(varargin{:});
        end
        
        function obj = fitData2Quadratic(obj, mcr, sfoc, powerPCT)
        % fitData2Quadratic Assign coefficients of quadratic fit of data
+       % obj = fitData2Quadratic(obj, mcr, sfoc, powerPCT) where MCR is the
+       % maximum continuous rating of the engine in kW, SFOC is the
+       % specific fuel oil consumption in g/kWh and POWERPCT is the power
+       % expressed as a percentage of MCR
        
        for oi = 1:numel(obj)
             
@@ -65,8 +100,8 @@ classdef cVesselEngine < handle
        
        for oi = 1:numObj
            
-           if ~isempty(obj(oi).Power) % && ~isempty(obj(oi).MCR)
-               currPower = obj(oi).Power; %obj(oi).powerFromMCRPCT(obj(oi).Power, obj(oi).MCR);
+           if ~isempty(obj(oi).Power)
+               currPower = obj(oi).Power;
                LowestPower(oi) = min(currPower);
                HighestPower(oi) = max(currPower);
                obj(oi).Lowest_Given_Brake_Power = min(currPower);
@@ -80,30 +115,19 @@ classdef cVesselEngine < handle
            end
        end
        end
-    end
-    
-    methods(Hidden)
-        
-        function empty = isempty(obj) 
-            
-            if any(size(obj) == 0)
-                empty = true;
-                return
-            end
-            
-            numObj = numel(obj);
-            props = properties(obj);
-            empty = false(numel(props), numObj);
-            for oi = 1:numObj
-                for pi = 1:numel(props)
-                    prop = props{pi};
-                    empty(pi, oi) = isempty(obj(oi).(prop));
-                end
-            end
-%             empty = empty(:);
-            empty = all(empty);
-        end
-        
+       
+       function obj = insert(obj, varargin)
+           
+           % Assign defaults required by local databases, not remote
+           fillVal_f = @(x) isempty(x) || (isscalar(x) && isnan(x));
+           fillVal_l = cellfun(fillVal_f, {obj.Minimum_FOC_ph});
+           [obj(fillVal_l).Minimum_FOC_ph] = deal(0);
+           fillVal_l = cellfun(fillVal_f, {obj.Highest_Given_Brake_Power});
+           [obj(fillVal_l).Highest_Given_Brake_Power] = deal(0);
+           
+           % Call parent class method
+           insert@cModelID(obj, varargin{:});
+       end
     end
     
     methods(Static)
@@ -123,5 +147,17 @@ classdef cVesselEngine < handle
            FOC = SFOC .* Power;
        end
        
+    end
+
+    methods
+        
+        function eid = get.Engine_Model_Id(obj)
+
+            eid = obj.Model_ID;
+        end
+        
+        function obj = set.Engine_Model_Id(obj, ~)
+            
+        end
     end
 end

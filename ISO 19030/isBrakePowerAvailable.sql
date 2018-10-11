@@ -7,9 +7,11 @@ value TRUE indicating that the mass of consumed fuel oil can be calculated
 from the volume amongst other variables.
 */
 
+DROP PROCEDURE IF EXISTS isBrakePowerAvailable;
+
 delimiter //
 
-CREATE PROCEDURE isBrakePowerAvailable(imo INT, OUT isAvailable BOOLEAN, OUT isMassNeeded BOOLEAN)
+CREATE PROCEDURE isBrakePowerAvailable(OUT isAvailable BOOLEAN, OUT isMassNeeded BOOLEAN)
 BEGIN
 	
     DECLARE MfocAvail BOOLEAN;
@@ -33,7 +35,6 @@ BEGIN
 			SET MfocAvail := TRUE;
             SET isMassNeeded := TRUE;
         END IF;
-        
 	ELSE
         SET MfocAvail := TRUE;
     END IF;
@@ -45,5 +46,4 @@ BEGIN
     
     /* Brake Power available when both are available */
 	SET isAvailable = LCVAvail AND MfocAvail;
-    
 END;

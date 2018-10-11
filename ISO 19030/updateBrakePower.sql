@@ -5,7 +5,7 @@ DROP PROCEDURE IF EXISTS updateBrakePower;
 
 delimiter //
 
-CREATE PROCEDURE updateBrakePower(IMO INT)
+CREATE PROCEDURE updateBrakePower(vcid INT)
 BEGIN
 	
     /* Declare variables */
@@ -14,15 +14,15 @@ BEGIN
     DECLARE X2 DOUBLE(20, 10) DEFAULT 0;
     
     /* Get coefficients of SFOC reference curve for engine of this vessel */
-    SELECT SFOCCoefficients.X0 INTO X0 FROM SFOCCoefficients
-			WHERE Engine_Model = 
-				(SELECT Engine_Model FROM Vessels WHERE IMO_Vessel_Number = IMO);
-    SELECT SFOCCoefficients.X1 INTO X1 FROM SFOCCoefficients
-			WHERE Engine_Model = 
-				(SELECT Engine_Model FROM Vessels WHERE IMO_Vessel_Number = IMO);
-    SELECT SFOCCoefficients.X2 INTO X2 FROM SFOCCoefficients
-			WHERE Engine_Model = 
-				(SELECT Engine_Model FROM Vessels WHERE IMO_Vessel_Number = IMO);
+    SELECT `static`.enginemodel.X0 INTO X0 FROM `static`.enginemodel
+			WHERE Engine_Model_Id = 
+				(SELECT Engine_Model_Id FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid);
+    SELECT `static`.enginemodel.X1 INTO X1 FROM `static`.enginemodel
+			WHERE Engine_Model_Id = 
+				(SELECT Engine_Model_Id FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid);
+    SELECT `static`.enginemodel.X2 INTO X2 FROM `static`.enginemodel
+			WHERE Engine_Model_Id = 
+				(SELECT Engine_Model_Id FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid);
     
     /* Perform calculation of Brake Power */
     UPDATE tempRawISO SET Brake_Power = 

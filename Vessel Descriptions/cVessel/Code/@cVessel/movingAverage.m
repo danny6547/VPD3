@@ -92,29 +92,13 @@ if isscalar(remove_l)
 end
 
 % Iterate over elements of data array
-% while ~obj.iterFinished
-% for oi = 1:numel(obj)
-%     
-%     currObj = obj(oi);
-%     ddi = 1;
-%     
 while obj.iterateDD
 
     [currDD_tbl, currObj, ddi, vi] = obj.currentDD;
-
-%     [obj, ii] = obj.iter;
-%     
-%     % Skip if empty
-%     currObj = obj(ii);
-%     if all(isnan(currObj.(currObj.Variable)))
-%         continue
-%     end
-
+    
     % Index into input and get dates
-%     currDate = currObj.DateTime_UTC;
-%     currPerf = currObj.(currObj.Variable);
-    currDate = currDD_tbl.datetime_utc;
-    currPerf = currDD_tbl.(currObj.Variable);
+    currDate = currDD_tbl.timestamp;
+    currPerf = currDD_tbl.(currObj.InServicePreferences.Variable);
 
     % Remove duplicate date data (redundant when no duplicates in db)
     [currDate, udi] = unique(currDate);
@@ -216,14 +200,6 @@ while obj.iterateDD
     end
 
     % Re-assign into Outputs
-%         avgStruct(ddi).Duration = Duration_st;
-%         obj(ii).MovingAverage(ddi) = avgStruct(ddi);
-    currObj.Report.MovingAverage(ddi).Duration = Duration_st;
+    currObj.Report(ddi).MovingAverage.Duration = Duration_st;
     avgStruct(vi).DryDockInterval(ddi) = Duration_st;
-
-%         % Iterate DD
-%         ddi = ddi + 1;
 end
-% end
-
-% obj = obj.iterReset;

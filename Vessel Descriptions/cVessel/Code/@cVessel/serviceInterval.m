@@ -43,7 +43,7 @@ while obj.iterateDD
    
    % Get range of date numbers in days
 %    dates = obj(ii).DateTime_UTC; % datenum(currData.DateTime_UTC, 'dd-mm-yyyy');
-   dates = currTable.datetime_utc;
+   dates = currTable.timestamp;
    numdays = max(dates) - min(dates);
    dvec = datevec(numdays);
    
@@ -73,17 +73,18 @@ while obj.iterateDD
    interval = struct('Duration', [], 'Units', [], 'StartDate', [], 'EndDate', []);
    interval.Duration = duration;
    interval.Units = units;
-   interval.StartDate = datestr(min(dates), currVessel.DateFormStr);
-   interval.EndDate = datestr(max(dates), currVessel.DateFormStr);
+   dt = datetime([min(dates), max(dates)], 'ConvertFrom', 'datenum');
+   interval.StartDate = char(dt(1), currVessel.DateFormStr);
+   interval.EndDate = char(dt(2), currVessel.DateFormStr);
    
    % Assign into output
    servStruct(vi).DryDockInterval(ddi) = interval;
    
    % Assign into obj
-   if ddi == currVessel.numDDIntervals
+%    if ddi == currVessel.numDDIntervals
        
-       currVessel.Report.ServiceInterval = servStruct(vi).DryDockInterval;
-   end
+       currVessel.Report(ddi).ServiceInterval = servStruct(vi).DryDockInterval(ddi);
+%    end
 end
 
 % obj = obj.iterReset;

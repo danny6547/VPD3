@@ -1,4 +1,4 @@
-classdef cVesselDisplacement < cMySQL & cModelName & cVesselDisplacementConversion
+classdef cVesselDisplacement < cModelID & cVesselDisplacementConversion
     %CVESSELDISPLACEMENT Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -13,14 +13,35 @@ classdef cVesselDisplacement < cMySQL & cModelName & cVesselDisplacementConversi
     
     properties(Hidden, Constant)
         
-        DBTable = {'Displacement'};  
-        Type = 'Displacement'; 
+        ModelTable = 'DisplacementModel';
+        ValueTable = {'DisplacementModelvalue'};
+        ModelField = {'Displacement_Model_Id'};
+        DataProperty = {'Displacement',...
+                        'Draft_Mean',...
+                        'Trim',...
+                        'TPC',...
+                        'Name',...
+                        'Description',...
+                        'Deleted',...
+                        'LCF'};
+        ValueObject = {};
+        TableIdentifier = 'Displacement_Model_Id';
+        NameAlias = '';
+        OtherTable = '';
+        OtherTableIdentifier = '';
+        EmptyIgnore = {'Deleted'};
+    end
+    
+    properties(Hidden)
+        
+        Displacement_Model_Id;
     end
     
     methods
        
-       function obj = cVesselDisplacement()
+       function obj = cVesselDisplacement(varargin)
            
+           obj = obj@cModelID(varargin{:});
        end
        
        function empty = isempty(obj)
@@ -75,18 +96,17 @@ classdef cVesselDisplacement < cMySQL & cModelName & cVesselDisplacementConversi
        function obj = displacementInMass(obj)
        % displacementInMass Covert displacement units to those of mass
            
-           obj = displacementInMass@cVesselDisplacementConversion(obj, 'Displacement');
-%            newDisp_c = num2cell(newDisp_v);
-%            [obj.Displacement] = deal(newDisp_c{:});
+           obj = displacementInMass@cVesselDisplacementConversion(obj,...
+               'Displacement');
        end
        
        function obj = displacementInVolume(obj)
        % displacementInMass Covert displacement units to those of mass
            
-           obj = displacementInVolume@cVesselDisplacementConversion(obj, 'Displacement');
-%            newDisp_c = num2cell(newDisp_v);
-%            [obj.Displacement] = deal(newDisp_c{:});
+           obj = displacementInVolume@cVesselDisplacementConversion(obj,...
+               'Displacement');
        end
+       
     end
     
     methods(Static)
@@ -128,8 +148,11 @@ classdef cVesselDisplacement < cMySQL & cModelName & cVesselDisplacementConversi
        function obj = set.Draft_Mean(obj, draft)
        % Ensure vector is of equal length to other properties
            
-           validateattributes(draft, {'numeric'}, {'vector', 'positive', 'real'},...
+           if ~isnumeric(draft) && ~isempty(draft)
+               
+               validateattributes(draft, {'numeric'}, {'vector', 'positive', 'real'},...
                'cVesselDisplacement.set.Draft_Mean', 'Draft_Mean');
+           end
            obj.Draft_Mean = draft;
        end 
     end

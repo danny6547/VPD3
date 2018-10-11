@@ -57,8 +57,8 @@ while obj.iterateDD
     trigger(vi).DryDockInterval(ddi) = maintrig;
     
     % Assign into obj
-    if ddi == currVessel.numDDIntervals
+%     if ddi == currVessel.numDDIntervals
         
-        currVessel.Report.MaintenanceTrigger = trigger(vi).DryDockInterval;
-    end
+        currVessel.Report(ddi).MaintenanceTrigger = trigger(vi).DryDockInterval(ddi);
+%     end
 end

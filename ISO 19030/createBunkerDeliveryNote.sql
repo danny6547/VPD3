@@ -18,7 +18,7 @@ CREATE TABLE BunkerDeliveryNote (id INT PRIMARY KEY AUTO_INCREMENT,
 								Density_At_15dg FLOAT(15, 4),
 								Lower_Heating_Value FLOAT(15, 3),
 								Density_Change_Rate_Per_C FLOAT(15, 10),
-								Deleted BINARY,
+								Deleted BOOL NOT NULL,
                                 CONSTRAINT UniIMO_BDN UNIQUE(Vessel_Id, BDN_Number)
                                 );
 END

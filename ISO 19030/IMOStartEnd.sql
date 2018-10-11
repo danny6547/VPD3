@@ -11,8 +11,8 @@ CREATE PROCEDURE IMOStartEnd(OUT imo INT(7), OUT startd DATETIME, OUT endd DATET
 
 BEGIN
 
-SET imo := (SELECT DISTINCT(IMO_Vessel_Number) FROM tempRawISO);
-SET startd := (SELECT MIN(DateTime_UTC) FROM tempRawISO);
-SET endd := (SELECT MAX(DateTime_UTC) FROM tempRawISO);
+SET imo := (SELECT DISTINCT(IMO_Vessel_Number) FROM `inservice`.tempRawISO);
+SET startd := (SELECT MIN(DateTime_UTC) FROM `inservice`.tempRawISO);
+SET endd := (SELECT MAX(DateTime_UTC) FROM `inservice`.tempRawISO);
 
 END;

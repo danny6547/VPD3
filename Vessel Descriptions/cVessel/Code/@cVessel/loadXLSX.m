@@ -71,7 +71,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
     end
     
     dateCols_c = {''};
-    if nargin > 8
+    if nargin > 8 && ~isempty(varargin{3})
         
         dateForm_c = varargin{3};
         if ~isempty(dateForm_c)
@@ -83,7 +83,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
     end
     
     lastRow_l = false;
-    if nargin > 9
+    if nargin > 9 && ~isempty(varargin{4})
         
         lastRow = varargin{4};
         validateattributes(lastRow, {'numeric'}, {'vector'}, ...
@@ -107,15 +107,31 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
         lastRow = lastRow - 1;
     end
     
+    opts_c = {};
+    if nargin > 10
+        
+        opts = varargin{5};
+        validateattributes(opts, ...
+            {'matlab.io.spreadsheet.SpreadsheetImportOptions'}, ...
+            {'scalar'}, 'cVessel.loadXLSX', 'opts', 12);
+        opts_c = {opts};
+    end
+    
     readCols_l = iscellstr(fileColID);
     
     % Append set SQL
-    [~, tabColNames] = obj.colNames('RawData');
+    [~, tabColNames] = obj.SQL.colNames(tab);
+    id_lc = regexp(tabColNames, '(_Id{1,1}$)');
+    id_l = ~cellfun(@isempty, id_lc);
+    idName_c = tabColNames(id_l);
+    idName_c = setdiff(idName_c, 'Vessel_Id');
+    tabColNames = setdiff(tabColNames, idName_c);
+    tabColNames = setdiff(tabColNames, 'id');
+    tabColNames = obj.SQL.encloseCols(tabColNames, '`');
     if ~isequal(set_c, {''})
 
         % Generate default set statement
-        tabColNames = setdiff(tabColNames, 'id');
-        [~, ~, defSet_c] = obj.setNullIfEmpty(tabColNames);
+        [~, ~, defSet_c] = obj.SQL.setNullIfEmpty(tabColNames);
         cutAtEquals_f = @(x) x(1:strfind(x, ' = ')-1);
         inDefaultNames_c = cellfun(cutAtEquals_f, defSet_c, 'Uni', 0);
 
@@ -134,7 +150,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
 %         nanSet_c(cols2replace_l) = [];
 %         set_c = [defSet_c(:)', set_c(~x_l), nanSet_c(:)'];
         set_c = [defSet_c(:)', set_c(~x_l)];
-        set_ch = ['SET ', obj.colSepList(set_c)];
+        set_ch = ['SET ', obj.SQL.colSepList(set_c)];
         
         % Get IMO number for insertion into RawData
         imo_ch = '';
@@ -146,20 +162,20 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
         setNames_c = {''};
     end
 
-    [isIMO, idxIMO] = ismember('IMO_Vessel_Number', setNames_c);
-    if isIMO
+    [isVid, vidIdx] = ismember('Vessel_Id', setNames_c);
+    if isVid && isempty(obj.Vessel_Id)
 
-        imoNum_ch = set_c{idxIMO}(strfind(set_c{idxIMO}, ' = ')+3:end);
-        imo = str2double(imoNum_ch);
+        vidNum_ch = set_c{vidIdx}(strfind(set_c{vidIdx}, ' = ')+3:end);
+        vid = str2double(vidNum_ch);
         
-    elseif ~isempty(obj.IMO_Vessel_Number)
+    elseif ~isempty(obj.Vessel_Id)
         
-        imo = obj.IMO_Vessel_Number;
+        vid = obj.Vessel_Id;
     else
         
-        % Error, need IMO somewhere to insert data 
+        % Error, need vessel id somewhere to insert data 
     end
-    fileColName = [fileColName,{'IMO_Vessel_Number'}];
+    fileColName = [fileColName(:)',{'Vessel_Id'}];
 
     % Iterate over files
     for fi = 1:numel(filename)
@@ -170,7 +186,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
         % Read only specified columns from file
         currFile = filename{fi};
         currSheet = sheet{si};
-        file_tbl = readtable(currFile, 'Sheet', currSheet, ...
+        file_tbl = readtable(currFile, opts_c{:}, 'Sheet', currSheet, ...
             'ReadVariableNames', readCols_l);
         if ~lastRow_l
             lastRow = height(file_tbl);
@@ -219,8 +235,8 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
         % Prepare outpus
 %         if isIMO
             
-            imo_v = repmat(imo, [height(file_tbl), 1]);
-            file_tbl.IMO_Vessel_Number = imo_v; 
+            vid_v = repmat(vid, [height(file_tbl), 1]);
+            file_tbl.Vessel_Id = vid_v; 
 %         end
 
         % Write table as csv
@@ -232,7 +248,7 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
                 'QuoteStrings',false);
         
         % Load in CSV file
-        try obj = obj.loadInFileDuplicate(tempFile, fileColName, tempTab, tab,...
+        try [obj(1).SQL] = obj(1).SQL.loadInFileDuplicate(tempFile, fileColName, tempTab, tab,...
                 ',', 1, set_ch, tabColNames, '', {'none'});
            
 		   % Get warnings from load infile statement
@@ -241,10 +257,10 @@ function [obj, numWarnings, warnings] = loadXLSX(obj, filename, sheet, firstRow,
 % 		   [obj, warn_tbl] = obj.warnings(false, 0, 10);
 % 		   warnings = warn_tbl;
 		   
-           [obj, numWarnings] = obj.warnings;
+           [obj(1).SQL, numWarnings] = obj(1).SQL.warnings;
            warnings = struct();
            if numWarnings ~= 0
-               [obj, warn_st] = obj.warnings(false, 0, 10);
+               [obj(1), warn_st] = obj(1).warnings(false, 0, 10);
                warnings = warn_st;
            end
            

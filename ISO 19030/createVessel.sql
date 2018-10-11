@@ -10,8 +10,8 @@ CREATE PROCEDURE createVessel()
 
 BEGIN
 
-	CREATE TABLE Vessel (Vessel_id INT PRIMARY KEY AUTO_INCREMENT,
+	CREATE TABLE `static`.Vessel (Vessel_Id INT PRIMARY KEY AUTO_INCREMENT,
 							 IMO INT UNIQUE NOT NULL,
-                             Deleted BINARY
+                             Deleted BOOL
 							 );
 END;

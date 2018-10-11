@@ -72,13 +72,13 @@ while obj.iterateDD
     [~, currVessel, ddi, vi] = obj.currentDD;
 %     obj = obj.regressions(1);
     
-    if numel(currVessel.Report.InServicePerformance) < ddi %isempty(currPerf)
+    if isempty(currVessel.Report(ddi).InServicePerformance) % numel(currVessel.Report.InServicePerformance) < ddi %isempty(currPerf)
         continue
     end
     
     % Get current activity
     if ~activityInput_l
-        activity = currVessel.Report.Activity(ddi);
+        activity = currVessel.Report(ddi).Activity;
     end
     
 %     currPerf = currVessel.Report.InServicePerformance(ddi);
@@ -92,7 +92,7 @@ while obj.iterateDD
     
     speedloss_ma = 0.059;
     siliconeEffect = 0.06;
-    inservice = currVessel.Report.ServiceInterval(ddi).Duration;
+    inservice = currVessel.Report(ddi).ServiceInterval.Duration;
     if speedLossInput_l
         
         speedloss_act = speedLoss(vi, ddi);
@@ -108,7 +108,8 @@ while obj.iterateDD
 %     fuelSavings = annualConsRef - annualConsEval;
     costSavings = fuelSavings * fuelCost;
     
-    switch currVessel.FuelType
+    CO2convfact = 1;
+    switch currVessel.Engine.Fuel_Type
         
         case 'HFO'
             
@@ -127,6 +128,6 @@ while obj.iterateDD
     savings_st.FuelPenaltyMarket = fuelCons_ma * fuelCost;
     
     % Assign struct to output
-    savings.DryDockInterval(ddi) = savings_st;
-    currVessel.Report.EstimatedFuelConsumption(ddi) = savings_st;
+    savings(vi).DryDockInterval(ddi) = savings_st;
+    currVessel.Report(ddi).EstimatedFuelConsumption = savings_st;
 end

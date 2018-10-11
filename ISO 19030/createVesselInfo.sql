@@ -10,10 +10,11 @@ CREATE PROCEDURE createVesselInfo()
 
 BEGIN
 
-	CREATE TABLE VesselInfo (id INT PRIMARY KEY AUTO_INCREMENT,
-							 Vessel_id INT(10),
+	CREATE TABLE `static`.VesselInfo (Vessel_Info_Id INT PRIMARY KEY AUTO_INCREMENT,
+							 Vessel_Id INT(10),
                              Valid_From DATETIME,
-                             Vessel_Name DATETIME,
-                             Deleted BINARY
+                             Vessel_Name TEXT,
+                             Deleted BOOL,
+                             CONSTRAINT UniqueVesselName UNIQUE(Vessel_Id, Valid_From)
 							 );
 END;

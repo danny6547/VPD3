@@ -1,12 +1,12 @@
 /* Calculate 10 minute standard error of mean */
 
-DROP TABLE IF EXISTS sem10Mins;
-CREATE TABLE sem10Mins LIKE mu10Mins;
+DROP TABLE IF EXISTS `inservice`.sem10Mins;
+CREATE TABLE `inservice`.sem10Mins LIKE mu10Mins;
 
-SET @startTime := (SELECT MIN(DateTime_UTC) from tempRawISO);
-SET @firstgroup := (SELECT FLOOR((TO_SECONDS(MIN(DateTime_UTC)) - TO_SECONDS(@startTime))/(600)) FROM tempRawISO);
+SET @startTime := (SELECT MIN(DateTime_UTC) from `inservice`.tempRawISO);
+SET @firstgroup := (SELECT FLOOR((TO_SECONDS(MIN(DateTime_UTC)) - TO_SECONDS(@startTime))/(600)) FROM `inservice`.tempRawISO);
 
-INSERT INTO sem10Mins (
+INSERT INTO `inservice`.sem10Mins (
 						Rudder_Angle,
 						Relative_Wind_Direction,
 						Ship_Heading, 
@@ -30,5 +30,5 @@ INSERT INTO sem10Mins (
                  SQRT(AVG(POWER(Water_Depth, 2))),
                  SQRT(AVG(POWER(Air_Temperature, 2))),
                  SQRT(AVG(POWER(Seawater_Temperature, 2)))
-			FROM tempRawISO
+			FROM `inservice`.tempRawISO
 				GROUP BY FLOOR((TO_SECONDS(DateTime_UTC) - TO_SECONDS(@startTime))/(600)));

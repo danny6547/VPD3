@@ -1,14 +1,11 @@
 /* Detect rows where displacement is outside the range of +/-5% of the 
 nearest value in the SpeedPower table. */
 
-
-
-
 DROP PROCEDURE IF EXISTS filterSpeedPowerLookup;
 
 delimiter //
 
-CREATE PROCEDURE filterSpeedPowerLookup(imo INT)
+CREATE PROCEDURE filterSpeedPowerLookup(vcid INT)
 BEGIN
 	
     /* 
@@ -270,6 +267,10 @@ BEGIN
 			t.NearestTrim = w.SPTrim
 				;*/
 	
+    UPDATE tempRawISO SET Filter_SpeedPower_Disp = FALSE WHERE Filter_SpeedPower_Disp IS NULL;
+    UPDATE tempRawISO SET Filter_SpeedPower_Trim = FALSE WHERE Filter_SpeedPower_Trim IS NULL;
+	UPDATE tempRawISO SET Filter_SpeedPower_Disp_Trim = FALSE WHERE Filter_SpeedPower_Disp_Trim IS NULL;
+    
     /* Get valid displacement and nearest displacement */
     UPDATE tempRawISO t
 		JOIN (
@@ -284,16 +285,18 @@ BEGIN
 						 `Upper Displacement`,
 						 (a.Displacement > `Lower Displacement` AND a.Displacement < `Upper Displacement`) AS ValidDisplacement,
 						 ABS((ABS(a.Displacement) - ABS(b.Displacement))) AS DiffDisp
-						 FROM speedpowercoefficients a
+						 FROM `static`.speedpowercoefficientmodelvalue a
 						 JOIN
 							(SELECT
 									id,
-                                    IMO_Vessel_Number,
 								   Displacement,
 								  (Displacement*0.95) AS 'Lower Displacement',
 								  (Displacement*1.05) AS 'Upper Displacement'
 							FROM tempRawISO) AS b
-						WHERE a.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)) AS z
+						WHERE a.Speed_Power_Coefficient_Model_Id IN (SELECT Speed_Power_Coefficient_Model_Id FROM `static`.SpeedPowerCoefficientModelValue 
+																		WHERE Speed_Power_Coefficient_Model_Id = 
+																			(SELECT Speed_Power_Coefficient_Model_Id FROM `static`.VesselConfiguration 
+																				WHERE Vessel_Configuration_Id = vcid))) AS z
 				INNER JOIN
 					(
 					SELECT d.id, SPDisplacement, `Actual Displacement`, `Lower Displacement`, `Upper Displacement`, ValidDisplacement, MIN(DiffDisp) AS MinDiff
@@ -306,16 +309,18 @@ BEGIN
 						 `Upper Displacement`,
 						 (a.Displacement > `Lower Displacement` AND a.Displacement < `Upper Displacement`) AS ValidDisplacement,
 						 ABS((ABS(a.Displacement) - ABS(b.Displacement))) AS DiffDisp
-						 FROM speedpowercoefficients a
+						 FROM `static`.speedpowercoefficientmodelvalue a
 						 JOIN
 							(SELECT
 									id,
-                                    IMO_Vessel_Number,
 								   Displacement,
 								  (Displacement*0.95) AS 'Lower Displacement',
 								  (Displacement*1.05) AS 'Upper Displacement'
 							FROM tempRawISO) AS b
-						WHERE a.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)) AS d
+						WHERE a.Speed_Power_Coefficient_Model_Id IN (SELECT Speed_Power_Coefficient_Model_Id FROM `static`.SpeedPowerCoefficientModelValue 
+																		WHERE Speed_Power_Coefficient_Model_Id = 
+																			(SELECT Speed_Power_Coefficient_Model_Id FROM `static`.VesselConfiguration 
+																				WHERE Vessel_Configuration_Id = vcid))) AS d
 					 GROUP BY id) AS x /* 'SPTrim', 'Actual Trim', `Lower Trim`, `Upper Trim`,  */ 
 				  ON
 					z.id= x.id AND
@@ -326,22 +331,50 @@ BEGIN
 				 t.Filter_SpeedPower_Disp = NOT(w.ValidDisplacement);
     
     /* Get valid trim and nearest trim */
-    /*UPDATE tempRawISO q
+    UPDATE tempRawISO q
 	JOIN 
-		(SELECT a.id, b.Trim, NOT( a.NearestTrim >= (a.Trim - 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AND
-				a.NearestTrim <= (a.Trim + 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) ) AS 'FT'
+		(SELECT a.id, b.Trim, NOT( a.Nearest_Trim >= (a.Trim - 0.002*(SELECT LBP FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid)) AND
+				a.Nearest_Trim <= (a.Trim + 0.002*(SELECT LBP FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid)) ) AS 'FT'
 			FROM tempRawISO a
 			JOIN
 			(
-				SELECT t.id, s.Trim, s.Displacement FROM speedpowercoefficients s
+				SELECT t.id, s.Trim, s.Displacement FROM `static`.SpeedPowerCoefficientModelValue s
 					JOIN tempRawISO t
-						ON s.Displacement = t.NearestDisplacement
-							WHERE s.ModelID IN (SELECT Speed_Power_Model FROM vesselspeedpowermodel WHERE IMO_Vessel_Number = imo)
+						ON s.Displacement = t.Nearest_Displacement
+							WHERE s.Speed_Power_Coefficient_Model_Id IN (SELECT Speed_Power_Coefficient_Model_Id FROM `static`.SpeedPowerCoefficientModelValue 
+																		WHERE Speed_Power_Coefficient_Model_Id = 
+																			(SELECT Speed_Power_Coefficient_Model_Id FROM `static`.VesselConfiguration 
+																				WHERE Vessel_Configuration_Id = vcid))
 						  ) b
 					ON a.id = b.id) w
 						ON q.id = w.id
                         SET q.Filter_SpeedPower_Trim = w.FT,
-							q.NearestTrim			 = w.Trim; */
+							q.Nearest_Trim			 = w.Trim;
+                            
+    /* Get valid trim and nearest trim, again, because it doesn't work the first time... */
+    UPDATE tempRawISO q
+	JOIN 
+		(SELECT a.id, b.Trim, NOT( a.Nearest_Trim >= (a.Trim - 0.002*(SELECT LBP FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid)) AND
+				a.Nearest_Trim <= (a.Trim + 0.002*(SELECT LBP FROM `static`.VesselConfiguration WHERE Vessel_Configuration_Id = vcid)) ) AS 'FT'
+			FROM tempRawISO a
+			JOIN
+			(
+				SELECT t.id, s.Trim, s.Displacement FROM `static`.SpeedPowerCoefficientModelValue s
+					JOIN tempRawISO t
+						ON s.Displacement = t.Nearest_Displacement
+							WHERE s.Speed_Power_Coefficient_Model_Id IN (SELECT Speed_Power_Coefficient_Model_Id FROM `static`.SpeedPowerCoefficientModelValue 
+																		WHERE Speed_Power_Coefficient_Model_Id = 
+																			(SELECT Speed_Power_Coefficient_Model_Id FROM `static`.VesselConfiguration 
+																				WHERE Vessel_Configuration_Id = vcid))
+						  ) b
+					ON a.id = b.id) w
+						ON q.id = w.id
+                        SET q.Filter_SpeedPower_Trim = w.FT,
+							q.Nearest_Trim			 = w.Trim;
+	
+	/* Get boolean column indicating which values of trim and displacement are outside the ranges for nearest-neighbour interpolation */
+	UPDATE tempRawISO SET Filter_SpeedPower_Disp_Trim = (Filter_SpeedPower_Disp OR Filter_SpeedPower_Trim);
+    
     /*       
     UPDATE tempRawISO a
 	JOIN (
@@ -355,7 +388,5 @@ BEGIN
 			a.Filter_SpeedPower_Trim = NOT( a.NearestTrim >= (a.Trim - 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) AND
 											a.NearestTrim <= (a.Trim + 0.002*(SELECT LBP FROM Vessels WHERE IMO_Vessel_Number = imo)) );
     */
-	/* Get boolean column indicating which values of trim and displacement are outside the ranges for nearest-neighbour interpolation */
-	UPDATE tempRawISO SET Filter_SpeedPower_Disp_Trim = (Filter_SpeedPower_Disp OR Filter_SpeedPower_Trim);
     
 END

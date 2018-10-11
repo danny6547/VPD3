@@ -11,7 +11,7 @@ BEGIN
 DROP TABLE IF EXISTS tempRaw;
 /* CREATE TABLE tempRaw LIKE dnvglraw; */
 
-CREATE TABLE tempRaw LIKE `dnvgl`.DNVGLRaw;
+CREATE TABLE tempRaw LIKE DNVGLRaw;
 
 ALTER TABLE tempRaw ADD COLUMN Seawater_Temperature DOUBLE (20, 5), 
 ADD COLUMN Displacement DOUBLE (20, 5), 
