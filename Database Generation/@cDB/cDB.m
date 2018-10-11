@@ -68,7 +68,7 @@ classdef cDB
        TopLevelDir = fileparts(fileparts(fileparts(mfilename('fullpath'))));
     end
     
-    properties(Hidden, Access=private)
+    properties(Hidden)
         
         LibraryAccessible;
     end
@@ -910,8 +910,7 @@ classdef cDB
        % Create database for hull performance data provided by Force Tech.
        
        % Assign DB?
-       dbname = 'testforce';
-%        obj.Database = database;
+       dbname = 'force';
        
        if obj.BuildSchema
            

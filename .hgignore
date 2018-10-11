@@ -65,6 +65,13 @@ ISO 19030/test ISO 19030/External Validation/validateISOOut_09_Research.csv
 Vessel Descriptions/cVessel/Code/@cVessel/plotPerformanceData.m.orig
 Vessel Descriptions/cVessel/Code/@cVessel/cVessel.m.orig
 Vessel Descriptions/cVesselReport/~$all_analytics.xlsx
+Vessel Descriptions/cVesselSpeedPower/Code/@cVesselSpeedPower/cVesselSpeedPower.m.orig
+Vessel Descriptions/cVessel/Code/@cVessel/loadOmanShippingNoon.m.orig
+To Do/To Do.txt.orig
+Vessel Descriptions/cVessel/Code/@cVessel/estimatedFuelConsumption.m.orig
+Vessel Descriptions/cVessel/Code/@cVessel/inServicePerformance.m.orig
+Vessel Descriptions/cVessel/Code/@cVessel/loadForceTech.m.orig
+Vessel Descriptions/cVessel/Code/@cVessel/loadMarorkaRaw.m.orig
 syntax: regexp
 (?i)\.asv
 convertEcoInsightXLS2tab.asv

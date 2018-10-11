@@ -239,7 +239,9 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
                 end
            end
        end
-       end
+    end
+       
+    methods
        
        function [obj, indb] = isInDB(obj)
        % isInDB True if speed, power data is in DB

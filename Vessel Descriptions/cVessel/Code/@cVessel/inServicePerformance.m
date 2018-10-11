@@ -11,57 +11,15 @@ servStruct = struct('InservicePerformance', [], 'ReferenceDuration', [],...
 inserv = struct('DryDockInterval', servStruct);
 dur = struct('Average', [], 'StartDate', [], 'EndDate', [],...
     'StdOfMean', [], 'Count', []);
-% sizeStruct = size(obj);
 
-% Inputs
-
-% Convert dates
-% obj = convertDate(obj); redundant function replaced with set method
-
-% Iterate over elements of data array
-% [obj.InServicePerformance] = deal(servStruct);
 while obj.iterateDD
-% while ~obj.iterFinished
     
-%    [obj, ii] = obj.iter;
    [currDD_tbl, currVessel, ddi, vi] = obj.currentDD;
-% for si = 1:numel(obj)
-    
-%     % Skip if empty
-%    if currVessel.isPerDataEmpty
-%        continue
-%    end
-    
+   
     % Index into input and get dates
-%     currDate = datenum(char(currStruct.DateTime_UTC), 'dd-mm-yyyy');
     currDate = currDD_tbl.timestamp;
     currVar = currVessel.Report(ddi).Variable;
     currPerf = currDD_tbl.(currVar);
-%     [ri, ci] = ind2sub(sizeStruct, si);
-    
-    % Remove duplicate date data (redundant when no duplicates in db)
-%     [currDate, udi] = unique(currDate);
-%     currPerf = currPerf(udi);
-%     
-%     % Get dates filtered by nan in performance data
-%     currDate = currDate(~isnan(currPerf));
-    
-    % NB. TAKE THE DRY-DOCK DATE FROM SERIES
-    
-    % If first DDi, calculate from end backwards
-%     dd = currDate(end);
-    
-%     startDate(1) = min(currDate);
-%     endTime(1) = startDate(1) + 365.25;
-%     startDateI(1) = 1;
-%     [endDate(1), endDateI(1)] = FindNearestInVector(endTime(1), currDate);
-% 
-%     startDateI(2) = find(currDate > startDate(1), 1);
-%     startDate(2) = currDate(startDateI);
-%     endDate(2) = max(currDate);
-%     
-%     output(1) = mean(currPerf(1:endDateI(1)));
-%     output(2) = mean(currPerf(1:endDateI(1)));
     
     % Initialise output struct
     Duration_st = struct('Average', [], 'StartDate', [], 'EndDate', []);
@@ -109,15 +67,10 @@ while obj.iterateDD
         servStruct.ReferenceValue = Duration_st(1).Average;
         servStruct.EvaluationDuration = Duration_st(2).EndDate - Duration_st(2).StartDate;
         servStruct.EvaluationValue = Duration_st(2).Average;
+        
         servStruct.InservicePerformance = servStruct.EvaluationValue - servStruct.ReferenceValue;
         inserv(vi).DryDockInterval(ddi) = servStruct;
         currVessel.Report(ddi).InServicePerformance = servStruct;
-%         
-%         % Re-assign into Outputs
-%         if ddi == currVessel.numDDIntervals
-%             currVessel.InServicePerformance = [inserv.DryDockInterval];
-%         end
     end
 end
 dur(1) = [];
-% obj = obj.iterReset;

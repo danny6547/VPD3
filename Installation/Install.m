@@ -15,6 +15,8 @@ report_f = @(stage) fprintf(1, ['\n', datestr(now), ' SHAPEDev installation '...
     'failed to: ', stage, '\n']);
 success_f = @() fprintf(1, ['\n', datestr(now), ' SHAPEDev installation '...
     'succeeded.\n']);
+reportCannotLoadDB_f = @() fprintf(1, ['\n', datestr(now), ' Cannot access '...
+    '''Vessel Library'' folder, external databases not loaded.\n']);
 
 try  % Create local SHAPE DB
     
@@ -32,6 +34,10 @@ try % Create External Performance DB
     
     obj.createDNVGL;
     obj.createForce;
+    if ~obj.LibraryAccessible
+        
+        reportCannotLoadDB_f();
+    end
 catch ee
     
     report_f(stage);
