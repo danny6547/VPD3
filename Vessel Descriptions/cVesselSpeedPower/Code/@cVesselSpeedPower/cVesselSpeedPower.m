@@ -197,30 +197,35 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
        function [obj, h] = plot(obj)
        % plot
        
+       
+       makePlot_l = ~isempty(obj);
+       if makePlot_l
+           
+           figure;
+           ax = axes;
+           set(ax, 'NextPlot', 'add');
+       end
+       
        for oi = 1:numel(obj)
            
            if ~isempty(obj(oi).Speed) && ~isempty(obj(oi).Power) || ...
                ~isempty(obj(oi).Coefficient_A) && ~isempty(obj(oi).Coefficient_B)
                 
-                figure;
-                axes;
                 xlabel('Speed (m/s)')
                 ylabel('(Corrected) Power (kW)');
                 title('Comparison of Reference and Measured Speed, Power');
            end
-           
-           leg_c = {};
-           if ~isempty(obj(oi).Speed) && ~isempty(obj(oi).Power)
-
-                h(oi) = plot(obj(oi).Speed, obj(oi).Power, 'b*');
-                leg_c{1} = 'Measurements';
-           end
-           
+                
+                h(1) = plot(ax, obj(oi).Speed, obj(oi).Power, 'b*');
+                xlabel('Speed (knots)')
+                ylabel('Power (kW)');
+                title('Speed against Power data and fit');
+                
                 if ~isempty(obj(oi).Coefficient_A) &&....
                         ~isempty(obj(oi).Coefficient_B)
-
-                y = linspace(min(obj(oi).Power), max(obj(oi).Power), 1e3);
-                coeffs = [obj(oi).Coefficient_A, obj(oi).Coefficient_B];
+                    
+                    y = linspace(min(obj(oi).Power), max(obj(oi).Power), 1e3);
+                    coeffs = [obj(oi).Coefficient_A, obj(oi).Coefficient_B];
                     switch obj(oi).Model
                         
                         case 'exponential'
@@ -231,17 +236,15 @@ classdef cVesselSpeedPower < cModelID & matlab.mixin.Copyable & cVesselDisplacem
                     end
                     
                     hold on;
-                    plot(x, y, 'r--');
-                    legend({'Speed, power data', 'Second-order polynomial fit'});
-                    text(0.1, 0.9, ['Displacement = ', ...
+                    plot(ax, x, y, 'r--');
+                    legend(ax, {'Speed, power data', 'Second-order polynomial fit'});
+                    text(ax, 0.1, 0.9, ['Displacement = ', ...
                         num2str(obj(oi).Displacement), ', Trim = ', ...
                         num2str(obj(oi).Trim)], 'Units', 'Normalized');
                 end
            end
        end
-    end
-       
-    methods
+       end
        
        function [obj, indb] = isInDB(obj)
        % isInDB True if speed, power data is in DB

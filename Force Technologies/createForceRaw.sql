@@ -240,7 +240,7 @@ id INTEGER AUTO_INCREMENT PRIMARY KEY,
      eventstart DATETIME,
      eventend DATETIME,
      eventname VARCHAR(256),
-     filtered BOOL
+     filtered INT(1)
 );
 
 END;
