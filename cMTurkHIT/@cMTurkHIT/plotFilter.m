@@ -22,8 +22,18 @@ end
 set(ax, 'NextPlot', 'ReplaceChildren');
 
 % Dock so user can find figure easier, turn on data brushing
-set(get(ax, 'Parent'), 'WindowStyle', 'Docked');
-brush on
+fig = get(ax, 'Parent');
+if numel(ax) == 1
+    
+    set(fig, 'WindowStyle', 'Docked');
+    brush on
+else
+    
+    for fi = 1:numel(fig)
+        
+        brush(fig{fi}, 'on');
+    end
+end
 
 % Clear windows clipboard
 if ~isempty(clipboard('paste'))
@@ -50,7 +60,11 @@ while ~fin
     answer = input('', 's');
     
     % Get current display properties
-    view = get(ax, 'View');
+    view = zeros(numel(ax), 2);
+    for ai = 1:numel(ax)
+        
+        view(ai, :) = get(ax(ai), 'View');
+    end
     
     % Undo last
     undo_l = strcmpi(answer, 'undo');
@@ -84,7 +98,10 @@ while ~fin
     end
     
     % Assign current display properties
-    set(ax, 'View', view);
+    for ai = 1:numel(ax)
+        
+        set(ax(ai), 'View', view(ai, :));
+    end
 %     set(ax, 'XLim', xlim);
 %     set(ax, 'YLim', ylim);
 %     set(ax, 'ZLim', zlim);

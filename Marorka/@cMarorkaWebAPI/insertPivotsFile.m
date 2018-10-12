@@ -2,7 +2,6 @@ function [outputArg1,outputArg2] = insertPivotsFile(obj, filename)
 %insertPivotsFile Insert pivots file into Marorka table
 %   Detailed explanation goes here
 
-
 cv = cVessel('SavedConnection', 'static');
 cols_c = [
         {'ShipName'                                             }
@@ -42,7 +41,6 @@ colsNotInTab_c = [...
 fileCols_c = setdiff(cols_c, colsNotInTab_c);
 [~, fileCols_c] = cv.SQL.escapeSQL(fileCols_c);
 [~, setNull_ch] = cv.SQL.setNullIfEmpty(fileCols_c, false);
-
 filename = validateCellStr(filename);
 for fi = 1:numel(filename)
     
