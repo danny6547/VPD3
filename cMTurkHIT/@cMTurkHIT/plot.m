@@ -30,7 +30,7 @@ if nargin > 1 && ~isempty(varargin{1})
     
     % If axis input, assume that number of axes matches number of variables
     % required
-    if numel(ax) ~= nVar
+    if numel(ax) ~= nVar && ~obj.IsGrid
         
         errid = 'cMTurkPlot:AxesVariableSizeMismatch';
         errmsg = ['If input AX is given, it must have as many elements '...
