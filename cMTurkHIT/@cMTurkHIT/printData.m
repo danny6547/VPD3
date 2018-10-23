@@ -16,9 +16,15 @@ if nargin > 2 && ~isempty(varargin{1})
 end
 
 otherInput_c = {};
+if nargin > 4
+    
+    otherInput_c = varargin(3:end);
+end
+
+printOnlyModelVars = false;
 if nargin > 3
     
-    otherInput_c = varargin(2:end);
+    printOnlyModelVars = varargin{2};
 end
 
 if filtered
@@ -28,6 +34,17 @@ else
     
     tbl = obj.FileData;
 end
+
+% Find Model Vars
+if printOnlyModelVars
+    
+    modelVars = {'Displacement','Draft','LCF','TPC', 'Trim'};
+    cols2print_l = ismember(tbl.Properties.VariableNames, modelVars);
+else
+    
+    cols2print_l = true(1, width(tbl));
+end
+tbl = tbl(:, cols2print_l);
 
 writetable(tbl, filename, otherInput_c{:});
 end

@@ -20,10 +20,13 @@ if ui
     obj = obj.plotFilter;
 end
 
-% Write SQL insert statement
-obj.printSQL('Insert.sql');
-sql = obj.copySQL();
+% % Write SQL insert statement
+% obj.printSQL('Insert.sql');
+% sql = obj.copySQL();
 
-% Write data to file
+% Write all data to file
 obj.printData('HydTable.csv', true);
+
+% Write model data to file
+obj.printData('ModelData.csv', true, true);
 end
