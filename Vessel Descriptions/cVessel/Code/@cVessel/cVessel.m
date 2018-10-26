@@ -1295,6 +1295,7 @@ classdef cVessel < cModelID
         
         [trading_tbl, idleDD_tbl, idleQuart_tbl, speed_tbl] = ...
             activityFromVesselTrackerXLSX(filename, dd, varargin);
+        
     end
     
     methods
@@ -1360,10 +1361,13 @@ classdef cVessel < cModelID
                return
            end
            
+           % Skip reading model data if performance database only
            [~, vesselTableExists_l] = obj.SQL.isTable('Vessel');
            returnBecauseExternal_l = ~vesselTableExists_l;
            if returnBecauseExternal_l
                
+               % In-service
+               obj.InServicePreferences.IMO = IMO;
                obj = obj.selectInService;
                return
            end
@@ -1435,8 +1439,6 @@ classdef cVessel < cModelID
            obj.WindCoefficient.Model_ID = windID;
            
            % In-service
-           obj.InServicePreferences.IMO = IMO;
-           obj.InServicePreferences.Vessel_Id = vid;
            obj = obj.selectInService;
        end
        
@@ -1564,7 +1566,10 @@ classdef cVessel < cModelID
             
             if ~isa(val, 'timetable')
                 
-                return
+                errid = 'cV:InServiceTT';
+                errmsg = ['Value assigned to property ''InService'' must '...
+                    'be a timetable'];
+                error(errid, errmsg);
             end
             obj.InServicePreferences.Data = val;
         end
