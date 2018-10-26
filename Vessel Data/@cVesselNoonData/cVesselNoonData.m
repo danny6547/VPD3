@@ -10,10 +10,70 @@ classdef cVesselNoonData
        function obj = cVesselNoonData()
             
        end
+       
+       
     end
     
     methods(Static)
+        
+       [relSpeed, relDir] = relWindFromTrue(trueSpeed, trueDir, sog, head)
        
+       function [out] = joinNoon2HighFreq(noon_tbl, high_tbl, noonRep, varargin)
+           
+           % Input
+           writeFile = false;
+           if nargin > 5 && ~isempty(varargin{1})
+               
+               outfile = varargin{1};
+               writeFile = false;
+           end
+           
+           newtimebasis = 'union';
+           if nargin > 6
+               
+               newtimebasis = varargin{2};
+           end
+           
+%            % Remove all but specified variables and re-order to fit input
+%            noonOpts = detectImportOptions(noonFile);
+%            noonOpts = cVesselNoonData.rmVarsFromOpts(noonOpts, noonVar);
+%            
+%            highOpts = detectImportOptions(highFile);
+%            highOpts = cVesselNoonData.rmVarsFromOpts(highOpts, highVar);
+%            
+%            noon_tbl = readtable(noonFile, noonOpts);
+%            high_tbl = readtable(highFile, highOpts);
+%            
+%            % Convert to timetable
+%            noon_tbl = table2timetable(noon_tbl);
+%            high_tbl = table2timetable(high_tbl);
+           
+           % Assign all VarCont of low freq table
+           noonVar = noon_tbl.Properties.VariableNames;
+           varCont = repmat({'unset'}, [1, width(noon_tbl)]);
+           varCont(ismember(noonRep, noonVar)) = {'step'};
+           noon_tbl.Properties.VariableContinuity = varCont;
+           
+           % Sort
+           high_tbl = sortrows(high_tbl);
+           noon_tbl = sortrows(noon_tbl);
+           
+           % Join
+           out = synchronize(high_tbl, noon_tbl, newtimebasis);
+           
+           % Write file if requested
+           if writeFile
+               
+               writetable(out, outfile);
+           end
+       end
+       
+       function opts = rmVarsFromOpts(opts, var2keep)
+             
+            var2keep_l = ismember(lower(opts.VariableNames), lower(var2keep));
+            opts.SelectedVariableNames = opts.VariableNames(var2keep_l);
+        end
+        
        function [repN, firstRowA] = numRows2Repeat(a, b, varargin)
        % numRows2Repeat Number of repetitions needed
        
@@ -122,6 +182,11 @@ classdef cVesselNoonData
        
        end
        
-       
+        function tbl = renameTableVar(tbl, oldNames, newNames)
+            
+            % Assume all oldNames are found in table
+            [~, oldIdx] = ismember(oldNames, tbl.Properties.VariableNames);
+            tbl.Properties.VariableNames(oldIdx) = newNames;
+        end
     end
 end
