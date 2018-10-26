@@ -80,11 +80,13 @@ function [ obj ] = select(obj, cv, varargin)
         colWithoutAlias = timeName;
     end
     
-%     % Call SQL join method
-%     if isequal(rawCols, {''})
-%         
-%         rawTab = '';
-%     end
+    if strcmp(dbname, 'dnvgl')
+        
+        % Quick hack to get DNVGL db working
+        calcCols = [calcCols, 'DateTime_UTC'];
+        colWithoutAlias = '';
+    end
+    
     tbl = obj.SQL.join(calcTab, calcCols, calcJoin, rawTab, rawCols, ...
         rawJoin, where, colWithoutAlias);
     
