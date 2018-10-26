@@ -127,6 +127,6 @@ classdef cVeinland < cGetFiles
     methods(Static)
         
         names = variableNames()
-        [out] = writeInServiceFileFromTable(tbl, file)
+        [out, over, tbl] = writeInServiceFileFromTable(tbl, file)
     end
 end

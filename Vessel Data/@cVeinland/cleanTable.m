@@ -7,7 +7,7 @@ tbl = standardizeMissing(tbl, miss);
 var2keep = obj.FileVariables2Keep;
 allVar = tbl.Properties.VariableNames;
 var2clean = setdiff(allVar, var2keep);
-tbl = rmmissing(tbl, 2, 'DataVariables', var2clean);
+tbl = rmmissing(tbl, 2, 'DataVariables', var2clean, 'MinNumMissing', height(tbl));
 
 unwantedVars = obj.UnwantedVariables;
 for ui = 1:numel(unwantedVars)

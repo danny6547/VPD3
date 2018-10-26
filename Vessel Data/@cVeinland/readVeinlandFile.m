@@ -1,4 +1,4 @@
-function tbl = readVeinlandFile(obj, filename)
+function [tbl, fails, err] = readVeinlandFile(obj, filename)
 %loadVeinland Load data from Veinland XML file
 %   Detailed explanation goes here
 
@@ -7,6 +7,8 @@ nFile = numel(filename);
 
 % Create table for Veinland files
 [tbl, veinlandNames, veinlandTypes] = obj.veinlandFileTable;
+fails = cell(1, nFile);
+err = cell(1, nFile);
 
 % tbl_c = cell(1, nFile);
 for fi = 1:nFile
@@ -14,7 +16,13 @@ for fi = 1:nFile
     currFile = filename{fi};
     
     % Open file and pre-allocate array
-    file_xml = xmlread(currFile);
+    try file_xml = xmlread(currFile);
+        
+    catch ee
+        
+        fails(fi) = {currFile};
+        err(fi) = {ee};
+    end
     report_xml = file_xml.getElementsByTagName('REPROW');
     nRows = report_xml.getLength;
 
@@ -67,4 +75,9 @@ for fi = 1:nFile
         names);
     warning('on',  'MATLAB:table:RowsAddedExistingVars');
 end
-% {'actual_heel_angle', 'flowcounter_me_in', 'foc_boiler_average', 
+
+% Remove empty elements of outputs
+% fails(cellfun(@isempty, fails)) = [];
+fails = [fails{:}];
+% err(isempty(err)) = [];
+err = [err{:}];
